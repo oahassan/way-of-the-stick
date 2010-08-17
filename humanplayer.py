@@ -30,6 +30,8 @@ class HumanPlayer(player.Player):
                     elif ((key in self.moveset.movement_key_to_movement_type.keys())
                     and (self.moveset.movement_key_to_movement_type[key] in movesetdata.MovementTypes.AERIAL_MOVEMENT_TYPES)):
                         self.handle_aerial_motion_input(key)
+                    elif key in self.moveset.attack_keys.values():
+                        self.handle_key_input(key)
                 elif self.action.action_state == player.PlayerStates.STUNNED:
                     if key in self.moveset.movement_key_to_movement_type.keys():
                         self.handle_stun_motion_input(key)
