@@ -684,31 +684,11 @@ class Attack(Action):
         
         if player.elevation == PlayerStates.GROUNDED:
             player.model.set_point_position(point_deltas)
-            
-            if player.model.position[1] + player.model.height > gamestate.stage.ground.position[1]:
-                position = player.model.position
-                
-                new_position = (position[0], \
-                                gamestate.stage.ground.position[1] - player.model.height)
-                player.model.move_model(new_position)
-            
+        
         elif player.elevation == PlayerStates.AERIAL:
             player.model.set_point_position_in_place(point_deltas)
-            player.apply_physics(end_time - start_time)
         
-        if player.model.position[0] + player.model.width > gamestate.stage.right_wall.position[0]:
-            position = player.model.position
-                
-            new_position = (gamestate.stage.right_wall.position[0] - player.model.width, \
-                            position[1])
-            player.model.move_model(new_position)
-        
-        if player.model.position[0] < gamestate.stage.left_wall.position[0]:
-            position = player.model.position
-                
-            new_position = (gamestate.stage.left_wall.position[0], \
-                            position[1])
-            player.model.move_model(new_position)
+        player.apply_physics(end_time - start_time)
         
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
