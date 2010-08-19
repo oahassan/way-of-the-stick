@@ -61,18 +61,18 @@ class Model(physics.Object):
         bottom_right_y = None
         
         for line in self.lines.values():
-            top_left_and_bottom_right = line.get_top_left_and_bottom_right()
+            top_left, bottom_right = line.get_top_left_and_bottom_right()
             
             if top_left_x == None:
-                top_left_x = top_left_and_bottom_right[0][0]
-                top_left_y = top_left_and_bottom_right[0][1]
-                bottom_right_x = top_left_and_bottom_right[1][0]
-                bottom_right_y = top_left_and_bottom_right[1][1]
+                top_left_x = top_left[0]
+                top_left_y = top_left[1]
+                bottom_right_x = bottom_right[0]
+                bottom_right_y = bottom_right[1]
             else:
-                top_left_x = min(top_left_x,top_left_and_bottom_right[0][0])
-                top_left_y = min(top_left_y,top_left_and_bottom_right[0][1])
-                bottom_right_x = max(bottom_right_x,top_left_and_bottom_right[1][0])
-                bottom_right_y = max(bottom_right_y,top_left_and_bottom_right[1][1])
+                top_left_x = min(top_left_x,top_left[0])
+                top_left_y = min(top_left_y,top_left[1])
+                bottom_right_x = max(bottom_right_x,bottom_right[0])
+                bottom_right_y = max(bottom_right_y,bottom_right[1])
         
         return ((top_left_x, top_left_y), \
                 (bottom_right_x, bottom_right_y))

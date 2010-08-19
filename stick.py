@@ -281,9 +281,13 @@ class Circle(Line):
         position = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
         position = (int(position[0]), int(position[1]))
         radius = int(self.diameter / 2)
-        #padding added for rounding error
-        return ((position[0] - radius - self.thickness - 2, position[1] - radius - self.thickness - 2), \
-                (position[0] + radius + self.thickness + 2, position[1] + radius + self.thickness + 2))
+        point_radius = max(self.endPoint1.radius, self.endPoint2.radius)
+        
+        point1_top_left, point1_bottom_right = self.endPoint1.get_top_left_and_bottom_right()
+        point2_top_left, point1_bottom_right = self.endPoint2.get_top_left_and_bottom_right()
+        
+        return (position[0] - radius - self.thickness - point_radius, position[1] - radius - self.thickness - point_radius), \
+                (position[0] + radius + self.thickness + point_radius, position[1] + radius + self.thickness + point_radius)
     
     def center(self):
         return mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
@@ -328,6 +332,27 @@ class Circle(Line):
                           (int(pos[0]), int(pos[1])), \
                           int(radius), \
                           int(line_thickness))
+
+def coalesce_top_right_and_bottom_left(*args):
+    """Finds the top left and bottom right of a list of top left and bottom right pairs"""
+    
+    if len(args) == 0:
+        raise Exception
+    
+    top_left_x = args[0][0][0]
+    top_left_y = args[0][0][1]
+    bottom_right_x = args[0][1][0]
+    bottom_right_y = args[0][1][1]
+    
+    for top_left_bottom_right in args:
+        top_left, bottom_right = top_left_bottom_right
+        
+        top_left_x = min(top_left_x, top_left[0])
+        top_left_y = min(top_left_y, top_left[1])
+        bottom_right_x = max(bottom_right_x, bottom_right[0])
+        bottom_right_y = max(bottom_right_y, bottom_right[1])
+    
+    return (top_left_x, top_left_y), (bottom_right_x, bottom_right_y)
 
 def move_image_point(point_pos, pos_delta):
     """draws the frame image with the top left corner of the image at the
