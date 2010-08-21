@@ -313,9 +313,9 @@ class Animation:
         self.point_names = {}
         self.frame_deltas = []
         self.animation_deltas = []
-        self.frame_point_travel_functions = []
         self.frame_times = []
         self.frame_start_times = []
+        self.frame_reference_point_initial_velocities = []
         self.frame_point_initial_velocities = []
         self.frame_point_final_velocities = []
         self.frame_point_accelerations = []
@@ -583,66 +583,39 @@ class Animation:
             point_deltas[point_name] = self.get_point_deltas(point_id, \
                                                              start_time, \
                                                              end_time)
-            
-            
         
         return point_deltas
     
     def get_point_deltas(self, point_id, start_time, end_time):
         """returns the displacement of a point given the start time of the movement and
-        the end time of the movement.  Time resets to 0 at start of animation and increments in milliseconds.
+        the end time of the movement.  Time resets to 0 at start of animation and 
+        increments in milliseconds.
         
         point_id: id of the point to return deltas for"""
-        start_frame_index = 0
-        
-        for frame_index in range(len(self.frames)):
-            if start_time < self.frame_start_times[frame_index]:
-                break
-            else:
-                start_frame_index = frame_index
+        start_frame_index = self.get_frame_index_at_time(start_time)
+        end_frame_index = self.get_frame_index_at_time(end_time)
         
         x_displacement = 0
         y_displacement = 0
         
-        frame_end_time = self.frame_start_times[start_frame_index] + self.frame_times[start_frame_index]
-        
-        if end_time < frame_end_time:
-            displacement = self.calculate_point_displacement(start_frame_index, \
-                                                             point_id, \
-                                                             start_time, \
-                                                             end_time)
-            x_displacement = displacement[0]
-            y_displacement = displacement[1]
-        else:
-            #add displacement for starting frame
-            displacement = self.calculate_point_displacement(start_frame_index, \
-                                                             point_id, \
-                                                             start_time, \
-                                                             frame_end_time)
+        for frame_index in range(start_frame_index, end_frame_index + 1):
+            displacement_start_time = self.frame_start_times[frame_index]
+            displacement_end_time = displacement_start_time + self.frame_times[frame_index]
             
+            if frame_index == start_frame_index:
+                displacement_start_time = start_time
+                start_time_difference = start_time - self.frame_start_times[frame_index]
+                displacement_end_time = displacement_start_time + self.frame_times[frame_index] - start_time_difference
+            
+            if frame_index == end_frame_index:
+                displacement_end_time = end_time
+            
+            displacement = self.calculate_point_displacement(frame_index, \
+                                                             point_id, \
+                                                             displacement_start_time, \
+                                                             displacement_end_time)
             x_displacement += displacement[0]
             y_displacement += displacement[1]
-            
-            #add displacement for subsequent frames
-            for frame_index in range(start_frame_index + 1, len(self.frames)):
-                frame_start_time = self.frame_start_times[frame_index]
-                frame_end_time = frame_start_time + self.frame_times[frame_index]
-                if end_time < frame_end_time:
-                    displacement = self.calculate_point_displacement(frame_index, \
-                                                                     point_id, \
-                                                                     frame_start_time, \
-                                                                     end_time)
-                    x_displacement += displacement[0]
-                    y_displacement += displacement[1]
-                    
-                    break
-                else:
-                    displacement = self.calculate_point_displacement(frame_index, \
-                                                                     point_id, \
-                                                                     frame_start_time, \
-                                                                     frame_end_time)
-                    x_displacement += displacement[0]
-                    y_displacement += displacement[1]
         
         return (x_displacement,y_displacement)
     
@@ -705,9 +678,59 @@ class Animation:
         
         return (.5*acceleration*(duration**2)) + initial_velocity*duration
     
-    #Create Point Travel Functions
+    #Create Reference Point Travel Data
+    def set_animation_reference_point_path_data(self, gravity):
+        """populates tables that determine the reference position of the animation at a
+        given point in time.  These tables contain the x and y velocity of the reference 
+        point at the start of each frame.  The x velocity is calculated by dividing the
+        x displacement by the frame time calculated by set_animation_point_path_data.
+        The y velocity is calculated by inferring when the figure is jumping and how
+        long that jump takes given gravity.
+        
+        acceleration: maximum acceleration allowed in pixels per millisecond
+        gravity: constant acceleration of gravity"""
+        pass
+        #Get jump intervals
+        #Get jump interval initial velocities
+        #save jump interval initial velocities
+    
+    def get_jump_frame_intervals(self, gravity):
+        """returns a list of tuples for the starting and ending frames of jumps in an
+        animation
+        
+        gravity: constant acceleration of gravity in pixels per millisecond"""
+        pass
+        #Every jump start is paired with a jump end
+        #if figure is grounded in the current frame and airborne in the next frame then 
+        #   the current frame is the start of a jump
+        #if figure is grounded in the current frame and was airborne in the previous frame
+        #   set the current frame as end of a jump
+        #if the current frame is the last frame and the figure is airborne then the current
+        #   frame is the end of the jump
+    
+    def figure_is_airborne(self, frame_index):
+        """returns whether the figure is grounded in the given frame index.  The first
+        frame is used as a reference for where the ground is."""
+        pass
+        #if this frame's bottom is above the first frame's bottom the figure is airborne.
+    
+    def get_jump_interval_velocity(self, gravity, start_frame_index, end_frame_index):
+        """returns the duration in milliseconds of each jump interval
+        
+        gravity: constant acceleration of gravity in pixels per millisecond"""
+        pass
+        #Find how high the figure jumps
+        #calculate the initial velocity given the displacement, a final velocity of 0 and
+        #an acceleration of the given gravity.
+    
+    def get_jump_height(self, start_frame_index, end_frame_index):
+        """returns the height of the jump between two frame indices"""
+        pass
+        #subtract the height frames y position from the starting frame's y position
+    
+    #Create Point Travel Data
     def set_animation_point_path_data(self, acceleration):
-        """creates functions that determine the position of each point at a given point of 
+        """populates tables that determine the position of each point at a given point of 
         time.
         
         acceleration: maximum acceleration allowed in pixels per millisecond"""

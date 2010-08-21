@@ -300,5 +300,8 @@ class AnimationTests(unittest.TestCase):
         
         self.assertEqual(duration, animation_duration)
     
+    def test_get_reference_point_velocity(self):
+        pass
+    
 if __name__ == '__main__':
     unittest.main()
