@@ -679,7 +679,7 @@ class Animation:
         return (.5*acceleration*(duration**2)) + initial_velocity*duration
     
     #Create Reference Point Travel Data
-    def set_animation_reference_point_path_data(self, gravity):
+    def set_animation_reference_point_path_data(self, acceleration, gravity):
         """populates tables that determine the reference position of the animation at a
         given point in time.  These tables contain the x and y velocity of the reference 
         point at the start of each frame.  The x velocity is calculated by dividing the
@@ -690,13 +690,34 @@ class Animation:
         acceleration: maximum acceleration allowed in pixels per millisecond
         gravity: constant acceleration of gravity"""
         pass
+        #Get y velocities
+        #Get x velocities
+    
+    def get_frame_reference_point_x_velocities(self, acceleration, frame_index):
+        """Gets the x velocity of the reference point at the start of each frame.  The x
+        velocity is calculated by dividing the x displacement by the frame time 
+        calculated by set_animation_point_path_data.
+        
+        acceleration: maximum acceleration allowed in pixels per millisecond
+        frame_index: the index of the current frame"""
+        #For each frame
+        #Calculate x displacement between the two frames
+        #Calculate the final velocity and save it as the initial velocity of the next frame
+    
+    def get_reference_point_y_velocities(self, gravity):
+        """Gets y velocity of the reference point at the start of each frame.  The y 
+        velocity is calculated by inferring when the figure is jumping and how long that
+        jump takes given gravity.
+        
+        gravity: constant acceleration of gravity"""
+        pass
         #Get jump intervals
         #Get jump interval initial velocities
         #save jump interval initial velocities
     
     def get_jump_frame_intervals(self, gravity):
         """returns a list of tuples for the starting and ending frames of jumps in an
-        animation
+        animation.
         
         gravity: constant acceleration of gravity in pixels per millisecond"""
         pass
