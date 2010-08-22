@@ -666,6 +666,7 @@ class Attack(Action):
         self.attack_type = attack_type
         self.attack_lines = []
         self.range = (0,0)
+        self.use_animation_physics = False
     
     def move_player(self, player):
         
@@ -682,13 +683,12 @@ class Attack(Action):
         
         point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         
-        if player.elevation == PlayerStates.GROUNDED:
-            player.model.set_point_position(point_deltas)
+        player.model.set_point_position_in_place(point_deltas)
         
-        elif player.elevation == PlayerStates.AERIAL:
-            player.model.set_point_position_in_place(point_deltas)
-        
-        player.apply_physics(end_time - start_time)
+        if self.use_animation_physics:
+            self.apply_animation_physics(player, start_time, end_time)
+        else:
+            player.apply_physics(end_time - start_time)
         
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
@@ -696,6 +696,11 @@ class Attack(Action):
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
         player.current_attack = self
+        
+        if player.elevation == PlayerStates.GROUNDED:
+            self.use_animation_physics = True
+        else:
+            self.use_animation_physics = False
         
         if player.model.time_passed > 0:
             self.move_player(player)
@@ -716,6 +721,46 @@ class Attack(Action):
             attack_lines[stick.LineNames.LEFT_LOWER_LEG] = model.lines[stick.LineNames.LEFT_LOWER_LEG]
         
         return attack_lines
+    
+    def apply_animation_physics(self, player, start_time, end_time):
+        """returns the displacement of a point given the start time of the movement and
+        the end time of the movement.  Time resets to 0 at start of animation and 
+        increments in milliseconds.
+        
+        point_id: id of the point to return deltas for"""
+        start_frame_index = self.animation.get_frame_index_at_time(start_time)
+        end_frame_index = self.animation.get_frame_index_at_time(end_time)
+        
+        x_velocity = 0
+        y_velocity = 0
+        
+        for frame_index in range(start_frame_index, end_frame_index + 1):
+            displacement_start_time = self.animation.frame_start_times[frame_index]
+            displacement_end_time = (displacement_start_time + 
+                                     self.animation.frame_times[frame_index])
+            elapsed_time = 0
+            if frame_index == start_frame_index:
+                displacement_start_time = start_time
+                elapsed_time = start_time - self.animation.frame_start_times[frame_index]
+                displacement_end_time = (displacement_start_time + 
+                                         self.animation.frame_times[frame_index] - 
+                                         elapsed_time)
+            
+            if frame_index == end_frame_index:
+                displacement_end_time = end_time
+            
+            duration = displacement_end_time - displacement_start_time
+            
+            x_acceleration = self.animation.lateral_accelerations[frame_index]
+            x_initial_velocity = self.animation.lateral_velocities[frame_index]
+            x_velocity = (x_initial_velocity + 
+                          (x_acceleration*elapsed_time) + 
+                          player.model.friction)
+            
+            y_velocity = self.animation.get_jump_velocity(displacement_start_time,frame_index)
+            
+            player.model.velocity = (x_velocity, y_velocity)
+            player.apply_physics(duration)
 
 class ActionFactory():
     """factory class for creating attack objects"""

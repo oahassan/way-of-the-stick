@@ -9,42 +9,7 @@ import mathfuncs
 class AnimationTests(unittest.TestCase):
     TEST_POINT_NAME = "testpoint"
     ACCELERATION = 1
-    
-    def setUp(self):
-        self.animation = animation.Animation()
-        
-        self.first_frame_point = stick.Point((0,0))
-        self.second_frame_point = copy.deepcopy(self.first_frame_point)
-        self.second_frame_point.pos = (10,10)
-        self.third_frame_point = copy.deepcopy(self.first_frame_point)
-        self.third_frame_point.pos = (20,20)
-        self.fourth_frame_point = copy.deepcopy(self.first_frame_point)
-        self.fourth_frame_point.pos = (10,10)
-        self.fifth_frame_point = copy.deepcopy(self.first_frame_point)
-        self.fifth_frame_point.pos = (10,10)
-        
-        self.animation.frames[0].add_point(self.first_frame_point)
-        self.animation.frames.append(animation.Frame())
-        self.animation.frames[1].add_point(self.second_frame_point)
-        self.animation.frames.append(animation.Frame())
-        self.animation.frames[2].add_point(self.third_frame_point)
-        self.animation.frames.append(animation.Frame())
-        self.animation.frames[3].add_point(self.fourth_frame_point)
-        self.animation.frames.append(animation.Frame())
-        self.animation.frames[4].add_point(self.fifth_frame_point)
-        
-        self.displacements = []
-        self.initial_velocities = []
-        self.final_velocities = []
-        self.accelerations = []
-        self.frame_times = []
-        self.frame_start_times = []
-        self.frame_end_times = []
-        
-        self.init_function_parms()
-        
-        self.animation.point_names[AnimationTests.TEST_POINT_NAME] = self.first_frame_point.id
-        self.animation.set_animation_point_path_data(AnimationTests.ACCELERATION)
+    GRAVITY = 1
     
     def init_function_parms(self):
         x_initial_velocity = 0
@@ -167,9 +132,46 @@ class AnimationTests(unittest.TestCase):
     def calculate_acceleration(self, duration, displacement, initial_velocity):
         return float(2*(displacement - (initial_velocity*duration)))/(duration**2)
     
+class PointPathTests(AnimationTests):
+    def setUp(self):
+        self.animation = animation.Animation()
+        
+        self.first_frame_point = stick.Point((0,0))
+        self.second_frame_point = copy.deepcopy(self.first_frame_point)
+        self.second_frame_point.pos = (10,10)
+        self.third_frame_point = copy.deepcopy(self.first_frame_point)
+        self.third_frame_point.pos = (20,20)
+        self.fourth_frame_point = copy.deepcopy(self.first_frame_point)
+        self.fourth_frame_point.pos = (10,10)
+        self.fifth_frame_point = copy.deepcopy(self.first_frame_point)
+        self.fifth_frame_point.pos = (10,10)
+        
+        self.animation.frames[0].add_point(self.first_frame_point)
+        self.animation.frames.append(animation.Frame())
+        self.animation.frames[1].add_point(self.second_frame_point)
+        self.animation.frames.append(animation.Frame())
+        self.animation.frames[2].add_point(self.third_frame_point)
+        self.animation.frames.append(animation.Frame())
+        self.animation.frames[3].add_point(self.fourth_frame_point)
+        self.animation.frames.append(animation.Frame())
+        self.animation.frames[4].add_point(self.fifth_frame_point)
+        
+        self.displacements = []
+        self.initial_velocities = []
+        self.final_velocities = []
+        self.accelerations = []
+        self.frame_times = []
+        self.frame_start_times = []
+        self.frame_end_times = []
+        
+        self.init_function_parms()
+        
+        self.animation.point_names[AnimationTests.TEST_POINT_NAME] = self.first_frame_point.id
+        self.animation.set_animation_point_path_data(AnimationTests.ACCELERATION)
+       
     def test_hold_position(self):
         start_time = 14
-        self.end_time = 20
+        end_time = 20
         
         displacement = self.animation.build_point_time_delta_dictionary(start_time, end_time)[AnimationTests.TEST_POINT_NAME]
         
@@ -299,9 +301,57 @@ class AnimationTests(unittest.TestCase):
         animation_duration = self.animation.get_constant_acceleration_frame_to_frame_duration(0,0,displacement,initial_velocity,acceleration)
         
         self.assertEqual(duration, animation_duration)
+       
+class AnimationPhysicsTests(AnimationTests):
+    def setUp(self):
+        self.animation = animation.Animation()
+        
+        self.first_frame_point = stick.Point((20,20))
+        self.second_frame_point = copy.deepcopy(self.first_frame_point)
+        self.second_frame_point.pos = (10,10)
+        self.third_frame_point = copy.deepcopy(self.first_frame_point)
+        self.third_frame_point.pos = (20,20)
+        self.fourth_frame_point = copy.deepcopy(self.first_frame_point)
+        self.fourth_frame_point.pos = (0,0)
+        self.fifth_frame_point = copy.deepcopy(self.first_frame_point)
+        self.fifth_frame_point.pos = (10,10)
+        
+        self.animation.frames[0].add_point(self.first_frame_point)
+        self.animation.frames.append(animation.Frame())
+        self.animation.frames[1].add_point(self.second_frame_point)
+        self.animation.frames.append(animation.Frame())
+        self.animation.frames[2].add_point(self.third_frame_point)
+        self.animation.frames.append(animation.Frame())
+        self.animation.frames[3].add_point(self.fourth_frame_point)
+        self.animation.frames.append(animation.Frame())
+        self.animation.frames[4].add_point(self.fifth_frame_point)
+        
+        self.displacements = []
+        self.initial_velocities = []
+        self.final_velocities = []
+        self.accelerations = []
+        self.frame_times = []
+        self.frame_start_times = []
+        self.frame_end_times = []
+        
+        self.init_function_parms()
+        
+        self.animation.point_names[AnimationTests.TEST_POINT_NAME] = self.first_frame_point.id
+        self.animation.set_animation_reference_point_path_data(AnimationTests.ACCELERATION,
+                                                               AnimationTests.GRAVITY)
     
-    def test_get_reference_point_velocity(self):
-        pass
+    def test_get_jump_height(self):
+        jump_height_1 = self.animation.get_jump_height(0,2)
+        jump_height_2 = self.animation.get_jump_height(2,4)
+        
+        self.assertEqual(-10, jump_height_1)
+        self.assertEqual(-20, jump_height_2)
+    
+    def test_get_jump_velocity(self):
+        self.assertEqual(0, self.animation.get_initial_jump_velocity(1))
+        #import pdb;pdb.set_trace()
+        y_velocity_1 = -math.sqrt(abs(2*AnimationTests.GRAVITY*10))
+        self.assertEqual(y_velocity_1, self.animation.get_initial_jump_velocity(0))
     
 if __name__ == '__main__':
     unittest.main()

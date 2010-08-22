@@ -212,6 +212,15 @@ class Frame:
             if reference_position[1] < min_y_pos:
                 min_y_pos = reference_position[1]
         
+        for point in self.points():
+            reference_position = point.pos
+            
+            if reference_position[0] < min_x_pos:
+                min_x_pos = reference_position[0]
+            
+            if reference_position[1] < min_y_pos:
+                min_y_pos = reference_position[1]
+        
         return (min_x_pos, min_y_pos)
     
     def build_pos_delta_dictionary(self, reference_position):
@@ -255,10 +264,30 @@ class Frame:
         for circle in self.circles():
             top_left_and_bottom_right = circle.get_top_left_and_bottom_right()
             
-            top_left_x = min(top_left_x,top_left_and_bottom_right[0][0])
-            top_left_y = min(top_left_y,top_left_and_bottom_right[0][1])
-            bottom_right_x = max(bottom_right_x,top_left_and_bottom_right[1][0])
-            bottom_right_y = max(bottom_right_y,top_left_and_bottom_right[1][1])
+            if top_left_x == None:
+                top_left_x = top_left_and_bottom_right[0][0]
+                top_left_y = top_left_and_bottom_right[0][1]
+                bottom_right_x = top_left_and_bottom_right[1][0]
+                bottom_right_y = top_left_and_bottom_right[1][1]
+            else:
+                top_left_x = min(top_left_x,top_left_and_bottom_right[0][0])
+                top_left_y = min(top_left_y,top_left_and_bottom_right[0][1])
+                bottom_right_x = max(bottom_right_x,top_left_and_bottom_right[1][0])
+                bottom_right_y = max(bottom_right_y,top_left_and_bottom_right[1][1])
+        
+        for point in self.points():
+            top_left_and_bottom_right = point.get_top_left_and_bottom_right()
+            
+            if top_left_x == None:
+                top_left_x = top_left_and_bottom_right[0][0]
+                top_left_y = top_left_and_bottom_right[0][1]
+                bottom_right_x = top_left_and_bottom_right[1][0]
+                bottom_right_y = top_left_and_bottom_right[1][1]
+            else:
+                top_left_x = min(top_left_x,top_left_and_bottom_right[0][0])
+                top_left_y = min(top_left_y,top_left_and_bottom_right[0][1])
+                bottom_right_x = max(bottom_right_x,top_left_and_bottom_right[1][0])
+                bottom_right_y = max(bottom_right_y,top_left_and_bottom_right[1][1])
         
         return ((top_left_x, top_left_y), \
                 (bottom_right_x, bottom_right_y))
@@ -316,7 +345,11 @@ class Animation:
         self.frame_times = []
         self.frame_start_times = []
         self.lateral_velocities = []
+        self.lateral_accelerations = []
         self.jump_velocities = {}
+        self.jump_durations = {}
+        self.jump_intervals = []
+        self.gravity = 0
         self.frame_point_initial_velocities = []
         self.frame_point_final_velocities = []
         self.frame_point_accelerations = []
@@ -679,6 +712,44 @@ class Animation:
         
         return (.5*acceleration*(duration**2)) + initial_velocity*duration
     
+    #Get velocities given time
+    def get_initial_lateral_velocity(self, frame_index):
+        return self.lateral_velocities[frame_index]
+    
+    def get_initial_jump_velocity(self, frame_index):
+        """returns the initial y velocity at the given frame index"""
+        y_initial_velocity = 0
+        
+        if frame_index in self.jump_velocities.keys():
+            y_initial_velocity = self.jump_velocities[frame_index]
+        
+        return y_initial_velocity
+    
+    def get_matching_jump_interval(self, frame_index):
+        """returns the jump interval a frame falls in.  If it doesn't fall in any interval
+        None is returned"""
+        matching_jump_interval = None
+        
+        for jump_interval in self.jump_intervals:
+            if frame_index >= jump_interval[0] and frame_index <= jump_interval[1]:
+                matching_jump_interval = jump_interval
+        
+        return matching_jump_interval
+    
+    def get_jump_velocity(self, time, frame_index):
+        """returns the y velocity of a figure given the time and the current frame_index"""
+        y_velocity = 0
+        
+        jump_interval = self.get_matching_jump_interval(frame_index)
+        
+        if jump_interval != None:
+            jump_start_time = self.frame_start_times[jump_interval[0]]
+            if time < (jump_start_time + self.jump_interval_durations[jump_interval[0]]):
+                y_intial_velocity = self.jump_velocities[jump_interval[0]]
+                y_velocity = y_intial_velocity + (self.gravity*(time - jump_start_time))
+        
+        return y_velocity
+    
     #Create Reference Point Travel Data
     def set_animation_reference_point_path_data(self, acceleration, gravity):
         """populates tables that determine the reference position of the animation at a
@@ -690,10 +761,13 @@ class Animation:
         
         acceleration: maximum acceleration allowed in pixels per millisecond
         gravity: constant acceleration of gravity"""
-        self.jump_velocities = self.get_jump_velocities(gravity)
-        self.lateral_velocities = self.get_reference_point_x_velocities(acceleration)
+        self.gravity = gravity
+        self.jump_intervals = self.get_jump_frame_intervals()
+        self.jump_interval_durations = self.get_jump_interval_durations(gravity, self.jump_intervals)
+        self.jump_velocities = self.get_jump_interval_initial_velocities(gravity, self.jump_intervals)
+        self.lateral_velocities, self.lateral_accelerations = self.get_reference_point_x_kinematics(acceleration)
     
-    def get_reference_point_x_velocities(self, acceleration):
+    def get_reference_point_x_kinematics(self, acceleration):
         """Gets the x velocity of the reference point at the start of each frame.  The x
         velocity is calculated by dividing the x displacement by the frame time 
         calculated by set_animation_point_path_data.
@@ -702,7 +776,7 @@ class Animation:
         
         x_displacements = []
         x_initial_velocities = [0,]
-        
+        x_accelerations = []
         #For each frame
         for frame_index in range(0, len(self.frames) - 1):
             #Calculate x displacement between the two frames
@@ -725,20 +799,11 @@ class Animation:
                                                                   displacement=x_displacement)
             x_initial_velocities.append(final_velocity)
             x_displacements.append(x_displacement)
+            x_accelerations.append(x_acceleration)
         
-        return x_initial_velocities
-    
-    def get_jump_velocities(self, gravity):
-        """Gets y velocity of the reference point at the start of each frame.  The y 
-        velocity is calculated by inferring when the figure is jumping and how long that
-        jump takes given gravity.
+        x_accelerations.append(0)
         
-        gravity: constant acceleration of gravity"""
-        #Get jump intervals
-        jump_intervals = self.get_jump_frame_intervals()
-        
-        #Get jump interval initial velocities
-        return self.get_jump_interval_initial_velocities(gravity, jump_intervals)
+        return x_initial_velocities, x_accelerations
     
     def get_jump_frame_intervals(self):
         """returns a list of tuples for the starting and ending frames of jumps in an
@@ -763,10 +828,10 @@ class Animation:
                     jump_interval_start_indices.append(frame_index - 1)
             else:
                 #if figure is grounded in the current frame and was airborne in the 
-                #previous frame set the current frame as end of a jump
+                #previous frame set the previous frame as end of a jump
                 if figure_is_airborne_indicator:
                     figure_is_airborne_indicator = False
-                    jump_interval_end_indices.append(frame_index)
+                    jump_interval_end_indices.append(frame_index - 1)
         
         return zip(jump_interval_start_indices, jump_interval_end_indices)
         
@@ -774,8 +839,10 @@ class Animation:
     def figure_is_airborne_in_frame(self, frame_index):
         """returns whether the figure is grounded in the given frame index.  The first
         frame is used as a reference for where the ground is."""
-        first_frame_bottom = self.frames[0].get_reference_position()[1] + self.frames[0].image_height()
-        current_frame_bottom = self.frames[frame_index].get_reference_position()[1] + self.frames[frame_index].image_height()
+        first_frame_bottom = (self.frames[0].get_reference_position()[1] + 
+                              self.frames[0].image_height())
+        current_frame_bottom = (self.frames[frame_index].get_reference_position()[1] + 
+                                self.frames[frame_index].image_height())
         
         #if this frame's bottom is above the first frame's bottom the figure is airborne.
         return (current_frame_bottom < first_frame_bottom)
@@ -792,11 +859,31 @@ class Animation:
             #Find how high the figure jumps
             y_displacement = self.get_jump_height(jump_interval[0], jump_interval[1])
             
-            #calculate the initial velocity given the displacement, a final velocity of 0 and
-            #an acceleration of the given gravity.
-            jump_interval_initial_velocities[jump_interval[0]] = -math.sqrt(abs(2*gravity*y_displacement))
+            #calculate the initial velocity given the displacement, a final velocity of 0 
+            #and an acceleration of the given gravity.
+            jump_interval_initial_velocity =-math.sqrt(abs(2*gravity*y_displacement))
+            jump_interval_initial_velocities[jump_interval[0]] = jump_interval_initial_velocity
         
         return jump_interval_initial_velocities
+    
+    def get_jump_interval_durations(self, gravity, jump_intervals):
+        """returns a dictionary of the durations in milliseconds of each frame in a
+        jump interval keyed by the frame index"""
+        jump_interval_durations = {}
+        
+        for jump_interval in jump_intervals:
+            #Find how high the figure jumps
+            y_displacement = self.get_jump_height(jump_interval[0], jump_interval[1])
+            
+            #calculate the initial velocity given the displacement, a final velocity of 0 
+            #and an acceleration of the given gravity.
+            jump_interval_initial_velocity =-math.sqrt(abs(2*gravity*y_displacement))
+            
+            #calculate the duration of the jump interval
+            total_duration = 2*(-jump_interval_initial_velocity)/gravity
+            jump_interval_durations[jump_interval[0]] = total_duration
+        
+        return jump_interval_durations
     
     def get_jump_height(self, start_frame_index, end_frame_index):
         """returns the height of the jump between two frame indices"""
@@ -804,7 +891,7 @@ class Animation:
                               self.frames[start_frame_index].image_height())
         jump_height_frame_bottom = start_frame_bottom
         
-        for frame_index in range(start_frame_index + 1, end_frame_index):
+        for frame_index in range(start_frame_index + 1, end_frame_index + 1):
             frame_bottom = (self.frames[frame_index].get_reference_position()[1] + 
                             self.frames[frame_index].image_height())
             
@@ -812,7 +899,7 @@ class Animation:
                 jump_height_frame_bottom = frame_bottom
         
         #subtract the height frames y position from the starting frame's y position
-        return frame_bottom - start_frame_bottom
+        return jump_height_frame_bottom - start_frame_bottom
     
     #Create Point Travel Data
     def set_animation_point_path_data(self, acceleration):
