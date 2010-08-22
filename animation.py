@@ -716,7 +716,7 @@ class Animation:
             #avoids having to make the figure slow down in the previous frame and creates
             #a more dramatic movement.
             if (frame_index != 0 and
-            mathfuncs.sign(x_displacements[frame_index]) != mathfuncs.sign(x_displacements[frame_index - 1]):
+            mathfuncs.sign(x_displacements[frame_index]) != mathfuncs.sign(x_displacements[frame_index - 1])):
                 x_initial_velocities[frame_index] = 0
             
             #Calculate the final velocity and save it as the initial velocity of the next frame
@@ -753,7 +753,7 @@ class Animation:
                 if figure_is_airborne_indicator:
                     #if the current frame is the last frame and the figure is airborne 
                     #then the current frame is the end of the jump
-                    if frame_index = len(self.frames) - 1:
+                    if frame_index == len(self.frames) - 1:
                         jump_interval_end_indices.append(frame_index)
                 else:
                     #if figure was grounded in the previous frame and is airborne in the
