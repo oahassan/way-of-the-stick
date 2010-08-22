@@ -690,7 +690,7 @@ class Animation:
         
         acceleration: maximum acceleration allowed in pixels per millisecond
         gravity: constant acceleration of gravity"""
-        self.jump_velocities = self.get_reference_point_y_velocities(gravity)
+        self.jump_velocities = self.get_jump_velocities(gravity)
         self.lateral_velocities = self.get_reference_point_x_velocities(acceleration)
     
     def get_reference_point_x_velocities(self, acceleration):
@@ -716,14 +716,15 @@ class Animation:
             #avoids having to make the figure slow down in the previous frame and creates
             #a more dramatic movement.
             if (frame_index != 0 and
-            mathfuncs.sign(x_displacements[frame_index]) != mathfuncs.sign(x_displacements[frame_index - 1])):
+            mathfuncs.sign(x_displacement) != mathfuncs.sign(x_displacements[frame_index - 1])):
                 x_initial_velocities[frame_index] = 0
             
             #Calculate the final velocity and save it as the initial velocity of the next frame
-            final_velocity = calculate_velocity_without_time(initial_velocity=x_velocities[frame_index],
-                                                             acceleration=x_acceleration,
-                                                             displacement=x_displacement)
-            x_velocities.append(final_velocity)
+            final_velocity = self.calculate_velocity_without_time(initial_velocity=x_initial_velocities[frame_index],
+                                                                  acceleration=x_acceleration,
+                                                                  displacement=x_displacement)
+            x_initial_velocities.append(final_velocity)
+            x_displacements.append(x_displacement)
         
         return x_initial_velocities
     
@@ -737,7 +738,7 @@ class Animation:
         jump_intervals = self.get_jump_frame_intervals()
         
         #Get jump interval initial velocities
-        return self.get_jump_interval_initial_velocites(gravity, jump_intervals)
+        return self.get_jump_interval_initial_velocities(gravity, jump_intervals)
     
     def get_jump_frame_intervals(self):
         """returns a list of tuples for the starting and ending frames of jumps in an
@@ -746,10 +747,10 @@ class Animation:
         jump_interval_start_indices = []
         jump_interval_end_indices = []
         
-        figure_is_airborne_indicator = false
+        figure_is_airborne_indicator = False
         
         for frame_index in range(len(self.frames)):
-            if figure_is_airborne_in_frame(frame_index):
+            if self.figure_is_airborne_in_frame(frame_index):
                 if figure_is_airborne_indicator:
                     #if the current frame is the last frame and the figure is airborne 
                     #then the current frame is the end of the jump
@@ -789,24 +790,23 @@ class Animation:
         
         for jump_interval in jump_intervals:
             #Find how high the figure jumps
-            y_displacement = get_jump_height(self, jump_interval[0], jump_interval[1])
+            y_displacement = self.get_jump_height(jump_interval[0], jump_interval[1])
             
             #calculate the initial velocity given the displacement, a final velocity of 0 and
             #an acceleration of the given gravity.
-            jump_interval_initial_velocity = -math.sqrt(2*gravity*y_displacement)
-            jump_interval_initial_velocities[jump_interval[0]] = y_initial_velocity
+            jump_interval_initial_velocities[jump_interval[0]] = -math.sqrt(abs(2*gravity*y_displacement))
         
         return jump_interval_initial_velocities
     
     def get_jump_height(self, start_frame_index, end_frame_index):
         """returns the height of the jump between two frame indices"""
-        start_frame_bottom = (self.frames[start_frame_index].get_reference_position() + 
-                              self.frames[start_frame_index].image_height)
+        start_frame_bottom = (self.frames[start_frame_index].get_reference_position()[1] + 
+                              self.frames[start_frame_index].image_height())
         jump_height_frame_bottom = start_frame_bottom
         
         for frame_index in range(start_frame_index + 1, end_frame_index):
-            frame_bottom = (self.frames[frame_index].get_reference_position() + 
-                            self.frames[frame_index].image_height)
+            frame_bottom = (self.frames[frame_index].get_reference_position()[1] + 
+                            self.frames[frame_index].image_height())
             
             if frame_bottom < jump_height_frame_bottom:
                 jump_height_frame_bottom = frame_bottom

@@ -1,13 +1,16 @@
 import math
 import mathfuncs
 
+GRAVITY = .005
+FRICTION = .003
+
 class Object():
     def __init__(self, \
                 position = (0,0), \
                 height = 0, \
                 width = 0, \
-                gravity = .005, \
-                friction = .003, \
+                gravity = GRAVITY, \
+                friction = FRICTION, \
                 velocity = (0,0)):
         self.gravity = gravity
         self.friction = friction

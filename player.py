@@ -803,8 +803,12 @@ class ActionFactory():
     def _set_action_animations(self, action, animation):
         action.right_animation = self.crte_player_animation(animation)
         action.right_animation.set_animation_point_path_data(Player.ACCELERATION)
+        action.right_animation.set_animation_reference_point_path_data(Player.ACCELERATION,
+                                                                       physics.GRAVITY)
         action.left_animation = self.crte_player_animation(animation.flip())
         action.left_animation.set_animation_point_path_data(Player.ACCELERATION)
+        action.left_animation.set_animation_reference_point_path_data(Player.ACCELERATION,
+                                                                      physics.GRAVITY)
     
     def crte_player_animation(self, animation):
         rtn_animation = copy.deepcopy(animation)
