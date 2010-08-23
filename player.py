@@ -52,6 +52,59 @@ class Model(physics.Object):
         for line in self.lines.values():
             line.thickness = 7
     
+    def get_reference_position(self):
+        """Calculates the position of the top left corner of a rectangle
+        enclosing the points of the model"""
+        min_x_pos = 99999999
+        min_y_pos = 99999999
+        
+        for line in self.lines.values():
+            reference_position = line.get_reference_position()
+            
+            if reference_position[0] < min_x_pos:
+                min_x_pos = reference_position[0]
+            
+            if reference_position[1] < min_y_pos:
+                min_y_pos = reference_position[1]
+        
+        for point in self.points.values():
+            reference_position = point.pos
+            
+            if reference_position[0] < min_x_pos:
+                min_x_pos = reference_position[0]
+            
+            if reference_position[1] < min_y_pos:
+                min_y_pos = reference_position[1]
+        
+        return min_x_pos, min_y_pos
+    
+    def get_enclosing_rect(self):
+        """returns a tuple for the enclosing rect as a pygame rect"""
+        top_left_x = None
+        top_left_y = None
+        bottom_right_x = None
+        bottom_right_y = None
+        
+        for line in self.lines.values():
+            top_left, bottom_right = line.get_top_left_and_bottom_right()
+            
+            if top_left_x == None:
+                top_left_x = top_left[0]
+                top_left_y = top_left[1]
+                bottom_right_x = bottom_right[0]
+                bottom_right_y = bottom_right[1]
+            else:
+                top_left_x = min(top_left_x,top_left[0])
+                top_left_y = min(top_left_y,top_left[1])                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                bottom_right_x = max(bottom_right_x,bottom_right[0])
+                bottom_right_y = max(bottom_right_y,bottom_right[1])
+        width = bottom_right_x - top_left_x
+        height = bottom_right_y - top_left_y
+        
+        return ((top_left_x, top_left_y), \
+                (width, height))
+    
+    
     def get_top_left_and_bottom_right(self):
         """Finds the top left and bottom right containers of a rectangle containg the
         points and lines of the frame"""
@@ -79,10 +132,10 @@ class Model(physics.Object):
     
     def set_dimensions(self):
         """sets the height and width of the model"""
-        top_left_and_bottom_right = self.get_top_left_and_bottom_right()
+        top_left, bottom_right = self.get_top_left_and_bottom_right()
         
-        self.height = top_left_and_bottom_right[1][1] - top_left_and_bottom_right[0][1]
-        self.width = top_left_and_bottom_right[1][0] - top_left_and_bottom_right[0][0]
+        self.height = bottom_right[1] - top_left[1]
+        self.width = bottom_right[0] - top_left[0]
     
     def set_frame_point_pos(self, deltas):
         """Sets the position of each point with respect to the reference point"""
@@ -102,7 +155,7 @@ class Model(physics.Object):
             self.points[point_name].pos = (point_position[0] + deltas[point_name][0], \
                                            point_position[1] + deltas[point_name][1])
         
-        self.position = self.get_position()
+        self.position = self.get_reference_position()
         self.set_dimensions()
     
     def set_point_position_in_place(self, deltas):
@@ -120,7 +173,7 @@ class Model(physics.Object):
     
     def move_model(self, new_position):
         """moves model to the new reference position"""
-        position = self.get_position()
+        position = self.get_reference_position()
         pos_delta = (new_position[0] - position[0], \
                      new_position[1] - position[1])
         
@@ -129,7 +182,7 @@ class Model(physics.Object):
             point.pos = (current_position[0] + pos_delta[0], \
                          current_position[1] + pos_delta[1])
         
-        self.position = self.get_position()
+        self.position = self.get_reference_position()
         self.set_dimensions()
     
     def shift(self, deltas):
@@ -143,9 +196,6 @@ class Model(physics.Object):
                          current_pos[1] + deltas[1])
         
         self.set_dimensions()
-    
-    def get_position(self):
-        return self.get_top_left_and_bottom_right()[0]
 
 def pull_point(point, \
               new_pos, \
@@ -386,7 +436,7 @@ class Player():
         return in_range
     
     def set_elevation(self):
-        if self.model.position[1] + self.model.height >= gamestate.stage.ground.position[1]:
+        if self.model.position[1] + self.model.height + 1 >= gamestate.stage.ground.position[1]:
             self.elevation = PlayerStates.GROUNDED
         else:
             self.elevation = PlayerStates.AERIAL
@@ -621,7 +671,7 @@ class Stun(Action):
                    point_to_lines)
         
         #resync position of physics model and model
-        player.model.position = player.model.get_position()
+        player.model.position = player.model.get_reference_position()
         player.model.set_dimensions()
     
     def move_player(self, player):
@@ -865,8 +915,12 @@ class ActionFactory():
         return rtn_animation
 
 def draw_model(player):
-    rect = pygame.Rect(player.model.position, (player.model.width, player.model.height))
-    pygame.draw.rect(gamestate.screen, (100,100,100),rect,1)
+    """draws the model to the screen"""
+    enclosing_rect = pygame.Rect(*player.model.get_enclosing_rect())
+    gamestate.new_dirty_rects.append(enclosing_rect)
+    
+    pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)
+    
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
             draw_point(point, player.color)
@@ -918,7 +972,7 @@ def draw_point(point, color):
     """Draws a point on a surface
     
     surface: the pygame surface to draw the point on"""
-    
+    #pygame.draw.rect(gamestate.screen, (100,100,100),point.get_enclosing_rect(),1)
     position = point.pixel_pos()
     
     pygame.draw.circle(gamestate.screen, \

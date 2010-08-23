@@ -203,16 +203,10 @@ def handle_events():
         else:
             human.handle_events(bot)
         
-        dirty_rect_dimensions = (human.model.width + 2,human.model.height + 2)
-        gamestate.new_dirty_rects.append(pygame.Rect(human.model.position,dirty_rect_dimensions))
-        
         if bot_type == PlayerTypes.BOT:
             bot.handle_events(human)
         else:
             bot.handle_events()
-        
-        dirty_rect_dimensions = (bot.model.width + 2,bot.model.height + 2)
-        gamestate.new_dirty_rects.append(pygame.Rect(bot.model.position,dirty_rect_dimensions))
         
         handle_interactions()
     

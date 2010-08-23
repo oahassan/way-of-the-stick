@@ -53,8 +53,12 @@ class Point:
         self.name = ''
     
     def get_top_left_and_bottom_right(self):
-        return ((self.pos[0] - self.radius, self.pos[1] - self.radius), \
-                (self.pos[0] + self.radius, self.pos[1] + self.radius))
+        return ((self.pos[0] - self.radius - 2, self.pos[1] - self.radius - 2), 
+                (self.pos[0] + self.radius + 2, self.pos[1] + self.radius + 2))
+    
+    def get_enclosing_rect(self):
+        return ((self.pos[0] - self.radius, self.pos[1] - self.radius), 
+                (2*self.radius, 2*self.radius))
     
     def pixel_pos(self):
         """Determines the pixel coordinates of a point by rounding its x and y
@@ -255,7 +259,7 @@ class Line:
         bottom_right_x = max(end_point_1_corners[1][0],end_point_2_corners[1][0])
         bottom_right_y = max(end_point_1_corners[1][1],end_point_2_corners[1][1])
         
-        return ((top_left_x, top_left_y), \
+        return ((top_left_x, top_left_y), 
                 (bottom_right_x, bottom_right_y))
     
     def get_reference_position(self):
