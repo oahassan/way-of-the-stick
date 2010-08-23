@@ -132,10 +132,18 @@ class Model(physics.Object):
     
     def set_dimensions(self):
         """sets the height and width of the model"""
-        top_left, bottom_right = self.get_top_left_and_bottom_right()
+        position = self.get_reference_position()
+        bottom_right_x, bottom_right_y = position
         
-        self.height = bottom_right[1] - top_left[1]
-        self.width = bottom_right[0] - top_left[0]
+        for point in self.points.values():
+            if point.pos[0] > bottom_right_x:
+                bottom_right_x = point.pos[0]
+            
+            if point.pos[1] > bottom_right_y:
+                bottom_right_y = point.pos[1]
+        
+        self.height = bottom_right_y - position[1]
+        self.width = bottom_right_x - position[0]
     
     def set_frame_point_pos(self, deltas):
         """Sets the position of each point with respect to the reference point"""
@@ -436,7 +444,7 @@ class Player():
         return in_range
     
     def set_elevation(self):
-        if self.model.position[1] + self.model.height + 1 >= gamestate.stage.ground.position[1]:
+        if self.model.position[1] + self.model.height >= gamestate.stage.ground.position[1]:
             self.elevation = PlayerStates.GROUNDED
         else:
             self.elevation = PlayerStates.AERIAL
@@ -505,7 +513,7 @@ class Action():
         player.action = self
         player.direction = direction
         player.set_elevation()
-        player.model.animation_run_time = 0
+        player.model.animation_run_time = 0     
         
         if direction == PlayerStates.FACING_LEFT:
             self.animation = self.left_animation
@@ -519,6 +527,9 @@ class Action():
             # print(current_x_position)
             # print("end position")
             # print(player.model.position[0])
+        
+        if player.elevation == PlayerStates.GROUNDED:
+            player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
         
         if player.model.time_passed > 0:
             self.move_player(player)
