@@ -508,16 +508,19 @@ class Action():
         elif direction == PlayerStates.FACING_RIGHT:
             self.animation = self.right_animation
         
-        player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+        #Check if the player is in the air.  If not, shift back to the gRound after
+        #changing to the new animation.
+        if player.is_aerial():
+            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+        else:
+            player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
+            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
         
         # if current_x_position != player.model.position[0]:
             # print("start position")
             # print(current_x_position)
             # print("end position")
             # print(player.model.position[0])
-        
-        if player.is_aerial() == False:
-            player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
         
         if player.model.time_passed > 0:
             self.move_player(player)
