@@ -24,7 +24,7 @@ class HumanPlayer(player.Player):
         
         for key in wotsuievents.keys_pressed:
             if key in self.key_bindings.keys():
-                if self.elevation == player.PlayerStates.AERIAL:
+                if self.is_aerial():
                     if key == pygame.K_UP:
                         self.handle_key_input(key)
                     elif ((key in self.moveset.movement_key_to_movement_type.keys())

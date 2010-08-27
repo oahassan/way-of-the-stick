@@ -297,8 +297,6 @@ class PlayerStates():
     LANDING = 'LANDING'
     ATTACKING = 'ATTACKING'
     CROUCHING = 'CROUCHING'
-    AERIAL = 'AERIAL'
-    GROUNDED = 'GROUNDED'
     STUNNED = 'STUNNED'
     BLOCKING = 'BLOCKING'
     
@@ -327,11 +325,10 @@ class Player():
     
     def __init__(self, position):
         self.current_attack = None
-        self.direction = PlayerStates.FACING_RIGHT
-        self.elevation = PlayerStates.GROUNDED
         self.action = None
         self.color = (255,255,255)
         self.current_animation = None
+        self.direction = PlayerStates.FACING_RIGHT
         self.stun_timeout = 500
         self.stun_timer = self.stun_timeout
         self.dash_timeout = 500
@@ -381,13 +378,9 @@ class Player():
         if self.action.action_state == PlayerStates.JUMPING:
             self.actions[PlayerStates.FLOATING].set_player_state(self)
         elif self.action.action_state == PlayerStates.LANDING:
-            self.actions[PlayerStates.STANDING].set_player_state(self)
+            self.set_neutral_state()
         elif self.action.action_state == PlayerStates.ATTACKING:
             self.current_attack = None
-            
-            if self.model.position[1] + self.model.height > gamestate.stage.ground.position[1]:
-                self.elevation = PlayerStates.AERIAL
-            
             self.set_neutral_state()
         elif self.action.action_state == PlayerStates.STUNNED:
             if self.action.test_state_change(self):
@@ -404,10 +397,10 @@ class Player():
             self.action.set_player_state(self)
     
     def set_neutral_state(self):
-        if self.elevation == PlayerStates.GROUNDED:
-            self.actions[PlayerStates.STANDING].set_player_state(self)
-        elif self.elevation == PlayerStates.AERIAL:
+        if self.is_aerial():
             self.actions[PlayerStates.FLOATING].set_player_state(self)
+        else:
+            self.actions[PlayerStates.STANDING].set_player_state(self)
     
     def set_velocity(self):
         velocity = self.model.velocity
@@ -443,11 +436,8 @@ class Player():
         
         return in_range
     
-    def set_elevation(self):
-        if self.model.position[1] + self.model.height >= gamestate.stage.ground.position[1]:
-            self.elevation = PlayerStates.GROUNDED
-        else:
-            self.elevation = PlayerStates.AERIAL
+    def is_aerial(self):
+        return int(self.model.position[1] + self.model.height) < gamestate.stage.ground.position[1]
     
     def apply_physics(self, duration):
         
@@ -455,9 +445,8 @@ class Player():
         
         self.set_velocity()
         self.model.resolve_self(duration)
-        self.set_elevation()
         
-        if (self.elevation == PlayerStates.GROUNDED):
+        if self.is_aerial() == False:
             system.append(gamestate.stage.ground)
             
             if ((self.action.action_state == PlayerStates.FLOATING)
@@ -512,7 +501,6 @@ class Action():
     def set_player_state(self, player, direction):
         player.action = self
         player.direction = direction
-        player.set_elevation()
         player.model.animation_run_time = 0     
         
         if direction == PlayerStates.FACING_LEFT:
@@ -528,7 +516,7 @@ class Action():
             # print("end position")
             # print(player.model.position[0])
         
-        if player.elevation == PlayerStates.GROUNDED:
+        if player.is_aerial() == False:
             player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
         
         if player.model.time_passed > 0:
@@ -614,7 +602,6 @@ class Jump(Action):
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
         player.model.velocity = (player.model.velocity[0], player.jump_speed)
-        player.elevation = PlayerStates.AERIAL
         
         if player.jump_timer < player.high_jump_timeout:
             player.model.velocity = (player.model.velocity[0], player.high_jump_speed)
@@ -633,30 +620,8 @@ class Land(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.LANDING)
     
-    def move_player(self, player):
-        
-        start_time = player.model.animation_run_time
-        end_time = start_time + player.model.time_passed
-        
-        if end_time > self.animation.animation_length:
-            end_time = self.animation.animation_length
-            player.model.animation_run_time = end_time
-            # player.model.time_passed = start_time + player.model.time_passed - end_time
-            player.model.time_passed = 0
-        else:
-            player.model.animation_run_time += player.model.time_passed
-        
-        point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
-        
-        player.model.set_point_position_in_place(point_deltas)
-        player.apply_physics(end_time - start_time)
-        
-        if player.model.animation_run_time >= self.animation.animation_length:
-            player.handle_animation_end()
-    
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
-        player.elevation = PlayerStates.GROUNDED
 
 class Float(Action):
     def __init__(self):
@@ -706,7 +671,6 @@ class Stun(Action):
     
     def set_player_state(self, player):
         player.action = self
-        player.set_elevation()
         player.model.animation_run_time = 0
         
         if player.model.time_passed > 0:
@@ -758,10 +722,17 @@ class Attack(Action):
         Action.set_player_state(self, player, player.direction)
         player.current_attack = self
         
-        if player.elevation == PlayerStates.GROUNDED:
-            self.use_animation_physics = True
-        else:
+        #print('player bottom')
+        #print(player.model.position[1] + player.model.height)
+        #print('player height')
+        #print(player.model.height)
+        #print('ground top')
+        #print(gamestate.stage.ground.position[1])
+        
+        if player.is_aerial():
             self.use_animation_physics = False
+        else:
+            self.use_animation_physics = True
         
         if player.model.time_passed > 0:
             self.move_player(player)
@@ -812,12 +783,7 @@ class Attack(Action):
             
             duration = displacement_end_time - displacement_start_time
             
-            x_acceleration = self.animation.lateral_accelerations[frame_index]
-            x_initial_velocity = self.animation.lateral_velocities[frame_index]
-            x_velocity = (x_initial_velocity + 
-                          (x_acceleration*elapsed_time) + 
-                          player.model.friction)
-            
+            x_velocity = self.animation.get_lateral_velocity(displacement_start_time,frame_index)
             y_velocity = self.animation.get_jump_velocity(displacement_start_time,frame_index)
             
             player.model.velocity = (x_velocity, y_velocity)

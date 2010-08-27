@@ -712,7 +712,15 @@ class Animation:
         
         return (.5*acceleration*(duration**2)) + initial_velocity*duration
     
-    #Get velocities given time
+    #Get macro velocities
+    def get_lateral_velocity(self, time, frame_index):
+        """returns the x velocity of a figure given the time and the current frame_index"""
+        initial_velocity = self.lateral_velocities[frame_index]
+        acceleration = self.lateral_accelerations[frame_index]
+        elapsed_time = time - self.frame_start_times[frame_index]
+        
+        return initial_velocity + (acceleration * elapsed_time)
+    
     def get_initial_lateral_velocity(self, frame_index):
         return self.lateral_velocities[frame_index]
     
