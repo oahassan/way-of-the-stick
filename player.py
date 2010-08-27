@@ -513,8 +513,8 @@ class Action():
         if player.is_aerial():
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
         else:
-            player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+            player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
         
         # if current_x_position != player.model.position[0]:
             # print("start position")
@@ -722,20 +722,36 @@ class Attack(Action):
             player.handle_animation_end()
     
     def set_player_state(self, player):
-        Action.set_player_state(self, player, player.direction)
+        player.action = self
+        player.model.animation_run_time = 0     
         player.current_attack = self
         
-        #print('player bottom')
-        #print(player.model.position[1] + player.model.height)
-        #print('player height')
-        #print(player.model.height)
-        #print('ground top')
-        #print(gamestate.stage.ground.position[1])
+        if player.direction == PlayerStates.FACING_LEFT:
+            self.animation = self.left_animation
+        elif player.direction == PlayerStates.FACING_RIGHT:
+            self.animation = self.right_animation
+        
+        #Check if the player is in the air.  If not, shift back to the gRound after
+        #changing to the new animation.
+        if player.is_aerial():
+            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+        else:
+            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+            player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
+                
+        print('player bottom')
+        print(player.model.position[1] + player.model.height)
+        print('player height')
+        print(player.model.height)
+        print('ground top')
+        print(gamestate.stage.ground.position[1])
         
         if player.is_aerial():
             self.use_animation_physics = False
         else:
             self.use_animation_physics = True
+        
+        print(self.use_animation_physics)
         
         if player.model.time_passed > 0:
             self.move_player(player)
