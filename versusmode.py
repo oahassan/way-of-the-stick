@@ -470,7 +470,7 @@ def get_line_hitboxes(line):
     return line_rects
 
 def get_hitbox_positions(box_count, line):
-        """gets center of each hitbox on a line.
+        """gets top left of each hitbox on a line.
         
         box_count: the number of hit boxes"""
         hitbox_positions = []
