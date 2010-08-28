@@ -739,19 +739,19 @@ class Attack(Action):
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
                 
-        print('player bottom')
-        print(player.model.position[1] + player.model.height)
-        print('player height')
-        print(player.model.height)
-        print('ground top')
-        print(gamestate.stage.ground.position[1])
+        #print('player bottom')
+        #print(player.model.position[1] + player.model.height)
+        #print('player height')
+        #print(player.model.height)
+        #print('ground top')
+        #print(gamestate.stage.ground.position[1])
         
         if player.is_aerial():
             self.use_animation_physics = False
         else:
             self.use_animation_physics = True
         
-        print(self.use_animation_physics)
+        #print(self.use_animation_physics)
         
         if player.model.time_passed > 0:
             self.move_player(player)
