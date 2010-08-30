@@ -1,6 +1,7 @@
 import math
 import mathfuncs
 import stick
+import pygame
 
 GRAVITY = .005
 FRICTION = .003
@@ -126,6 +127,10 @@ class Model(Object):
         self.lines = {}
         self.animation_run_time = 0
         self.time_passed = 0
+    
+    def init_stick_data(self):
+        self.load_points()
+        self.load_lines()
     
     def load_points(self):
         """sets the position of each point in a stick to that from a passed in dictionary
@@ -395,33 +400,46 @@ class Model(Object):
 class ModelCollision():
     HITBOX_SIDE_LENGTH = 7
     
-    def __init__(self, player1, player2):
-        player_to_hitbox = dict([(player1, []), (player2, [])])
-        hitbox_to_player = {}
-        hitbox_to_line = {}
+    def __init__(self, model1, model2):
+        self.hitboxes = {}
+        self.model_to_hitboxes = dict([(model1, []), (model2, [])])
+        self.hitbox_to_model = {}
+        self.hitbox_to_line = {}
         
-        self.add_player_hitboxes_to_dictionaries(player1)
-        self.add_player_hitboxes_to_dictionaries(player2)
+        self.add_model_hitboxes_to_dictionaries(model1)
+        self.add_model_hitboxes_to_dictionaries(model2)
     
-    def add_player_hitboxes_to_dictionaries(self, player):
-        """populates the hitbox dictinoaries of a playerplayercollision.  This does NOT
+    def get_model_hitboxes(self, model):
+        """returns hitboxes for a given model"""
+        if model == None:
+            raise Exception("model is null")
+        
+        if not model in self.model_to_hitboxes.keys():
+            raise KeyError("the given model is not in this collision")
+        
+        return self.model_to_hitboxes[model]
+    
+    def add_model_hitboxes_to_dictionaries(self, model):
+        """populates the hitbox dictinoaries of a modelcollision.  This does NOT
         included the colliding rects."""
-        for name, line in player.model.lines.iteritems():
+        for name, line in model.lines.iteritems():
             if name == stick.LineNames.HEAD:
-                hitbox = get_circle_hitbox(line)
+                hitbox = self.get_circle_hitbox(line)
+                hitbox_id = id(hitbox)
                 
-                self.hitbox_to_player[hitbox] = player
-                self.hitbox_to_line[hitbox] = name
-                self.player_to_hitbox[player].append[hitbox]
+                self.hitboxes[hitbox_id] = hitbox
+                self.hitbox_to_model[hitbox_id] = model
+                self.hitbox_to_line[hitbox_id] = name
+                self.model_to_hitboxes[model].append(hitbox)
             else:
-                hitboxes = get_line_hitboxes(line)
+                hitboxes = self.get_line_hitboxes(line)
                 
                 for hitbox in hitboxes:
-                    self.hitbox_to_player[hitbox] = player
-                    self.hitbox_to_line[hitbox] = name
-                    self.player_to_hitbox[player].append[hitbox]
+                    self.hitbox_to_model[hitbox_id] = model
+                    self.hitbox_to_line[hitbox_id] = name
+                    self.model_to_hitboxes[model].append(hitbox)
     
-    def get_circle_hitbox(circle):
+    def get_circle_hitbox(self, circle):
         """returns the smallest rect that encloses the circle"""
         circle.set_length()
         radius = int(circle.length / 2)
@@ -431,22 +449,26 @@ class ModelCollision():
         
         return hitbox
 
-    def get_line_hitboxes(line):
+    def get_line_hitboxes(self, line):
         """returns a list of rects that lie on the given line."""
         line_rects = []
         
         line.set_length()
-        box_count = line.length / (HITBOX_SIDE_LENGTH/2)
+        box_count = line.length / (ModelCollision.HITBOX_SIDE_LENGTH/2)
         
         if box_count > 0:
-            for pos in get_hitbox_positions(box_count, line):
-                line_rects.append(pygame.Rect(pos, (HITBOX_SIDE_LENGTH,HITBOX_SIDE_LENGTH)))
+            for pos in self.get_hitbox_positions(box_count, line):
+                line_rects.append(pygame.Rect(pos, 
+                                              (ModelCollision.HITBOX_SIDE_LENGTH, 
+                                               ModelCollision.HITBOX_SIDE_LENGTH)))
         else:
-            line_rects.append(pygame.Rect(line.endPoint1.pos, (HITBOX_SIDE_LENGTH,HITBOX_SIDE_LENGTH)))
+            line_rects.append(pygame.Rect(line.endPoint1.pos, 
+                                          (ModelCollision.HITBOX_SIDE_LENGTH,
+                                           ModelCollision.HITBOX_SIDE_LENGTH)))
         
         return line_rects
 
-    def get_hitbox_positions(box_count, line):
+    def get_hitbox_positions(self, box_count, line):
             """gets top left of each hitbox on a line.
             
             box_count: the number of hit boxes"""
@@ -462,8 +484,8 @@ class ModelCollision():
             length_to_hit_box_center = 0
             increment = line.length / box_count
             
-            hitbox_positions.append((int(end_pos[0] - (HITBOX_SIDE_LENGTH / 2)), 
-                                     int(end_pos[1] - (HITBOX_SIDE_LENGTH / 2))))
+            hitbox_positions.append((int(end_pos[0] - (ModelCollision.HITBOX_SIDE_LENGTH / 2)), 
+                                     int(end_pos[1] - (ModelCollision.HITBOX_SIDE_LENGTH / 2))))
             
             length_to_hit_box_center += increment
             x_pos = (start_pos[0] + 
@@ -475,8 +497,8 @@ class ModelCollision():
             box_center = (x_pos, y_pos)
             
             for i in range(int(box_count)):
-                hitbox_positions.append((int(box_center[0] - (HITBOX_SIDE_LENGTH / 2)), 
-                                         int(box_center[1] - (HITBOX_SIDE_LENGTH / 2))))
+                hitbox_positions.append((int(box_center[0] - (ModelCollision.HITBOX_SIDE_LENGTH / 2)), 
+                                         int(box_center[1] - (ModelCollision.HITBOX_SIDE_LENGTH / 2))))
                 
                 length_to_hit_box_center += increment
                 x_pos = (start_pos[0] + 
@@ -487,7 +509,7 @@ class ModelCollision():
                          ((y_delta / length) * length_to_hit_box_center))
                 box_center = (x_pos, y_pos)
             
-            hitbox_positions.append((int(start_pos[0] - (HITBOX_SIDE_LENGTH / 2)), 
-                                     int(start_pos[1] - (HITBOX_SIDE_LENGTH / 2))))
+            hitbox_positions.append((int(start_pos[0] - (ModelCollision.HITBOX_SIDE_LENGTH / 2)), 
+                                     int(start_pos[1] - (ModelCollision.HITBOX_SIDE_LENGTH / 2))))
             
             return hitbox_positions
