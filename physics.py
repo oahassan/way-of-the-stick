@@ -412,8 +412,6 @@ class ModelCollision():
         self.model2 = model2
         self.hitboxes = {}
         self.model_to_hitboxes = dict([(model1, []), (model2, [])])
-        self.hitbox_to_model = {}
-        self.hitbox_to_line = {}
         
         self.add_model_hitboxes_to_dictionaries(model1)
         self.add_model_hitboxes_to_dictionaries(model2)
@@ -440,49 +438,52 @@ class ModelCollision():
         included the colliding rects."""
         for name, line in model.lines.iteritems():
             if name == stick.LineNames.HEAD:
-                hitbox = self.get_circle_hitbox(line)
+                hitbox = self.get_circle_hitbox(model, line)
                 hitbox_id = id(hitbox)
                 
                 self.hitboxes[hitbox_id] = hitbox
-                self.hitbox_to_model[hitbox_id] = model
-                self.hitbox_to_line[hitbox_id] = name
                 self.model_to_hitboxes[model].append(hitbox)
             else:
-                hitboxes = self.get_line_hitboxes(line)
+                hitboxes = self.get_line_hitboxes(model, line)
                 
                 for hitbox in hitboxes:
-                    self.hitbox_to_model[hitbox_id] = model
-                    self.hitbox_to_line[hitbox_id] = name
+                    self.hitboxes[hitbox_id] = hitbox
                     self.model_to_hitboxes[model].append(hitbox)
     
-    def get_circle_hitbox(self, circle):
-        """returns the smallest rect that encloses the circle"""
+    def get_circle_hitbox(self, model, circle):
+        """returns the smallest hitbox that encloses the circle"""
         circle.set_length()
         radius = int(circle.length / 2)
-        hitbox = pygame.Rect((circle.center()[0] - radius,
-                              circle.center()[1] - radius),
-                             (circle.length, circle.length))
+        hitbox = Hitbox(model, 
+                        circle,
+                        [(circle.center()[0] - radius,
+                          circle.center()[1] - radius),
+                         (circle.length, circle.length)])
         
         return hitbox
 
-    def get_line_hitboxes(self, line):
-        """returns a list of rects that lie on the given line."""
-        line_rects = []
+    def get_line_hitboxes(self, model, line):
+        """returns a list of hitboxes that lie on the given line."""
+        line_hitboxes = []
         
         line.set_length()
         box_count = line.length / (ModelCollision.HITBOX_SIDE_LENGTH/2)
         
         if box_count > 0:
-            for pos in self.get_hitbox_positions(box_count, line):
-                line_rects.append(pygame.Rect(pos, 
-                                              (ModelCollision.HITBOX_SIDE_LENGTH, 
-                                               ModelCollision.HITBOX_SIDE_LENGTH)))
+            for position in self.get_hitbox_positions(box_count, line):
+                line_hitboxes.append(Hitbox(model,
+                                            line,
+                                            [position, 
+                                             (ModelCollision.HITBOX_SIDE_LENGTH, 
+                                              ModelCollision.HITBOX_SIDE_LENGTH)]))
         else:
-            line_rects.append(pygame.Rect(line.endPoint1.pos, 
-                                          (ModelCollision.HITBOX_SIDE_LENGTH,
-                                           ModelCollision.HITBOX_SIDE_LENGTH)))
+            line_hitboxes.append(Hitbox(model,
+                                        line,
+                                        [line.endPoint1.pos, 
+                                         (ModelCollision.HITBOX_SIDE_LENGTH,
+                                          ModelCollision.HITBOX_SIDE_LENGTH)]))
         
-        return line_rects
+        return line_hitboxes
 
     def get_hitbox_positions(self, box_count, line):
             """gets top left of each hitbox on a line.
