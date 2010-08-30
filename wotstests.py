@@ -1,3 +1,4 @@
+from nose.tools import *
 import unittest
 import copy
 import math
