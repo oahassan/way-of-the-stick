@@ -20,13 +20,6 @@ class ModelCollisionTests(unittest.TestCase):
                           physics.Model((0,0)))
         self.assertTrue(len(self.modelCollision.get_model_hitboxes(self.model1)) > 0,
                         "no hitboxes added for model1")
-    
-    def test_create_modelCollision(self):
-        pass
-        
-    def model_hitboxes_created(self, model):
-        model_lines = []
-        
-        #self.assertTrue(
-            
+        self.assertTrue(len(self.modelCollision.get_model_hitboxes(self.model2)) > 0,
+                        "no hitboxes added for model2")
 
