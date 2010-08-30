@@ -398,8 +398,9 @@ class Model(Object):
         return point_to_lines
 
 class Hitbox(pygame.Rect):
-    def __init__(self, line, rect_args):
+    def __init__(self, model, line, rect_args):
         pygame.Rect.__init__(self, *rect_args)
+        self.model = model
         self.line = line
         self.id = id(self)
 
@@ -423,8 +424,6 @@ class ModelCollision():
         for hitbox in self.model_to_hitboxes(self.model1):
             colliding_hitbox_indices = hitbox.collidelistall(self.model_to_hitboxes(self.model2))
             colliding_hitboxes = [self.model_to_hitboxes[index] for index in colliding_hitbox_indices]
-                
-            
     
     def get_model_hitboxes(self, model):
         """returns hitboxes for a given model"""
