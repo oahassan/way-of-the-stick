@@ -22,4 +22,12 @@ class ModelCollisionTests(unittest.TestCase):
                         "no hitboxes added for model1")
         self.assertTrue(len(self.modelCollision.get_model_hitboxes(self.model2)) > 0,
                         "no hitboxes added for model2")
-
+    
+    def test_create_hitbox(self):
+        model1_head = self.model1.lines[stick.LineNames.HEAD]
+        hitbox = physics.Hitbox(model1_head,
+                                [model1_head.get_reference_position(),
+                                 (model1_head.length,
+                                  model1_head.length)])
+        self.assertEqual(hitbox.line, model1_head)
+        self.assertEqual(id(hitbox), hitbox.id)
