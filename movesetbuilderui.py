@@ -390,7 +390,6 @@ class AnimationThumbnail(button.Button):
     
     def draw_current_frame(self, surface):
         """draws the frame thumbnail"""
-        wotsui.UIObjectBase.draw(self, surface)
         
         frame_image_pos = self.frame.get_reference_position()
         temp_surface = pygame.Surface((self.frame.image_width(), \
@@ -407,6 +406,8 @@ class AnimationThumbnail(button.Button):
                         line_thickness = 2)
         
         surface.blit(temp_surface, self.position)
+        
+        wotsui.UIObjectBase.draw(self, surface)
     
     def draw_relative(self, surface, position):
         if self.contains(wotsuievents.mouse_pos):
@@ -417,7 +418,6 @@ class AnimationThumbnail(button.Button):
             self.draw_current_frame_relative(surface, position)
     
     def draw_current_frame_relative(self, surface, reference_position):
-        wotsui.UIObjectBase.draw_relative(self, surface, reference_position)
         
         frame_image_pos = self.frame.get_reference_position()
         temp_surface = pygame.Surface((self.frame.image_width(), \
@@ -436,6 +436,8 @@ class AnimationThumbnail(button.Button):
         relative_position = self.get_relative_position(reference_position)
         
         surface.blit(temp_surface, relative_position)
+        
+        wotsui.UIObjectBase.draw_relative(self, surface, reference_position)
     
     def play_animation(self, surface, draw_func):
         """plays the animation"""

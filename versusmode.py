@@ -78,10 +78,10 @@ def init():
                             (gamestate._HEIGHT / 2) - (bot_wins_label.height / 2))
     bot_wins_label.set_position(bot_wins_label_position)
     
-    if player_type == PlayerTypes.HUMAN:
-        new_player = humanplayer.HumanPlayer((200, 367))
-    else:
+    if player_type == PlayerTypes.BOT:
         new_player = aiplayer.Bot((200, 367))
+    else:
+        new_player = humanplayer.HumanPlayer((200, 367))
     
     if bot_type == PlayerTypes.HUMAN:
         second_player = humanplayer.HumanPlayer((500, 367))
