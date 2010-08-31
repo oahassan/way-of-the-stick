@@ -420,7 +420,7 @@ class ModelCollision():
         """builds a dictionary a list of ordered pairs containing colliding hitboxes.
         The first member of the pair is a hitbox from model 1.  The second member is a
         list of colliding hitboxes from model2."""
-        #import pdb;pdb.set_trace()
+        
         colliding_hitboxes = []
         
         model1_hitboxes = self.model_to_hitboxes[self.model1]
@@ -452,19 +452,17 @@ class ModelCollision():
             if name == stick.LineNames.HEAD:
                 hitbox = self.get_circle_hitbox(model, line)
                 
-                self.hitboxes[hitbox.id] = hitbox
-                self.model_to_hitboxes[model].append(hitbox)
+                self.add_hitbox_to_dictionaries(model, hitbox)
             else:
                 hitboxes = self.get_line_hitboxes(model, line)
                 
                 for hitbox in hitboxes:
-                    self.hitboxes[hitbox.id] = hitbox
-                    self.model_to_hitboxes[model].append(hitbox)
+                    self.add_hitbox_to_dictionaries(model, hitbox)
     
-    #def add_hitbox_to_dictionaries(self, model, hitbox):
-    #    """adds a hitbox object to a model collision's dictionaries"""
-    #    self.hitboxes[hitbox.id] = hitbox
-    #    self.model_to_hitboxes[model].append(hitbox)
+    def add_hitbox_to_dictionaries(self, model, hitbox):
+        """adds a hitbox object to a model collision's dictionaries"""
+        self.hitboxes[hitbox.id] = hitbox
+        self.model_to_hitboxes[model].append(hitbox)
     
     def get_circle_hitbox(self, model, circle):
         """returns the smallest hitbox that encloses the circle"""
