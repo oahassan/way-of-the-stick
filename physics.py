@@ -416,12 +416,24 @@ class ModelCollision():
         self.add_model_hitboxes_to_dictionaries(model1)
         self.add_model_hitboxes_to_dictionaries(model2)
     
-    def get_colliding_rects(self):
+    def get_colliding_hitboxes(self):
+        """builds a dictionary a list of ordered pairs containing colliding hitboxes.
+        The first member of the pair is a hitbox from model 1.  The second member is a
+        list of colliding hitboxes from model2."""
+        #import pdb;pdb.set_trace()
         colliding_hitboxes = []
         
-        for hitbox in self.model_to_hitboxes(self.model1):
-            colliding_hitbox_indices = hitbox.collidelistall(self.model_to_hitboxes(self.model2))
-            colliding_hitboxes = [self.model_to_hitboxes[index] for index in colliding_hitbox_indices]
+        model1_hitboxes = self.model_to_hitboxes[self.model1]
+        model2_hitboxes = self.model_to_hitboxes[self.model2]
+        
+        for model1_hitbox in model1_hitboxes:
+            colliding_model2_hitbox_indices = model1_hitbox.collidelistall(model2_hitboxes)
+            
+            if len(colliding_model2_hitbox_indices) > 0:
+                model2_colliding_hitboxes = [model2_hitboxes[index] for index in colliding_model2_hitbox_indices]
+                colliding_hitboxes.append((model1_hitbox, model2_colliding_hitboxes))
+        
+        return colliding_hitboxes
     
     def get_model_hitboxes(self, model):
         """returns hitboxes for a given model"""
@@ -439,16 +451,20 @@ class ModelCollision():
         for name, line in model.lines.iteritems():
             if name == stick.LineNames.HEAD:
                 hitbox = self.get_circle_hitbox(model, line)
-                hitbox_id = id(hitbox)
                 
-                self.hitboxes[hitbox_id] = hitbox
+                self.hitboxes[hitbox.id] = hitbox
                 self.model_to_hitboxes[model].append(hitbox)
             else:
                 hitboxes = self.get_line_hitboxes(model, line)
                 
                 for hitbox in hitboxes:
-                    self.hitboxes[hitbox_id] = hitbox
+                    self.hitboxes[hitbox.id] = hitbox
                     self.model_to_hitboxes[model].append(hitbox)
+    
+    #def add_hitbox_to_dictionaries(self, model, hitbox):
+    #    """adds a hitbox object to a model collision's dictionaries"""
+    #    self.hitboxes[hitbox.id] = hitbox
+    #    self.model_to_hitboxes[model].append(hitbox)
     
     def get_circle_hitbox(self, model, circle):
         """returns the smallest hitbox that encloses the circle"""

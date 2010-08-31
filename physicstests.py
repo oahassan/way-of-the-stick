@@ -10,6 +10,19 @@ class ModelCollisionTests(unittest.TestCase):
         self.model2.init_stick_data()
         
         self.modelCollision = physics.ModelCollision(self.model1, self.model2)
+        
+        self.head_model1 = physics.Model((0,0))
+        self.head_model1.lines[stick.LineNames.HEAD] = \
+            self.model1.lines[stick.LineNames.HEAD]
+        self.head_model1.lines[stick.LineNames.HEAD].endPoint1.pos = (0,10)
+        
+        self.head_model2 = physics.Model((0,0))
+        self.head_model2.lines[stick.LineNames.HEAD] = \
+            self.model2.lines[stick.LineNames.HEAD]
+        self.head_model2.lines[stick.LineNames.HEAD].endPoint1.pos = (0,10)
+        
+        self.head_model_collision = physics.ModelCollision(self.head_model1, 
+                                                         self.head_model2)
     
     def test_get_model_hitboxes(self):
         self.assertRaises(Exception,
@@ -33,3 +46,10 @@ class ModelCollisionTests(unittest.TestCase):
         self.assertEqual(hitbox.model, self.model1)
         self.assertEqual(hitbox.line, model1_head)
         self.assertEqual(id(hitbox), hitbox.id)
+    
+    def test_get_colliding_hitboxes(self):
+        colliding_hitboxes = self.head_model_collision.get_colliding_hitboxes()
+        
+        self.assertTrue(len(colliding_hitboxes) > 0, "heads aren't knocking?!")
+        self.assertEqual(colliding_hitboxes[0][0].model, self.head_model1)
+        self.assertEqual(colliding_hitboxes[0][1][0].model, self.head_model2)
