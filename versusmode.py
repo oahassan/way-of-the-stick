@@ -503,3 +503,30 @@ def get_hitbox_positions(box_count, line):
         hitbox_positions.append((int(start_pos[0] - 3.5), int(start_pos[1] - 3.5)))
         
         return hitbox_positions
+
+class AttackResolver():
+    """Applies the effect of collisions on each player involved in them."""
+    
+    def __init__(self):
+        self.resolved_player_states = {}
+        self.player_knockback_vectors = {}
+        self.player_hitboxes = {}
+        self.collisions = []
+    
+    def reset():
+        """resets the dictionaries of an AttackResolver"""
+        self.resolved_player_states = {}
+        self.player_knockback_vectors = {}
+        self.player_hitboxes = {}
+        self.collisions = []
+    
+    def resolve_collisions(self, players):
+        """applies the effects of collisions between a set of players"""
+        #get collisions
+        #for each collision:
+        #   get post collision player states
+        #   get knockback vectors
+        #   apply knockback vectors
+        #   get damage
+        #   apply damage
+        pass
