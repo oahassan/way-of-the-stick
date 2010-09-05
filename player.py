@@ -428,7 +428,8 @@ class Attack(Action):
         """keeps track of the amount of damage a point deals when it hits"""
         def __init__(self):
             #last position relative to a model's reference position
-            self.last_relative_position = None 
+            self.last_relative_position = None
+            
             #accumulated damage
             self.damage = 0
         

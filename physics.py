@@ -219,6 +219,12 @@ class Model(Object):
         return ((top_left_x, top_left_y), \
                 (width, height))
     
+    def get_point_relative_position(self, point_name):
+        """gets the position of a point relative to the reference point"""
+        point_position = self.points[point_name].pos
+        reference_position = self.get_reference_position()
+        
+        return point_position[0] - reference_position[0], point_position[1] - reference_position[1]
     
     def get_top_left_and_bottom_right(self):
         """Finds the top left and bottom right containers of a rectangle containg the
