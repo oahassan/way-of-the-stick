@@ -511,22 +511,37 @@ class AttackResolver():
         self.resolved_player_states = {}
         self.player_knockback_vectors = {}
         self.player_hitboxes = {}
-        self.collisions = []
+        self.player_collisions = ()
     
     def reset():
         """resets the dictionaries of an AttackResolver"""
         self.resolved_player_states = {}
         self.player_knockback_vectors = {}
         self.player_hitboxes = {}
-        self.collisions = []
+        self.player_collisions = {}
     
     def resolve_collisions(self, players):
         """applies the effects of collisions between a set of players"""
+        #get attacking players
+        #for each attacking player
+        #   get knockbcak vectors from player attack
+        #   get damage from player attaack
+        
         #get collisions
         #for each collision:
-        #   get post collision player states
-        #   get knockback vectors
-        #   apply knockback vectors
-        #   get damage
-        #   apply damage
+        #   set post collision player states
+        pass
+    
+    def get_collisions(self, players):
+        #get attacking players
+        #for each attacking player
+        #   for each overlapping player       
+        #       create a collision
+        #       if an equivalent collision doesn't exist add it to the collisions dictionary
+        pass
+    
+    def get_post_collision_player_states(self):
+        #for each collision
+        #   if both players are attacking resolve attack attack collision
+        #   if one player is attacking resolve unblocked collision
         pass

@@ -422,6 +422,23 @@ class Attack(Action):
         self.attack_lines = []
         self.range = (0,0)
         self.use_animation_physics = False
+        self.point_name_to_point_damage = {} #Point name to PointDamage object
+    
+    class PointDamage():
+        """keeps track of the amount of damage a point deals when it hits"""
+        def __init__(self):
+            #last position relative to a model's reference position
+            self.last_relative_position = None 
+            #accumulated damage
+            self.damage = 0
+        
+        def cache_new_damage(self, new_relative_position):
+            """accumulates damage dealt by a point by adding the change in the
+            position of a point relative to a models reference position"""
+            self.damage += mathfuncs.distance(self.last_relative_position, new_relative_position)
+        
+        def set_last_relative_position(self, last_relative_position):
+            self.last_relative_position = last_relative_position
     
     def move_player(self, player):
         
