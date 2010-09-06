@@ -30,6 +30,17 @@ class LineNames:
     RIGHT_UPPER_LEG = "rightupperleg"
     RIGHT_LOWER_LEG = "rightlowerleg"
 
+LINE_TO_POINTS = dict([(LineNames.HEAD, [PointNames.HEAD_TOP,PointNames.TORSO_TOP]),
+                       (LineNames.LEFT_UPPER_ARM, [PointNames.TORSO_TOP,PointNames.LEFT_ELBOW]),
+                       (LineNames.LEFT_FOREARM, [PointNames.LEFT_ELBOW,PointNames.LEFT_HAND]),
+                       (LineNames.RIGHT_UPPER_ARM, [PointNames.TORSO_TOP,PointNames.RIGHT_ELBOW]),
+                       (LineNames.RIGHT_FOREARM, [PointNames.RIGHT_ELBOW,PointNames.RIGHT_HAND]),
+                       (LineNames.TORSO, [PointNames.TORSO_TOP,PointNames.TORSO_BOTTOM]),
+                       (LineNames.LEFT_UPPER_LEG, [PointNames.TORSO_BOTTOM,PointNames.LEFT_KNEE]),
+                       (LineNames.LEFT_LOWER_LEG, [PointNames.LEFT_KNEE,PointNames.LEFT_FOOT]),
+                       (LineNames.RIGHT_UPPER_LEG, [PointNames.TORSO_BOTTOM,PointNames.RIGHT_KNEE]),
+                       (LineNames.RIGHT_LOWER_LEG, [PointNames.RIGHT_KNEE,PointNames.RIGHT_FOOT])])
+
 class Point:
     """A point of a stick figure
     

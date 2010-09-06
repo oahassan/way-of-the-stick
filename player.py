@@ -76,16 +76,21 @@ class Player():
         self.health_meter = self.health_max
         self.health_color = (0,0,100)
         self.moveset = None
+        self.point_name_to_point_damage = {} #Point name to PointDamage object
     
     def init_state(self):
         self.model.load_points()
         self.model.load_lines()
+        self.init_point_damage_dictionary()
     
     def handle_events(self):
         time_passed = gamestate.clock.get_time()
         self.model.time_passed = time_passed
         
         self.action.move_player(self)
+        
+        if self.action.action_state == PlayerStates.ATTACKING:
+            self.update_point_damage()
         
         draw_model(self)
         
@@ -143,6 +148,33 @@ class Player():
                 self.model.velocity = (-(self.walk_speed + friction), velocity[1])
             elif self.action.action_state == PlayerStates.RUNNING:
                 self.model.velocity = (-(self.run_speed + friction), velocity[1])
+    
+    def init_point_damage_dictionary(self):
+        """initializes the point damage dictionary. NOTE: model must be intialized before
+        calling."""
+        for line_name in self.model.lines.keys():
+            for point_name in stick.LINE_TO_POINTS[line_name]:
+                if point_name not in self.point_name_to_point_damage.keys():
+                    self.point_name_to_point_damage[point_name] = Attack.PointDamage()
+    
+    def update_point_damage(self):
+        """updates the damage done by each attacking point"""
+        
+        for point_name, point_damage in self.point_name_to_point_damage.iteritems():
+            new_relative_position = self.model.get_point_relative_position(point_name)
+            point_damage.cache_new_damage(new_relative_position)
+            point_damage.set_last_relative_position(new_relative_position)
+    
+    def reset_point_damage(self):
+        """sets the point damage for each point at the start of an attack"""
+        
+        for point_name, point_damage in self.point_name_to_point_damage.iteritems():
+            point_damage.set_damage(0)
+            point_damage.set_last_relative_position(self.model.get_point_relative_position(point_name))
+    
+    def get_point_damage(self, point_name):
+        """Returns the damage dealt when attacked from the given point"""
+        return self.point_name_to_point_damage[point_name].damage
     
     def attack_in_range(self, attack, enemy):
         bottom_right_top_left = self.model.get_top_left_and_bottom_right()
@@ -422,7 +454,6 @@ class Attack(Action):
         self.attack_lines = []
         self.range = (0,0)
         self.use_animation_physics = False
-        self.point_name_to_point_damage = {} #Point name to PointDamage object
     
     class PointDamage():
         """keeps track of the amount of damage a point deals when it hits"""
@@ -433,13 +464,23 @@ class Attack(Action):
             #accumulated damage
             self.damage = 0
         
+        def set_damage(self, damage_value):
+            """sets the value of damage"""
+            self.damage = damage_value
+        
         def cache_new_damage(self, new_relative_position):
             """accumulates damage dealt by a point by adding the change in the
             position of a point relative to a models reference position"""
-            self.damage += mathfuncs.distance(self.last_relative_position, new_relative_position)
+            self.set_damage(self.damage + mathfuncs.distance(self.last_relative_position, new_relative_position))
         
         def set_last_relative_position(self, last_relative_position):
             self.last_relative_position = last_relative_position
+    
+    def set_attack_data(self, model):
+        """called after the animations of an attack has been set to intialize other data"""
+        self.range = (self.right_animation.get_widest_frame().image_width(), 
+                      self.right_animation.get_tallest_frame().image_height())
+        self.attack_lines = self.get_attack_lines(model)
     
     def move_player(self, player):
         
@@ -483,7 +524,9 @@ class Attack(Action):
         else:
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
-                
+        
+        player.reset_point_damage()
+        
         #print('player bottom')
         #print(player.model.position[1] + player.model.height)
         #print('player height')
@@ -630,9 +673,7 @@ class ActionFactory():
         
         self._set_action_animations(return_attack, animation)
         
-        return_attack.range = (return_attack.right_animation.get_widest_frame().image_width(), 
-                               return_attack.right_animation.get_tallest_frame().image_height())
-        return_attack.attack_lines = return_attack.get_attack_lines(model)
+        return_attack.set_attack_data(model)
         
         return return_attack
     

@@ -312,7 +312,15 @@ def draw_receiver_hitboxes(hitbox_dictionary):
 
 def handle_unblocked_attack_collision(attacker, receiver, attacker_hitboxes, receiver_hitboxes):
     apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
-    receiver.health_meter = max(0, receiver.health_meter - mathfuncs.distance((0,0), receiver.knockback_vector))
+    
+    colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
+    
+    colliding_lines = (attacker.model.lines[colliding_line_names[0]], \
+                       receiver.model.lines[colliding_line_names[1]])
+    
+    interaction_points = get_interaction_points(colliding_lines)
+    
+    receiver.health_meter = max(0, receiver.health_meter - attacker.get_point_damage(interaction_points[0].name))
     
     receiver.actions[player.PlayerStates.STUNNED].set_player_state(receiver)
 
