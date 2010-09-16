@@ -22,6 +22,7 @@ import movesetbuilder
 import movesetselect
 import versusmovesetselect
 import onlineversusmode
+import onlineversusmovesetselect
 
 import gamestate
 
@@ -72,6 +73,8 @@ while 1:
         versusmovesetselect.handle_events()
     elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMODE:
         onlineversusmode.handle_events()
+    elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT:
+        onlineversusmovesetselect.handle_events()
     
     if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
         pygame.display.flip()
