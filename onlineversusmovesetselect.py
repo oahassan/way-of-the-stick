@@ -14,8 +14,6 @@ exit_button = None
 start_match_label = None
 player_type_select = None
 player_moveset_select = None
-bot_type_select = None
-bot_moveset_select = None
 remote_player_state = None
 
 def get_playable_movesets():
@@ -30,8 +28,6 @@ def load():
     global start_match_label
     global player_type_select
     global player_moveset_select
-    global bot_type_select
-    global bot_moveset_select
     global remote_player_state
     
     exit_button = button.ExitButton()
@@ -59,25 +55,6 @@ def load():
             playable_movesets
         )
     
-    bot_type_select = \
-        wotsuicontainers.ButtonContainer(
-            (400,50),
-            200,
-            300,
-            'Select Enemy Type',
-            button.TextButton,
-            [['Human',15], ['Bot',15]]
-        )
-    
-    bot_moveset_select = \
-        movesetselectui.MovesetSelectContainer(
-            (400, 270),
-            200,
-            100,
-            'Select Enemy Moveset',
-            playable_movesets
-        )
-    
     remote_player_state = \
         button.Label((0,0), "Waiting for Player", (255,255,255),32)
     
@@ -89,8 +66,6 @@ def unload():
     global start_match_label
     global player_type_select
     global player_moveset_select
-    global bot_type_select
-    global bot_moveset_select
     global remote_player_state
     
     exit_button = None
@@ -98,8 +73,6 @@ def unload():
     start_match_label = None
     player_type_select = None
     player_moveset_select = None
-    bot_type_select = None
-    bot_moveset_select = None
     remote_player_state = None
 
 def handle_events():
@@ -108,8 +81,6 @@ def handle_events():
     global start_match_label
     global player_type_select
     global player_moveset_select
-    global bot_type_select
-    global bot_moveset_select
     
     if loaded == False:
         load()
@@ -133,17 +104,6 @@ def handle_events():
                 player_type_select.selected_button = button
                 break
         
-        for button in bot_type_select.buttons:
-            if button.contains(wotsuievents.mouse_pos):
-                button.handle_selected()
-                
-                if ((bot_type_select.selected_button != None)
-                and (bot_type_select.selected_button != button)):
-                    bot_type_select.selected_button.handle_deselected()
-                
-                bot_type_select.selected_button = button
-                break
-        
     if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
         if exit_button.selected:
             exit_button.handle_deselected()
@@ -158,25 +118,16 @@ def handle_events():
                     if player_type_select.selected_button.text.text == 'Human':
                         versusmode.player_type = versusmode.PlayerTypes.HUMAN
                     elif player_type_select.selected_button.text.text == 'Bot':
-                        versusmode.player_type = versusmode.PlayerTypes.BOT
-                
-                if bot_type_select.selected_button != None:
-                    if bot_type_select.selected_button.text.text == 'Human':
-                        versusmode.bot_type = versusmode.PlayerTypes.HUMAN
-                    elif bot_type_select.selected_button.text.text == 'Bot':
-                        versusmode.bot_type = versusmode.PlayerTypes.BOT
+                        versusmode.player_type = versusmode.PlayerTypes.BOTT
                 
                 versusmode.init()
                 versusmode.human.load_moveset(player_moveset_select.selected_moveset)
-                versusmode.bot.load_moveset(bot_moveset_select.selected_moveset)
                 unload()
                 gamestate.mode = gamestate.Modes.VERSUSMODE
     if loaded:
         player_moveset_select.handle_events()
-        bot_moveset_select.handle_events()
         
-        if ((player_moveset_select.selected_moveset != None) and
-            (bot_moveset_select.selected_moveset != None)):
+        if player_moveset_select.selected_moveset != None:
             if start_match_label.active == False:
                 start_match_label.activate()
         else:
