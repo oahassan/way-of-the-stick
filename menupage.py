@@ -94,13 +94,27 @@ menu_button_index = 0
 menu_pos = None
 
 def load():
-    versus_mode_button = MenuButton('Versus Mode', \
-                                    gamestate.Modes.VERSUSMOVESETSELECT)
-    move_set_builder_button = MenuButton('Move Set Builder', \
-                                         gamestate.Modes.MOVESETSELECT)
+    versus_mode_button = \
+        MenuButton(
+            'Versus Mode',
+            gamestate.Modes.VERSUSMOVESETSELECT
+        )
+    
+    multiplayer_versus_mode_button = \
+        MenuButton(
+            'Online Versus Mode',
+            gamestate.Modes.ONLINEVERSUSMODE
+        )
+    
+    move_set_builder_button = \
+        MenuButton(
+            'Move Set Builder',
+            gamestate.Modes.MOVESETSELECT
+        )
     
     main_menu_buttons.append(versus_mode_button)
     main_menu_buttons.append(move_set_builder_button)
+    main_menu_buttons.append(multiplayer_versus_mode_button)
     
     menu_button_index = 0
     menu_pos = get_menu_pos()

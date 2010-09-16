@@ -21,6 +21,7 @@ import keybinding
 import movesetbuilder
 import movesetselect
 import versusmovesetselect
+import onlineversusmode
 
 import gamestate
 
@@ -69,6 +70,8 @@ while 1:
         movesetselect.handle_events()
     elif gamestate.mode == gamestate.Modes.VERSUSMOVESETSELECT:
         versusmovesetselect.handle_events()
+    elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMODE:
+        onlineversusmode.handle_events()
     
     if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
         pygame.display.flip()
