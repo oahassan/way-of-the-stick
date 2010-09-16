@@ -30,4 +30,4 @@ def handle_events():
             exit_button.symbol.color = button.Button._InactiveColor
             
             if exit_button.contains(wotsuievents.mouse_pos):
-                gamestate.mode = gamestate.Modes.MAINMENU
+                gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT

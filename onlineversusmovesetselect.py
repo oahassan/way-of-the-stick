@@ -120,10 +120,8 @@ def handle_events():
                     elif player_type_select.selected_button.text.text == 'Bot':
                         versusmode.player_type = versusmode.PlayerTypes.BOTT
                 
-                versusmode.init()
-                versusmode.human.load_moveset(player_moveset_select.selected_moveset)
                 unload()
-                gamestate.mode = gamestate.Modes.VERSUSMODE
+                gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
     if loaded:
         player_moveset_select.handle_events()
         
