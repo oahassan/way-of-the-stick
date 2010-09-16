@@ -5,5 +5,3 @@ import gamestate
 
 import button
 import movesetselectui
-
-
