@@ -103,7 +103,7 @@ def load():
     multiplayer_versus_mode_button = \
         MenuButton(
             'Online Versus Mode',
-            gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+            gamestate.Modes.ONLINEMENUPAGE
         )
     
     move_set_builder_button = \
