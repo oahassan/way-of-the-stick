@@ -50,46 +50,30 @@ class BuilderContainer(wotsui.UIObjectBase):
         self.animation_select_container.handle_events()
         self.key_select_container.handle_events()
 
-class MovesetNameEntryBox(wotsui.SelectableObjectBase):
+class MovesetNameEntryBox(wotsuicontainers.TextEntryBox):
     _X_POS = 10
     _Y_POS = 10
     
     def __init__(self):
-        wotsui.SelectableObjectBase.__init__(self)
+        wotsuicontainers.TextEntryBox.__init__(
+            self,
+            max_length = 100,
+            position = (MovesetNameEntryBox._X_POS, MovesetNameEntryBox._Y_POS),
+            prompt_text = 'Type moveset name: ',
+            text_color = (255,255,255)
+        )
+        
         self.moveset = None
-        self.text_entry_box = eztext.Input(maxlength=100, \
-                                           x=MovesetNameEntryBox._X_POS, \
-                                           y=MovesetNameEntryBox._Y_POS, \
-                                           prompt='Type moveset name: ', \
-                                           color=(255,255,255), \
-                                           font=pygame.font.Font('freesansbold.ttf', 30))
-        self.set_layout_data((MovesetNameEntryBox._X_POS, \
-                              MovesetNameEntryBox._Y_POS), \
-                             self.text_entry_box.height, \
-                             self.text_entry_box.width)
     
     def set_moveset(self, moveset):
         self.moveset = moveset
         self.text_entry_box.value = moveset.name
     
-    def draw(self, surface):
-        self.text_entry_box.draw(surface)
-    
     def handle_events(self):
+        wotsuicontainers.TextEntryBox.handle_events(self)
         
-        if self.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
-                if self.selected:
-                    self.handle_deselected()
-                else:
-                    self.handle_selected()
-                
-                self.text_entry_box.color = self.color
-        
-        if self.selected:
-            self.text_entry_box.update(wotsuievents.events)
-            
-            if self.text_entry_box.value != self.moveset.name:
+        if (self.selected and
+        self.text_entry_box.value != self.moveset.name):
                 self.moveset.name = self.text_entry_box.value
 
 class MovementBuilderContainer(BuilderContainer):

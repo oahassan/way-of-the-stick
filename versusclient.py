@@ -13,6 +13,7 @@ import button
 import movesetselectui
 import wotsuicontainers
 
+DFLT_PORT = 749387
 
 def get_public_ip_addr():
     

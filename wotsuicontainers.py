@@ -1,4 +1,6 @@
 import pygame
+import eztext
+
 import wotsui
 import wotsuievents
 import button
@@ -652,3 +654,65 @@ class ButtonContainer(ScrollableContainer):
                 if len(self.buttons) > 0:
                     self.layout_buttons()
                 break
+
+class TextEntryBox(wotsui.SelectableObjectBase):
+    
+    def __init__(
+        self,
+        prompt_text = '',
+        max_length = 100,
+        position = (0, 0),
+        text_color =(255, 255, 255)
+    ):
+        wotsui.SelectableObjectBase.__init__(self)
+        self.moveset = None
+        
+        self.text_entry_box = \
+            eztext.Input(
+                maxlength = max_length,
+                x = position[0],
+                y = position[1],
+                prompt = prompt_text,
+                color = text_color,
+                font = pygame.font.Font('freesansbold.ttf', 30)
+            )
+        
+        self.set_layout_data(
+            position,
+            self.text_entry_box.height, \
+            self.text_entry_box.width
+        )
+    
+    def set_position(self, position):
+        """moves the top left of the text entry box to the given position"""
+        wotsui.SelectableObjectBase.set_position(self, position)
+        self.text_entry_box.set_position(position)
+    
+    def draw(self, surface):
+        self.text_entry_box.draw(surface)
+    
+    def _update(self):
+        """sends events to the eztext entry box to update its text and resizes
+        the text entry box accordingly"""
+        self.text_entry_box.update(wotsuievents.events)
+        
+        self.set_layout_data(
+            self.position,
+            self.text_entry_box.height, \
+            self.text_entry_box.width
+        )
+    
+    def handle_events(self):
+        """handle events that affect the text entry box"""
+        if self.contains(wotsuievents.mouse_pos):
+            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+                if self.selected:
+                    self.handle_deselected()
+                    
+                else:
+                    self.handle_selected()
+                
+                self.text_entry_box.color = self.color
+        
+        if self.selected:
+            self._update()

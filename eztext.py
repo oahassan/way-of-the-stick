@@ -32,10 +32,10 @@ class Input:
         self.width = self.font.size(self.prompt+self.value)[0]
         self.height = self.font.size(self.prompt+self.value)[1]
 
-    def set_pos(self, x, y):
+    def set_position(self, position):
         """ Set the position to x, y """
-        self.x = x
-        self.y = y
+        self.x = position[0]
+        self.y = position[1]
 
     def set_font(self, font):
         """ Set the font for the input """
