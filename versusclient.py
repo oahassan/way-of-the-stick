@@ -1,3 +1,6 @@
+import urllib
+import socket
+
 import pygame
 from PodSixNet.Connection import connection, ConnectionListener
 
@@ -9,6 +12,16 @@ import versusmode
 import button
 import movesetselectui
 import wotsuicontainers
+
+
+def get_public_ip_addr():
+    
+    return urllib.urlopen('http://www.whatismyip.com/automation/n09230945.asp').read()
+
+def get_lan_ip_addr():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(('google.com', 80))
+    return s.getsockname()[0]
 
 def connect_to_host(host, port):
     connection.Connect((host, port))
