@@ -18,7 +18,6 @@ player_type_select = None
 player_moveset_select = None
 remote_player_state = None
 ip_address_input = None
-port_input = None
 
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
@@ -34,7 +33,6 @@ def load():
     global player_moveset_select
     global remote_player_state
     global ip_address_input
-    global port_input
     
     exit_button = button.ExitButton()
     loaded = True
@@ -74,7 +72,6 @@ def unload():
     global player_moveset_select
     global remote_player_state
     global ip_address_input
-    global port_input
     
     exit_button = None
     loaded = False
@@ -83,7 +80,6 @@ def unload():
     player_moveset_select = None
     remote_player_state = None
     ip_address_input = None
-    port_input = None
 
 def handle_events():
     global loaded
@@ -92,7 +88,6 @@ def handle_events():
     global player_type_select
     global player_moveset_select
     global ip_address_input
-    global port_input
     
     if loaded == False:
         load()
