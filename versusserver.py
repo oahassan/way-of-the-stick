@@ -60,9 +60,6 @@ class WotsServer(Server):
     def Connected(self, channel, addr):
         print 'new connection:', channel
         self.add_spectator(channel)
-        
-        data = {DataKeys.ACTION:ClientActions.SPECTATOR_JOINED, DataKeys.NICKNAME:channel.nickname}
-        self.send_to_all(data)
     
     def close(self):
         """remove all players and close the sever's socket"""

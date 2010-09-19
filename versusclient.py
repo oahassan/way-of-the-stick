@@ -51,9 +51,6 @@ class ClientConnectionListener(ConnectionListener):
     def Network_spectator_joined(self, data):
         spectator_name = data[DataKeys.NICKNAME]
         self.spectators.append(spectator_name)
-        
-        print("local client")
-        print(data)
     
     def Network_update_player_state(self, data):
         pass
