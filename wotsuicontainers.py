@@ -143,6 +143,7 @@ class ScrollableContainer(wotsui.UIObjectBase):
         return percent
     
     def handle_events(self):
+        
         self.handle_vertical_scroll_events()
         self.handle_horizontal_scroll_events()
         
@@ -154,6 +155,9 @@ class ScrollableContainer(wotsui.UIObjectBase):
                 child.handle_events()
     
     def handle_vertical_scroll_events(self):
+        if self.vertical_scrollbar == None:
+            self.init_vertical_scrollbar()
+        
         vertical_scrollbar = self.vertical_scrollbar
         
         if (self.is_vertically_scrollable() and
@@ -179,6 +183,9 @@ class ScrollableContainer(wotsui.UIObjectBase):
                 self.scrollable_area.shift(0,scroll_distance)
     
     def handle_horizontal_scroll_events(self):
+        if self.horizontal_scrollbar == None:
+            self.init_horizontal_scrollbar()
+        
         horizontal_scrollbar = self.horizontal_scrollbar
         
         if (self.is_horizontally_scrollable() and

@@ -11,7 +11,7 @@ import versusserver
 import versusclient
 
 import button
-from onlineversusmovesetselectui import NetworkMessageNotification
+from onlineversusmovesetselectui import NetworkMessageNotification, LocalPlayerSetupContainer
 import movesetselectui
 import wotsuicontainers
 
@@ -29,6 +29,12 @@ hosting_indicator = False
 connected = False
 network_message_notifications = []
 
+player_status_ui_dictionary = \
+    {
+        versusserver.PlayerPositions.PLAYER1 : None,
+        versusserver.PlayerPositions.PLAYER2 : None
+    }
+
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
     playable_movesets = [moveset for moveset in movesets if moveset.is_complete()]
@@ -39,13 +45,11 @@ def load():
     global loaded
     global exit_button
     global start_match_label
-    global player_type_select
-    global player_moveset_select
-    global remote_player_state
     global ip_address_input
     global hosting_indicator
     global connect_button
     global connected
+    global player_status_ui_dictionary
     
     exit_button = button.ExitButton()
     loaded = True
@@ -53,27 +57,15 @@ def load():
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
     
-    player_type_select = \
-        wotsuicontainers.ButtonContainer(
-            (50,140),
-            200,
-            300,
-            'Select Player Type',
-            button.TextButton,
-            [['Human',15], ['Bot',15]]
-        )
+    player1_ui = LocalPlayerSetupContainer((50,140), playable_movesets)
+    player2_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
     
-    player_moveset_select = \
-        movesetselectui.MovesetSelectContainer(
-            (50, 240),
-            200,
-            100,
-            'Select Your Moveset',
-            playable_movesets
-        )
-    
-    remote_player_state = \
-        button.Label((0,0), "Waiting for Player", (255,255,255),32)
+    player_status_ui_dictionary = \
+    {
+        versusserver.PlayerPositions.PLAYER1 : player1_ui,
+        versusserver.PlayerPositions.PLAYER2 : player2_ui
+    }
+    set_remote_player_state_position(player2_ui)
     
     ip_address_input = \
         wotsuicontainers.TextEntryBox(
@@ -82,8 +74,6 @@ def load():
             max_length = 15,
             text_color = (255, 255, 255)
         )
-    
-    set_remote_player_state_position()
     
     if hosting_indicator:
         versusserver.start_lan_server()
@@ -98,9 +88,6 @@ def unload():
     global loaded
     global exit_button
     global start_match_label
-    global player_type_select
-    global player_moveset_select
-    global remote_player_state
     global ip_address_input
     global hosting_indicator
     global connected
@@ -108,9 +95,6 @@ def unload():
     exit_button = None
     loaded = False
     start_match_label = None
-    player_type_select = None
-    player_moveset_select = None
-    remote_player_state = None
     ip_address_input = None
     network_message_label = None
     
@@ -138,12 +122,11 @@ def handle_events():
     global loaded
     global exit_button
     global start_match_label
-    global player_type_select
-    global player_moveset_select
     global ip_address_input
     global connect_button
     global connected
     global network_message_notifications
+    global player_status_ui_dictionary
     
     if loaded == False:
         load()
@@ -156,17 +139,6 @@ def handle_events():
             if start_match_label.contains(wotsuievents.mouse_pos):
                 start_match_label.handle_selected()
         
-        for button in player_type_select.buttons:
-            if button.contains(wotsuievents.mouse_pos):
-                button.handle_selected()
-                
-                if ((player_type_select.selected_button != None)
-                and (player_type_select.selected_button != button)):
-                    player_type_select.selected_button.handle_deselected()
-                
-                player_type_select.selected_button = button
-                break
-        
     if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
         if exit_button.selected:
             exit_button.handle_deselected()
@@ -177,18 +149,17 @@ def handle_events():
         
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):
-                if player_type_select.selected_button != None:
-                    if player_type_select.selected_button.text.text == 'Human':
-                        versusmode.player_type = versusmode.PlayerTypes.HUMAN
-                    elif player_type_select.selected_button.text.text == 'Bot':
-                        versusmode.player_type = versusmode.PlayerTypes.BOT
-                
-                unload()
-                gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
+                pass
+    
     if loaded:
-        player_moveset_select.handle_events()
+        for player_status_ui in player_status_ui_dictionary.values():
+            player_status_ui.handle_events()
+            player_status_ui.draw(gamestate.screen)
         
-        if player_moveset_select.selected_moveset != None:
+        players_ready = \
+            player_status_ui_dictionary[versusserver.PlayerPositions.PLAYER1].player_ready()
+        
+        if players_ready:
             if start_match_label.active == False:
                 start_match_label.activate()
         else:
@@ -197,9 +168,6 @@ def handle_events():
         
         exit_button.draw(gamestate.screen)
         start_match_label.draw(gamestate.screen)
-        player_type_select.draw(gamestate.screen)
-        player_moveset_select.draw(gamestate.screen)
-        remote_player_state.draw(gamestate.screen)
         
         if hosting_indicator == False:
             if ip_address_input.active:
@@ -294,15 +262,13 @@ def layout_network_message_notifications():
         current_row_position = (50, current_row_position[1] + 20)
     
 
-def set_remote_player_state_position():
-    global remote_player_state
-    
+def set_remote_player_state_position(remote_player_state_label):
     window_center = (gamestate._WIDTH / 2, gamestate._HEIGHT / 2)
     
-    y_pos = window_center[1] - (remote_player_state.height / 2)
+    y_pos = window_center[1] - (remote_player_state_label.height / 2)
     
     window_x_75_percent = window_center[0] + ((gamestate._WIDTH - window_center[0]) / 2)
     
-    x_pos = window_x_75_percent - (remote_player_state.width / 2)
+    x_pos = window_x_75_percent - (remote_player_state_label.width / 2)
     
-    remote_player_state.set_position((x_pos, y_pos))
+    remote_player_state_label.set_position((x_pos, y_pos))

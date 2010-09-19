@@ -3,6 +3,8 @@ import pygame
 import movesetdata
 import gamestate
 
+import wotsui
+import wotsuicontainers
 import button
 import movesetselectui
 
@@ -22,18 +24,20 @@ class NetworkMessageNotification(button.Label):
 class LocalPlayerSetupContainer(wotsui.UIObjectBase):
     
     def __init__(self, position, movesets):
+        wotsui.UIObjectBase.__init__(self)
         
         player_type_select_position = position
         
         self.player_type_select = \
             wotsuicontainers.ButtonContainer(
                 player_type_select_position,
-                200,
+                100,
                 300,
                 'Select Player Type',
                 button.TextButton,
                 [['Human',15], ['Bot',15]]
             )
+        self.add_child(self.player_type_select)
         
         moveset_select_position = \
             (
@@ -48,15 +52,16 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase):
                 'Select Your Moveset', \
                 movesets
             )
+        self.add_child(self.moveset_select)
     
-    def handle_events():
+    def handle_events(self):
     
-        player_moveset_select.handle_events()
-        bot_moveset_select.handle_events()
+        self.moveset_select.handle_events()
+        self.player_type_select.handle_events()
     
-    def player_ready():
-        if ((player_moveset_select.selected_moveset != None) and
-            (bot_moveset_select.selected_moveset != None)):
+    def player_ready(self):
+        if ((self.moveset_select.selected_moveset != None) and
+        (self.player_type_select.selected_button != None)):
             return True
         else:
             return False
