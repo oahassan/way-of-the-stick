@@ -25,6 +25,7 @@ remote_player_state = None
 ip_address_input = None
 connect_button = None
 hosting_indicator = False
+connected = False
 
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
@@ -41,16 +42,17 @@ def load():
     global remote_player_state
     global ip_address_input
     global hosting_indicator
+    global connect_button
     
     exit_button = button.ExitButton()
     loaded = True
-    start_match_label = movesetselectui.MovesetActionLabel((10, 500), "Start Match!")
+    start_match_label = movesetselectui.MovesetActionLabel((10, 520), "Start Match!")
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
     
     player_type_select = \
         wotsuicontainers.ButtonContainer(
-            (50,100),
+            (50,140),
             200,
             300,
             'Select Player Type',
@@ -60,7 +62,7 @@ def load():
     
     player_moveset_select = \
         movesetselectui.MovesetSelectContainer(
-            (50, 220),
+            (50, 240),
             200,
             100,
             'Select Your Moveset',
@@ -83,6 +85,10 @@ def load():
     if hosting_indicator:
         versusserver.start_lan_server()
         versusclient.connect_to_host(versusserver.get_lan_ip_address())
+    else:
+        connect_button = button.TextButton("Connect to server")
+        connect_button.set_position((10, 50))
+        connect_button.inactivate()
 
 def unload():
     global loaded
@@ -93,6 +99,7 @@ def unload():
     global remote_player_state
     global ip_address_input
     global hosting_indicator
+    global connected
     
     exit_button = None
     loaded = False
@@ -101,6 +108,7 @@ def unload():
     player_moveset_select = None
     remote_player_state = None
     ip_address_input = None
+    connected = False
     
     if hosting_indicator:
         #clean up any remaining messages to the client
@@ -127,6 +135,8 @@ def handle_events():
     global player_type_select
     global player_moveset_select
     global ip_address_input
+    global connect_button
+    global connected
     
     if loaded == False:
         load()
@@ -164,13 +174,12 @@ def handle_events():
                     if player_type_select.selected_button.text.text == 'Human':
                         versusmode.player_type = versusmode.PlayerTypes.HUMAN
                     elif player_type_select.selected_button.text.text == 'Bot':
-                        versusmode.player_type = versusmode.PlayerTypes.BOTT
+                        versusmode.player_type = versusmode.PlayerTypes.BOT
                 
                 unload()
                 gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
     if loaded:
         player_moveset_select.handle_events()
-        ip_address_input.handle_events()
         
         if player_moveset_select.selected_moveset != None:
             if start_match_label.active == False:
@@ -184,12 +193,44 @@ def handle_events():
         player_type_select.draw(gamestate.screen)
         player_moveset_select.draw(gamestate.screen)
         remote_player_state.draw(gamestate.screen)
-        ip_address_input.draw(gamestate.screen)
         
         
-        if ((versusclient.get_connection_status() == 
-        versusclient.ConnectionStatus.CONNECTED) or
-        hosting_indicator):
+        if hosting_indicator == False:
+            if ip_address_input.active:
+                ip_address_input.handle_events()
+            
+            server_address = ip_address_input.text_entry_box.value.strip()
+            
+            if re.match(VALID_IPV4_ADDRESS_REGEX, server_address):
+                connect_button.activate()
+            else:
+                connect_button.inactivate()
+            
+            if connect_button.active and connect_button.contains(wotsuievents.mouse_pos):
+                if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+                    connect_button.handle_selected()
+                    
+                if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
+                
+                    if connect_button.selected:
+                        ip_address_input.inactivate()
+                    
+                        versusclient.connect_to_host(server_address)
+                        versusclient.get_network_messages()
+                        versusclient.listener.Pump()
+                        
+                        connect_button.handle_deselected()
+                        connect_button.inactivate()
+                        
+                        connected = True
+                        
+                    else:
+                        connect_button.handle_deselected()
+                
+            ip_address_input.draw(gamestate.screen)
+            connect_button.draw(gamestate.screen)
+        
+        if connected or hosting_indicator:
             versusclient.listener.Pump()
             versusclient.get_network_messages()
         
