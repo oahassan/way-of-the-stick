@@ -22,6 +22,7 @@ class ClientConnectionListener(ConnectionListener):
         self.player_positions = {PlayerPositions.PLAYER1:None, PlayerPositions.PLAYER2:None}
         self.spectators = []
         self.actions_received = []
+        self.player_id = None
     
     def close(self):
         connection.Close()
@@ -44,13 +45,13 @@ class ClientConnectionListener(ConnectionListener):
     
     def Network_player_joined(self, data):
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]
-        
-        print("local client")
-        print(data)
     
     def Network_spectator_joined(self, data):
         spectator_name = data[DataKeys.NICKNAME]
         self.spectators.append(spectator_name)
+    
+    def Network_get_player_id(self, data):
+        self.player_id = data[DataKeys.PLAYER_ID]
     
     def Network_update_player_state(self, data):
         pass

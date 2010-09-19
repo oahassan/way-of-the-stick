@@ -13,9 +13,11 @@ class DataKeys:
     ACTION = "action"
     NICKNAME = "nickname"
     PLAYER_POSITIONS = "player_positions"
+    PLAYER_ID = "player_id"
 
 class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
+    GET_PLAYER_ID = "get_player_id"
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -59,6 +61,8 @@ class WotsServer(Server):
     
     def Connected(self, channel, addr):
         print 'new connection:', channel
+        
+        self.assign_id(channel)
         self.add_spectator(channel)
     
     def close(self):
@@ -77,6 +81,16 @@ class WotsServer(Server):
         self.player_name_count += 1
         
         return player_name
+    
+    def assign_id(self, player):
+        """sends a players server id to their client"""
+        data = \
+            {
+                DataKeys.ACTION : ClientActions.GET_PLAYER_ID,
+                DataKeys.PLAYER_ID : id(player)
+            }
+        
+        player.Send(data)
     
     def add_spectator(self, player):
         """Add a spectator to the server"""
