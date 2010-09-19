@@ -51,6 +51,15 @@ class WotsServer(Server):
         print 'new connection:', channel
         self.spectators.append(channel)
     
+    def close(self):
+        for spectator in self.spectators:
+            spectator.close()
+        
+        for player in self.players:
+            player.close()
+        
+        Server.close(self)
+    
     def generate_nickname(self):
         """creates a player name and increments the number of the player name"""
         player_name = "player" + str(self.player_name_count + 1)
