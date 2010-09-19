@@ -24,7 +24,7 @@ class ClientConnectionListener(ConnectionListener):
     
     def close(self):
         connection.Close()
-        self.connection_status = ConnectionStatus.DISCONNECT
+        self.connection_status = ConnectionStatus.DISCONNECTED
     
     #Network methods
     
@@ -56,7 +56,7 @@ class ClientConnectionListener(ConnectionListener):
     
     def Network_disconnected(self, data):
         print 'Server disconnected'
-        connection.Close()
+        #connection.Close()
         self.connection_status = ConnectionStatus.DISCONNECTED
 
 def connect_to_host(host_ip_address):

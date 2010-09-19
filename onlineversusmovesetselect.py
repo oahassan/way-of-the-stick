@@ -103,9 +103,20 @@ def unload():
     ip_address_input = None
     
     if hosting_indicator:
+        #clean up any remaining messages to the client
+        versusclient.listener.Pump()
+        versusclient.get_network_messages()
+        
         versusclient.listener.close()
         versusclient.listener = None
+        print("listener closed")
+        
+        #clean of any remaining messages to the server
+        versusserver.server.Pump()
+        
+        versusserver.server.close()
         versusserver.server = None
+        print("server closed")
     
     hosting_indicator = False
 
@@ -174,12 +185,16 @@ def handle_events():
         player_moveset_select.draw(gamestate.screen)
         remote_player_state.draw(gamestate.screen)
         ip_address_input.draw(gamestate.screen)
-    
-    versusclient.listener.Pump()
-    versusclient.get_network_messages()
-    
-    if hosting_indicator:
-        versusserver.server.Pump()
+        
+        
+        if ((versusclient.get_connection_status() == 
+        versusclient.ConnectionStatus.CONNECTED) or
+        hosting_indicator):
+            versusclient.listener.Pump()
+            versusclient.get_network_messages()
+        
+        if hosting_indicator:
+            versusserver.server.Pump()
 
 def set_remote_player_state_position():
     global remote_player_state
