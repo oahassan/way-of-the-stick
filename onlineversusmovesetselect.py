@@ -1,3 +1,5 @@
+import re
+
 import pygame
 import eztext
 
@@ -12,6 +14,8 @@ import button
 import movesetselectui
 import wotsuicontainers
 
+VALID_IPV4_ADDRESS_REGEX = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
+
 loaded = False
 exit_button = None
 start_match_label = None
@@ -19,6 +23,7 @@ player_type_select = None
 player_moveset_select = None
 remote_player_state = None
 ip_address_input = None
+connect_button = None
 hosting_indicator = False
 
 def get_playable_movesets():
@@ -64,6 +69,14 @@ def load():
     
     remote_player_state = \
         button.Label((0,0), "Waiting for Player", (255,255,255),32)
+    
+    ip_address_input = \
+        wotsuicontainers.TextEntryBox(
+            prompt_text = 'Enter ip address: ',
+            position = (10,10),
+            max_length = 15,
+            text_color = (255, 255, 255)
+        )
     
     set_remote_player_state_position()
     
@@ -146,6 +159,7 @@ def handle_events():
                 gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
     if loaded:
         player_moveset_select.handle_events()
+        ip_address_input.handle_events()
         
         if player_moveset_select.selected_moveset != None:
             if start_match_label.active == False:
@@ -159,6 +173,7 @@ def handle_events():
         player_type_select.draw(gamestate.screen)
         player_moveset_select.draw(gamestate.screen)
         remote_player_state.draw(gamestate.screen)
+        ip_address_input.draw(gamestate.screen)
     
     versusclient.listener.Pump()
     versusclient.get_network_messages()

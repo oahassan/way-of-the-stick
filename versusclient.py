@@ -24,16 +24,20 @@ class ClientConnectionListener(ConnectionListener):
     
     def close(self):
         connection.Close()
+        self.connection_status = ConnectionStatus.DISCONNECT
     
     #Network methods
     
     def Network(self, data):
+        print("local client")
         print(data)
     
     def Network_player_joined(self, data):
+        print("local client")
         print(data)
     
     def Network_spectator_joined(self, data):
+        print("local client")
         print(data)
     
     def Network_update_player_state(self, data):

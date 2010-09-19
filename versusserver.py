@@ -11,6 +11,7 @@ class ClientChannel(Channel):
         self.nickname = self._server.generate_nickname()
     
     def Network():
+        print("Server channel")
         print(data)
     
     def Network_join_match(data):
