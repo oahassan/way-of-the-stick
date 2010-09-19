@@ -43,6 +43,7 @@ def load():
     global ip_address_input
     global hosting_indicator
     global connect_button
+    global connected
     
     exit_button = button.ExitButton()
     loaded = True
@@ -85,6 +86,7 @@ def load():
     if hosting_indicator:
         versusserver.start_lan_server()
         versusclient.connect_to_host(versusserver.get_lan_ip_address())
+        connected = True
     else:
         connect_button = button.TextButton("Connect to server")
         connect_button.set_position((10, 50))
@@ -108,9 +110,8 @@ def unload():
     player_moveset_select = None
     remote_player_state = None
     ip_address_input = None
-    connected = False
     
-    if hosting_indicator:
+    if connected:
         #clean up any remaining messages to the client
         versusclient.listener.Pump()
         versusclient.get_network_messages()
@@ -118,7 +119,8 @@ def unload():
         versusclient.listener.close()
         versusclient.listener = None
         print("listener closed")
-        
+    
+    if hosting_indicator:
         #clean of any remaining messages to the server
         versusserver.server.Pump()
         
@@ -126,6 +128,7 @@ def unload():
         versusserver.server = None
         print("server closed")
     
+    connected = False
     hosting_indicator = False
 
 def handle_events():

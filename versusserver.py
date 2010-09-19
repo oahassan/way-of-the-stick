@@ -14,17 +14,27 @@ class ClientChannel(Channel):
         print("Server channel")
         print(data)
     
-    def Network_join_match(data):
+    def Network_join_match(self, data):
         pass
     
-    def Network_spectate_match(data):
+    def Network_spectate_match(self, data):
         pass
     
-    def Network_update_player_state(data):
+    def Network_update_player_state(self, data):
         pass
     
-    def Network_player_ready(data):
+    def Network_player_ready(self, data):
         pass
+    
+    def Close(self):
+        print("deleting player: " + self.nickname)
+        self._server.del_player(self)
+
+class MatchInfo():
+    
+    def __init__(self):
+        self.number_of_players = 2
+        self.player
 
 class WotsServer(Server):
     channelClass = ClientChannel
@@ -47,6 +57,16 @@ class WotsServer(Server):
         self.player_name_count += 1
         
         return player_name
+    
+    def del_player(self, player):
+        if player in self.players:
+            self.players.remove(player)
+        
+        if player in self.spectators:
+            self.spectators.remove(player)
+    
+    def send_to_all(self, data):
+		[p.Send(data) for p in self.players]
 
 server = None
 
