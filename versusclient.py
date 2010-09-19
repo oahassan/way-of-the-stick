@@ -16,6 +16,9 @@ class ConnectionStatus:
     DISCONNECTED = 'disconnected'
     ERROR = 'error'
 
+class ServerActions:
+    JOIN_MATCH = "join_match"
+
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
         self.connection_status = ConnectionStatus.DISCONNECTED
@@ -35,6 +38,10 @@ class ClientConnectionListener(ConnectionListener):
         
         return actions_received
     
+    def join_match(self):
+        data = {DataKeys.ACTION : ServerActions.JOIN_MATCH}
+        connection.Send(data)
+    
     #Network methods
     
     def Network(self, data):
@@ -42,6 +49,9 @@ class ClientConnectionListener(ConnectionListener):
         
         print("local client")
         print(data)
+    
+    def Network_get_player_position(self, data):
+        pass
     
     def Network_player_joined(self, data):
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]

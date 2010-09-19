@@ -13,11 +13,13 @@ class DataKeys:
     ACTION = "action"
     NICKNAME = "nickname"
     PLAYER_POSITIONS = "player_positions"
+    PLAYER_POSITION = "player_position"
     PLAYER_ID = "player_id"
 
 class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
     GET_PLAYER_ID = "get_player_id"
+    GET_PLAYER_POSITION = "get_player_position"
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -26,12 +28,20 @@ class ClientChannel(Channel):
         self.nickname = self._server.generate_nickname()
         self.postion = PlayerPositions.NONE
     
-    def Network():
+    def Network(self, data):
         print("Server channel")
         print(data)
     
     def Network_join_match(self, data):
-        self._server.add_player(self)
+        player_position = self._server.add_player(self)
+        
+        data = \
+            {
+                DataKeys.ACTION : ClientActions.GET_PLAYER_POSITION,
+                DataKeys.PLAYER_POSITION : player_position
+            }
+        
+        self.Send(data)
     
     def Network_spectate_match(self, data):
         pass
@@ -53,7 +63,11 @@ class WotsServer(Server):
         Server.__init__(self, channelClass, localaddr, listeners)
         self.player_name_count = 0
         self.player_positions = \
-            {PlayerPositions.PLAYER1:None, PlayerPositions.PLAYER2:None}
+            {
+                PlayerPositions.PLAYER1 : None,
+                PlayerPositions.PLAYER2 : None,
+                PlayerPositions.NONE : []
+            }
         self.players = []
         self.spectators = []
         
@@ -114,18 +128,21 @@ class WotsServer(Server):
         
         if player1 == None and not player == player2:
             self.player_positions[PlayerPositions.PLAYER1] = player
-            players.add(player)
+            self.players.append(player)
             
             return PlayerPositions.PLAYER1
             
         elif player2 == None and not player == player1:
             self.player_positions[PlayerPositions.PLAYER2] = player
-            players.add(player)
+            self.players.append(player)
             
             return PlayerPositions.PLAYER2
             
-        else:
+        elif not (player == player1 or player == player2):
             return PlayerPositions.NONE
+        else:
+            #do nothing because the player has already joined the match
+            pass
     
     def del_player(self, player):
         """remove a player from the server"""

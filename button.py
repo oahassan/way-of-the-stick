@@ -1,6 +1,7 @@
 import pygame
 import gamestate
 import wotsui
+import wotsuievents
 
 class Symbol:
     _DfltColor = (255, 255, 255)

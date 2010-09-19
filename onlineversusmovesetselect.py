@@ -28,6 +28,7 @@ connect_button = None
 hosting_indicator = False
 connected = False
 network_message_notifications = []
+join_match_button = None
 
 player_status_ui_dictionary = \
     {
@@ -50,6 +51,7 @@ def load():
     global connect_button
     global connected
     global player_status_ui_dictionary
+    global join_match_button
     
     exit_button = button.ExitButton()
     loaded = True
@@ -75,6 +77,9 @@ def load():
             text_color = (255, 255, 255)
         )
     
+    join_match_button = button.TextButton("Connect to server")
+    join_match_button.set_position((210, 50))
+    
     if hosting_indicator:
         versusserver.start_lan_server()
         versusclient.connect_to_host(versusserver.get_lan_ip_address())
@@ -91,12 +96,14 @@ def unload():
     global ip_address_input
     global hosting_indicator
     global connected
+    global join_match_button
     
     exit_button = None
     loaded = False
     start_match_label = None
     ip_address_input = None
     network_message_label = None
+    join_match_button = None
     
     if connected:
         #clean up any remaining messages to the client
@@ -127,6 +134,7 @@ def handle_events():
     global connected
     global network_message_notifications
     global player_status_ui_dictionary
+    global join_match_button
     
     if loaded == False:
         load()
@@ -139,6 +147,10 @@ def handle_events():
             if start_match_label.contains(wotsuievents.mouse_pos):
                 start_match_label.handle_selected()
         
+        if join_match_button.active:
+            if join_match_button.contains(wotsuievents.mouse_pos):
+                join_match_button.handle_selected()
+        
     if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
         if exit_button.selected:
             exit_button.handle_deselected()
@@ -150,6 +162,11 @@ def handle_events():
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):
                 pass
+        
+        elif join_match_button.selected:
+            if join_match_button.contains(wotsuievents.mouse_pos):
+                versusclient.listener.join_match()
+                join_match_button.handle_deselected()
     
     if loaded:
         players_ready = True
@@ -168,6 +185,7 @@ def handle_events():
             if start_match_label.active:
                 start_match_label.inactivate()
         
+        join_match_button.draw(gamestate.screen)
         exit_button.draw(gamestate.screen)
         start_match_label.draw(gamestate.screen)
         
