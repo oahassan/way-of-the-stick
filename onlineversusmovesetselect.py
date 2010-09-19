@@ -26,6 +26,20 @@ ip_address_input = None
 connect_button = None
 hosting_indicator = False
 connected = False
+network_message_notifications = []
+
+class NetworkMessageNotification(button.Label):
+    
+    def __init__(self, text, timeout = 3000):
+        button.Label.__init__(self, (0,0), text, (255,255,255), 20)
+        self.timer = 0
+        self.timeout = timeout
+    
+    def update(self, time_passed):
+        self.timer += time_passed
+    
+    def expired(self):
+        return self.timer > self.timeout
 
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
@@ -110,6 +124,7 @@ def unload():
     player_moveset_select = None
     remote_player_state = None
     ip_address_input = None
+    network_message_label = None
     
     if connected:
         #clean up any remaining messages to the client
@@ -140,6 +155,7 @@ def handle_events():
     global ip_address_input
     global connect_button
     global connected
+    global network_message_notifications
     
     if loaded == False:
         load()
@@ -197,14 +213,13 @@ def handle_events():
         player_moveset_select.draw(gamestate.screen)
         remote_player_state.draw(gamestate.screen)
         
-        
         if hosting_indicator == False:
             if ip_address_input.active:
                 ip_address_input.handle_events()
             
             server_address = ip_address_input.text_entry_box.value.strip()
             
-            if re.match(VALID_IPV4_ADDRESS_REGEX, server_address):
+            if re.match(VALID_IPV4_ADDRESS_REGEX, server_address) and not connected:
                 connect_button.activate()
             else:
                 connect_button.inactivate()
@@ -236,9 +251,60 @@ def handle_events():
         if connected or hosting_indicator:
             versusclient.listener.Pump()
             versusclient.get_network_messages()
+            
+            remove_expired_network_message_notifications()
+            get_new_network_message_notifications()
+            layout_network_message_notifications()
+            
+            time_passed = gamestate.clock.get_time()
+            
+            for notification in network_message_notifications:
+                notification.draw(gamestate.screen)
+                notification.update(time_passed)
         
         if hosting_indicator:
             versusserver.server.Pump()
+
+def get_new_network_message_notifications():
+    received_actions = versusclient.listener.pop_received_actions()
+    
+    for action in received_actions:
+        if (action[versusserver.DataKeys.ACTION] == 
+        versusserver.ClientActions.SPECTATOR_JOINED):
+            network_message_notifications.append(
+                NetworkMessageNotification(
+                    action[versusserver.DataKeys.NICKNAME] + " is now spectating."
+                )
+            )
+        else:
+            #TODO - Raise invalid value error here
+            pass
+
+def remove_expired_network_message_notifications():
+    global network_message_notifications
+    
+    removable_messages = \
+        [notification \
+        for notification in network_message_notifications if notification.expired()]
+    
+    [network_message_notifications.remove(notification) \
+    for notification in removable_messages]
+
+def layout_network_message_notifications():
+    global network_message_notifications
+    
+    network_message_count = len(network_message_notifications)
+    
+    row_count = min(5, network_message_count)
+    
+    first_row_position = (50, gamestate._HEIGHT - (row_count * 20))
+    current_row_position = first_row_position
+    
+    for notification in network_message_notifications:
+        notification.set_position(current_row_position)
+        
+        current_row_position = (50, current_row_position[1] + 20)
+    
 
 def set_remote_player_state_position():
     global remote_player_state

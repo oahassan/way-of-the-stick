@@ -4,18 +4,32 @@ import socket
 from PodSixNet.Channel import Channel
 from PodSixNet.Server import Server
 
+class PlayerPositions:
+    NONE = "none"
+    PLAYER1 = "player1"
+    PLAYER2 = "player2"
+
+class DataKeys:
+    ACTION = "action"
+    NICKNAME = "nickname"
+    PLAYER_POSITIONS = "player_positions"
+
+class ClientActions:
+    SPECTATOR_JOINED = "spectator_joined"
+
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
         Channel.__init__(self, *args, **kwargs)
         
         self.nickname = self._server.generate_nickname()
+        self.postion = PlayerPositions.NONE
     
     def Network():
         print("Server channel")
         print(data)
     
     def Network_join_match(self, data):
-        pass
+        self._server.add_player(self)
     
     def Network_spectate_match(self, data):
         pass
@@ -30,18 +44,14 @@ class ClientChannel(Channel):
         print("deleting player: " + self.nickname)
         self._server.del_player(self)
 
-class MatchInfo():
-    
-    def __init__(self):
-        self.number_of_players = 2
-        self.player
-
 class WotsServer(Server):
     channelClass = ClientChannel
     
     def __init__(self, channelClass=None, localaddr=("127.0.0.1", 31425), listeners=5):
         Server.__init__(self, channelClass, localaddr, listeners)
         self.player_name_count = 0
+        self.player_positions = \
+            {PlayerPositions.PLAYER1:None, PlayerPositions.PLAYER2:None}
         self.players = []
         self.spectators = []
         
@@ -49,9 +59,13 @@ class WotsServer(Server):
     
     def Connected(self, channel, addr):
         print 'new connection:', channel
-        self.spectators.append(channel)
+        self.add_spectator(channel)
+        
+        data = {DataKeys.ACTION:ClientActions.SPECTATOR_JOINED, DataKeys.NICKNAME:channel.nickname}
+        self.send_to_all(data)
     
     def close(self):
+        """remove all players and close the sever's socket"""
         for spectator in self.spectators:
             spectator.close()
         
@@ -62,12 +76,53 @@ class WotsServer(Server):
     
     def generate_nickname(self):
         """creates a player name and increments the number of the player name"""
-        player_name = "player" + str(self.player_name_count + 1)
+        player_name = "stick" + str(self.player_name_count + 1)
         self.player_name_count += 1
         
         return player_name
     
+    def add_spectator(self, player):
+        """Add a spectator to the server"""
+        print("spectator joined " + player.nickname)
+        self.spectators.append(player)
+        
+        data = \
+            {
+                DataKeys.ACTION : ClientActions.SPECTATOR_JOINED,
+                DataKeys.NICKNAME : player.nickname
+            }
+        
+        self.send_to_all(data)
+    
+    def add_player(self, player):
+        """Assign the player to a position and return its position.  If all positions are
+        taken return the NONE position."""
+        
+        player1 = self.player_positions[PlayerPositions.PLAYER1]
+        player2 = self.player_positions[PlayerPositions.PLAYER2]
+        
+        if player1 == None and not player == player2:
+            self.player_positions[PlayerPositions.PLAYER1] = player
+            players.add(player)
+            
+            return PlayerPositions.PLAYER1
+            
+        elif player2 == None and not player == player1:
+            self.player_positions[PlayerPositions.PLAYER2] = player
+            players.add(player)
+            
+            return PlayerPositions.PLAYER2
+            
+        else:
+            return PlayerPositions.NONE
+    
     def del_player(self, player):
+        """remove a player from the server"""
+        if player == self.player_positions[PlayerPositions.PLAYER1]:
+            self.player_positions[PlayerPositions.PLAYER1] = None
+        elif player == self.player_positions[PlayerPositions.PLAYER2]:
+            self.player_positions[PlayerPositions.PLAYER2] = None
+        
         if player in self.players:
             self.players.remove(player)
         
@@ -75,7 +130,9 @@ class WotsServer(Server):
             self.spectators.remove(player)
     
     def send_to_all(self, data):
-		[p.Send(data) for p in self.players]
+        """send data to all connected players"""
+        [player.Send(data) for player in self.players]
+        [spectator.Send(data) for spectator in self.spectators]
 
 server = None
 

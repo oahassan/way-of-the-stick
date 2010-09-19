@@ -5,7 +5,7 @@ import wotsuievents
 import movesetdata
 import gamestate
 import versusmode
-from versusserver import DFLT_PORT
+from versusserver import DFLT_PORT, PlayerPositions, DataKeys
 
 import button
 import movesetselectui
@@ -16,27 +16,42 @@ class ConnectionStatus:
     DISCONNECTED = 'disconnected'
     ERROR = 'error'
 
-listener = None
-
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
         self.connection_status = ConnectionStatus.DISCONNECTED
+        self.player_positions = {PlayerPositions.PLAYER1:None, PlayerPositions.PLAYER2:None}
+        self.spectators = []
+        self.actions_received = []
     
     def close(self):
         connection.Close()
         self.connection_status = ConnectionStatus.DISCONNECTED
     
+    def pop_received_actions(self):
+        """returns the list of received actions and clears the list"""
+        actions_received = self.actions_received
+        self.actions_received = []
+        
+        return actions_received
+    
     #Network methods
     
     def Network(self, data):
+        self.actions_received.append(data)
+        
         print("local client")
         print(data)
     
     def Network_player_joined(self, data):
+        self.player_positions = data[DataKeys.PLAYER_POSITIONS]
+        
         print("local client")
         print(data)
     
     def Network_spectator_joined(self, data):
+        spectator_name = data[DataKeys.NICKNAME]
+        self.spectators.append(spectator_name)
+        
         print("local client")
         print(data)
     
@@ -45,6 +60,9 @@ class ClientConnectionListener(ConnectionListener):
     
     # built in stuff
 
+    def Network_socketConnect(self, data):
+        self.connection_status = ConnectionStatus.CONNECTED
+    
     def Network_connected(self, data):
         self.connection_status = ConnectionStatus.CONNECTED
         print "You are now connected to the server"
@@ -59,11 +77,10 @@ class ClientConnectionListener(ConnectionListener):
         #connection.Close()
         self.connection_status = ConnectionStatus.DISCONNECTED
 
+listener = ClientConnectionListener()
+
 def connect_to_host(host_ip_address):
     """connects to a server using the default port specified in DFLT_PORT"""
-    global listener
-    
-    listener = ClientConnectionListener()
     listener.Connect((host_ip_address, DFLT_PORT))
 
 def get_network_messages():
