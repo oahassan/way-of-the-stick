@@ -57,7 +57,7 @@ def load():
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
     
-    player1_ui = LocalPlayerSetupContainer((50,140), playable_movesets)
+    player1_ui = button.Label((50,300), "Waiting for Player", (255,255,255),32)
     player2_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
     
     player_status_ui_dictionary = \
@@ -152,12 +152,14 @@ def handle_events():
                 pass
     
     if loaded:
+        players_ready = True
+        
         for player_status_ui in player_status_ui_dictionary.values():
             player_status_ui.handle_events()
             player_status_ui.draw(gamestate.screen)
-        
-        players_ready = \
-            player_status_ui_dictionary[versusserver.PlayerPositions.PLAYER1].player_ready()
+            
+            if hasattr(player_status_ui, "player_ready"):
+                player_ready = getattr(player_status_ui, "player_ready")() and player_ready
         
         if players_ready:
             if start_match_label.active == False:
