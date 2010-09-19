@@ -5,6 +5,7 @@ import wotsuievents
 import movesetdata
 import gamestate
 import versusmode
+import versusserver
 import versusclient
 
 import button
@@ -18,6 +19,7 @@ player_type_select = None
 player_moveset_select = None
 remote_player_state = None
 ip_address_input = None
+hosting_indicator = False
 
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
@@ -33,6 +35,7 @@ def load():
     global player_moveset_select
     global remote_player_state
     global ip_address_input
+    global hosting_indicator
     
     exit_button = button.ExitButton()
     loaded = True
@@ -64,6 +67,10 @@ def load():
     
     set_remote_player_state_position()
     
+    if hosting_indicator:
+        versusserver.start_lan_server()
+        versusclient.connect_to_host(versusserver.get_lan_ip_address())
+
 def unload():
     global loaded
     global exit_button
@@ -72,6 +79,7 @@ def unload():
     global player_moveset_select
     global remote_player_state
     global ip_address_input
+    global hosting_indicator
     
     exit_button = None
     loaded = False
@@ -80,6 +88,13 @@ def unload():
     player_moveset_select = None
     remote_player_state = None
     ip_address_input = None
+    
+    if hosting_indicator:
+        versusclient.listener.close()
+        versusclient.listener = None
+        versusserver.server = None
+    
+    hosting_indicator = False
 
 def handle_events():
     global loaded
@@ -144,6 +159,12 @@ def handle_events():
         player_type_select.draw(gamestate.screen)
         player_moveset_select.draw(gamestate.screen)
         remote_player_state.draw(gamestate.screen)
+    
+    versusclient.listener.Pump()
+    versusclient.get_network_messages()
+    
+    if hosting_indicator:
+        versusserver.server.Pump()
 
 def set_remote_player_state_position():
     global remote_player_state

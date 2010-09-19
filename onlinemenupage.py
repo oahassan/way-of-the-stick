@@ -4,6 +4,7 @@ import wotsuievents
 import gamestate
 import menupage
 import button
+import onlineversusmovesetselect
 
 host_match_button = None
 join_match_button = None
@@ -62,6 +63,7 @@ def handle_events():
     global exit_button
     global exit_indicator
     global menu
+    global host_match_button
     
     if not loaded:
         load()
@@ -82,6 +84,10 @@ def handle_events():
             if exit_button.contains(wotsuievents.mouse_pos):
                 unload()
                 gamestate.mode = gamestate.Modes.MAINMENU
+        
+        if (gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT and 
+        host_match_button.contains(wotsuievents.mouse_pos)):
+            onlineversusmovesetselect.hosting_indicator = True
     
     if loaded:
         exit_button.draw(gamestate.screen)
