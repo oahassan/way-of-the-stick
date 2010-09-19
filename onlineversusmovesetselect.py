@@ -11,6 +11,7 @@ import versusserver
 import versusclient
 
 import button
+from onlineversusmovesetselectui import NetworkMessageNotification
 import movesetselectui
 import wotsuicontainers
 
@@ -27,19 +28,6 @@ connect_button = None
 hosting_indicator = False
 connected = False
 network_message_notifications = []
-
-class NetworkMessageNotification(button.Label):
-    
-    def __init__(self, text, timeout = 3000):
-        button.Label.__init__(self, (0,0), text, (255,255,255), 20)
-        self.timer = 0
-        self.timeout = timeout
-    
-    def update(self, time_passed):
-        self.timer += time_passed
-    
-    def expired(self):
-        return self.timer > self.timeout
 
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
