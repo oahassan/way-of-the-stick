@@ -96,8 +96,10 @@ def get_local_player_position():
             return player_position
 
 def local_player_is_in_match(): 
-    if listener.player_id == None:
-        pass
+    if listener == None:
+        return False
+    elif listener.player_id == None:
+        return False
     else:
         if listener.player_id in listener.player_positions.values():
             return True
@@ -106,6 +108,11 @@ def local_player_is_in_match():
 
 def connect_to_host(host_ip_address):
     """connects to a server using the default port specified in DFLT_PORT"""
+    global listener
+    
+    if listener == None:
+        listener = ClientConnectionListener()
+    
     listener.Connect((host_ip_address, DFLT_PORT))
 
 def get_network_messages():
