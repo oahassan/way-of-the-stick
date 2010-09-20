@@ -32,7 +32,7 @@ class ClientConnectionListener(ConnectionListener):
         connection.Close()
         self.connection_status = ConnectionStatus.DISCONNECTED
     
-    def pop_received_actions(self):
+    def pop_received_data(self):
         """returns the list of received actions and clears the list"""
         actions_received = self.actions_received
         self.actions_received = []
@@ -42,6 +42,18 @@ class ClientConnectionListener(ConnectionListener):
     def join_match(self):
         data = {DataKeys.ACTION : ServerActions.JOIN_MATCH}
         connection.Send(data)
+    
+    def del_player(self, player_to_del_id):
+        del self.player_nicknames[player_to_del_id]
+        
+        if player_to_del_id in self.spectators:
+            self.spectators.remove(player_to_del_id)
+            print("spectator deleted")
+        
+        for player_position, player_id in self.player_positions.iteritems():
+            if player_to_del_id == player_id:
+                self.player_positions[player_position] = None
+                print("player deleted")
     
     #Network methods
     
@@ -59,6 +71,9 @@ class ClientConnectionListener(ConnectionListener):
     
     def Network_player_joined(self, data):
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]
+    
+    def Network_player_disconnected(self, data):
+        self.del_player(data[DataKeys.PLAYER_ID])
     
     def Network_spectator_joined(self, data):
         spectator_name = data[DataKeys.NICKNAME]

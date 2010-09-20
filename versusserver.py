@@ -24,6 +24,7 @@ class ClientActions:
     GET_PLAYER_ID = "get_player_id"
     GET_PLAYER_POSITION = "get_player_position"
     GET_CURRENT_PLAYER_DATA = "get_current_player_data"
+    PLAYER_DISCONNECTED = "player_disconnected"
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -197,6 +198,15 @@ class WotsServer(Server):
         
         if player in self.spectators:
             self.spectators.remove(player)
+        
+        data = \
+            {
+                DataKeys.ACTION : ClientActions.PLAYER_DISCONNECTED,
+                DataKeys.PLAYER_ID : player.player_id,
+                DataKeys.NICKNAME : player.nickname
+            }
+        
+        self.send_to_all(data)
     
     def send_to_all(self, data):
         """send data to all connected players"""

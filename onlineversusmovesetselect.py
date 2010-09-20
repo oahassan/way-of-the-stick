@@ -284,16 +284,27 @@ def handle_events():
             versusserver.server.Pump()
 
 def get_new_network_message_notifications():
-    received_actions = versusclient.listener.pop_received_actions()
+    received_data = versusclient.listener.pop_received_data()
     
-    for action in received_actions:
-        if (action[versusserver.DataKeys.ACTION] == 
+    for data in received_data:
+        if (data[versusserver.DataKeys.ACTION] == 
         versusserver.ClientActions.SPECTATOR_JOINED):
+            
             network_message_notifications.append(
                 NetworkMessageNotification(
-                    action[versusserver.DataKeys.NICKNAME] + " is now spectating."
+                    data[versusserver.DataKeys.NICKNAME] + " is now spectating."
                 )
             )
+        
+        elif (data[versusserver.DataKeys.ACTION] ==
+        versusserver.ClientActions.PLAYER_DISCONNECTED):
+            
+            network_message_notifications.append(
+                NetworkMessageNotification(
+                    data[versusserver.DataKeys.NICKNAME] + " has left the game."
+                )
+            )
+        
         else:
             #TODO - Raise invalid value error here
             pass
