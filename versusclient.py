@@ -51,7 +51,10 @@ class ClientConnectionListener(ConnectionListener):
         print(data)
     
     def Network_get_player_position(self, data):
-        pass
+        player_position = data[DataKeys.PLAYER_POSITION]
+        id_of_player_at_position = data[DataKeys.PLAYER_ID]
+        
+        self.player_positions[player_position] = id_of_player_at_position
     
     def Network_player_joined(self, data):
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]

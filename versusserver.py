@@ -38,7 +38,8 @@ class ClientChannel(Channel):
         data = \
             {
                 DataKeys.ACTION : ClientActions.GET_PLAYER_POSITION,
-                DataKeys.PLAYER_POSITION : player_position
+                DataKeys.PLAYER_POSITION : player_position,
+                DataKeys.PLAYER_ID : id(self)
             }
         
         self.Send(data)
