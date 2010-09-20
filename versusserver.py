@@ -42,7 +42,7 @@ class ClientChannel(Channel):
                 DataKeys.PLAYER_ID : id(self)
             }
         
-        self.Send(data)
+        self._server.send_to_all(data)
     
     def Network_spectate_match(self, data):
         pass
@@ -139,11 +139,14 @@ class WotsServer(Server):
             
             return PlayerPositions.PLAYER2
             
-        elif not (player == player1 or player == player2):
-            return PlayerPositions.NONE
+        elif player == player1:
+            return PlayerPositions.PLAYER1
+            
+        elif player == player2:
+            return PlayerPositions.PLAYER1
+            
         else:
-            #do nothing because the player has already joined the match
-            pass
+            return PlayerPositions.None
     
     def del_player(self, player):
         """remove a player from the server"""
