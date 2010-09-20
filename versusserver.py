@@ -143,7 +143,7 @@ class WotsServer(Server):
             return PlayerPositions.PLAYER1
             
         elif player == player2:
-            return PlayerPositions.PLAYER1
+            return PlayerPositions.PLAYER2
             
         else:
             return PlayerPositions.None
