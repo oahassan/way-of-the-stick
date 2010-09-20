@@ -70,6 +70,15 @@ class ClientConnectionListener(ConnectionListener):
     def Network_get_player_id(self, data):
         self.player_id = data[DataKeys.PLAYER_ID]
     
+    def Network_sync_to_server(self, data):
+        """syncs client data on connected players with server"""
+        
+        #rencode sends lists accross as tuples so convert it back into a list
+        self.spectators = [spectator_id for spectator_id in data[DataKeys.SPECTATORS]]
+        
+        self.player_positions = data[DataKeys.PLAYER_POSITIONS]
+        self.player_nicknames = data[DataKeys.PLAYER_NICKNAMES]
+    
     def Network_update_player_state(self, data):
         pass
     

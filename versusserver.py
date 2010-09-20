@@ -12,7 +12,10 @@ class PlayerPositions:
 class DataKeys:
     ACTION = "action"
     NICKNAME = "nickname"
+    PLAYER_NICKNAMES = "player_nicknames"
     PLAYER_POSITIONS = "player_positions"
+    SPECTATORS = "spectators"
+    PLAYERS = "players"
     PLAYER_POSITION = "player_position"
     PLAYER_ID = "player_id"
 
@@ -20,6 +23,7 @@ class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
     GET_PLAYER_ID = "get_player_id"
     GET_PLAYER_POSITION = "get_player_position"
+    GET_CURRENT_PLAYER_DATA = "get_current_player_data"
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -27,6 +31,7 @@ class ClientChannel(Channel):
         
         self.nickname = self._server.generate_nickname()
         self.postion = PlayerPositions.NONE
+        self.player_id = id(self)
     
     def Network(self, data):
         print("Server channel")
@@ -39,7 +44,7 @@ class ClientChannel(Channel):
             {
                 DataKeys.ACTION : ClientActions.GET_PLAYER_POSITION,
                 DataKeys.PLAYER_POSITION : player_position,
-                DataKeys.PLAYER_ID : id(self)
+                DataKeys.PLAYER_ID : self.player_id
             }
         
         self._server.send_to_all(data)
@@ -66,8 +71,7 @@ class WotsServer(Server):
         self.player_positions = \
             {
                 PlayerPositions.PLAYER1 : None,
-                PlayerPositions.PLAYER2 : None,
-                PlayerPositions.NONE : []
+                PlayerPositions.PLAYER2 : None
             }
         self.players = []
         self.spectators = []
@@ -79,6 +83,7 @@ class WotsServer(Server):
         
         self.assign_id(channel)
         self.add_spectator(channel)
+        self.sync_client_to_server(channel)
     
     def close(self):
         """remove all players and close the sever's socket"""
@@ -89,6 +94,35 @@ class WotsServer(Server):
             player.close()
         
         Server.close(self)
+    
+    def sync_client_to_server(self, client):
+        spectators = [spectator.player_id for spectator in self.spectators]
+        
+        player_positions = {}
+        
+        for position, player in self.player_positions.iteritems():
+            if player == None:
+                player_positions[position] = None
+            else:
+                player_positions[position] = player.player_id
+        
+        player_nicknames = {}
+        
+        for player in self.players:
+            player_nicknames[player.player_id] = player.nickname
+        
+        for spectator in self.spectators:
+            player_nicknames[spectator.player_id] = spectator.nickname
+        
+        data = \
+            {
+                DataKeys.ACTION : "sync_to_server",
+                DataKeys.SPECTATORS : spectators,
+                DataKeys.PLAYER_POSITIONS : player_positions,
+                DataKeys.PLAYER_NICKNAMES : player_nicknames
+            }
+        
+        client.Send(data)
     
     def generate_nickname(self):
         """creates a player name and increments the number of the player name"""
@@ -102,7 +136,7 @@ class WotsServer(Server):
         data = \
             {
                 DataKeys.ACTION : ClientActions.GET_PLAYER_ID,
-                DataKeys.PLAYER_ID : id(player)
+                DataKeys.PLAYER_ID : player.player_id
             }
         
         player.Send(data)
@@ -116,7 +150,7 @@ class WotsServer(Server):
             {
                 DataKeys.ACTION : ClientActions.SPECTATOR_JOINED,
                 DataKeys.NICKNAME : player.nickname,
-                DataKeys.PLAYER_ID : id(player)
+                DataKeys.PLAYER_ID : player.player_id
             }
         
         self.send_to_all(data)
@@ -149,7 +183,7 @@ class WotsServer(Server):
             return PlayerPositions.PLAYER2
             
         else:
-            return PlayerPositions.None
+            return PlayerPositions.NONE
     
     def del_player(self, player):
         """remove a player from the server"""
