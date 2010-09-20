@@ -130,12 +130,14 @@ class WotsServer(Server):
         if player1 == None and not player == player2:
             self.player_positions[PlayerPositions.PLAYER1] = player
             self.players.append(player)
+            self.spectators.remove(player)
             
             return PlayerPositions.PLAYER1
             
         elif player2 == None and not player == player1:
             self.player_positions[PlayerPositions.PLAYER2] = player
             self.players.append(player)
+            self.spectators.remove(player)
             
             return PlayerPositions.PLAYER2
             
