@@ -67,7 +67,9 @@ def load():
         versusserver.PlayerPositions.PLAYER1 : player1_ui,
         versusserver.PlayerPositions.PLAYER2 : player2_ui
     }
-    set_remote_player_state_position(player2_ui)
+    
+    set_player_state_position(player1_ui, versusserver.PlayerPositions.PLAYER1)
+    set_player_state_position(player2_ui, versusserver.PlayerPositions.PLAYER2)
     
     ip_address_input = \
         wotsuicontainers.TextEntryBox(
@@ -281,14 +283,30 @@ def layout_network_message_notifications():
         
         current_row_position = (50, current_row_position[1] + 20)
     
-
-def set_remote_player_state_position(remote_player_state_label):
-    window_center = (gamestate._WIDTH / 2, gamestate._HEIGHT / 2)
+def get_local_player_setup_container_position(player_position):
+    if player_position == versusserver.PlayerPositions.PLAYER1:
+        return (50, 100)
+    elif player_position == versusserver.PlayerPosition.PLAYER2:
+        return (450, 100)
+ 
+def set_player_state_position(player_state_label, player_position):
     
-    y_pos = window_center[1] - (remote_player_state_label.height / 2)
-    
-    window_x_75_percent = window_center[0] + ((gamestate._WIDTH - window_center[0]) / 2)
-    
-    x_pos = window_x_75_percent - (remote_player_state_label.width / 2)
-    
-    remote_player_state_label.set_position((x_pos, y_pos))
+    if player_position == versusserver.PlayerPositions.PLAYER1:
+        window_right_center = (0, gamestate._HEIGHT / 2)
+        
+        y_pos = window_right_center[1] - (player_state_label.height / 2)
+        
+        window_x_25_percent = gamestate._WIDTH / 4
+        x_pos = window_x_25_percent - (player_state_label.width / 2)
+        
+        player_state_label.set_position((x_pos, y_pos))
+        
+    elif player_position == versusserver.PlayerPositions.PLAYER2:
+        window_center = (gamestate._WIDTH / 2, gamestate._HEIGHT / 2)
+        
+        y_pos = window_center[1] - (player_state_label.height / 2)
+        
+        window_x_75_percent = window_center[0] + ((gamestate._WIDTH - window_center[0]) / 2)
+        x_pos = window_x_75_percent - (player_state_label.width / 2)
+        
+        player_state_label.set_position((x_pos, y_pos))
