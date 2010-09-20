@@ -90,6 +90,20 @@ class ClientConnectionListener(ConnectionListener):
 
 listener = ClientConnectionListener()
 
+def get_local_player_position():
+    for player_position, player_id in listener.player_positions.iteritems():
+        if player_id == listener.player_id:
+            return player_position
+
+def local_player_is_in_match(): 
+    if listener.player_id == None:
+        pass
+    else:
+        if listener.player_id in listener.player_positions.values():
+            return True
+        else:
+            return False
+
 def connect_to_host(host_ip_address):
     """connects to a server using the default port specified in DFLT_PORT"""
     listener.Connect((host_ip_address, DFLT_PORT))

@@ -29,6 +29,7 @@ hosting_indicator = False
 connected = False
 network_message_notifications = []
 join_match_button = None
+local_player_container_created = False
 
 player_status_ui_dictionary = \
     {
@@ -79,8 +80,8 @@ def load():
             text_color = (255, 255, 255)
         )
     
-    join_match_button = button.TextButton("Connect to server")
-    join_match_button.set_position((210, 50))
+    join_match_button = button.TextButton("Join Match")
+    join_match_button.set_position((360, 50))
     
     if hosting_indicator:
         versusserver.start_lan_server()
@@ -137,6 +138,7 @@ def handle_events():
     global network_message_notifications
     global player_status_ui_dictionary
     global join_match_button
+    global local_player_container_created
     
     if loaded == False:
         load()
@@ -172,6 +174,21 @@ def handle_events():
     
     if loaded:
         players_ready = True
+        
+        if not local_player_container_created:
+            
+            if versusclient.local_player_is_in_match():
+                local_player_position = versusclient.get_local_player_position()
+                
+                new_ui_position = \
+                    get_local_player_setup_container_position(local_player_position)
+                
+                player_status_ui_dictionary[local_player_position] = \
+                    LocalPlayerSetupContainer(new_ui_position, get_playable_movesets())
+                
+                local_player_container_created = True
+            else:
+                local_player_container_created = False
         
         for player_status_ui in player_status_ui_dictionary.values():
             player_status_ui.handle_events()
@@ -285,9 +302,9 @@ def layout_network_message_notifications():
     
 def get_local_player_setup_container_position(player_position):
     if player_position == versusserver.PlayerPositions.PLAYER1:
-        return (50, 100)
-    elif player_position == versusserver.PlayerPosition.PLAYER2:
-        return (450, 100)
+        return (50, 150)
+    elif player_position == versusserver.PlayerPositions.PLAYER2:
+        return (450, 150)
  
 def set_player_state_position(player_state_label, player_position):
     
