@@ -23,6 +23,7 @@ class ClientConnectionListener(ConnectionListener):
     def __init__(self):
         self.connection_status = ConnectionStatus.DISCONNECTED
         self.player_positions = {PlayerPositions.PLAYER1:None, PlayerPositions.PLAYER2:None}
+        self.player_nicknames = {}
         self.spectators = []
         self.actions_received = []
         self.player_id = None
@@ -61,7 +62,10 @@ class ClientConnectionListener(ConnectionListener):
     
     def Network_spectator_joined(self, data):
         spectator_name = data[DataKeys.NICKNAME]
-        self.spectators.append(spectator_name)
+        spectator_id = data[DataKeys.PLAYER_ID]
+        
+        self.spectators.append(spectator_id)
+        self.player_nicknames[spectator_id] = spectator_name 
     
     def Network_get_player_id(self, data):
         self.player_id = data[DataKeys.PLAYER_ID]
@@ -105,6 +109,21 @@ def local_player_is_in_match():
             return True
         else:
             return False
+
+def get_remote_player_positions():
+    remote_player_positions = []
+    
+    for position, player_id in listener.player_positions.iteritems():
+        if not (player_id == None or player_id == listener.player_id):
+            remote_player_positions.append(position)
+    
+    return remote_player_positions
+
+def get_player_id_at_position(player_position):
+    return listener.player_positions[player_position]
+
+def get_player_nickname(player_id):
+    return listener.player_nicknames[player_id]
 
 def connect_to_host(host_ip_address):
     """connects to a server using the default port specified in DFLT_PORT"""

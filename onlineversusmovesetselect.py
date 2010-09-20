@@ -11,7 +11,7 @@ import versusserver
 import versusclient
 
 import button
-from onlineversusmovesetselectui import NetworkMessageNotification, LocalPlayerSetupContainer
+from onlineversusmovesetselectui import NetworkMessageNotification, LocalPlayerSetupContainer, RemotePlayerStateLabel
 import movesetselectui
 import wotsuicontainers
 
@@ -30,6 +30,7 @@ connected = False
 network_message_notifications = []
 join_match_button = None
 local_player_container_created = False
+assigned_position = None
 
 player_status_ui_dictionary = \
     {
@@ -53,12 +54,14 @@ def load():
     global connected
     global player_status_ui_dictionary
     global join_match_button
+    global assigned_positions
     
     exit_button = button.ExitButton()
     loaded = True
     start_match_label = movesetselectui.MovesetActionLabel((10, 520), "Start Match!")
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
+    assigned_positions = []
     
     player1_ui = button.Label((50,300), "Waiting for Player", (255,255,255),32)
     player2_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
@@ -100,6 +103,7 @@ def unload():
     global hosting_indicator
     global connected
     global join_match_button
+    global assigned_positions
     
     exit_button = None
     loaded = False
@@ -107,6 +111,7 @@ def unload():
     ip_address_input = None
     network_message_label = None
     join_match_button = None
+    assigned_positions = None
     
     if connected:
         #clean up any remaining messages to the client
@@ -187,8 +192,26 @@ def handle_events():
                     LocalPlayerSetupContainer(new_ui_position, get_playable_movesets())
                 
                 local_player_container_created = True
+                assigned_positions.append(local_player_position)
             else:
                 local_player_container_created = False
+        
+        for player_position in versusclient.get_remote_player_positions():
+            if not player_position in assigned_positions:
+                remote_player_id = versusclient.get_player_id_at_position(player_position)
+                remote_player_nickname = versusclient.get_player_nickname(remote_player_id)
+                
+                new_ui_position = \
+                    get_remote_player_state_label_position(player_position)
+                
+                player_status_ui_dictionary[player_position] = \
+                    RemotePlayerStateLabel(
+                        new_ui_position,
+                        remote_player_id,
+                        remote_player_nickname
+                    )
+                
+                assigned_positions.append(player_position)
         
         for player_status_ui in player_status_ui_dictionary.values():
             player_status_ui.handle_events()
@@ -301,6 +324,12 @@ def layout_network_message_notifications():
         current_row_position = (50, current_row_position[1] + 20)
     
 def get_local_player_setup_container_position(player_position):
+    if player_position == versusserver.PlayerPositions.PLAYER1:
+        return (50, 150)
+    elif player_position == versusserver.PlayerPositions.PLAYER2:
+        return (450, 150)
+
+def get_remote_player_state_label_position(player_position):
     if player_position == versusserver.PlayerPositions.PLAYER1:
         return (50, 150)
     elif player_position == versusserver.PlayerPositions.PLAYER2:

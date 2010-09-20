@@ -24,12 +24,14 @@ class NetworkMessageNotification(button.Label):
 class RemotePlayerStateLabel(wotsui.UIObjectBase):
     
     def __init__(self, position, player_id, player_name):
-        self.player_name_label = button.Label(position, player_name, (255,255,255), 23)
+        wotsui.UIObjectBase.__init__(self)
+        
+        self.player_name_label = button.Label(position, player_name, (255,255,255), 25)
         self.add_child(self.player_name_label)
         
         player_state_label_position = (position[0], position[1] + 200)
         self.player_state_label = \
-            button.Label(position, "Preparing...", (255,255,255), 23)
+            button.Label(player_state_label_position, "Preparing...", (255,255,255), 25)
         self.add_child(self.player_state_label)
         
     def set_player_state_label_text(self, text):

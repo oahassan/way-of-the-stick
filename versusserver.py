@@ -115,7 +115,8 @@ class WotsServer(Server):
         data = \
             {
                 DataKeys.ACTION : ClientActions.SPECTATOR_JOINED,
-                DataKeys.NICKNAME : player.nickname
+                DataKeys.NICKNAME : player.nickname,
+                DataKeys.PLAYER_ID : id(player)
             }
         
         self.send_to_all(data)
