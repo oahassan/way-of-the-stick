@@ -190,7 +190,7 @@ def handle_events():
         
         elif spectate_button.selected:
             if spectate_button.contains(wotsuievents.mouse_pos):
-                #versusclient.listener.join_match()
+                versusclient.listener.spectate_match()
                 spectate_button.handle_deselected()
     
     if loaded:

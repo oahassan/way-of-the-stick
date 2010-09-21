@@ -64,7 +64,7 @@ class ClientChannel(Channel):
             self._server.send_to_all(data)
     
     def Network_spectate_match(self, data):
-        pass
+        self._server.add_spectator(self)
     
     def Network_update_player_state(self, data):
         pass
@@ -155,16 +155,23 @@ class WotsServer(Server):
         
         player.Send(data)
     
-    def add_spectator(self, player):
+    def add_spectator(self, spectator):
         """Add a spectator to the server"""
-        print("spectator joined " + player.nickname)
-        self.spectators.append(player)
+        print("spectator joined " + spectator.nickname)
+        self.spectators.append(spectator)
+        
+        for player_position, player in self.player_positions.iteritems():
+            if player == spectator:
+                self.player_positions[player_position] = None
+                self.players.remove(spectator)
+                
+                break
         
         data = \
             {
                 DataKeys.ACTION : ClientActions.SPECTATOR_JOINED,
-                DataKeys.NICKNAME : player.nickname,
-                DataKeys.PLAYER_ID : player.player_id
+                DataKeys.NICKNAME : spectator.nickname,
+                DataKeys.PLAYER_ID : spectator.player_id
             }
         
         self.send_to_all(data)

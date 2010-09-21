@@ -18,6 +18,7 @@ class ConnectionStatus:
 
 class ServerActions:
     JOIN_MATCH = "join_match"
+    SPECTATE_MATCH = "spectate_match"
 
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
@@ -41,6 +42,10 @@ class ClientConnectionListener(ConnectionListener):
     
     def join_match(self):
         data = {DataKeys.ACTION : ServerActions.JOIN_MATCH}
+        connection.Send(data)
+    
+    def spectate_match(self):
+        data = {DataKeys.ACTION : ServerActions.SPECTATE_MATCH}
         connection.Send(data)
     
     def del_player(self, player_to_del_id):
@@ -80,7 +85,13 @@ class ClientConnectionListener(ConnectionListener):
         spectator_id = data[DataKeys.PLAYER_ID]
         
         self.spectators.append(spectator_id)
-        self.player_nicknames[spectator_id] = spectator_name 
+        self.player_nicknames[spectator_id] = spectator_name
+        
+        for player_position, player_id in self.player_positions.iteritems():
+            if player_id == spectator_id:
+                self.player_positions[player_position] = None
+                
+                break
     
     def Network_get_player_id(self, data):
         self.player_id = data[DataKeys.PLAYER_ID]
