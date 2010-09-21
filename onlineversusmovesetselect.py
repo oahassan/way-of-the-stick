@@ -32,6 +32,7 @@ join_match_button = None
 local_player_container_created = False
 assigned_position = None
 spectate_button = None
+local_player_position = None
 
 player_status_ui_dictionary = \
     {
@@ -110,7 +111,9 @@ def unload():
     global join_match_button
     global assigned_positions
     global spectate_button
+    global local_player_position
     
+    local_player_position = None
     exit_button = None
     loaded = False
     start_match_label = None
@@ -151,6 +154,7 @@ def handle_events():
     global player_status_ui_dictionary
     global join_match_button
     global local_player_container_created
+    global local_player_position
     
     if loaded == False:
         load()
@@ -211,6 +215,18 @@ def handle_events():
                 assigned_positions.append(local_player_position)
             else:
                 local_player_container_created = False
+        else:
+            
+            if not versusclient.local_player_is_in_match():
+                new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
+                set_player_state_position(new_ui, local_player_position)
+                
+                player_status_ui_dictionary[local_player_position] = new_ui
+                
+                assigned_positions.remove(local_player_position)
+                local_player_position = None
+                local_player_container_created = False
+                    
         
         for player_position in versusclient.get_remote_player_positions():
             if not player_position in assigned_positions:
