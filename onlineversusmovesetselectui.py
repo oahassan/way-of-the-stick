@@ -22,10 +22,22 @@ class NetworkMessageNotification(button.Label):
     def expired(self):
         return self.timer > self.timeout
 
-class RemotePlayerStateLabel(wotsui.UIObjectBase):
+class PlayerStatusUiBase():
+    
+    def __init__(self):
+        self.ready_indicator = False
+    
+    def set_player_ready(ready_indicator):
+        self.ready_indicator = ready_indicator
+    
+    def player_ready():
+        return self.ready_indicator
+
+class RemotePlayerStateLabel(wotsui.UIObjectBase, PlayerStatusUiBase):
     
     def __init__(self, position, player_id, player_name):
         wotsui.UIObjectBase.__init__(self)
+        PlayerStatusUiBase.__init__(self)
         
         self.player_name_label = button.Label(position, player_name, (255,255,255), 25)
         self.add_child(self.player_name_label)
@@ -34,22 +46,15 @@ class RemotePlayerStateLabel(wotsui.UIObjectBase):
         self.player_state_label = \
             button.Label(player_state_label_position, "Preparing...", (255,255,255), 25)
         self.add_child(self.player_state_label)
-        
-        self.ready_indicator = False
-        
+    
     def set_player_state_label_text(self, text):
         self.player_state_label.set_text(text)
-        
-    def set_player_ready(ready_indicator):
-        self.ready_indicator = ready_indicator
-    
-    def player_ready():
-        return self.ready_indicator
 
-class LocalPlayerSetupContainer(wotsui.UIObjectBase):
+class LocalPlayerSetupContainer(wotsui.UIObjectBase, PlayerStatusUiBase):
     
     def __init__(self, position, movesets):
         wotsui.UIObjectBase.__init__(self)
+        PlayerStatusUiBase.__init__(self)
         
         player_type_select_position = position
         
@@ -99,6 +104,8 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase):
     def player_ready(self):
         if ((self.moveset_select.selected_moveset != None) and
         (self.player_type_select.selected_button != None)):
+            self.ready_indicator = True
             return True
         else:
+            self.ready_indicator = False
             return False

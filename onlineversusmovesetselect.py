@@ -209,6 +209,16 @@ def handle_events():
         if local_player_container_created:
             players_ready = True
             
+            local_player_position = versusclient.get_local_player_position()
+            
+            if player_status_ui_dictionary[local_player_position].player_ready() and \
+            not versusclient.listener.player_positions_ready_dictionary[local_player_position]:
+                pass
+            
+            if not player_status_ui_dictionary[local_player_position].player_ready() and \
+            versusclient.listener.player_positions_ready_dictionary[local_player_position]:
+                pass
+            
             for player_status_ui in player_status_ui_dictionary.values():
                 if hasattr(player_status_ui, "player_ready"):
                     players_ready = (getattr(player_status_ui, "player_ready")() and players_ready)

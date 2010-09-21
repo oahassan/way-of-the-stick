@@ -19,11 +19,16 @@ class ConnectionStatus:
 class ServerActions:
     JOIN_MATCH = "join_match"
     SPECTATE_MATCH = "spectate_match"
+    PLAYER_READY = "player_ready"
+    PLAYER_NOT_READY = "player_not_ready"
 
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
         self.connection_status = ConnectionStatus.DISCONNECTED
-        self.player_positions = {PlayerPositions.PLAYER1:None, PlayerPositions.PLAYER2:None}
+        self.player_positions = \
+            {PlayerPositions.PLAYER1:None, PlayerPositions.PLAYER2:None}
+        self.player_positions_ready_dictionary = \
+            {PlayerPositions.PLAYER1:False, PlayerPositions.PLAYER2:False}
         self.player_nicknames = {}
         self.spectators = []
         self.actions_received = []
