@@ -4,6 +4,7 @@ import movesetdata
 import gamestate
 
 import wotsui
+import wotsuievents
 import wotsuicontainers
 import button
 import movesetselectui
@@ -34,8 +35,16 @@ class RemotePlayerStateLabel(wotsui.UIObjectBase):
             button.Label(player_state_label_position, "Preparing...", (255,255,255), 25)
         self.add_child(self.player_state_label)
         
+        self.ready_indicator = False
+        
     def set_player_state_label_text(self, text):
         self.player_state_label.set_text(text)
+        
+    def set_player_ready(ready_indicator):
+        self.ready_indicator = ready_indicator
+    
+    def player_ready():
+        return self.ready_indicator
 
 class LocalPlayerSetupContainer(wotsui.UIObjectBase):
     
@@ -74,6 +83,18 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase):
     
         self.moveset_select.handle_events()
         self.player_type_select.handle_events()
+        
+        if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+            for button in self.player_type_select.buttons:
+                if button.contains(wotsuievents.mouse_pos):
+                    button.handle_selected()
+                    
+                    if ((self.player_type_select.selected_button != None)
+                    and (self.player_type_select.selected_button != button)):
+                        self.player_type_select.selected_button.handle_deselected()
+                    
+                    self.player_type_select.selected_button = button
+                    break
     
     def player_ready(self):
         if ((self.moveset_select.selected_moveset != None) and

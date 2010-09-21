@@ -209,11 +209,10 @@ def handle_events():
         
         if local_player_container_created:
             for player_status_ui in player_status_ui_dictionary.values():
-                player_status_ui.handle_events()
-                player_status_ui.draw(gamestate.screen)
-                
                 if hasattr(player_status_ui, "player_ready"):
                     player_ready = getattr(player_status_ui, "player_ready")() and player_ready
+                else:
+                    player_ready = False
             
             if players_ready:
                 if start_match_label.active == False:
@@ -221,6 +220,10 @@ def handle_events():
             else:
                 if start_match_label.active:
                     start_match_label.inactivate()
+        
+        for player_status_ui in player_status_ui_dictionary.values():
+            player_status_ui.handle_events()
+            player_status_ui.draw(gamestate.screen)
         
         join_match_button.draw(gamestate.screen)
         exit_button.draw(gamestate.screen)
