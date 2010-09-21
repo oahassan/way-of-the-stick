@@ -27,10 +27,10 @@ class PlayerStatusUiBase():
     def __init__(self):
         self.ready_indicator = False
     
-    def set_player_ready(ready_indicator):
+    def set_player_ready(self, ready_indicator):
         self.ready_indicator = ready_indicator
     
-    def player_ready():
+    def player_ready(self):
         return self.ready_indicator
 
 class RemotePlayerStateLabel(wotsui.UIObjectBase, PlayerStatusUiBase):

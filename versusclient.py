@@ -20,7 +20,6 @@ class ServerActions:
     JOIN_MATCH = "join_match"
     SPECTATE_MATCH = "spectate_match"
     PLAYER_READY = "player_ready"
-    PLAYER_NOT_READY = "player_not_ready"
 
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
@@ -45,6 +44,10 @@ class ClientConnectionListener(ConnectionListener):
         
         return actions_received
     
+    def player_ready(self):
+        data = {DataKeys.ACTION : ServerActions.PLAYER_READY}
+        connection.Send(data)
+    
     def join_match(self):
         data = {DataKeys.ACTION : ServerActions.JOIN_MATCH}
         connection.Send(data)
@@ -53,16 +56,20 @@ class ClientConnectionListener(ConnectionListener):
         data = {DataKeys.ACTION : ServerActions.SPECTATE_MATCH}
         connection.Send(data)
     
-    def del_player(self, player_to_del_id):
+    def del_player(self, player_to_delete_id):
         del self.player_nicknames[player_to_del_id]
         
-        if player_to_del_id in self.spectators:
+        if player_to_delete_id in self.spectators:
             self.spectators.remove(player_to_del_id)
             print("spectator deleted")
         
+        self.remove_player_from_match(player_to_delete_id)
+    
+    def remove_player_from_match(self, player_to_remove_id):
         for player_position, player_id in self.player_positions.iteritems():
-            if player_to_del_id == player_id:
+            if player_to_remove_id == player_id:
                 self.player_positions[player_position] = None
+                self.player_positions_ready[player_position] = False
                 print("player deleted")
     
     #Network methods
@@ -83,7 +90,8 @@ class ClientConnectionListener(ConnectionListener):
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]
     
     def Network_player_disconnected(self, data):
-        self.del_player(data[DataKeys.PLAYER_ID])
+        deleted_player_id = data[DataKeys.PLAYER_ID]
+        self.del_player(deleted_player_id)
     
     def Network_spectator_joined(self, data):
         spectator_name = data[DataKeys.NICKNAME]
@@ -92,11 +100,7 @@ class ClientConnectionListener(ConnectionListener):
         self.spectators.append(spectator_id)
         self.player_nicknames[spectator_id] = spectator_name
         
-        for player_position, player_id in self.player_positions.iteritems():
-            if player_id == spectator_id:
-                self.player_positions[player_position] = None
-                
-                break
+        self.remove_player_from_match(spectator_id)
     
     def Network_get_player_id(self, data):
         self.player_id = data[DataKeys.PLAYER_ID]
@@ -109,9 +113,16 @@ class ClientConnectionListener(ConnectionListener):
         
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]
         self.player_nicknames = data[DataKeys.PLAYER_NICKNAMES]
+        self.player_positions_ready = data[DataKeys.PLAYER_POSITIONS_READY]
+        print(self.player_positions_ready)
     
     def Network_match_full(self, data):
         pass
+    
+    def Network_player_ready(self, data):
+        player_position = data[DataKeys.PLAYER_POSITION]
+        
+        self.player_positions_ready_dictionary[player_position] = True
     
     def Network_update_player_state(self, data):
         pass

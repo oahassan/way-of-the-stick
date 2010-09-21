@@ -205,6 +205,12 @@ def handle_events():
         handle_remote_player_ui_changes()
         reset_empty_position_uis()
         
+        for player_position, player_status_ui in player_status_ui_dictionary.iteritems():
+            if hasattr(player_status_ui, "set_player_ready"):
+                if versusclient.listener.player_positions_ready_dictionary[player_position]:
+                    player_status_ui.set_player_ready(True)
+                else:
+                    player_status_ui.set_player_ready(False)
         
         if local_player_container_created:
             players_ready = True
@@ -213,11 +219,7 @@ def handle_events():
             
             if player_status_ui_dictionary[local_player_position].player_ready() and \
             not versusclient.listener.player_positions_ready_dictionary[local_player_position]:
-                pass
-            
-            if not player_status_ui_dictionary[local_player_position].player_ready() and \
-            versusclient.listener.player_positions_ready_dictionary[local_player_position]:
-                pass
+                versusclient.listener.player_ready()
             
             for player_status_ui in player_status_ui_dictionary.values():
                 if hasattr(player_status_ui, "player_ready"):

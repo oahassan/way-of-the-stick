@@ -18,6 +18,7 @@ class DataKeys:
     PLAYERS = "players"
     PLAYER_POSITION = "player_position"
     PLAYER_ID = "player_id"
+    PLAYER_POSITIONS_READY = "player_positions_ready"
 
 class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
@@ -27,6 +28,7 @@ class ClientActions:
     PLAYER_DISCONNECTED = "player_disconnected"
     MATCH_FULL = "match_full"
     PLAYER_JOINED_MATCH = "player_joined_match"
+    PLAYER_READY = "player_ready"
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -70,7 +72,18 @@ class ClientChannel(Channel):
         pass
     
     def Network_player_ready(self, data):
-        pass
+        
+        player_position = self._server.get_player_position(self)
+        self._server.set_player_position_ready(player_position, True)
+        
+        data = \
+                {
+                    DataKeys.ACTION : ClientActions.PLAYER_READY,
+                    DataKeys.PLAYER_POSITION : player_position,
+                    DataKeys.PLAYER_ID : self.player_id
+                }
+        
+        self._server.send_to_all(data)
     
     def Close(self):
         print("deleting player: " + self.nickname)
@@ -86,6 +99,11 @@ class WotsServer(Server):
             {
                 PlayerPositions.PLAYER1 : None,
                 PlayerPositions.PLAYER2 : None
+            }
+        self.player_positions_ready = \
+            {
+                PlayerPositions.PLAYER1 : False,
+                PlayerPositions.PLAYER2 : False
             }
         self.players = []
         self.spectators = []
@@ -133,7 +151,8 @@ class WotsServer(Server):
                 DataKeys.ACTION : ClientActions.SYNC_TO_SERVER,
                 DataKeys.SPECTATORS : spectators,
                 DataKeys.PLAYER_POSITIONS : player_positions,
-                DataKeys.PLAYER_NICKNAMES : player_nicknames
+                DataKeys.PLAYER_NICKNAMES : player_nicknames,
+                DataKeys.PLAYER_POSITIONS_READY : self.player_positions_ready
             }
         
         client.Send(data)
@@ -144,6 +163,16 @@ class WotsServer(Server):
         self.player_name_count += 1
         
         return player_name
+    
+    def get_player_position(self, player_to_find):
+        """return the position of the player to find.  If the player to find has no
+        position none is returned"""
+        for player_position, player in self.player_positions.iteritems():
+            if player == player_to_find:
+                return player_position
+    
+    def set_player_position_ready(self, player_position, ready_indicator):
+        self.player_positions_ready[player_position] = ready_indicator
     
     def assign_id(self, player):
         """sends a players server id to their client"""
