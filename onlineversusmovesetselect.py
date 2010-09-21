@@ -209,8 +209,14 @@ def handle_events():
             if hasattr(player_status_ui, "set_player_ready"):
                 if versusclient.listener.player_positions_ready_dictionary[player_position]:
                     player_status_ui.set_player_ready(True)
+                    
+                    if player_position in versusclient.get_remote_player_positions():
+                        player_status_ui.set_player_state_label_text("Player Ready")
                 else:
                     player_status_ui.set_player_ready(False)
+                    
+                    if player_position in versusclient.get_remote_player_positions():
+                        player_status_ui.set_player_state_label_text("Preparing...")
         
         if local_player_container_created:
             players_ready = True
