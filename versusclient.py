@@ -57,10 +57,10 @@ class ClientConnectionListener(ConnectionListener):
         connection.Send(data)
     
     def del_player(self, player_to_delete_id):
-        del self.player_nicknames[player_to_del_id]
+        del self.player_nicknames[player_to_delete_id]
         
         if player_to_delete_id in self.spectators:
-            self.spectators.remove(player_to_del_id)
+            self.spectators.remove(player_to_delete_id)
             print("spectator deleted")
         
         self.remove_player_from_match(player_to_delete_id)
@@ -69,7 +69,7 @@ class ClientConnectionListener(ConnectionListener):
         for player_position, player_id in self.player_positions.iteritems():
             if player_to_remove_id == player_id:
                 self.player_positions[player_position] = None
-                self.player_positions_ready[player_position] = False
+                self.player_positions_ready_dictionary[player_position] = False
                 print("player deleted")
     
     #Network methods
@@ -113,8 +113,7 @@ class ClientConnectionListener(ConnectionListener):
         
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]
         self.player_nicknames = data[DataKeys.PLAYER_NICKNAMES]
-        self.player_positions_ready = data[DataKeys.PLAYER_POSITIONS_READY]
-        print(self.player_positions_ready)
+        self.player_positions_ready_dictionary = data[DataKeys.PLAYER_POSITIONS_READY]
     
     def Network_match_full(self, data):
         pass
