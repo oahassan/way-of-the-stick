@@ -31,6 +31,7 @@ network_message_notifications = []
 join_match_button = None
 local_player_container_created = False
 assigned_position = None
+spectate_button = None
 
 player_status_ui_dictionary = \
     {
@@ -55,6 +56,7 @@ def load():
     global player_status_ui_dictionary
     global join_match_button
     global assigned_positions
+    global spectate_button
     
     exit_button = button.ExitButton()
     loaded = True
@@ -86,6 +88,9 @@ def load():
     join_match_button = button.TextButton("Join Match")
     join_match_button.set_position((360, 50))
     
+    spectate_button = button.TextButton("Spectate")
+    spectate_button.set_position((600, 50))
+    
     if hosting_indicator:
         versusserver.start_lan_server()
         versusclient.connect_to_host(versusserver.get_lan_ip_address())
@@ -104,6 +109,7 @@ def unload():
     global connected
     global join_match_button
     global assigned_positions
+    global spectate_button
     
     exit_button = None
     loaded = False
@@ -112,6 +118,7 @@ def unload():
     network_message_label = None
     join_match_button = None
     assigned_positions = None
+    spectate_button = None
     
     if connected:
         #clean up any remaining messages to the client
@@ -230,6 +237,7 @@ def handle_events():
         join_match_button.draw(gamestate.screen)
         exit_button.draw(gamestate.screen)
         start_match_label.draw(gamestate.screen)
+        spectate_button.draw(gamestate.screen)
         
         if hosting_indicator == False:
             if ip_address_input.active:
@@ -320,6 +328,15 @@ def get_new_network_message_notifications():
             network_message_notifications.append(
                 NetworkMessageNotification(
                     "The match is full."
+                )
+            )
+        
+        elif (data[versusserver.DataKeys.ACTION] ==
+        versusserver.ClientActions.PLAYER_DISCONNECTED):
+            
+            network_message_notifications.append(
+                NetworkMessageNotification(
+                    data[versusserver.DataKeys.NICKNAME] + " has left the game."
                 )
             )
         
