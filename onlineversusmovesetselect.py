@@ -200,7 +200,6 @@ def handle_events():
                 spectate_button.handle_deselected()
     
     if loaded:
-        players_ready = True
         
         handle_local_player_ui_changes()
         handle_remote_player_ui_changes()
@@ -208,11 +207,13 @@ def handle_events():
         
         
         if local_player_container_created:
+            players_ready = True
+            
             for player_status_ui in player_status_ui_dictionary.values():
                 if hasattr(player_status_ui, "player_ready"):
-                    player_ready = getattr(player_status_ui, "player_ready")() and player_ready
+                    players_ready = (getattr(player_status_ui, "player_ready")() and players_ready)
                 else:
-                    player_ready = False
+                    players_ready = False
             
             if players_ready:
                 if start_match_label.active == False:
