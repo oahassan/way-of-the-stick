@@ -167,6 +167,10 @@ def handle_events():
             if join_match_button.contains(wotsuievents.mouse_pos):
                 join_match_button.handle_selected()
         
+        if spectate_button.active:
+            if spectate_button.contains(wotsuievents.mouse_pos):
+                spectate_button.handle_selected()
+        
     if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
         if exit_button.selected:
             exit_button.handle_deselected()
@@ -183,6 +187,11 @@ def handle_events():
             if join_match_button.contains(wotsuievents.mouse_pos):
                 versusclient.listener.join_match()
                 join_match_button.handle_deselected()
+        
+        elif spectate_button.selected:
+            if spectate_button.contains(wotsuievents.mouse_pos):
+                #versusclient.listener.join_match()
+                spectate_button.handle_deselected()
     
     if loaded:
         players_ready = True
