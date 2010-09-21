@@ -206,19 +206,21 @@ def handle_events():
         handle_remote_player_ui_changes()
         reset_empty_position_uis()
         
-        for player_status_ui in player_status_ui_dictionary.values():
-            player_status_ui.handle_events()
-            player_status_ui.draw(gamestate.screen)
-            
-            if hasattr(player_status_ui, "player_ready"):
-                player_ready = getattr(player_status_ui, "player_ready")() and player_ready
         
-        if players_ready:
-            if start_match_label.active == False:
-                start_match_label.activate()
-        else:
-            if start_match_label.active:
-                start_match_label.inactivate()
+        if local_player_container_created:
+            for player_status_ui in player_status_ui_dictionary.values():
+                player_status_ui.handle_events()
+                player_status_ui.draw(gamestate.screen)
+                
+                if hasattr(player_status_ui, "player_ready"):
+                    player_ready = getattr(player_status_ui, "player_ready")() and player_ready
+            
+            if players_ready:
+                if start_match_label.active == False:
+                    start_match_label.activate()
+            else:
+                if start_match_label.active:
+                    start_match_label.inactivate()
         
         join_match_button.draw(gamestate.screen)
         exit_button.draw(gamestate.screen)
