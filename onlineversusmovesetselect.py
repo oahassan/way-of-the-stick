@@ -200,7 +200,18 @@ def handle_events():
     if loaded:
         players_ready = True
         
-        if not local_player_container_created:
+        if local_player_container_created:
+            if not versusclient.local_player_is_in_match():
+                new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
+                set_player_state_position(new_ui, local_player_position)
+                
+                player_status_ui_dictionary[local_player_position] = new_ui
+                
+                assigned_positions.remove(local_player_position)
+                local_player_position = None
+                local_player_container_created = False
+            
+        else:
             
             if versusclient.local_player_is_in_match():
                 local_player_position = versusclient.get_local_player_position()
@@ -215,21 +226,12 @@ def handle_events():
                 assigned_positions.append(local_player_position)
             else:
                 local_player_container_created = False
-        else:
-            
-            if not versusclient.local_player_is_in_match():
-                new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
-                set_player_state_position(new_ui, local_player_position)
-                
-                player_status_ui_dictionary[local_player_position] = new_ui
-                
-                assigned_positions.remove(local_player_position)
-                local_player_position = None
-                local_player_container_created = False
                     
         
         for player_position in versusclient.get_remote_player_positions():
-            if not player_position in assigned_positions:
+            if player_position in assigned_positions:
+                pass
+            else:
                 remote_player_id = versusclient.get_player_id_at_position(player_position)
                 remote_player_nickname = versusclient.get_player_nickname(remote_player_id)
                 
@@ -244,6 +246,18 @@ def handle_events():
                     )
                 
                 assigned_positions.append(player_position)
+        
+        for player_position in assigned_positions:
+            player_id = versusclient.listener.player_positions[player_position]
+            
+            if player_id == None:
+                
+                assigned_positions.remove(player_position)
+                
+                new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
+                set_player_state_position(new_ui, player_position)
+                
+                player_status_ui_dictionary[player_position] = new_ui
         
         for player_status_ui in player_status_ui_dictionary.values():
             player_status_ui.handle_events()
