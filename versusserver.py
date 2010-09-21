@@ -23,8 +23,10 @@ class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
     GET_PLAYER_ID = "get_player_id"
     GET_PLAYER_POSITION = "get_player_position"
-    GET_CURRENT_PLAYER_DATA = "get_current_player_data"
+    SYNC_TO_SERVER = "sync_to_server"
     PLAYER_DISCONNECTED = "player_disconnected"
+    MATCH_FULL = "match_full"
+    PLAYER_JOINED_MATCH = "player_joined_match"
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -41,14 +43,25 @@ class ClientChannel(Channel):
     def Network_join_match(self, data):
         player_position = self._server.add_player(self)
         
-        data = \
-            {
-                DataKeys.ACTION : ClientActions.GET_PLAYER_POSITION,
-                DataKeys.PLAYER_POSITION : player_position,
-                DataKeys.PLAYER_ID : self.player_id
-            }
-        
-        self._server.send_to_all(data)
+        if player_position == PlayerPositions.NONE:
+            data = \
+                {
+                    DataKeys.ACTION : ClientActions.MATCH_FULL,
+                    DataKeys.PLAYER_POSITION : player_position,
+                    DataKeys.PLAYER_ID : self.player_id
+                }
+            
+            self.Send(data)
+        else:
+            data = \
+                {
+                    DataKeys.ACTION : ClientActions.PLAYER_JOINED_MATCH,
+                    DataKeys.PLAYER_POSITION : player_position,
+                    DataKeys.PLAYER_ID : self.player_id,
+                    DataKeys.NICKNAME : self.nickname
+                }
+            
+            self._server.send_to_all(data)
     
     def Network_spectate_match(self, data):
         pass
@@ -117,7 +130,7 @@ class WotsServer(Server):
         
         data = \
             {
-                DataKeys.ACTION : "sync_to_server",
+                DataKeys.ACTION : ClientActions.SYNC_TO_SERVER,
                 DataKeys.SPECTATORS : spectators,
                 DataKeys.PLAYER_POSITIONS : player_positions,
                 DataKeys.PLAYER_NICKNAMES : player_nicknames

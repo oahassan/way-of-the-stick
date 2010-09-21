@@ -305,6 +305,24 @@ def get_new_network_message_notifications():
                 )
             )
         
+        elif (data[versusserver.DataKeys.ACTION] ==
+        versusserver.ClientActions.PLAYER_JOINED_MATCH):
+            
+            network_message_notifications.append(
+                NetworkMessageNotification(
+                    data[versusserver.DataKeys.NICKNAME] + " has joined the game."
+                )
+            )
+        
+        elif (data[versusserver.DataKeys.ACTION] ==
+        versusserver.ClientActions.MATCH_FULL):
+            
+            network_message_notifications.append(
+                NetworkMessageNotification(
+                    "The match is full."
+                )
+            )
+        
         else:
             #TODO - Raise invalid value error here
             pass

@@ -63,7 +63,7 @@ class ClientConnectionListener(ConnectionListener):
         print("local client")
         print(data)
     
-    def Network_get_player_position(self, data):
+    def Network_player_joined_match(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]
         id_of_player_at_position = data[DataKeys.PLAYER_ID]
         
@@ -93,6 +93,9 @@ class ClientConnectionListener(ConnectionListener):
         
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]
         self.player_nicknames = data[DataKeys.PLAYER_NICKNAMES]
+    
+    def Network_match_full(self, data):
+        pass
     
     def Network_update_player_state(self, data):
         pass
