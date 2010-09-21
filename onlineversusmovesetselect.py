@@ -30,7 +30,7 @@ connected = False
 network_message_notifications = []
 join_match_button = None
 local_player_container_created = False
-assigned_position = None
+assigned_positions = None
 spectate_button = None
 local_player_position = None
 
@@ -88,9 +88,11 @@ def load():
     
     join_match_button = button.TextButton("Join Match")
     join_match_button.set_position((360, 50))
+    join_match_button.inactivate()
     
     spectate_button = button.TextButton("Spectate")
     spectate_button.set_position((600, 50))
+    spectate_button.inactivate()
     
     if hosting_indicator:
         versusserver.start_lan_server()
@@ -314,6 +316,12 @@ def handle_events():
             connect_button.draw(gamestate.screen)
         
         if connected or hosting_indicator:
+            if not join_match_button.active:
+                join_match_button.activate()
+            
+            if not spectate_button.active:
+                spectate_button.activate()
+            
             versusclient.listener.Pump()
             versusclient.get_network_messages()
             
@@ -382,6 +390,73 @@ def get_new_network_message_notifications():
         else:
             #TODO - Raise invalid value error here
             pass
+
+def handle_player_ui_changes():
+    """change ui if local or remote player states change"""
+    global player_status_ui_dictionary
+    global local_player_container_created
+    global local_player_position
+    
+    for player_position, player_id in versusclient.listener.player_positions():
+        pass
+    
+    if local_player_container_created:
+        if not versusclient.local_player_is_in_match():
+            new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
+            set_player_state_position(new_ui, local_player_position)
+            
+            player_status_ui_dictionary[local_player_position] = new_ui
+            
+            assigned_positions.remove(local_player_position)
+            local_player_position = None
+            local_player_container_created = False
+        
+    else:
+        
+        if versusclient.local_player_is_in_match():
+            local_player_position = versusclient.get_local_player_position()
+            
+            new_ui_position = \
+                get_local_player_setup_container_position(local_player_position)
+            
+            player_status_ui_dictionary[local_player_position] = \
+                LocalPlayerSetupContainer(new_ui_position, get_playable_movesets())
+            
+            local_player_container_created = True
+            assigned_positions.append(local_player_position)
+        else:
+            local_player_container_created = False
+    
+    for player_position in versusclient.get_remote_player_positions():
+        if player_position in assigned_positions:
+            pass
+        else:
+            remote_player_id = versusclient.get_player_id_at_position(player_position)
+            remote_player_nickname = versusclient.get_player_nickname(remote_player_id)
+            
+            new_ui_position = \
+                get_remote_player_state_label_position(player_position)
+            
+            player_status_ui_dictionary[player_position] = \
+                RemotePlayerStateLabel(
+                    new_ui_position,
+                    remote_player_id,
+                    remote_player_nickname
+                )
+            
+            assigned_positions.append(player_position)
+    
+    for player_position in assigned_positions:
+        player_id = versusclient.listener.player_positions[player_position]
+        
+        if player_id == None:
+            
+            assigned_positions.remove(player_position)
+            
+            new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
+            set_player_state_position(new_ui, player_position)
+            
+            player_status_ui_dictionary[player_position] = new_ui
 
 def remove_expired_network_message_notifications():
     global network_message_notifications
