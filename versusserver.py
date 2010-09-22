@@ -19,6 +19,7 @@ class DataKeys:
     PLAYER_POSITION = "player_position"
     PLAYER_ID = "player_id"
     PLAYER_POSITIONS_READY = "player_positions_ready"
+    SERVER_MODE = "server_mode"
 
 class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
@@ -29,6 +30,10 @@ class ClientActions:
     MATCH_FULL = "match_full"
     PLAYER_JOINED_MATCH = "player_joined_match"
     PLAYER_READY = "player_ready"
+
+class ServerModes:
+    MOVESETSELECT = "movesetselect"
+    MATCH = "match"
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -85,6 +90,14 @@ class ClientChannel(Channel):
         
         self._server.send_to_all(data)
     
+    def Network_match_started(self, data):
+        if self._server.client_is_player(self):
+            server_mode = data[DataKeys.SERVER_MODE]
+            
+            self._server.mode = server_mode
+            
+            self._server.send_to_all(data)
+    
     def Close(self):
         print("deleting player: " + self.nickname)
         self._server.del_player(self)
@@ -107,6 +120,7 @@ class WotsServer(Server):
             }
         self.players = []
         self.spectators = []
+        self.mode = ServerModes.MOVESETSELECT
         
         print 'server started!'
     
@@ -128,6 +142,7 @@ class WotsServer(Server):
         Server.close(self)
     
     def sync_client_to_server(self, client):
+        """send the client the current state of the server"""
         spectators = [spectator.player_id for spectator in self.spectators]
         
         player_positions = {}
@@ -152,7 +167,8 @@ class WotsServer(Server):
                 DataKeys.SPECTATORS : spectators,
                 DataKeys.PLAYER_POSITIONS : player_positions,
                 DataKeys.PLAYER_NICKNAMES : player_nicknames,
-                DataKeys.PLAYER_POSITIONS_READY : self.player_positions_ready
+                DataKeys.PLAYER_POSITIONS_READY : self.player_positions_ready,
+                DataKeys.SERVER_MODE : self.mode
             }
         
         client.Send(data)
@@ -261,6 +277,9 @@ class WotsServer(Server):
         """send data to all connected players"""
         [player.Send(data) for player in self.players]
         [spectator.Send(data) for spectator in self.spectators]
+    
+    def client_is_player(self, client):
+        return client in self.players
 
 server = None
 

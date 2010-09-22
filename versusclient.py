@@ -5,7 +5,7 @@ import wotsuievents
 import movesetdata
 import gamestate
 import versusmode
-from versusserver import DFLT_PORT, PlayerPositions, DataKeys
+from versusserver import DFLT_PORT, PlayerPositions, DataKeys, ServerModes
 
 import button
 import movesetselectui
@@ -20,6 +20,7 @@ class ServerActions:
     JOIN_MATCH = "join_match"
     SPECTATE_MATCH = "spectate_match"
     PLAYER_READY = "player_ready"
+    MATCH_STARTED = "match_started"
 
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
@@ -32,6 +33,7 @@ class ClientConnectionListener(ConnectionListener):
         self.spectators = []
         self.actions_received = []
         self.player_id = None
+        self.server_mode = None
     
     def close(self):
         connection.Close()
@@ -54,6 +56,14 @@ class ClientConnectionListener(ConnectionListener):
     
     def spectate_match(self):
         data = {DataKeys.ACTION : ServerActions.SPECTATE_MATCH}
+        connection.Send(data)
+    
+    def start_match(self):
+        data = {
+            DataKeys.ACTION : ServerActions.START_MATCH,
+            DataKeys.SERVER_MODE :ServerModes.MATCH
+        }
+        
         connection.Send(data)
     
     def del_player(self, player_to_delete_id):
@@ -79,6 +89,9 @@ class ClientConnectionListener(ConnectionListener):
         
         print("local client")
         print(data)
+    
+    def Network_match_started(self, data):
+        
     
     def Network_player_joined_match(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]
@@ -114,9 +127,14 @@ class ClientConnectionListener(ConnectionListener):
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]
         self.player_nicknames = data[DataKeys.PLAYER_NICKNAMES]
         self.player_positions_ready_dictionary = data[DataKeys.PLAYER_POSITIONS_READY]
+        
+        self.sever_mode = data[DataKeys.SERVER_MODE]
     
     def Network_match_full(self, data):
         pass
+    
+    def Network_match_started(self, data):
+        self.server_mode = data[DataKeys.SERVER_MODE]
     
     def Network_player_ready(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]
