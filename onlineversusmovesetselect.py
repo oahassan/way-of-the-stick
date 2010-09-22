@@ -304,6 +304,9 @@ def handle_events():
             for notification in network_message_notifications:
                 notification.draw(gamestate.screen)
                 notification.update(time_passed)
+            
+            if versusclient.listener.server_mode == versusserver.ServerModes.MATCH:
+                gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
         
         if hosting_indicator:
             versusserver.server.Pump()
