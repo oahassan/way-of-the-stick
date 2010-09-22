@@ -187,7 +187,8 @@ def handle_events():
         
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):
-                pass
+                versusclient.listener.start_match()
+                start_match_label.handle_deselected()
         
         elif join_match_button.selected:
             if join_match_button.contains(wotsuievents.mouse_pos):

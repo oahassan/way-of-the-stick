@@ -60,7 +60,7 @@ class ClientConnectionListener(ConnectionListener):
     
     def start_match(self):
         data = {
-            DataKeys.ACTION : ServerActions.START_MATCH,
+            DataKeys.ACTION : ServerActions.MATCH_STARTED,
             DataKeys.SERVER_MODE :ServerModes.MATCH
         }
         
@@ -89,9 +89,6 @@ class ClientConnectionListener(ConnectionListener):
         
         print("local client")
         print(data)
-    
-    def Network_match_started(self, data):
-        
     
     def Network_player_joined_match(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]
