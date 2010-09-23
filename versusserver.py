@@ -90,7 +90,7 @@ class ClientChannel(Channel):
         
         self._server.send_to_all(data)
     
-    def Network_match_started(self, data):
+    def Network_set_game_mode(self, data):
         if self._server.client_is_player(self):
             server_mode = data[DataKeys.SERVER_MODE]
             

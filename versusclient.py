@@ -20,7 +20,7 @@ class ServerActions:
     JOIN_MATCH = "join_match"
     SPECTATE_MATCH = "spectate_match"
     PLAYER_READY = "player_ready"
-    MATCH_STARTED = "match_started"
+    SET_GAME_MODE = "set_game_mode"
 
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
@@ -60,7 +60,7 @@ class ClientConnectionListener(ConnectionListener):
     
     def start_match(self):
         data = {
-            DataKeys.ACTION : ServerActions.MATCH_STARTED,
+            DataKeys.ACTION : ServerActions.SET_GAME_MODE,
             DataKeys.SERVER_MODE :ServerModes.MATCH
         }
         
@@ -130,7 +130,7 @@ class ClientConnectionListener(ConnectionListener):
     def Network_match_full(self, data):
         pass
     
-    def Network_match_started(self, data):
+    def Network_set_game_mode(self, data):
         self.server_mode = data[DataKeys.SERVER_MODE]
     
     def Network_player_ready(self, data):
