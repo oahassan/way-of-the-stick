@@ -42,6 +42,9 @@ def handle_events():
     if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
         gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
     
+    if versusclient.listener.connection_status == versusclient.ConnectionStatus.DISCONNECTED:
+        gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+    
     versusclient.listener.Pump()
     versusclient.get_network_messages()
     

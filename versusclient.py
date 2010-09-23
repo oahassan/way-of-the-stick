@@ -202,6 +202,9 @@ def get_player_id_at_position(player_position):
 def get_player_nickname(player_id):
     return listener.player_nicknames[player_id]
 
+def client_was_connected():
+    return not listener.player_id == None
+
 def connect_to_host(host_ip_address):
     """connects to a server using the default port specified in DFLT_PORT"""
     global listener

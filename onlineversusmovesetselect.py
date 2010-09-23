@@ -179,7 +179,7 @@ def handle_events():
             exit_button.handle_deselected()
             
             if exit_button.contains(wotsuievents.mouse_pos):
-                gamestate.mode = gamestate.Modes.MAINMENU
+                gamestate.mode = gamestate.Modes.ONLINEMENUPAGE
                 unload()
         
         elif start_match_label.selected:
@@ -278,9 +278,15 @@ def handle_events():
                         
                     else:
                         connect_button.handle_deselected()
-                
-            ip_address_input.draw(gamestate.screen)
-            connect_button.draw(gamestate.screen)
+            
+            if (versusclient.client_was_connected() and
+            versusclient.listener.connection_status == versusclient.ConnectionStatus.DISCONNECTED):
+                gamestate.mode = gamestate.Modes.ONLINEMENUPAGE
+                unload()
+            
+            if not versusclient.client_was_connected():
+                ip_address_input.draw(gamestate.screen)
+                connect_button.draw(gamestate.screen)
         
         if connected or gamestate.hosting:
             if not join_match_button.active:
