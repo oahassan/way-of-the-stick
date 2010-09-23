@@ -36,6 +36,8 @@ clock = pygame.time.Clock()
 old_dirty_rects = []
 new_dirty_rects = []
 
+hosting = False
+
 def clear_old_dirty_rects():
     global old_dirty_rects
     

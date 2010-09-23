@@ -25,7 +25,6 @@ player_moveset_select = None
 remote_player_state = None
 ip_address_input = None
 connect_button = None
-hosting_indicator = False
 connected = False
 network_message_notifications = []
 join_match_button = None
@@ -51,7 +50,6 @@ def load():
     global exit_button
     global start_match_label
     global ip_address_input
-    global hosting_indicator
     global connect_button
     global connected
     global player_status_ui_dictionary
@@ -94,7 +92,7 @@ def load():
     spectate_button.set_position((600, 50))
     spectate_button.inactivate()
     
-    if hosting_indicator:
+    if gamestate.hosting:
         versusserver.start_lan_server()
         versusclient.connect_to_host(versusserver.get_lan_ip_address())
         connected = True
@@ -108,7 +106,6 @@ def unload():
     global exit_button
     global start_match_label
     global ip_address_input
-    global hosting_indicator
     global connected
     global join_match_button
     global assigned_positions
@@ -131,19 +128,19 @@ def unload():
         versusclient.get_network_messages()
         
         versusclient.listener.close()
-        versusclient.listener = None
         print("listener closed")
     
-    if hosting_indicator:
-        #clean of any remaining messages to the server
+    if gamestate.hosting:
+        #clean up any remaining messages to the server
         versusserver.server.Pump()
         
         versusserver.server.close()
         versusserver.server = None
         print("server closed")
+        
+        gamestate.hosting = False
     
     connected = False
-    hosting_indicator = False
 
 def handle_events():
     global loaded
@@ -250,7 +247,7 @@ def handle_events():
         start_match_label.draw(gamestate.screen)
         spectate_button.draw(gamestate.screen)
         
-        if hosting_indicator == False:
+        if gamestate.hosting == False:
             if ip_address_input.active:
                 ip_address_input.handle_events()
             
@@ -285,7 +282,7 @@ def handle_events():
             ip_address_input.draw(gamestate.screen)
             connect_button.draw(gamestate.screen)
         
-        if connected or hosting_indicator:
+        if connected or gamestate.hosting:
             if not join_match_button.active:
                 join_match_button.activate()
             
@@ -308,7 +305,7 @@ def handle_events():
             if versusclient.listener.server_mode == versusserver.ServerModes.MATCH:
                 gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
         
-        if hosting_indicator:
+        if gamestate.hosting:
             versusserver.server.Pump()
 
 def get_new_network_message_notifications():

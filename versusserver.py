@@ -32,7 +32,7 @@ class ClientActions:
     PLAYER_READY = "player_ready"
 
 class ServerModes:
-    MOVESETSELECT = "movesetselect"
+    MOVESET_SELECT = "moveset_select"
     MATCH = "match"
 
 class ClientChannel(Channel):
@@ -120,7 +120,7 @@ class WotsServer(Server):
             }
         self.players = []
         self.spectators = []
-        self.mode = ServerModes.MOVESETSELECT
+        self.mode = ServerModes.MOVESET_SELECT
         
         print 'server started!'
     

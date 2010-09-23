@@ -66,6 +66,14 @@ class ClientConnectionListener(ConnectionListener):
         
         connection.Send(data)
     
+    def end_match(self):
+        data = {
+            DataKeys.ACTION : ServerActions.SET_GAME_MODE,
+            DataKeys.SERVER_MODE : ServerModes.MOVESET_SELECT
+        }
+        
+        connection.Send(data)
+    
     def del_player(self, player_to_delete_id):
         del self.player_nicknames[player_to_delete_id]
         
@@ -125,13 +133,14 @@ class ClientConnectionListener(ConnectionListener):
         self.player_nicknames = data[DataKeys.PLAYER_NICKNAMES]
         self.player_positions_ready_dictionary = data[DataKeys.PLAYER_POSITIONS_READY]
         
-        self.sever_mode = data[DataKeys.SERVER_MODE]
+        self.server_mode = data[DataKeys.SERVER_MODE]
     
     def Network_match_full(self, data):
         pass
     
     def Network_set_game_mode(self, data):
         self.server_mode = data[DataKeys.SERVER_MODE]
+        print(self.server_mode)
     
     def Network_player_ready(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]

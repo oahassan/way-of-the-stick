@@ -1,4 +1,7 @@
 import pygame
+
+import versusclient
+import versusserver
 import wotsuievents
 import gamestate
 import player
@@ -30,4 +33,17 @@ def handle_events():
             exit_button.symbol.color = button.Button._InactiveColor
             
             if exit_button.contains(wotsuievents.mouse_pos):
-                gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+                if versusclient.local_player_is_in_match():
+                    versusclient.listener.end_match()
+                else:
+                    versusclient.listener.close()
+                    gamestate.mode = gamestate.Modes.MAINMENU
+    
+    if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
+        gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+    
+    versusclient.listener.Pump()
+    versusclient.get_network_messages()
+    
+    if gamestate.hosting:
+        versusserver.server.Pump()

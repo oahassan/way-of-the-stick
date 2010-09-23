@@ -87,7 +87,7 @@ def handle_events():
         
         if (gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT and 
         host_match_button.contains(wotsuievents.mouse_pos)):
-            onlineversusmovesetselect.hosting_indicator = True
+            gamestate.hosting = True
     
     if loaded:
         exit_button.draw(gamestate.screen)
