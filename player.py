@@ -8,6 +8,10 @@ import mathfuncs
 import stick
 import pulltool
 
+class PlayerTypes:
+    HUMAN = 'Human'
+    BOT = 'Bot'
+
 class AnimationModes():
     PHYSICS = "PHYSICS"
     KEYFRAME = "KEYFRAME"

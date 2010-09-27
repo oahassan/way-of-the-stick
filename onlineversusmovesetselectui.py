@@ -9,6 +9,8 @@ import wotsuicontainers
 import button
 import movesetselectui
 
+import player
+
 class NetworkMessageNotification(button.Label):
     
     def __init__(self, text, timeout = 3000):
@@ -65,7 +67,7 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase, PlayerStatusUiBase):
                 300,
                 'Select Player Type',
                 button.TextButton,
-                [['Human',15], ['Bot',15]]
+                [[player.PlayerTypes.HUMAN,15], [player.PlayerTypes.BOT,15]]
             )
         self.add_child(self.player_type_select)
         
@@ -100,6 +102,18 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase, PlayerStatusUiBase):
                     
                     self.player_type_select.selected_button = button
                     break
+    
+    def get_player_type(self):
+        if self.player_type_select.selected_button != None:
+            return self.player_type_select.selected_button.text.text
+        else:
+            return None
+    
+    def get_player_moveset(self):
+        if self.moveset_select.selected_moveset != None:
+            return self.moveset_select.selected_moveset
+        else:
+            return None
     
     def player_ready(self):
         if ((self.moveset_select.selected_moveset != None) and

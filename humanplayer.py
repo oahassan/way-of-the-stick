@@ -13,6 +13,7 @@ class HumanPlayer(player.Player):
         self.input_action = None
         self.bound_keys = []
         self.key_bindings = {}
+        self.player_type = player.PlayerTypes.HUMAN
     
     def set_action(self):
         #Change state if key is released

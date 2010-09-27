@@ -9,6 +9,7 @@ class Bot(player.Player):
     def __init__(self, position):
         player.Player.__init__(self, position)
         self.actions = {}
+        self.player_type = player.PlayerTypes.BOT
     
     def load_moveset(self, moveset):
         self.moveset = moveset
