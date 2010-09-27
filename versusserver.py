@@ -12,14 +12,16 @@ class PlayerPositions:
 class DataKeys:
     ACTION = "action"
     NICKNAME = "nickname"
-    PLAYER_NICKNAMES = "player_nicknames"
-    PLAYER_POSITIONS = "player_positions"
+    PLAYER_NICKNAMES = "player nicknames"
+    PLAYER_POSITIONS = "player positions"
     SPECTATORS = "spectators"
     PLAYERS = "players"
-    PLAYER_POSITION = "player_position"
+    PLAYER_POSITION = "player position"
     PLAYER_ID = "player_id"
-    PLAYER_POSITIONS_READY = "player_positions_ready"
-    SERVER_MODE = "server_mode"
+    PLAYER_POSITIONS_READY = "player positions ready"
+    SERVER_MODE = "server mode"
+    PLAYER_STATE = "player state"
+    POINT_POSITIONS = "point positions"
 
 class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
@@ -30,9 +32,12 @@ class ClientActions:
     MATCH_FULL = "match_full"
     PLAYER_JOINED_MATCH = "player_joined_match"
     PLAYER_READY = "player_ready"
+    RECEIVE_PLAYER_INITIAL_STATE = "receive_player_initial_state"
+    SET_GAME_MODE = "set_game_mode"
 
 class ServerModes:
-    MOVESET_SELECT = "moveset_select"
+    MOVESET_SELECT = "moveset select"
+    LOADING_MATCH_DATA = "loading match data"
     MATCH = "match"
 
 class ClientChannel(Channel):
@@ -73,6 +78,34 @@ class ClientChannel(Channel):
     def Network_spectate_match(self, data):
         self._server.add_spectator(self)
     
+    def Network_send_initial_player_state(self, data):
+        """send data about the starting state of player to all clients"""
+        
+        send_data = {DataKeys.ACTION : ClientActions.RECEIVE_PLAYER_INITIAL_STATE}
+        
+        for key, value in data.iteritems():
+            if key != DataKeys.ACTION:
+                send_data[key] = value
+        
+        self._server.send_to_all(send_data)
+    
+    def Network_initial_player_states_received(self, data):
+        """indicate on server that all remote player states have been received"""
+        
+        player_position = self._server.get_player_position(self)
+        self._server.set_initial_player_states_received(player_position)
+        
+        #TODO - add timeout not necessarily here
+        if self._server.all_initial_player_states_received():
+            data = \
+                {
+                    DataKeys.ACTION : ClientActions.SET_GAME_MODE,
+                    DataKeys.SERVER_MODE : ServerModes.MATCH
+                }
+    
+    def Network_start_match(self, data):
+        self._server.mode = ServerModes.MATCH
+    
     def Network_update_player_state(self, data):
         pass
     
@@ -109,15 +142,15 @@ class WotsServer(Server):
         Server.__init__(self, channelClass, localaddr, listeners)
         self.player_name_count = 0
         self.player_positions = \
-            {
-                PlayerPositions.PLAYER1 : None,
-                PlayerPositions.PLAYER2 : None
-            }
+            {PlayerPositions.PLAYER1 : None, PlayerPositions.PLAYER2 : None}
         self.player_positions_ready = \
-            {
-                PlayerPositions.PLAYER1 : False,
-                PlayerPositions.PLAYER2 : False
-            }
+            {PlayerPositions.PLAYER1 : False, PlayerPositions.PLAYER2 : False}
+        
+        #indicates that point position data has been received for by players in the match
+        #this ensures that models are ready to be drawn at each client.
+        self.initial_remote_player_state_received = \
+            {PlayerPositions.PLAYER1 : False, PlayerPositions.PLAYER2 : False}
+        
         self.players = []
         self.spectators = []
         self.mode = ServerModes.MOVESET_SELECT
@@ -140,6 +173,18 @@ class WotsServer(Server):
             player.close()
         
         Server.close(self)
+    
+    def set_initial_player_states_received(self, player_position):
+        self.initial_remote_player_state_received[player_position] = True
+    
+    def all_initial_player_states_received(self):
+        return_indicator = True
+        
+        for player_state_dictionary in self.initial_remote_player_state_received.values():
+            if player_state_dictionary == None:
+                return_indicator = False
+        
+        return return_indicator
     
     def sync_client_to_server(self, client):
         """send the client the current state of the server"""

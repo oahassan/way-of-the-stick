@@ -11,6 +11,7 @@ import pulltool
 class PlayerTypes:
     HUMAN = 'Human'
     BOT = 'Bot'
+    REMOTE = 'Remote'
 
 class AnimationModes():
     PHYSICS = "PHYSICS"
@@ -55,6 +56,7 @@ class Player():
     ACCELERATION = .00200
     
     def __init__(self, position):
+        self.player_type = None
         self.current_attack = None
         self.action = None
         self.color = (255,255,255)

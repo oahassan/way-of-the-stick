@@ -21,14 +21,18 @@ class ServerActions:
     SPECTATE_MATCH = "spectate_match"
     PLAYER_READY = "player_ready"
     SET_GAME_MODE = "set_game_mode"
+    INITIAL_PLAYER_STATES_RECEIVED = "initial_player_states_received"
+    SEND_INITIAL_PLAYER_STATE = "send_initial_player_state"
 
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
         self.connection_status = ConnectionStatus.DISCONNECTED
         self.player_positions = \
-            {PlayerPositions.PLAYER1:None, PlayerPositions.PLAYER2:None}
+            {PlayerPositions.PLAYER1 : None, PlayerPositions.PLAYER2 : None}
         self.player_positions_ready_dictionary = \
-            {PlayerPositions.PLAYER1:False, PlayerPositions.PLAYER2:False}
+            {PlayerPositions.PLAYER1 : False, PlayerPositions.PLAYER2 : False}
+        self.player_states = \
+            {PlayerPositions.PLAYER1 : None, PlayerPositions.PLAYER2 : None}
         self.player_nicknames = {}
         self.spectators = []
         self.actions_received = []
@@ -58,10 +62,18 @@ class ClientConnectionListener(ConnectionListener):
         data = {DataKeys.ACTION : ServerActions.SPECTATE_MATCH}
         connection.Send(data)
     
+    def load_match_data(self):
+        data = {
+            DataKeys.ACTION : ServerActions.SET_GAME_MODE,
+            DataKeys.SERVER_MODE : ServerModes.LOADING_MATCH_DATA
+        }
+        
+        connection.Send(data)
+    
     def start_match(self):
         data = {
             DataKeys.ACTION : ServerActions.SET_GAME_MODE,
-            DataKeys.SERVER_MODE :ServerModes.MATCH
+            DataKeys.SERVER_MODE : ServerModes.MATCH
         }
         
         connection.Send(data)
@@ -89,6 +101,28 @@ class ClientConnectionListener(ConnectionListener):
                 self.player_positions[player_position] = None
                 self.player_positions_ready_dictionary[player_position] = False
                 print("player deleted")
+    
+    def all_player_states_received(self):
+        """If any player state is null this returns false."""
+        return_indicator = True
+        
+        for player_state in self.player_states.values():
+            if player_state == None:
+                return_indicator = False
+        
+        return return_indicator
+    
+    def send_player_initial_state(self, player_state_dictionary, player_position):
+        """notify the server of a local players initial state"""
+        
+        data = \
+            {
+                DataKeys.ACTION : ServerActions.SEND_INITIAL_PLAYER_STATE,
+                DataKeys.PLAYER_STATE : player_state_dictionary,
+                DataKeys.PLAYER_POSITION : get_local_player_position()
+            }
+        
+        connection.Send(data)
     
     #Network methods
     
@@ -135,6 +169,19 @@ class ClientConnectionListener(ConnectionListener):
         
         self.server_mode = data[DataKeys.SERVER_MODE]
     
+    def Network_receive_player_initial_state(self, data):
+        """receive the inital state of a remote player.  If all states have been received
+        notify the server."""
+        player_position = data[DataKeys.PLAYER_POSITION]
+        
+        self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
+        
+        if self.all_player_states_received():
+            #notify server that all player states have been received
+            data = {DataKeys.ACTION : ServerActions.INITIAL_PLAYER_STATES_RECEIVED}
+            
+            connection.Send(data)
+    
     def Network_match_full(self, data):
         pass
     
@@ -170,6 +217,14 @@ class ClientConnectionListener(ConnectionListener):
         self.connection_status = ConnectionStatus.DISCONNECTED
 
 listener = ClientConnectionListener()
+
+def get_player_state(player_position):
+    return listener.player_states[player_position]
+
+def local_player_match_data_loaded():
+    player_position = get_local_player_position()
+    
+    return listener.player_states[player_position] == None
 
 def get_local_player_position():
     for player_position, player_id in listener.player_positions.iteritems():

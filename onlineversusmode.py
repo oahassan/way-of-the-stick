@@ -20,23 +20,55 @@ players = \
         versusserver.PlayerPositions.PLAYER2 : None
     }
 
-class RemotePlayer(player.Player):
-    
-    def __init__(self, position):
-        player.Player.__init__(self, position)
+class PlayerStateData:
+    POINT_POSITIONS = "point positions"
 
-class LocalHumanPlayer(humanplayer.HumanPlayer):
+class NetworkPlayer():
     
-    def __init__(self, position):
-        humanplayer.HumanPlayer.__init__(self, position)
+    def __init__(self, player_position):
+        self.player_position = player_position
+    
+    def sync_to_server_data(self):
+        """syncs a players state to that given from the server"""
         
-    def get_player_state():
-        pass
+        player_state_dictionary = versusclient.get_player_state(self.player_position)
+        
+        point_positions = player_state_dictionary[PlayerStateData.POINT_POSITIONS]
+        self.model.set_absolution_point_positions(point_positions)
 
-class LocalBot(aiplayer.Bot):
+class RemotePlayer(player.Player, NetworkPlayer):
     
-    def __init__(self, position):
+    def __init__(self, position, player_position):
+        player.Player.__init__(self, position)
+        NetworkPlayer.__init__(self, player_position)
+    
+    def handle_events(self):
+        
+        self.sync_to_server_data()
+        player.draw_model(self)
+
+class LocalPlayer(NetworkPlayer):
+    
+    def get_player_point_positions(self):
+        
+        return_dictionary = {}
+        
+        for point_name, point in self.model.points.iteritems():
+            return_dictionary[point_name] = point.pos
+        
+        return return_dictionary
+
+class LocalHumanPlayer(humanplayer.HumanPlayer, LocalPlayer):
+    
+    def __init__(self, position, player_position):
+        humanplayer.HumanPlayer.__init__(self, position)
+        LocalPlayer.__init__(self, player_position)
+
+class LocalBot(aiplayer.Bot, LocalPlayer):
+    
+    def __init__(self, position, player_position):
         aiplayer.Bot.__init__(self, position)
+        LocalPlayer.__init__(self, player_position)
 
 gamestate.stage = stage.Stage(pygame.image.load('arenabkg.png'), 447)
 
@@ -149,6 +181,7 @@ def exit():
 def handle_events():
     global exit_button
     global exit_indicator
+    global players
     
     for rect in gamestate.old_dirty_rects:
         rect_surface = pygame.Surface((rect.width,rect.height))
@@ -157,6 +190,14 @@ def handle_events():
     
     exit_button.draw(gamestate.screen)
     gamestate.new_dirty_rects.append(pygame.Rect(exit_button.position, (exit_button.width,exit_button.height)))
+    
+    for player_position, current_player in players.iteritems():
+        if current_player.player_type == player.PlayerTypes.BOT:
+            for other_player_position in get_other_player_positions(player_position):
+                current_player.handle_events(players[other_player_position])
+        
+        else:
+            current_player.handle_events()
     
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
@@ -196,3 +237,17 @@ def set_player(player_position, player):
     global players
     
     players[player_position] = player
+
+def get_other_player_positions(player_position):
+    global players
+    
+    return [position for position in players.keys if position != player_position]
+
+def get_local_player_state_dictionary():
+    local_player_position = versusclient.get_local_player_position()
+    local_player = players[local_player_position]
+    
+    player_state_dictionary = \
+        {PlayerStateData.POINT_POSITIONS : local_player.get_player_point_positions()}
+    
+    return player_state_dictionary

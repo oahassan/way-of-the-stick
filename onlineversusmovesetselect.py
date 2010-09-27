@@ -188,9 +188,10 @@ def handle_events():
         
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):
-                versusclient.listener.start_match()
+                versusclient.listener.load_match_data()
                 start_match_label.handle_deselected()
         
+        #TODO - inactivate join if selected and same for spectate
         elif join_match_button.selected:
             if join_match_button.contains(wotsuievents.mouse_pos):
                 versusclient.listener.join_match()
@@ -312,8 +313,11 @@ def handle_events():
                 notification.draw(gamestate.screen)
                 notification.update(time_passed)
             
-            if versusclient.listener.server_mode == versusserver.ServerModes.MATCH:
+            if (versusclient.listener.server_mode == 
+            versusserver.ServerModes.LOADING_MATCH_DATA):
                 setup_versusmode()
+            
+            if versusclient.listener.server_mode == versusserver.ServerModes.MATCH:
                 gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
         
         if gamestate.hosting:
@@ -327,9 +331,15 @@ def setup_versusmode():
         setup_remote_player(player_position)
     
     onlineversusmode.init()
+    
+    local_player_state_dictionary = onlineversusmode.get_local_player_state_dictionary()
+    
+    if (versusclient.local_player_is_in_match() and
+    (versusclient.local_player_match_data_loaded() == False)):
+        versusclient.listener.send_player_intial_state(local_player_state_dictionary)
 
 def setup_remote_player(player_position):
-    remote_player = onlineversusmode.RemotePlayer((0,0))
+    remote_player = onlineversusmode.RemotePlayer((0,0), player_position)
     
     set_player_initial_state(player_position, remote_player)
     
@@ -347,10 +357,10 @@ def setup_local_player():
     local_player = None
     
     if local_player_type == player.PlayerTypes.HUMAN:
-        local_player = onlineversusmode.LocalHumanPlayer((0,0))
+        local_player = onlineversusmode.LocalHumanPlayer((0,0), local_player_position)
         
     elif local_player_type == player.PlayerTypes.BOT:
-        local_player = onlineversusmode.LocalBot((0,0))
+        local_player = onlineversusmode.LocalBot((0,0), local_player_position)
     
     #Calling set initial state first makes it so that the player doesn't turn around in
     #the first frame if it's supposed to start facing left.

@@ -210,14 +210,13 @@ class Model(Object):
                 bottom_right_y = bottom_right[1]
             else:
                 top_left_x = min(top_left_x,top_left[0])
-                top_left_y = min(top_left_y,top_left[1])                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                top_left_y = min(top_left_y,top_left[1])
                 bottom_right_x = max(bottom_right_x,bottom_right[0])
                 bottom_right_y = max(bottom_right_y,bottom_right[1])
         width = bottom_right_x - top_left_x
         height = bottom_right_y - top_left_y
         
-        return ((top_left_x, top_left_y), \
-                (width, height))
+        return ((top_left_x, top_left_y), (width, height))
     
     def get_point_relative_position(self, point_name):
         """gets the position of a point relative to the reference point"""
@@ -244,12 +243,11 @@ class Model(Object):
                 bottom_right_y = bottom_right[1]
             else:
                 top_left_x = min(top_left_x,top_left[0])
-                top_left_y = min(top_left_y,top_left[1])                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+                top_left_y = min(top_left_y,top_left[1])
                 bottom_right_x = max(bottom_right_x,bottom_right[0])
                 bottom_right_y = max(bottom_right_y,bottom_right[1])
         
-        return ((top_left_x, top_left_y), \
-                (bottom_right_x, bottom_right_y))
+        return ((top_left_x, top_left_y), (bottom_right_x, bottom_right_y))
     
     def set_dimensions(self):
         """sets the height and width of the model"""
@@ -265,6 +263,16 @@ class Model(Object):
         
         self.height = bottom_right_y - position[1]
         self.width = bottom_right_x - position[0]
+    
+    def set_absolute_point_positions(self, point_position_dictionary):
+        """sets the position of each point in the model by name from the
+        point_position_dictionary"""
+        
+        for point_name, position in point_position_dictionary.iteritems():
+            self.points[point_name].pos = position
+        
+        self.set_dimensions()
+        self.position = self.get_reference_position()
     
     def set_frame_point_pos(self, deltas):
         """Sets the position of each point with respect to the reference point"""
