@@ -63,12 +63,26 @@ class LocalHumanPlayer(humanplayer.HumanPlayer, LocalPlayer):
     def __init__(self, position, player_position):
         humanplayer.HumanPlayer.__init__(self, position)
         LocalPlayer.__init__(self, player_position)
+    
+    def handle_events(self):
+        humanplayer.HumanPlayer.handle_events(self)
+        
+        player_state_dictionary = get_local_player_state_dictionary()
+        
+        versusclient.update_player_state(player_state_dictionary, self.player_position)
 
 class LocalBot(aiplayer.Bot, LocalPlayer):
     
     def __init__(self, position, player_position):
         aiplayer.Bot.__init__(self, position)
         LocalPlayer.__init__(self, player_position)
+    
+    def handle_events(self, opponent):
+        aiplayer.Bot.handle_events(self, opponent)
+        
+        player_state_dictionary = get_local_player_state_dictionary()
+        
+        versusclient.update_player_state(player_state_dictionary, self.player_position)
 
 gamestate.stage = stage.Stage(pygame.image.load('arenabkg.png'), 447)
 
@@ -241,7 +255,7 @@ def set_player(player_position, player):
 def get_other_player_positions(player_position):
     global players
     
-    return [position for position in players.keys if position != player_position]
+    return [position for position in players.keys() if position != player_position]
 
 def get_local_player_state_dictionary():
     local_player_position = versusclient.get_local_player_position()

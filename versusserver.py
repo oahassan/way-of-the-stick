@@ -34,6 +34,7 @@ class ClientActions:
     PLAYER_READY = "player_ready"
     RECEIVE_PLAYER_INITIAL_STATE = "receive_player_initial_state"
     SET_GAME_MODE = "set_game_mode"
+    UPDATE_PLAYER_STATE = "update_player_state"
 
 class ServerModes:
     MOVESET_SELECT = "moveset select"
@@ -109,7 +110,7 @@ class ClientChannel(Channel):
         self._server.mode = ServerModes.MATCH
     
     def Network_update_player_state(self, data):
-        pass
+        self._server.send_to_all(data)
     
     def Network_player_ready(self, data):
         

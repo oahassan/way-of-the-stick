@@ -23,6 +23,7 @@ class ServerActions:
     SET_GAME_MODE = "set_game_mode"
     INITIAL_PLAYER_STATES_RECEIVED = "initial_player_states_received"
     SEND_INITIAL_PLAYER_STATE = "send_initial_player_state"
+    UPDATE_PLAYER_STATE = "update_player_state"
 
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
@@ -124,6 +125,17 @@ class ClientConnectionListener(ConnectionListener):
         
         connection.Send(data)
     
+    def update_player_state(self, player_state_dictionary, player_position):
+        data = \
+            {
+                DataKeys.ACTION : ServerActions.UPDATE_PLAYER_STATE,
+                DataKeys.PLAYER_STATE : player_state_dictionary,
+                DataKeys.PLAYER_POSITION : get_local_player_position()
+            }
+        
+        connection.Send(data)
+        
+    
     #Network methods
     
     def Network(self, data):
@@ -195,7 +207,9 @@ class ClientConnectionListener(ConnectionListener):
         self.player_positions_ready_dictionary[player_position] = True
     
     def Network_update_player_state(self, data):
-        pass
+        player_position = data[DataKeys.PLAYER_POSITION]
+        
+        self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
     
     # built in stuff
 
@@ -217,6 +231,9 @@ class ClientConnectionListener(ConnectionListener):
         self.connection_status = ConnectionStatus.DISCONNECTED
 
 listener = ClientConnectionListener()
+
+def update_player_state(player_state_dictionary, player_position):
+    listener.update_player_state(player_state_dictionary, player_position)
 
 def get_player_state(player_position):
     return listener.player_states[player_position]
