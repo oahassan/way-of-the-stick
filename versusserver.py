@@ -102,6 +102,8 @@ class ClientChannel(Channel):
                     DataKeys.ACTION : ClientActions.SET_GAME_MODE,
                     DataKeys.SERVER_MODE : ServerModes.MATCH
                 }
+            
+            self.Send(data)
     
     def Network_start_match(self, data):
         self._server.mode = ServerModes.MATCH
@@ -180,8 +182,8 @@ class WotsServer(Server):
     def all_initial_player_states_received(self):
         return_indicator = True
         
-        for player_state_dictionary in self.initial_remote_player_state_received.values():
-            if player_state_dictionary == None:
+        for player_state_received in self.initial_remote_player_state_received.values():
+            if player_state_received == False:
                 return_indicator = False
         
         return return_indicator

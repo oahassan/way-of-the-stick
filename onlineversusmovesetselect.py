@@ -318,6 +318,7 @@ def handle_events():
                 setup_versusmode()
             
             if versusclient.listener.server_mode == versusserver.ServerModes.MATCH:
+                onlineversusmode.init()
                 gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
         
         if gamestate.hosting:
@@ -330,13 +331,16 @@ def setup_versusmode():
     for player_position in versusclient.get_remote_player_positions():
         setup_remote_player(player_position)
     
-    onlineversusmode.init()
-    
-    local_player_state_dictionary = onlineversusmode.get_local_player_state_dictionary()
-    
     if (versusclient.local_player_is_in_match() and
     (versusclient.local_player_match_data_loaded() == False)):
-        versusclient.listener.send_player_intial_state(local_player_state_dictionary)
+        
+        local_player_state_dictionary = onlineversusmode.get_local_player_state_dictionary()
+        
+        local_player_position = versusclient.get_local_player_position()
+        versusclient.listener.send_player_initial_state(
+            local_player_state_dictionary, 
+            local_player_position
+        )
 
 def setup_remote_player(player_position):
     remote_player = onlineversusmode.RemotePlayer((0,0), player_position)

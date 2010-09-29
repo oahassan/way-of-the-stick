@@ -34,7 +34,7 @@ class NetworkPlayer():
         player_state_dictionary = versusclient.get_player_state(self.player_position)
         
         point_positions = player_state_dictionary[PlayerStateData.POINT_POSITIONS]
-        self.model.set_absolution_point_positions(point_positions)
+        self.model.set_absolute_point_positions(point_positions)
 
 class RemotePlayer(player.Player, NetworkPlayer):
     

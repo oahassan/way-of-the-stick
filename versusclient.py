@@ -224,7 +224,10 @@ def get_player_state(player_position):
 def local_player_match_data_loaded():
     player_position = get_local_player_position()
     
-    return listener.player_states[player_position] == None
+    if listener.player_states[player_position] == None:
+        return False
+    else:
+        return True
 
 def get_local_player_position():
     for player_position, player_id in listener.player_positions.iteritems():
