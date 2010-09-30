@@ -155,6 +155,10 @@ class Player():
             elif self.action.action_state == PlayerStates.RUNNING:
                 self.model.velocity = (-(self.run_speed + friction), velocity[1])
     
+    def get_player_state(self):
+        """returns the current state of the player"""
+        return self.action.action_state
+    
     def init_point_damage_dictionary(self):
         """initializes the point damage dictionary. NOTE: model must be intialized before
         calling."""

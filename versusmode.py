@@ -229,9 +229,9 @@ def handle_interactions():
     global human
     global bot
     
-    if bot.action.action_state == player.PlayerStates.ATTACKING:
+    if bot.get_player_state() == player.PlayerStates.ATTACKING:
         handle_attacks(bot, human)
-    elif human.action.action_state == player.PlayerStates.ATTACKING:
+    elif human.get_player_state() == player.PlayerStates.ATTACKING:
         handle_attacks(human, bot)
 
 def get_player(input_player):
@@ -248,7 +248,7 @@ def handle_attacks(attacker, receiver):
     if attacker.attack_in_range(attacker.action, receiver):
         attacker_attack_hitboxes = get_hitbox_dictionary(attacker.action.attack_lines)
         
-        if receiver.action.action_state == player.PlayerStates.ATTACKING:
+        if receiver.get_player_state() == player.PlayerStates.ATTACKING:
             receiver_attack_hitboxes = get_hitbox_dictionary(receiver.action.attack_lines)
             colliding_line_names = test_attack_collision(attacker_attack_hitboxes, receiver_attack_hitboxes)
             

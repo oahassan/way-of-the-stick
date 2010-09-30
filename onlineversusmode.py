@@ -22,6 +22,9 @@ players = \
 
 class PlayerStateData:
     POINT_POSITIONS = "point positions"
+    POINT_DAMAGES = "point damages"
+    PLAYER_STATE = "player state"
+    HEALTH = "health"
 
 class NetworkPlayer():
     
@@ -33,8 +36,22 @@ class NetworkPlayer():
         
         player_state_dictionary = versusclient.get_player_state(self.player_position)
         
-        point_positions = player_state_dictionary[PlayerStateData.POINT_POSITIONS]
-        self.model.set_absolute_point_positions(point_positions)
+        for data_key, data_value in player_state_dictionary.itermitems():
+            if data_key == PlayerStateData.POINT_POSITIONS:
+                point_positions = player_state_dictionary[PlayerStateData.POINT_POSITIONS]
+                self.model.set_absolute_point_positions(point_positions)
+            
+            elif data_key == PlayerStateData.POINT_DAMAGES:
+                #set point damage
+                pass
+            
+            elif data_key == PlayerStateData.PLAYER_STATE:
+                #set player state
+                pass
+                
+            elif data_key == PlayerStateData.HEALTH:
+                #set player health
+                pass
 
 class RemotePlayer(player.Player, NetworkPlayer):
     
