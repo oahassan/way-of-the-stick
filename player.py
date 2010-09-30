@@ -159,6 +159,10 @@ class Player():
         """returns the current state of the player"""
         return self.action.action_state
     
+    def set_player_state(self, player_state):
+        """sets the current state of the player"""
+        self.actions[player_state].set_player_state(self)
+    
     def init_point_damage_dictionary(self):
         """initializes the point damage dictionary. NOTE: model must be intialized before
         calling."""

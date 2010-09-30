@@ -322,7 +322,7 @@ def handle_unblocked_attack_collision(attacker, receiver, attacker_hitboxes, rec
     
     receiver.health_meter = max(0, receiver.health_meter - attacker.get_point_damage(interaction_points[0].name))
     
-    receiver.actions[player.PlayerStates.STUNNED].set_player_state(receiver)
+    receiver.set_player_state(player.PlayerStates.STUNNED)
 
 def get_separation_vector(attacker, receiver):
     x_delta = receiver.model.position[0] - attacker.model.position[0]
