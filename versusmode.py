@@ -246,10 +246,10 @@ def get_player(input_player):
 
 def handle_attacks(attacker, receiver):
     if attacker.attack_in_range(attacker.action, receiver):
-        attacker_attack_hitboxes = get_hitbox_dictionary(attacker.action.attack_lines)
+        attacker_attack_hitboxes = get_hitbox_dictionary(attacker.get_attack_lines())
         
         if receiver.get_player_state() == player.PlayerStates.ATTACKING:
-            receiver_attack_hitboxes = get_hitbox_dictionary(receiver.action.attack_lines)
+            receiver_attack_hitboxes = get_hitbox_dictionary(receiver.get_attack_lines())
             colliding_line_names = test_attack_collision(attacker_attack_hitboxes, receiver_attack_hitboxes)
             
             if colliding_line_names:
