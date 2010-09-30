@@ -193,6 +193,9 @@ class Player():
         """Returns the damage dealt when attacked from the given point"""
         return self.point_name_to_point_damage[point_name].damage
     
+    def get_enclosing_rect(self):
+        return pygame.Rect(*self.model.get_enclosing_rect())
+    
     def attack_in_range(self, attack, enemy):
         bottom_right_top_left = self.model.get_top_left_and_bottom_right()
         bottom_right = bottom_right_top_left[1]

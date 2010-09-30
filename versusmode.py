@@ -245,7 +245,7 @@ def get_player(input_player):
     return return_name
 
 def handle_attacks(attacker, receiver):
-    if attacker.attack_in_range(attacker.action, receiver):
+    if test_overlap(attacker.get_enclosing_rect(), receiver.get_enclosing_rect()):
         attacker_attack_hitboxes = get_hitbox_dictionary(attacker.get_attack_lines())
         
         if receiver.get_player_state() == player.PlayerStates.ATTACKING:
