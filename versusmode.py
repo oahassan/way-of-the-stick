@@ -333,16 +333,10 @@ def get_separation_vector(attacker, receiver):
     
     return (x_delta, y_delta)
     
-def get_knockback_vector(attacker, receiver, attack_point, attack_line_name):
-    knockback_vector = None
-    frame_index = attacker.action.animation.get_frame_index_at_time(attacker.model.animation_run_time)
+def get_knockback_vector(attacker, attack_point):
+    """get the direction and magnitude of the knockback"""
     
-    if frame_index == 0:
-        knockback_vector = (get_direction_sign(attacker, receiver), get_direction_sign(attacker, receiver))
-    else:
-        knockback_vector = attacker.action.animation.animation_deltas[frame_index][attack_point.name]
-    
-    return knockback_vector
+    return attacker.get_point_position_change(attack_point.name)
 
 def get_interaction_points(colliding_lines):
     attacker_line_index = 0
@@ -388,12 +382,9 @@ def apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitb
     # print('attacker: ' + get_player(attacker))
     attack_point = interaction_points[0]
     receiver.pull_point = interaction_points[1]
-    receiver.knockback_vector = get_knockback_vector(attacker, \
-                                                     receiver, \
-                                                     attack_point, \
-                                                     colliding_line_names[0])
-    receiver.model.accelerate(receiver.knockback_vector[0]/500, \
-                              receiver.knockback_vector[1]/500)
+    receiver.knockback_vector = get_knockback_vector(attacker, attack_point)
+    receiver.model.accelerate(receiver.knockback_vector[0]/400, \
+                              receiver.knockback_vector[1]/400)
 
 def get_direction_sign(attacker, receiver):
     receiver_pos = receiver.model.position

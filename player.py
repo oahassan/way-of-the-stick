@@ -83,6 +83,7 @@ class Player():
         self.health_color = (0,0,100)
         self.moveset = None
         self.point_name_to_point_damage = {} #Point name to PointDamage object
+        self.previous_point_positions = {}
     
     def init_state(self):
         self.model.load_points()
@@ -92,6 +93,8 @@ class Player():
     def handle_events(self):
         time_passed = gamestate.clock.get_time()
         self.model.time_passed = time_passed
+        
+        self.set_previous_point_positions()
         
         self.action.move_player(self)
         
@@ -108,6 +111,30 @@ class Player():
         
         if self.stun_timer < self.stun_timeout:
             self.stun_timer += time_passed
+    
+    def set_previous_point_positions(self):
+        for point_name, point in self.model.points.iteritems():
+            self.previous_point_positions[point_name] = point.pos
+    
+    def get_previous_point_position(self, point_name):
+        """Get the previous position of the point from the previous points dictionary.
+        If the dictionary doesn't exist yet return the current position of the point."""
+        
+        if point_name in self.previous_point_positions.keys():
+            return self.previous_point_positions[point_name]
+            
+        else:
+            return self.model.points[point_name].pos
+    
+    def get_point_position_change(self, point_name):
+        """Get the change in position of a point between now and the previous 
+        game loop"""
+        current_position = self.model.points[point_name].pos
+        previous_position = self.get_previous_point_position(point_name)
+        
+        return \
+            current_position[0] - previous_position[0], \
+            current_position[1] - previous_position[1]
     
     def set_action(self):
         pass
