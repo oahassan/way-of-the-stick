@@ -36,7 +36,7 @@ class NetworkPlayer():
         
         player_state_dictionary = versusclient.get_player_state(self.player_position)
         
-        for data_key, data_value in player_state_dictionary.itermitems():
+        for data_key, data_value in player_state_dictionary.iteritems():
             if data_key == PlayerStateData.POINT_POSITIONS:
                 point_positions = player_state_dictionary[PlayerStateData.POINT_POSITIONS]
                 self.model.set_absolute_point_positions(point_positions)
@@ -61,7 +61,10 @@ class RemotePlayer(player.Player, NetworkPlayer):
     
     def handle_events(self):
         
+        self.set_previous_point_positions()
+        
         self.sync_to_server_data()
+        
         player.draw_model(self)
 
 class LocalPlayer(NetworkPlayer):

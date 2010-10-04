@@ -199,26 +199,30 @@ class Player():
         for line_name in self.model.lines.keys():
             for point_name in stick.LINE_TO_POINTS[line_name]:
                 if point_name not in self.point_name_to_point_damage.keys():
-                    self.point_name_to_point_damage[point_name] = Attack.PointDamage()
+                    self.point_name_to_point_damage[point_name] = 0
     
     def update_point_damage(self):
         """updates the damage done by each attacking point"""
         
-        for point_name, point_damage in self.point_name_to_point_damage.iteritems():
-            new_relative_position = self.model.get_point_relative_position(point_name)
-            point_damage.cache_new_damage(new_relative_position)
-            point_damage.set_last_relative_position(new_relative_position)
+        for point_name in self.point_name_to_point_damage.keys():
+            
+            current_position = self.model.points[point_name].pos
+            previous_position = self.get_previous_point_position(point_name)
+            
+            additional_damage = mathfuncs.distance(current_position, previous_position)
+            
+            self.point_name_to_point_damage[point_name] += additional_damage
     
     def reset_point_damage(self):
         """sets the point damage for each point at the start of an attack"""
         
-        for point_name, point_damage in self.point_name_to_point_damage.iteritems():
-            point_damage.set_damage(0)
-            point_damage.set_last_relative_position(self.model.get_point_relative_position(point_name))
+        for point_name in self.point_name_to_point_damage.keys():
+            
+            self.point_name_to_point_damage[point_name] = 0
     
     def get_point_damage(self, point_name):
         """Returns the damage dealt when attacked from the given point"""
-        return self.point_name_to_point_damage[point_name].damage
+        return self.point_name_to_point_damage[point_name]
     
     def get_enclosing_rect(self):
         return pygame.Rect(*self.model.get_enclosing_rect())
@@ -501,27 +505,6 @@ class Attack(Action):
         self.attack_lines = []
         self.range = (0,0)
         self.use_animation_physics = False
-    
-    class PointDamage():
-        """keeps track of the amount of damage a point deals when it hits"""
-        def __init__(self):
-            #last position relative to a model's reference position
-            self.last_relative_position = None
-            
-            #accumulated damage
-            self.damage = 0
-        
-        def set_damage(self, damage_value):
-            """sets the value of damage"""
-            self.damage = damage_value
-        
-        def cache_new_damage(self, new_relative_position):
-            """accumulates damage dealt by a point by adding the change in the
-            position of a point relative to a models reference position"""
-            self.set_damage(self.damage + mathfuncs.distance(self.last_relative_position, new_relative_position))
-        
-        def set_last_relative_position(self, last_relative_position):
-            self.last_relative_position = last_relative_position
     
     def set_attack_data(self, model):
         """called after the animations of an attack has been set to intialize other data"""
