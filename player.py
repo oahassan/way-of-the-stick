@@ -200,7 +200,9 @@ class Player():
     
     def set_player_state(self, player_state):
         """sets the current state of the player"""
-        self.actions[player_state].set_player_state(self)
+        
+        if self.actions[player_state].test_state_change(self):
+            self.actions[player_state].set_player_state(self)
     
     def get_attack_lines(self):
         return self.action.attack_lines
@@ -267,6 +269,10 @@ class Player():
     def get_point_damage(self, point_name):
         """Returns the damage dealt when attacked from the given point"""
         return self.point_name_to_point_damage[point_name]
+    
+    def set_health(self, health_value):
+        
+        self.health_meter = health_value
     
     def get_enclosing_rect(self):
         return pygame.Rect(*self.model.get_enclosing_rect())
@@ -497,11 +503,13 @@ class Stun(Action):
         new_pos = (pull_point_pos[0] + knock_back_vector[0],
                    pull_point_pos[1] + knock_back_vector[1])
         point_to_lines = player.model.build_point_to_lines(player.model.lines.values())
-        player.model.pull_point(player.pull_point,
-                                new_pos,
-                                player.pull_point,
-                                [],
-                                point_to_lines)
+        player.model.pull_point(
+            player.pull_point,
+            new_pos,
+            player.pull_point,
+            [],
+            point_to_lines
+        )
         
         #resync position of physics model and model
         player.model.position = player.model.get_reference_position()
@@ -516,6 +524,7 @@ class Stun(Action):
         player.apply_physics(player.model.time_passed)
         
         if player.stun_timer >= player.stun_timeout:
+            
             player.handle_animation_end()
     
     def test_state_change(self, player):
@@ -527,14 +536,15 @@ class Stun(Action):
         return change_state
     
     def set_player_state(self, player):
+        
         player.action = self
         player.model.animation_run_time = 0
         
-        if player.model.time_passed > 0:
-            self.move_player(player)
-        
         player.stun_timeout = 500 #min(500,int(1000 * ((player.health_max - player.health_meter) / player.health_max)) + 200)
         player.stun_timer = 0
+        
+        if player.model.time_passed > 0:
+            self.move_player(player)
 
 class AttackTypes():
     PUNCH = "PUNCH"
@@ -549,6 +559,13 @@ class Attack(Action):
         self.attack_lines = []
         self.range = (0,0)
         self.use_animation_physics = False
+    
+    def test_state_change(self, player):
+        
+        if player.get_player_state() == PlayerStates.STUNNED:
+            return False
+        else:
+            return Action.test_state_change(self, player)
     
     def set_attack_data(self, model):
         """called after the animations of an attack has been set to intialize other data"""

@@ -43,21 +43,46 @@ class NetworkPlayer():
             
             elif data_key == PlayerStateData.POINT_DAMAGES:
                 #set point damage
-                pass
+                point_damage_dictionary = player_state_dictionary[PlayerStateData.POINT_DAMAGES]
+                
+                self.update_point_damage(point_damage_dictionary)
             
             elif data_key == PlayerStateData.PLAYER_STATE:
                 #set player state
-                pass
+                player_state = player_state_dictionary[PlayerStateData.PLAYER_STATE]
+                
+                self.set_player_state(player_state)
                 
             elif data_key == PlayerStateData.HEALTH:
                 #set player health
-                pass
+                health_value = player_state_dictinoary[PlayerStateData.HEALTH]
+                
+                self.set_health(health_value)
 
 class RemotePlayer(player.Player, NetworkPlayer):
     
     def __init__(self, position, player_position):
         player.Player.__init__(self, position)
         NetworkPlayer.__init__(self, player_position)
+        
+        self.player_state = player.PlayerStates.STANDING
+        self.attack_name = ''
+    
+    def set_player_state(self, player_state):
+        """sets the current state of the player and any state changes associated with a
+        change in player state"""
+        
+        if player_state == player.PlayerStates.ATTACKING:
+            if self.player_state != player.PlayerStates.ATTACKING:
+                self.reset_point_damage()
+            else:
+                pass
+        
+        self.player_state = player_state
+    
+    def update_point_damage(self, point_damage_dictionary):
+        
+        self.point_name_to_point_damage = point_damage_dictionary
     
     def handle_events(self):
         
@@ -69,7 +94,11 @@ class RemotePlayer(player.Player, NetworkPlayer):
 
 class LocalPlayer(NetworkPlayer):
     
-    pass
+    def set_player_state(self, player_state):
+        """sets the current state of the player"""
+        
+        if self.actions[player_state].test_state_change(self):
+            self.actions[player_state].set_player_state(self)
 
 class LocalHumanPlayer(humanplayer.HumanPlayer, LocalPlayer):
     
