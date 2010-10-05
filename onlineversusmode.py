@@ -11,6 +11,7 @@ import button
 import stage
 import stick
 import mathfuncs
+import versusmode
 
 exit_button = button.ExitButton()
 exit_indicator = False
@@ -25,11 +26,14 @@ class PlayerStateData:
     POINT_DAMAGES = "point damages"
     PLAYER_STATE = "player state"
     HEALTH = "health"
+    ATTACK_SEQUENCE = "attack sequence"
+    ATTACK_LINE_NAMES = "attack line names"
 
 class NetworkPlayer():
     
     def __init__(self, player_position):
         self.player_position = player_position
+        self.attack_sequence = 0
     
     def sync_to_server_data(self):
         """syncs a players state to that given from the server"""
@@ -49,9 +53,7 @@ class NetworkPlayer():
             
             elif data_key == PlayerStateData.PLAYER_STATE:
                 #set player state
-                player_state = player_state_dictionary[PlayerStateData.PLAYER_STATE]
-                
-                self.set_player_state(player_state)
+                self.set_player_state(player_state_dictionary)
                 
             elif data_key == PlayerStateData.HEALTH:
                 #set player health
@@ -66,19 +68,67 @@ class RemotePlayer(player.Player, NetworkPlayer):
         NetworkPlayer.__init__(self, player_position)
         
         self.player_state = player.PlayerStates.STANDING
-        self.attack_name = ''
+        self.attack_line_names = []
     
-    def set_player_state(self, player_state):
+    def sync_to_server_data(self):
+        """syncs a players state to that given from the server"""
+        
+        player_state_dictionary = versusclient.get_player_state(self.player_position)
+        
+        for data_key, data_value in player_state_dictionary.iteritems():
+            if data_key == PlayerStateData.POINT_POSITIONS:
+                point_positions = player_state_dictionary[PlayerStateData.POINT_POSITIONS]
+                self.model.set_absolute_point_positions(point_positions)
+            
+            elif data_key == PlayerStateData.POINT_DAMAGES:
+                #set point damage
+                point_damage_dictionary = player_state_dictionary[PlayerStateData.POINT_DAMAGES]
+                
+                self.update_point_damage(point_damage_dictionary)
+            
+            elif data_key == PlayerStateData.PLAYER_STATE:
+                #set player state
+                self.sync_player_state_to_server(player_state_dictionary)
+                
+            elif data_key == PlayerStateData.HEALTH:
+                #set player health
+                health_value = player_state_dictionary[PlayerStateData.HEALTH]
+                
+                self.set_health(health_value)
+            
+            elif data_key == PlayerStateData.ATTACK_LINE_NAMES:
+                
+                attack_line_names = player_state_dictionary[PlayerStateData.ATTACK_LINE_NAMES]
+                
+                self.attack_line_names = attack_line_names
+    
+    def sync_player_state_to_server(self, player_state_dictionary):
         """sets the current state of the player and any state changes associated with a
         change in player state"""
         
+        player_state = player_state_dictionary[PlayerStateData.PLAYER_STATE]
+        
         if player_state == player.PlayerStates.ATTACKING:
-            if self.player_state != player.PlayerStates.ATTACKING:
+            attack_sequence = player_state_dictionary[PlayerStateData.ATTACK_SEQUENCE]
+            
+            if attack_sequence != self.attack_sequence:
                 self.reset_point_damage()
-            else:
-                pass
+                self.attack_sequence = attack_sequence
         
         self.player_state = player_state
+    
+    def set_player_state(self, player_state):
+        self.player_state = player_state
+    
+    def get_player_state(self):
+        return self.player_state
+    
+    def get_attack_lines(self):
+        return \
+            dict([(line_name, self.model.lines[line_name]) for line_name in self.attack_line_names])
+    
+    def set_neutral_state(self):
+        pass
     
     def update_point_damage(self, point_damage_dictionary):
         
@@ -94,11 +144,40 @@ class RemotePlayer(player.Player, NetworkPlayer):
 
 class LocalPlayer(NetworkPlayer):
     
+    def __init__(self, player_position):
+        
+        NetworkPlayer.__init__(self, player_position)
+    
+    def build_player_state_dictionary(self):
+        
+        player_state = self.get_player_state()
+        
+        player_state_dictionary = \
+            {
+                PlayerStateData.POINT_POSITIONS : self.get_player_point_positions(),
+                PlayerStateData.POINT_DAMAGES : self.point_name_to_point_damage,
+                PlayerStateData.PLAYER_STATE : player_state,
+                PlayerStateData.HEALTH : self.health_meter
+            }
+        
+        if player_state == player.PlayerStates.ATTACKING:
+            player_state_dictionary[PlayerStateData.ATTACK_SEQUENCE] = self.attack_sequence
+            player_state_dictionary[PlayerStateData.ATTACK_LINE_NAMES] = self.get_attack_line_names()
+        
+        return player_state_dictionary
+    
+    def get_attack_line_names(self):
+        
+        return [line_name for line_name in self.get_attack_lines().keys()]
+    
     def set_player_state(self, player_state):
         """sets the current state of the player"""
         
         if self.actions[player_state].test_state_change(self):
             self.actions[player_state].set_player_state(self)
+            
+            if self.get_player_state() == player.PlayerStates.ATTACKING:
+                self.attack_sequence += 1
 
 class LocalHumanPlayer(humanplayer.HumanPlayer, LocalPlayer):
     
@@ -109,7 +188,7 @@ class LocalHumanPlayer(humanplayer.HumanPlayer, LocalPlayer):
     def handle_events(self):
         humanplayer.HumanPlayer.handle_events(self)
         
-        player_state_dictionary = get_local_player_state_dictionary()
+        player_state_dictionary = self.build_player_state_dictionary()
         
         versusclient.update_player_state(player_state_dictionary, self.player_position)
 
@@ -122,7 +201,7 @@ class LocalBot(aiplayer.Bot, LocalPlayer):
     def handle_events(self, opponent):
         aiplayer.Bot.handle_events(self, opponent)
         
-        player_state_dictionary = get_local_player_state_dictionary()
+        player_state_dictionary = self.build_player_state_dictionary()
         
         versusclient.update_player_state(player_state_dictionary, self.player_position)
 
@@ -255,6 +334,8 @@ def handle_events():
         else:
             current_player.handle_events()
     
+    handle_interactions()
+    
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
             exit_indicator = True
@@ -289,6 +370,39 @@ def handle_events():
     if gamestate.hosting:
         versusserver.server.Pump()
 
+def handle_interactions():
+    """changes the state of each player according to their interactions.  The state of
+    the remote player isn't actually affected by this function.  So, differences in the
+    state of the two clients will be synced after each request from the server"""
+    
+    global players
+    
+    #a dictionary of player positions that have already interacted.  This dictinoary is
+    #used to ensure that interactions between players are only done once.
+    handled_player_interactions = {}
+    
+    for player_position, current_player in players.iteritems():
+        
+        if player_position not in handled_player_interactions.keys():
+            handled_player_interactions[player_position] = []
+        
+        for other_player_position in get_other_player_positions(player_position):
+            
+            if other_player_position not in handled_player_interactions.keys():
+                handled_player_interactions[other_player_position] = []
+            
+            if (not player_position in handled_player_interactions[other_player_position] and
+            not other_player_position in handled_player_interactions[player_position]):
+                
+                if current_player.get_player_state() == player.PlayerStates.ATTACKING:
+                    
+                    other_player = players[other_player_position]
+                    
+                    versusmode.handle_attacks(current_player, other_player)
+                    
+                    handled_player_interactions[player_position].append(other_player_position)
+                    handled_player_interactions[other_player_position].append(player_position)
+
 def set_player(player_position, player):
     global players
     
@@ -300,10 +414,18 @@ def get_other_player_positions(player_position):
     return [position for position in players.keys() if position != player_position]
 
 def get_local_player_state_dictionary():
+    global players
+    
     local_player_position = versusclient.get_local_player_position()
     local_player = players[local_player_position]
     
     player_state_dictionary = \
-        {PlayerStateData.POINT_POSITIONS : local_player.get_player_point_positions()}
+        {
+            PlayerStateData.POINT_POSITIONS : local_player.get_player_point_positions(),
+            PlayerStateData.POINT_DAMAGES : local_player.point_name_to_point_damage,
+            PlayerStateData.PLAYER_STATE : local_player.get_player_state(),
+            PlayerStateData.HEALTH : local_player.health_meter,
+            PlayerStateData.ATTACK_SEQUENCE : local_player.attack_sequence
+        }
     
     return player_state_dictionary
