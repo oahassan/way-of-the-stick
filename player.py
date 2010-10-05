@@ -213,17 +213,30 @@ class Player():
                 if point_name not in self.point_name_to_point_damage.keys():
                     self.point_name_to_point_damage[point_name] = 0
     
-    #TODO - use last relative position not last position for damage
-    
     def update_point_damage(self):
         """updates the damage done by each attacking point"""
         
+        current_point_positions_dictionary = self.get_player_point_positions()
+        
         for point_name in self.point_name_to_point_damage.keys():
             
-            current_position = self.model.points[point_name].pos
-            previous_position = self.get_previous_point_position(point_name)
+            current_relative_position = \
+                self.get_point_relative_position(
+                    point_name,
+                    current_point_positions_dictionary
+                )
             
-            additional_damage = mathfuncs.distance(current_position, previous_position)
+            previous_relative_position = \
+                self.get_point_relative_position(
+                    point_name,
+                    self.previous_point_positions
+                )
+            
+            additional_damage = \
+                mathfuncs.distance(
+                    current_relative_position,
+                    previous_relative_position
+                )
             
             self.point_name_to_point_damage[point_name] += additional_damage
     

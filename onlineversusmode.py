@@ -69,14 +69,7 @@ class RemotePlayer(player.Player, NetworkPlayer):
 
 class LocalPlayer(NetworkPlayer):
     
-    def get_player_point_positions(self):
-        
-        return_dictionary = {}
-        
-        for point_name, point in self.model.points.iteritems():
-            return_dictionary[point_name] = point.pos
-        
-        return return_dictionary
+    pass
 
 class LocalHumanPlayer(humanplayer.HumanPlayer, LocalPlayer):
     
