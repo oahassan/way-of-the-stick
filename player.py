@@ -112,9 +112,20 @@ class Player():
         if self.stun_timer < self.stun_timeout:
             self.stun_timer += time_passed
     
-    def set_previous_point_positions(self):
+    def get_player_point_positions(self):
+        """builds a dictionary of point name to point position for each point in the
+        model"""
+        
+        return_dictionary = {}
+        
         for point_name, point in self.model.points.iteritems():
-            self.previous_point_positions[point_name] = point.pos
+            return_dictionary[point_name] = point.pos
+        
+        return return_dictionary
+    
+    def set_previous_point_positions(self):
+        
+        self.previous_point_positions = self.get_player_point_positions()
     
     def get_previous_point_position(self, point_name):
         """Get the previous position of the point from the previous points dictionary.
@@ -129,6 +140,7 @@ class Player():
     def get_point_position_change(self, point_name):
         """Get the change in position of a point between now and the previous 
         game loop"""
+        
         current_position = self.model.points[point_name].pos
         previous_position = self.get_previous_point_position(point_name)
         
@@ -201,6 +213,8 @@ class Player():
                 if point_name not in self.point_name_to_point_damage.keys():
                     self.point_name_to_point_damage[point_name] = 0
     
+    #TODO - use last relative position not last position for damage
+    
     def update_point_damage(self):
         """updates the damage done by each attacking point"""
         
@@ -212,6 +226,23 @@ class Player():
             additional_damage = mathfuncs.distance(current_position, previous_position)
             
             self.point_name_to_point_damage[point_name] += additional_damage
+    
+    def get_point_relative_position(self, point_name, point_position_dictionary):
+        """determines the relative position of point based on the positions in the 
+        point_position_dictionary"""
+        
+        point_position = point_position_dictionary[point_name]
+        left, top = point_position_dictionary[point_name]
+        
+        for position in point_position_dictionary.values():
+            
+            if position[0] < left:
+                left = position[0]
+                
+            if position[1] < top:
+                top = position[1]
+        
+        return point_position[0] - left, point_position[1] - top
     
     def reset_point_damage(self):
         """sets the point damage for each point at the start of an attack"""
