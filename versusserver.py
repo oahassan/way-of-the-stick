@@ -50,8 +50,9 @@ class ClientChannel(Channel):
         self.player_id = id(self)
     
     def Network(self, data):
-        print("Server channel")
-        print(data)
+        #print("Server channel")
+        #print(data)
+        pass
     
     def Network_join_match(self, data):
         player_position = self._server.add_player(self)

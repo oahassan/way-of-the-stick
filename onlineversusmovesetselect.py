@@ -137,8 +137,11 @@ def unload():
     
     if connected:
         #clean up any remaining messages to the client
+        versusclient.listener.Pump()
+        versusclient.get_network_messages()
         
         versusclient.listener.close()
+        versusclient.unload()
         print("listener closed")
     
     if gamestate.hosting:
@@ -294,7 +297,6 @@ def handle_events():
             if (versusclient.client_was_connected() and
             versusclient.listener.connection_status == versusclient.ConnectionStatus.DISCONNECTED):
                 gamestate.mode = gamestate.Modes.ONLINEMENUPAGE
-                versusclient.unload()
                 unload()
             
             if not versusclient.client_was_connected():

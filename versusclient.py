@@ -141,8 +141,8 @@ class ClientConnectionListener(ConnectionListener):
     def Network(self, data):
         self.actions_received.append(data)
         
-        print("local client")
-        print(data)
+        #print("local client")
+        #print(data)
     
     def Network_player_joined_match(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]
@@ -229,6 +229,7 @@ class ClientConnectionListener(ConnectionListener):
         print 'Server disconnected'
         #connection.Close()
         self.connection_status = ConnectionStatus.DISCONNECTED
+        self.player_id = None
 
 listener = None
 
