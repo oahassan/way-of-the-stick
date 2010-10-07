@@ -5,6 +5,7 @@ import gamestate
 import menupage
 import button
 import onlineversusmovesetselect
+import versusclient
 
 host_match_button = None
 join_match_button = None
@@ -85,9 +86,11 @@ def handle_events():
                 unload()
                 gamestate.mode = gamestate.Modes.MAINMENU
         
-        if (gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT and 
-        host_match_button.contains(wotsuievents.mouse_pos)):
-            gamestate.hosting = True
+        if gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT:
+            if host_match_button.contains(wotsuievents.mouse_pos):
+                gamestate.hosting = True
+            elif join_match_button.contains(wotsuievents.mouse_pos):
+                versusclient.load()
     
     if loaded:
         exit_button.draw(gamestate.screen)

@@ -230,7 +230,17 @@ class ClientConnectionListener(ConnectionListener):
         #connection.Close()
         self.connection_status = ConnectionStatus.DISCONNECTED
 
-listener = ClientConnectionListener()
+listener = None
+
+def load():
+    global listener
+    
+    listener = ClientConnectionListener()
+
+def unload():
+    global listener
+    
+    listener = None
 
 def update_player_state(player_state_dictionary, player_position):
     listener.update_player_state(player_state_dictionary, player_position)

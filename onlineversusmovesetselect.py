@@ -60,6 +60,7 @@ def load():
     global join_match_button
     global assigned_positions
     global spectate_button
+    global network_message_notifications
     
     exit_button = button.ExitButton()
     loaded = True
@@ -67,6 +68,7 @@ def load():
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
     assigned_positions = []
+    network_message_notifications = []
     
     player1_ui = button.Label((50,300), "Waiting for Player", (255,255,255),32)
     player2_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
@@ -110,13 +112,15 @@ def unload():
     global exit_button
     global start_match_label
     global ip_address_input
+    global connect_button
     global connected
+    global player_status_ui_dictionary
     global join_match_button
     global assigned_positions
     global spectate_button
     global local_player_position
+    global local_player_container_created
     
-    local_player_position = None
     exit_button = None
     loaded = False
     start_match_label = None
@@ -125,11 +129,14 @@ def unload():
     join_match_button = None
     assigned_positions = None
     spectate_button = None
+    network_message_notifications = []
+    connect_button = None
+    player_status_ui_dictionary = None
+    local_player_position = None
+    local_player_container_created = False
     
     if connected:
         #clean up any remaining messages to the client
-        versusclient.listener.Pump()
-        versusclient.get_network_messages()
         
         versusclient.listener.close()
         print("listener closed")
@@ -287,6 +294,7 @@ def handle_events():
             if (versusclient.client_was_connected() and
             versusclient.listener.connection_status == versusclient.ConnectionStatus.DISCONNECTED):
                 gamestate.mode = gamestate.Modes.ONLINEMENUPAGE
+                versusclient.unload()
                 unload()
             
             if not versusclient.client_was_connected():
