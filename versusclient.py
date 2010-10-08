@@ -21,6 +21,7 @@ class ServerActions:
     SPECTATE_MATCH = "spectate_match"
     PLAYER_READY = "player_ready"
     SET_GAME_MODE = "set_game_mode"
+    END_MATCH = "end_match"
     INITIAL_PLAYER_STATES_RECEIVED = "initial_player_states_received"
     SEND_INITIAL_PLAYER_STATE = "send_initial_player_state"
     UPDATE_PLAYER_STATE = "update_player_state"
@@ -81,8 +82,7 @@ class ClientConnectionListener(ConnectionListener):
     
     def end_match(self):
         data = {
-            DataKeys.ACTION : ServerActions.SET_GAME_MODE,
-            DataKeys.SERVER_MODE : ServerModes.MOVESET_SELECT
+            DataKeys.ACTION : ServerActions.END_MATCH
         }
         
         connection.Send(data)
@@ -199,12 +199,20 @@ class ClientConnectionListener(ConnectionListener):
     
     def Network_set_game_mode(self, data):
         self.server_mode = data[DataKeys.SERVER_MODE]
+        print("client view of server")
+        print(self.server_mode)
+    
+    def Network_end_match(self, data):
+        self.server_mode = ServerModes.MOVESET_SELECT
+        print("client view of server")
         print(self.server_mode)
     
     def Network_player_ready(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]
         
-        self.player_positions_ready_dictionary[player_position] = True
+        self.player_positions_ready_dictionary[player_position] = \
+            data[DataKeys.PLAYER_READY_INDICATOR]
+        
     
     def Network_update_player_state(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]

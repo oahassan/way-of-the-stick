@@ -19,6 +19,7 @@ class DataKeys:
     PLAYER_POSITION = "player position"
     PLAYER_ID = "player_id"
     PLAYER_POSITIONS_READY = "player positions ready"
+    PLAYER_READY_INDICATOR = "player ready indicator"
     SERVER_MODE = "server mode"
     PLAYER_STATE = "player state"
     POINT_POSITIONS = "point positions"
@@ -109,6 +110,26 @@ class ClientChannel(Channel):
     
     def Network_start_match(self, data):
         self._server.mode = ServerModes.MATCH
+        
+        self._server.send_to_all(data)
+        
+    def Network_end_match(self, data):
+        self._server.mode = ServerModes.MOVESET_SELECT
+        
+        for player_position in self._server.player_positions.keys():
+            self._server.set_player_position_ready(player_position, False)
+            
+            player_ready_data = \
+                {
+                    DataKeys.ACTION : ClientActions.PLAYER_READY,
+                    DataKeys.PLAYER_POSITION : player_position,
+                    DataKeys.PLAYER_ID : self._server.player_positions[player_position].player_id,
+                    DataKeys.PLAYER_READY_INDICATOR : False
+                }
+            
+            self._server.send_to_all(player_ready_data)
+        
+        self._server.send_to_all(data)
     
     def Network_update_player_state(self, data):
         self._server.send_to_all(data)
@@ -122,10 +143,12 @@ class ClientChannel(Channel):
                 {
                     DataKeys.ACTION : ClientActions.PLAYER_READY,
                     DataKeys.PLAYER_POSITION : player_position,
-                    DataKeys.PLAYER_ID : self.player_id
+                    DataKeys.PLAYER_ID : self.player_id,
+                    DataKeys.PLAYER_READY_INDICATOR : True
                 }
         
         self._server.send_to_all(data)
+    
     
     def Network_set_game_mode(self, data):
         if self._server.client_is_player(self):
