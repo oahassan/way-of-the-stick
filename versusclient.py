@@ -126,15 +126,20 @@ class ClientConnectionListener(ConnectionListener):
         connection.Send(data)
     
     def update_player_state(self, player_state_dictionary, player_position):
-        data = \
-            {
-                DataKeys.ACTION : ServerActions.UPDATE_PLAYER_STATE,
-                DataKeys.PLAYER_STATE : player_state_dictionary,
-                DataKeys.PLAYER_POSITION : get_local_player_position()
-            }
         
-        connection.Send(data)
+        if self.server_mode == ServerModes.MATCH:
+            data = \
+                {
+                    DataKeys.ACTION : ServerActions.UPDATE_PLAYER_STATE,
+                    DataKeys.PLAYER_STATE : player_state_dictionary,
+                    DataKeys.PLAYER_POSITION : get_local_player_position()
+                }
+            
+            connection.Send(data)
         
+    def clear_player_states(self):
+        for player_position in self.player_states.keys():
+            self.player_states[player_position] = None
     
     #Network methods
     
@@ -204,6 +209,7 @@ class ClientConnectionListener(ConnectionListener):
     
     def Network_end_match(self, data):
         self.server_mode = ServerModes.MOVESET_SELECT
+        
         print("client view of server")
         print(self.server_mode)
     
@@ -215,9 +221,11 @@ class ClientConnectionListener(ConnectionListener):
         
     
     def Network_update_player_state(self, data):
-        player_position = data[DataKeys.PLAYER_POSITION]
-        
-        self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
+    
+        if self.server_mode == ServerModes.MATCH:
+            player_position = data[DataKeys.PLAYER_POSITION]
+            
+            self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
     
     # built in stuff
 
@@ -238,6 +246,7 @@ class ClientConnectionListener(ConnectionListener):
         #connection.Close()
         self.connection_status = ConnectionStatus.DISCONNECTED
         self.player_id = None
+        self.server_mode = ServerModes.MOVESET_SELECT
 
 listener = None
 
@@ -310,6 +319,12 @@ def connect_to_host(host_ip_address):
 
 def get_network_messages():
     connection.Pump()
+
+def clear_player_states():
+    """sets all player states to None"""
+    
+    if listener != None:
+        listener.clear_player_states()
 
 def get_connection_status():
     """returns whether the game is connected to a server"""

@@ -309,6 +309,7 @@ def exit():
             versusserver.PlayerPositions.PLAYER2 : None
         }
     initialized = False
+    
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.NONE
     gamestate.drawing_mode = gamestate.DrawingModes.UPDATE_ALL
     gamestate.frame_rate = 20
@@ -351,17 +352,28 @@ def handle_events():
                 if versusclient.local_player_is_in_match():
                     versusclient.listener.end_match()
                 else:
+                    #if you're a spectator go to the main menu
                     versusclient.listener.close()
                     exit()
                     gamestate.mode = gamestate.Modes.MAINMENU
     
     if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
         exit()
+        
+        #This must be called here to make sure that the player states get set to None. If
+        #not a new match cannot be joined
+        versusclient.clear_player_states()
+        
         gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
     
     if versusclient.listener.connection_status == versusclient.ConnectionStatus.DISCONNECTED:
         #TODO - goto mainmenu if hosting
         exit()
+        
+        #This must be called here to make sure that the player states get set to None. If
+        #not a new match cannot be joined
+        versusclient.clear_player_states()
+        
         gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
     
     versusclient.listener.Pump()

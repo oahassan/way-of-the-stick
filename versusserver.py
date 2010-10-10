@@ -98,7 +98,7 @@ class ClientChannel(Channel):
         player_position = self._server.get_player_position(self)
         
         if player_position != None:
-            self._server.set_initial_player_states_received(player_position)
+            self._server.set_initial_player_states_received(player_position, True)
         
         #TODO - add timeout not necessarily here
         if self._server.all_initial_player_states_received():
@@ -122,17 +122,7 @@ class ClientChannel(Channel):
         self._server.mode = ServerModes.MOVESET_SELECT
         
         for player_position in self._server.player_positions.keys():
-            self._server.set_player_position_ready(player_position, False)
-            
-            player_ready_data = \
-                {
-                    DataKeys.ACTION : ClientActions.PLAYER_READY,
-                    DataKeys.PLAYER_POSITION : player_position,
-                    DataKeys.PLAYER_ID : self._server.player_positions[player_position].player_id,
-                    DataKeys.PLAYER_READY_INDICATOR : False
-                }
-            
-            self._server.send_to_all(player_ready_data)
+            self._server.set_initial_player_states_received(player_position, False)
         
         self._server.send_to_all(data)
     
@@ -178,7 +168,7 @@ class WotsServer(Server):
         self.player_positions_ready = \
             {PlayerPositions.PLAYER1 : False, PlayerPositions.PLAYER2 : False}
         
-        #indicates that point position data has been received for by players in the match
+        #indicates that point position data has been received by players in the match
         #this ensures that models are ready to be drawn at each client.
         self.initial_remote_player_state_received = \
             {PlayerPositions.PLAYER1 : False, PlayerPositions.PLAYER2 : False}
@@ -206,8 +196,8 @@ class WotsServer(Server):
         
         Server.close(self)
     
-    def set_initial_player_states_received(self, player_position):
-        self.initial_remote_player_state_received[player_position] = True
+    def set_initial_player_states_received(self, player_position, indicator):
+        self.initial_remote_player_state_received[player_position] = indicator
     
     def all_initial_player_states_received(self):
         return_indicator = True

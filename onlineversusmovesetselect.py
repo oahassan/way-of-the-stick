@@ -6,7 +6,6 @@ import eztext
 import wotsuievents
 import movesetdata
 import gamestate
-import onlineversusmode
 import versusserver
 import versusclient
 
