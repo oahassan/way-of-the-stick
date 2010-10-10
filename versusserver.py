@@ -96,17 +96,22 @@ class ClientChannel(Channel):
         """indicate on server that all remote player states have been received"""
         
         player_position = self._server.get_player_position(self)
-        self._server.set_initial_player_states_received(player_position)
+        
+        if player_position != None:
+            self._server.set_initial_player_states_received(player_position)
         
         #TODO - add timeout not necessarily here
         if self._server.all_initial_player_states_received():
+            
+            self._server.mode = ServerModes.MATCH
+            
             data = \
                 {
                     DataKeys.ACTION : ClientActions.SET_GAME_MODE,
                     DataKeys.SERVER_MODE : ServerModes.MATCH
                 }
             
-            self.Send(data)
+            self._server.send_to_all(data)
     
     def Network_start_match(self, data):
         self._server.mode = ServerModes.MATCH

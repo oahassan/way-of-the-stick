@@ -79,8 +79,8 @@ def load():
         versusserver.PlayerPositions.PLAYER2 : player2_ui
     }
     
-    set_player_state_position(player1_ui, versusserver.PlayerPositions.PLAYER1)
-    set_player_state_position(player2_ui, versusserver.PlayerPositions.PLAYER2)
+    set_player_state_label_position(player1_ui, versusserver.PlayerPositions.PLAYER1)
+    set_player_state_label_position(player2_ui, versusserver.PlayerPositions.PLAYER2)
     
     ip_address_input = \
         wotsuicontainers.TextEntryBox(
@@ -325,73 +325,10 @@ def handle_events():
             
             if (versusclient.listener.server_mode == 
             versusserver.ServerModes.LOADING_MATCH_DATA):
-                setup_versusmode()
-            
-            if versusclient.listener.server_mode == versusserver.ServerModes.MATCH:
-                onlineversusmode.init()
-                gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
+                gamestate.mode = gamestate.Modes.ONLINEMATCHLOADER
         
         if gamestate.hosting:
             versusserver.server.Pump()
-
-def setup_versusmode():
-    if versusclient.local_player_is_in_match():
-        setup_local_player()
-        
-    for player_position in versusclient.get_remote_player_positions():
-        setup_remote_player(player_position)
-    
-    if (versusclient.local_player_is_in_match() and
-    (versusclient.local_player_match_data_loaded() == False)):
-        
-        local_player_state_dictionary = onlineversusmode.get_local_player_state_dictionary()
-        
-        local_player_position = versusclient.get_local_player_position()
-        versusclient.listener.send_player_initial_state(
-            local_player_state_dictionary, 
-            local_player_position
-        )
-
-def setup_remote_player(player_position):
-    remote_player = onlineversusmode.RemotePlayer((0,0), player_position)
-    
-    set_player_initial_state(player_position, remote_player)
-    
-    onlineversusmode.set_player(player_position, remote_player)
-
-def setup_local_player():
-    """creates a local player in the versus mode module"""
-    global player_status_ui_dictionary
-    
-    local_player_position = versusclient.get_local_player_position()
-    
-    local_player_ui = player_status_ui_dictionary[local_player_position]
-    local_player_type = local_player_ui.get_player_type()
-    
-    local_player = None
-    
-    if local_player_type == player.PlayerTypes.HUMAN:
-        local_player = onlineversusmode.LocalHumanPlayer((0,0), local_player_position)
-        
-    elif local_player_type == player.PlayerTypes.BOT:
-        local_player = onlineversusmode.LocalBot((0,0), local_player_position)
-    
-    #Calling set initial state first makes it so that the player doesn't turn around in
-    #the first frame if it's supposed to start facing left.
-    set_player_initial_state(local_player_position, local_player)
-    
-    local_player.load_moveset(local_player_ui.get_player_moveset())
-    
-    onlineversusmode.set_player(local_player_position, local_player)
-
-def set_player_initial_state(player_position, player):
-    player.init_state()
-    
-    player.color = get_player_color(player_position)
-    
-    player.direction = get_player_model_direction(player_position)
-    
-    player.model.move_model(get_player_model_position(local_player_position))
 
 def get_new_network_message_notifications():
     received_data = versusclient.listener.pop_received_data()
@@ -456,7 +393,7 @@ def handle_local_player_ui_changes():
     if local_player_container_created:
         if not versusclient.local_player_is_in_match():
             new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
-            set_player_state_position(new_ui, local_player_position)
+            set_player_state_label_position(new_ui, local_player_position)
             
             player_status_ui_dictionary[local_player_position] = new_ui
             
@@ -515,7 +452,7 @@ def reset_empty_position_uis():
             assigned_positions.remove(player_position)
             
             new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
-            set_player_state_position(new_ui, player_position)
+            set_player_state_label_position(new_ui, player_position)
             
             player_status_ui_dictionary[player_position] = new_ui
 
@@ -556,28 +493,7 @@ def get_remote_player_state_label_position(player_position):
     elif player_position == versusserver.PlayerPositions.PLAYER2:
         return (450, 150)
 
-def get_player_model_position(player_position):
-    if player_position == versusserver.PlayerPositions.PLAYER1:
-        return ((200, 367))
-        
-    elif player_position == versusserver.PlayerPositions.PLAYER2:
-        return ((600, 367))
-
-def get_player_model_direction(player_position):
-    if player_position == versusserver.PlayerPositions.PLAYER1:
-        return player.PlayerStates.FACING_RIGHT
-        
-    elif player_position == versusserver.PlayerPositions.PLAYER2:
-        return player.PlayerStates.FACING_LEFT
-
-def get_player_color(player_position):
-    if player_position == versusserver.PlayerPositions.PLAYER1:
-        return (255,0,0)
-        
-    elif player_position == versusserver.PlayerPositions.PLAYER2:
-        return (0,255,0)
-
-def set_player_state_position(player_state_label, player_position):
+def set_player_state_label_position(player_state_label, player_position):
     
     if player_position == versusserver.PlayerPositions.PLAYER1:
         window_right_center = (0, gamestate._HEIGHT / 2)
