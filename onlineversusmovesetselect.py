@@ -195,11 +195,16 @@ def handle_events():
             if join_match_button.contains(wotsuievents.mouse_pos):
                 versusclient.listener.join_match()
                 join_match_button.handle_deselected()
+                join_match_button.inactivate()
+                
+                spectate_button.activate()
         
         elif spectate_button.selected:
             if spectate_button.contains(wotsuievents.mouse_pos):
                 versusclient.listener.spectate_match()
                 spectate_button.handle_deselected()
+                spectate_button.inactivate()
+                join_match_button.activate()
     
     if loaded:
         
@@ -307,11 +312,19 @@ def handle_events():
                 connect_button.draw(gamestate.screen)
         
         if connected or gamestate.hosting:
-            if not join_match_button.active:
-                join_match_button.activate()
-            
-            if not spectate_button.active:
-                spectate_button.activate()
+            if not versusclient.local_player_is_in_match():
+                if not join_match_button.active:
+                    join_match_button.activate()
+                
+                if spectate_button.active:
+                    spectate_button.inactivate()
+                
+            else:
+                if not spectate_button.active:
+                    spectate_button.activate()
+                
+                if join_match_button.active:
+                    join_match_button.inactivate()
             
             versusclient.listener.Pump()
             versusclient.get_network_messages()
