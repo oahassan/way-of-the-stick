@@ -141,6 +141,7 @@ class ClientConnectionListener(ConnectionListener):
         for player_position in self.player_states.keys():
             self.player_states[player_position] = None
     
+    
     #Network methods
     
     def Network(self, data):
@@ -218,7 +219,6 @@ class ClientConnectionListener(ConnectionListener):
         
         self.player_positions_ready_dictionary[player_position] = \
             data[DataKeys.PLAYER_READY_INDICATOR]
-        
     
     def Network_update_player_state(self, data):
     
@@ -226,6 +226,7 @@ class ClientConnectionListener(ConnectionListener):
             player_position = data[DataKeys.PLAYER_POSITION]
             
             self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
+    
     
     # built in stuff
 

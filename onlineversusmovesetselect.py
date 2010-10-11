@@ -69,17 +69,7 @@ def load():
     assigned_positions = []
     network_message_notifications = []
     
-    player1_ui = button.Label((50,300), "Waiting for Player", (255,255,255),32)
-    player2_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
-    
-    player_status_ui_dictionary = \
-    {
-        versusserver.PlayerPositions.PLAYER1 : player1_ui,
-        versusserver.PlayerPositions.PLAYER2 : player2_ui
-    }
-    
-    set_player_state_label_position(player1_ui, versusserver.PlayerPositions.PLAYER1)
-    set_player_state_label_position(player2_ui, versusserver.PlayerPositions.PLAYER2)
+    init_player_status_ui_dictionary()
     
     ip_address_input = \
         wotsuicontainers.TextEntryBox(
@@ -293,10 +283,23 @@ def handle_events():
                     else:
                         connect_button.handle_deselected()
             
-            if (versusclient.client_was_connected() and
-            versusclient.listener.connection_status == versusclient.ConnectionStatus.DISCONNECTED):
-                gamestate.mode = gamestate.Modes.ONLINEMENUPAGE
-                unload()
+            if versusclient.listener.connection_status == \
+            versusclient.ConnectionStatus.DISCONNECTED:
+                
+                connected = False
+                
+                if ip_address_input.active == False:
+                    ip_address_input.activate()
+                    init_player_status_ui_dictionary()
+                
+                if join_match_button.active:
+                    join_match_button.inactivate()
+                
+                if spectate_button.active:
+                    spectate_button.inactivate()
+                
+                if start_match_label.active:
+                    start_match_label.inactivate()
             
             if not versusclient.client_was_connected():
                 ip_address_input.draw(gamestate.screen)
@@ -491,6 +494,26 @@ def get_remote_player_state_label_position(player_position):
         return (50, 150)
     elif player_position == versusserver.PlayerPositions.PLAYER2:
         return (450, 150)
+
+def init_player_status_ui_dictionary():
+    """sets the player statuses for each position to waiting for player"""
+    
+    global player_status_ui_dictionary
+    global local_player_container_created
+    
+    local_player_container_created = False
+    
+    player1_ui = button.Label((50,300), "Waiting for Player", (255,255,255),32)
+    player2_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
+    
+    player_status_ui_dictionary = \
+    {
+        versusserver.PlayerPositions.PLAYER1 : player1_ui,
+        versusserver.PlayerPositions.PLAYER2 : player2_ui
+    }
+    
+    set_player_state_label_position(player1_ui, versusserver.PlayerPositions.PLAYER1)
+    set_player_state_label_position(player2_ui, versusserver.PlayerPositions.PLAYER2)
 
 def set_player_state_label_position(player_state_label, player_position):
     
