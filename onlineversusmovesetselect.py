@@ -227,6 +227,7 @@ def handle_events():
             
             if player_status_ui_dictionary[local_player_position].player_ready() and \
             not versusclient.listener.player_positions_ready_dictionary[local_player_position]:
+                
                 versusclient.listener.player_ready()
             
             for player_status_ui in player_status_ui_dictionary.values():

@@ -101,6 +101,7 @@ class ClientConnectionListener(ConnectionListener):
             if player_to_remove_id == player_id:
                 self.player_positions[player_position] = None
                 self.player_positions_ready_dictionary[player_position] = False
+                self.player_states[player_position] = None
                 print("player deleted")
     
     def all_player_states_received(self):

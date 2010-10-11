@@ -322,8 +322,13 @@ class WotsServer(Server):
         """remove a player from the server"""
         if player == self.player_positions[PlayerPositions.PLAYER1]:
             self.player_positions[PlayerPositions.PLAYER1] = None
+            self.player_positions_ready[PlayerPositions.PLAYER1] = False
+            self.initial_remote_player_state_received[PlayerPositions.PLAYER1] = False
+            
         elif player == self.player_positions[PlayerPositions.PLAYER2]:
             self.player_positions[PlayerPositions.PLAYER2] = None
+            self.player_positions_ready[PlayerPositions.PLAYER2] = False
+            self.initial_remote_player_state_received[PlayerPositions.PLAYER2] = False
         
         if player in self.players:
             self.players.remove(player)
