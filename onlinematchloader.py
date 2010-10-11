@@ -67,9 +67,6 @@ def setup_versusmode():
     for player_position in versusclient.get_remote_player_positions():
         setup_remote_player(player_position)
     
-    if versusclient.local_player_match_data_loaded():
-        print("LOCAL PLAYER MATCH DATA IS LOADED?!?!?!?!?!?")
-    
     if (versusclient.local_player_is_in_match() and
     (versusclient.local_player_match_data_loaded() == False)):
         local_player_state_dictionary = \
