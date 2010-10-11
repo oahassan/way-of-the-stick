@@ -358,7 +358,7 @@ def handle_events():
                     exit()
                     gamestate.mode = gamestate.Modes.MAINMENU
     
-    if versusclient.local_player_is_in_match():
+    if versusclient.get_connection_status() != versusclient.ConnectionStatus.DISCONNECTED:
         if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
             exit()
             
@@ -377,8 +377,7 @@ def handle_events():
             versusclient.clear_player_states()
             
             gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
-    
-    if versusclient.get_connection_status() != versusclient.ConnectionStatus.DISCONNECTED:
+        
         versusclient.listener.Pump()
         versusclient.get_network_messages()
     
