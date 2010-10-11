@@ -354,30 +354,33 @@ def handle_events():
                 else:
                     #if you're a spectator go to the main menu
                     versusclient.listener.close()
+                    versusclient.unload()
                     exit()
                     gamestate.mode = gamestate.Modes.MAINMENU
     
-    if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
-        exit()
+    if versusclient.local_player_is_in_match():
+        if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
+            exit()
+            
+            #This must be called here to make sure that the player states get set to None. If
+            #not a new match cannot be joined
+            versusclient.clear_player_states()
+            
+            gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
         
-        #This must be called here to make sure that the player states get set to None. If
-        #not a new match cannot be joined
-        versusclient.clear_player_states()
-        
-        gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+        if versusclient.get_connection_status() == versusclient.ConnectionStatus.DISCONNECTED:
+            #TODO - goto mainmenu if hosting
+            exit()
+            
+            #This must be called here to make sure that the player states get set to None. If
+            #not a new match cannot be joined
+            versusclient.clear_player_states()
+            
+            gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
     
-    if versusclient.listener.connection_status == versusclient.ConnectionStatus.DISCONNECTED:
-        #TODO - goto mainmenu if hosting
-        exit()
-        
-        #This must be called here to make sure that the player states get set to None. If
-        #not a new match cannot be joined
-        versusclient.clear_player_states()
-        
-        gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
-    
-    versusclient.listener.Pump()
-    versusclient.get_network_messages()
+    if versusclient.get_connection_status() != versusclient.ConnectionStatus.DISCONNECTED:
+        versusclient.listener.Pump()
+        versusclient.get_network_messages()
     
     if gamestate.hosting:
         versusserver.server.Pump()

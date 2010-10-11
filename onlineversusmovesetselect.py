@@ -327,7 +327,8 @@ def handle_events():
                 notification.update(time_passed)
             
             if (versusclient.listener.server_mode == 
-            versusserver.ServerModes.LOADING_MATCH_DATA):
+            versusserver.ServerModes.LOADING_MATCH_DATA) or \
+            (versusclient.listener.server_mode == versusserver.ServerModes.MATCH):
                 gamestate.mode = gamestate.Modes.ONLINEMATCHLOADER
         
         if gamestate.hosting:
