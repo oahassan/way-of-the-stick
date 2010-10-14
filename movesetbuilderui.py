@@ -44,11 +44,9 @@ class BuilderContainer(wotsui.UIObjectBase):
     
     def save(self):
         self.animation_select_container.save_selected_movement_animations()
-        self.key_select_container.save()
     
     def handle_events(self):
         self.animation_select_container.handle_events()
-        self.key_select_container.handle_events()
 
 class MovesetNameEntryBox(wotsuicontainers.TextEntryBox):
     _X_POS = 10
@@ -91,23 +89,10 @@ class MovementBuilderContainer(BuilderContainer):
                                                                            animation_types)
         self.add_children([self.title, self.animation_select_container])
         
-        key_select_title_text = "Select Movement Keys"
-        
-        movement_types = {movesetdata.MovementTypes.MOVE_LEFT:"Move Left", \
-                          movesetdata.MovementTypes.MOVE_RIGHT:"Move Right", \
-                          movesetdata.MovementTypes.MOVE_UP:"Move Up", \
-                          movesetdata.MovementTypes.MOVE_DOWN:"Move Down"}
-        
-        self.key_select_container = MovementKeyBindingContainer((20,self.position[1] + self.height + 20), \
-                                                                key_select_title_text, \
-                                                                movement_types)
-        self.add_child(self.key_select_container)
-        
     def set_moveset(self, moveset):
         BuilderContainer.set_moveset(self, moveset)
         
         self.animation_select_container.set_moveset(moveset)
-        self.key_select_container.set_moveset(moveset)
     
     def expand(self):
         BuilderContainer.expand(self)
@@ -147,23 +132,14 @@ class AttackBuilderContainer(BuilderContainer):
                                                                           movement_select_title_text, \
                                                                           animation_types)
         self.add_children([self.title, self.animation_select_container])
-        
-        key_select_title_text = "Select Attack Keys"
-        
-        self.key_select_container = AttackKeyBindingContainer((20,self.position[1] + self.height + 20), \
-                                                               key_select_title_text, \
-                                                               {})
-        self.add_child(self.key_select_container)
     
     def save(self):
         self.animation_select_container.save_selected_attack_animations()
-        self.key_select_container.save()
     
     def set_moveset(self, moveset):
         BuilderContainer.set_moveset(self, moveset)
         
         self.animation_select_container.set_moveset(moveset)
-        self.key_select_container.set_moveset(moveset)
     
     def expand(self):
         BuilderContainer.expand(self)
@@ -196,15 +172,6 @@ class AttackBuilderContainer(BuilderContainer):
     
     def handle_events(self):
         self.animation_select_container.handle_events()
-        self.key_select_container.handle_events()
-        
-        for thumbnail in self.animation_select_container.animation_navigator.animation_thumbnails:
-            if thumbnail.selected:
-                if not self.key_select_container.has_button(thumbnail.animation.name):
-                    self.key_select_container.add_button(thumbnail.animation.name)
-            else:
-                if self.key_select_container.has_button(thumbnail.animation.name):
-                    self.key_select_container.remove_button(thumbnail.animation.name)
 
 class AnimationSelectContainer(BuilderContainer):
     def __init__(self, position, title_text, animation_types):
