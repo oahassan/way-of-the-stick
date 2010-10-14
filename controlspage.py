@@ -29,9 +29,15 @@ def load():
     
     exit_button = ExitButton()
     loaded = True
-    press_key_label = Label((300, 0), "Press a key to bind the action", (255, 0, 0), 22)
-    set_movement_keys_label = Label((20, 20), "Set Movement Keys", (255, 255, 255))
-    set_attack_keys_label = Label((20, 220), "Set Attack Keys", (255, 255, 255))
+    press_key_label = \
+        Label(
+            (60, 15),
+            "Select an action, then press a key to bind the action to that key",
+            (255, 0, 0),
+            22
+        )
+    set_movement_keys_label = Label((20, 60), "Set Movement Keys", (255, 255, 255))
+    set_attack_keys_label = Label((20, 280), "Set Attack Keys", (255, 255, 255))
     
     movement_buttons = []
     
@@ -40,11 +46,11 @@ def load():
         movement_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MOVE_RIGHT, "Move Right"),
+        BindButton(InputActionTypes.MOVE_UP, "Move Up"),
         movement_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MOVE_UP, "Move Up"),
+        BindButton(InputActionTypes.MOVE_RIGHT, "Move Right"),
         movement_buttons
     )
     add_bind_button_to_button_list(
@@ -53,7 +59,7 @@ def load():
     )
     
     layout_buttons( 
-        (40, set_movement_keys_label.height + set_movement_keys_label.position[1] + 10),
+        (40, set_movement_keys_label.height + set_movement_keys_label.position[1] + 15),
         movement_buttons
     )
     
@@ -64,19 +70,19 @@ def load():
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MEDIUM_PUNCH, "Medium Punch"),
-        attack_buttons
-    )
-    add_bind_button_to_button_list(
-        BindButton(InputActionTypes.STRONG_PUNCH, "Strong Punch"),
-        attack_buttons
-    )
-    add_bind_button_to_button_list(
         BindButton(InputActionTypes.WEAK_KICK, "Weak Kick"),
         attack_buttons
     )
     add_bind_button_to_button_list(
+        BindButton(InputActionTypes.MEDIUM_PUNCH, "Medium Punch"),
+        attack_buttons
+    )
+    add_bind_button_to_button_list(
         BindButton(InputActionTypes.MEDIUM_KICK, "Medium Kick"),
+        attack_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.STRONG_PUNCH, "Strong Punch"),
         attack_buttons
     )
     add_bind_button_to_button_list(
@@ -85,7 +91,7 @@ def load():
     )
     
     layout_buttons( 
-        (40, set_attack_keys_label.height + set_attack_keys_label.position[1] + 10),
+        (40, set_attack_keys_label.height + set_attack_keys_label.position[1] + 15),
         attack_buttons
     )
     
@@ -137,6 +143,7 @@ def handle_events():
         exit_button.draw(gamestate.screen)
         set_movement_keys_label.draw(gamestate.screen)
         set_attack_keys_label.draw(gamestate.screen)
+        press_key_label.draw(gamestate.screen)
         
         for attack_button in attack_buttons:
             attack_button.draw(gamestate.screen)
