@@ -1,30 +1,122 @@
 import pygame
 
-import wotsui
 import wotsuievents
-import button
 import gamestate
+import controlsdata
+from button import Label, ExitButton
+from movesetbuilderui import BindButton
+from wotsuicontainers import ButtonContainer
+from actionwizard import InputActionTypes
 
 loaded = False
 exit_button = None
+set_movement_keys_label = None
+set_attack_keys_label = None
+movement_buttons = None
+attack_buttons = None
+active_button = None
+press_key_label = None
 
 def load():
     global loaded
     global exit_button
+    global set_movement_keys_label
+    global set_attack_keys_label
+    global movement_buttons
+    global attack_buttons
+    global active_button
+    global press_key_label
     
-    exit_button = button.ExitButton()
+    exit_button = ExitButton()
     loaded = True
+    press_key_label = Label((300, 0), "Press a key to bind the action", (255, 0, 0), 22)
+    set_movement_keys_label = Label((20, 20), "Set Movement Keys", (255, 255, 255))
+    set_attack_keys_label = Label((20, 220), "Set Attack Keys", (255, 255, 255))
+    
+    movement_buttons = []
+    
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.MOVE_LEFT, "Move Left"),
+        movement_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.MOVE_RIGHT, "Move Right"),
+        movement_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.MOVE_UP, "Move Up"),
+        movement_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.MOVE_DOWN, "Move Down"),
+        movement_buttons
+    )
+    
+    layout_buttons( 
+        (40, set_movement_keys_label.height + set_movement_keys_label.position[1] + 10),
+        movement_buttons
+    )
+    
+    attack_buttons = []
+    
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.WEAK_PUNCH, "Weak Punch"),
+        attack_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.MEDIUM_PUNCH, "Medium Punch"),
+        attack_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.STRONG_PUNCH, "Strong Punch"),
+        attack_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.WEAK_KICK, "Weak Kick"),
+        attack_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.MEDIUM_KICK, "Medium Kick"),
+        attack_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(InputActionTypes.STRONG_KICK, "Strong Kick"),
+        attack_buttons
+    )
+    
+    layout_buttons( 
+        (40, set_attack_keys_label.height + set_attack_keys_label.position[1] + 10),
+        attack_buttons
+    )
+    
+    active_button = None
 
 def unload():
     global loaded
     global exit_button
+    global set_movement_keys_label
+    global set_attack_keys_label
+    global movement_buttons
+    global attack_buttons
+    global active_button
+    global press_key_label
     
     exit_button = None
     loaded = False
+    set_movement_keys_label = None
+    set_attack_keys_label = None
+    movement_buttons = None
+    attack_buttons = None
+    active_button = None
+    press_key_label = None
 
 def handle_events():
     global loaded
-    global exit_buttonr
+    global exit_button
+    global set_movement_keys_label
+    global set_attack_keys_label
+    global movement_buttons
+    global attack_buttons
     
     if loaded == False:
         load()
@@ -43,3 +135,36 @@ def handle_events():
     
     if loaded:
         exit_button.draw(gamestate.screen)
+        set_movement_keys_label.draw(gamestate.screen)
+        set_attack_keys_label.draw(gamestate.screen)
+        
+        for attack_button in attack_buttons:
+            attack_button.draw(gamestate.screen)
+        
+        for movement_button in movement_buttons:
+            movement_button.draw(gamestate.screen)
+
+def add_bind_button_to_button_list(bind_button, button_list,):
+    
+    bind_button.set_key(controlsdata.get_control_key(bind_button.move_type))
+    button_list.append(bind_button)
+
+def layout_buttons(start_position, buttons):
+    
+    button_position = start_position
+    
+    for button_index in range(len(buttons)):
+        
+        buttons[button_index].set_position(button_position)
+        
+        next_x_position = button_position[0]
+        next_y_position = button_position[1]
+        
+        if ((button_index + 1) % 2) == 1:
+            next_x_position = start_position[0] + 400
+        
+        else:
+            next_x_position = start_position[0]
+            next_y_position += buttons[button_index].height + 10
+        
+        button_position = (next_x_position, next_y_position)

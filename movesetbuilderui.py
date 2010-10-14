@@ -745,6 +745,9 @@ class BindButton(button.TextButton):
         self.move_type = move_type
         self.key = None
     
+    def set_key(self, key):
+        self.key = key
+    
     def draw(self, surface):
         button.TextButton.draw(self, surface)
         
