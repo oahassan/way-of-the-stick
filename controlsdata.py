@@ -1,7 +1,19 @@
 import shelve
 import copy
-from actionwizard import InputActionTypes
 import pygame
+
+class InputActionTypes():
+    MOVE_RIGHT = 'moveright'
+    MOVE_LEFT = 'moveleft'
+    MOVE_UP = 'moveup'
+    MOVE_DOWN = 'movedown'
+    BLOCK = 'block'
+    WEAK_PUNCH = 'weakpunch'
+    MEDIUM_PUNCH = 'mediumpunch'
+    STRONG_PUNCH = 'strongpunch'
+    WEAK_KICK = 'weakkick'
+    MEDIUM_KICK = 'mediumkick'
+    STRONG_KICK = 'strongkick'
 
 CONTROlS_DB_FILE_NM = 'controls_wots.dat'
 

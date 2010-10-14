@@ -6,7 +6,6 @@ import controlsdata
 from button import Label, ExitButton
 from movesetbuilderui import BindButton
 from wotsuicontainers import ButtonContainer
-from actionwizard import InputActionTypes
 
 loaded = False
 exit_button = None
@@ -44,19 +43,19 @@ def load():
     movement_buttons = []
     
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MOVE_LEFT, "Move Left"),
+        BindButton(controlsdata.InputActionTypes.MOVE_LEFT, "Move Left"),
         movement_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MOVE_UP, "Move Up"),
+        BindButton(controlsdata.InputActionTypes.MOVE_UP, "Move Up"),
         movement_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MOVE_RIGHT, "Move Right"),
+        BindButton(controlsdata.InputActionTypes.MOVE_RIGHT, "Move Right"),
         movement_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MOVE_DOWN, "Move Down"),
+        BindButton(controlsdata.InputActionTypes.MOVE_DOWN, "Move Down"),
         movement_buttons
     )
     
@@ -68,27 +67,27 @@ def load():
     attack_buttons = []
     
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.WEAK_PUNCH, "Weak Punch"),
+        BindButton(controlsdata.InputActionTypes.WEAK_PUNCH, "Weak Punch"),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.WEAK_KICK, "Weak Kick"),
+        BindButton(controlsdata.InputActionTypes.WEAK_KICK, "Weak Kick"),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MEDIUM_PUNCH, "Medium Punch"),
+        BindButton(controlsdata.InputActionTypes.MEDIUM_PUNCH, "Medium Punch"),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.MEDIUM_KICK, "Medium Kick"),
+        BindButton(controlsdata.InputActionTypes.MEDIUM_KICK, "Medium Kick"),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.STRONG_PUNCH, "Strong Punch"),
+        BindButton(controlsdata.InputActionTypes.STRONG_PUNCH, "Strong Punch"),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(InputActionTypes.STRONG_KICK, "Strong Kick"),
+        BindButton(controlsdata.InputActionTypes.STRONG_KICK, "Strong Kick"),
         attack_buttons
     )
     

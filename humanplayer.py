@@ -6,6 +6,7 @@ import wotsuievents
 import gamestate
 import movesetdata
 import actionwizard
+from controlsdata import InputActionTypes, get_control_key
 
 class HumanPlayer(player.Player):
     def __init__(self, position):
@@ -111,7 +112,7 @@ class HumanPlayer(player.Player):
                 self.actions[movement] = self.create_action(movement, movement_animation)
         
         #Set move up actions
-        jump_key = moveset.movement_keys[movesetdata.MovementTypes.MOVE_UP]
+        jump_key = get_control_key(InputActionTypes.MOVE_UP)
         jump_action = self.create_action(player.PlayerStates.JUMPING, \
                                          moveset.movement_animations[player.PlayerStates.JUMPING], \
                                          None, \
@@ -119,7 +120,7 @@ class HumanPlayer(player.Player):
         self.key_bindings[jump_key] = [jump_action]
         
         #Set move down actions
-        crouch_key = moveset.movement_keys[movesetdata.MovementTypes.MOVE_DOWN]
+        crouch_key = get_control_key(InputActionTypes.MOVE_DOWN)
         crouch_action = self.create_action(player.PlayerStates.CROUCHING, \
                                            moveset.movement_animations[player.PlayerStates.CROUCHING], \
                                            None, \
@@ -127,7 +128,7 @@ class HumanPlayer(player.Player):
         self.key_bindings[crouch_key] = [crouch_action]
         
         #Set move right actions
-        move_right_key = moveset.movement_keys[movesetdata.MovementTypes.MOVE_RIGHT]
+        move_right_key = get_control_key(InputActionTypes.MOVE_RIGHT)
         walk_right_action = self.create_action(player.PlayerStates.WALKING, \
                                                moveset.movement_animations[player.PlayerStates.WALKING], \
                                                player.PlayerStates.FACING_RIGHT, \
@@ -139,7 +140,7 @@ class HumanPlayer(player.Player):
         self.key_bindings[move_right_key] = [walk_right_action,run_right_action]
         
         #Set move left actions
-        move_left_key = moveset.movement_keys[movesetdata.MovementTypes.MOVE_LEFT]
+        move_left_key = get_control_key(InputActionTypes.MOVE_LEFT)
         walk_left_action = self.create_action(player.PlayerStates.WALKING, \
                                               moveset.movement_animations[player.PlayerStates.WALKING], \
                                               player.PlayerStates.FACING_LEFT, \
@@ -152,6 +153,10 @@ class HumanPlayer(player.Player):
         
         #Set attack actions
         for attack_name, attack_animation in moveset.attack_animations.iteritems():
+            attack_type = moveset.attack_types[attack_name]
+            
+            attack_key = None
+            
             if moveset.attack_is_complete(attack_name):
                 attack_key = moveset.attack_keys[attack_name]
                 attack_type = moveset.attack_types[attack_name]
