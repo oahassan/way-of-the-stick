@@ -12,6 +12,7 @@ import movesetdata
 import actionwizard
 import animationexplorer
 import frameeditor
+from controlsdata import InputActionTypes
 
 import gamestate
 import player
@@ -127,7 +128,15 @@ class AttackBuilderContainer(BuilderContainer):
         self.draw_tab = False
         
         movement_select_title_text = "Select Attack Animations"
-        animation_types = {player.AttackTypes.PUNCH:'Punch', player.AttackTypes.KICK:'Kick'}
+        animation_types = \
+            {
+                InputActionTypes.WEAK_PUNCH : 'Weak Punch',
+                InputActionTypes.MEDIUM_PUNCH : 'Medium Punch',
+                InputActionTypes.STRONG_PUNCH : 'Strong Punch',
+                InputActionTypes.WEAK_KICK : 'Weak Kick',
+                InputActionTypes.MEDIUM_KICK : 'Medium Kick',
+                InputActionTypes.STRONG_KICK : 'Strong Kick'
+            }
         self.animation_select_container = AttackAnimationSelectContainer((20,self.position[1] + self.title.height + 15), \
                                                                           movement_select_title_text, \
                                                                           animation_types)
@@ -221,11 +230,6 @@ class AnimationSelectContainer(BuilderContainer):
             buttons[i].set_position(current_position)
 
 class AttackAnimationSelectContainer(AnimationSelectContainer):
-    def __init__(self, position, title_text, animation_types):
-        AnimationSelectContainer.__init__(self, position, title_text, animation_types)
-        self.animation_navigator.allow_multiple_select = True
-        self.move_type = None
-    
     def handle_events(self):
         self.animation_navigator.handle_events()
         
@@ -246,21 +250,20 @@ class AttackAnimationSelectContainer(AnimationSelectContainer):
     def sync_to_moveset(self):
         for button in self.buttons:
             if button.selected:
-                for attack_animation_name in self.moveset.attack_animations.keys():
-                    if self.moveset.attack_types[attack_animation_name] == button.move_type:
-                        for thumbnail in self.animation_navigator.animation_thumbnails:
-                            if thumbnail.animation.name == attack_animation_name:
-                                thumbnail.handle_selected()
-                                self.animation_navigator.selected_animation = thumbnail.animation
+                if self.moveset.has_attack_animation(button.move_type):
+                    for thumbnail in self.animation_navigator.animation_thumbnails:
+                        if thumbnail.animation.name == self.moveset.attack_animations[button.move_type].name:
+                            thumbnail.handle_selected()
+                            self.animation_navigator.selected_animation = thumbnail.animation
     
     def save_selected_attack_animations(self):
-        for thumbnail in self.animation_navigator.animation_thumbnails:
-            if thumbnail.selected:
-                self.moveset.save_attack_animation(thumbnail.animation)
-                self.moveset.save_attack_type(thumbnail.animation.name, self.animation_navigator.animation_type)
-            else:
-                if self.moveset.has_attack_animation(thumbnail.animation.name):
-                    self.moveset.remove_attack(thumbnail.animation.name)
+        selected_animation = self.animation_navigator.selected_animation
+        
+        if selected_animation != None:
+            self.moveset.save_attack_animation(
+                self.animation_navigator.animation_type,
+                selected_animation
+            )
 
 class MovementAnimationSelectContainer(AnimationSelectContainer):
     def handle_events(self):
@@ -471,8 +474,14 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
         
         if self.animation_type in player.PlayerStates.MOVEMENTS:
             animations = actionwizard.get_movement_animations(self.animation_type)
-        elif self.animation_type in player.AttackTypes.ATTACK_TYPES:
-            animations = actionwizard.get_attack_animations(self.animation_type)
+        elif self.animation_type in InputActionTypes.ATTACKS:
+        
+            action_type = player.AttackTypes.PUNCH
+            
+            if self.animation_type in [InputActionTypes.WEAK_KICK, InputActionTypes.MEDIUM_KICK, InputActionTypes.STRONG_KICK]:
+                action_type = player.AttackTypes.KICK
+            
+            animations = actionwizard.get_attack_animations(action_type)
         
         return animations
     
