@@ -16,6 +16,7 @@ movement_buttons = None
 attack_buttons = None
 active_button = None
 press_key_label = None
+bind_buttons = None
 
 def load():
     global loaded
@@ -26,6 +27,7 @@ def load():
     global attack_buttons
     global active_button
     global press_key_label
+    global bind_buttons
     
     exit_button = ExitButton()
     loaded = True
@@ -95,6 +97,10 @@ def load():
         attack_buttons
     )
     
+    bind_buttons = []
+    bind_buttons.extend(movement_buttons)
+    bind_buttons.extend(attack_buttons)
+    
     active_button = None
 
 def unload():
@@ -106,6 +112,7 @@ def unload():
     global attack_buttons
     global active_button
     global press_key_label
+    global bind_buttons
     
     exit_button = None
     loaded = False
@@ -115,6 +122,7 @@ def unload():
     attack_buttons = None
     active_button = None
     press_key_label = None
+    bind_buttons = None
 
 def handle_events():
     global loaded
@@ -123,6 +131,9 @@ def handle_events():
     global set_attack_keys_label
     global movement_buttons
     global attack_buttons
+    global active_button
+    global press_key_label
+    global bind_buttons
     
     if loaded == False:
         load()
@@ -131,6 +142,15 @@ def handle_events():
         if exit_button.contains(wotsuievents.mouse_pos):
             exit_button.handle_selected()
         
+        for bind_button in bind_buttons:
+            if bind_button.contains(wotsuievents.mouse_pos):
+                
+                if active_button != None:
+                    active_button.handle_deselected()
+                
+                bind_button.handle_selected()
+                active_button = bind_button
+        
     if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
         if exit_button.selected:
             exit_button.handle_deselected()
@@ -138,6 +158,17 @@ def handle_events():
             if exit_button.contains(wotsuievents.mouse_pos):
                 gamestate.mode = gamestate.Modes.MAINMENU
                 unload()
+        
+    if (pygame.KEYDOWN in wotsuievents.event_types and
+    active_button != None):
+        active_button.set_key(wotsuievents.keys_pressed[0])
+        controlsdata.set_control_key(
+            active_button.move_type,
+            wotsuievents.keys_pressed[0]
+        )
+        
+        active_button.handle_deselected()
+        active_button = None
     
     if loaded:
         exit_button.draw(gamestate.screen)
