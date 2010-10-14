@@ -112,9 +112,16 @@ def load():
             gamestate.Modes.MOVESETSELECT
         )
     
+    controls_page_button = \
+        MenuButton(
+            'Controls',
+            gamestate.Modes.CONTROLSPAGE
+        )
+    
     main_menu_buttons.append(versus_mode_button)
     main_menu_buttons.append(move_set_builder_button)
     main_menu_buttons.append(multiplayer_versus_mode_button)
+    main_menu_buttons.append(controls_page_button)
     
     menu_button_index = 0
     menu_pos = get_menu_pos()

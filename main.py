@@ -25,6 +25,7 @@ import onlineversusmode
 import onlineversusmovesetselect
 import onlinemenupage
 import onlinematchloader
+import controlspage
 
 import gamestate
 
@@ -81,7 +82,9 @@ while 1:
         onlinemenupage.handle_events()
     elif gamestate.mode == gamestate.Modes.ONLINEMATCHLOADER:
         onlinematchloader.handle_events()
-    
+    elif gamestate.mode == gamestate.Modes.CONTROLSPAGE:
+        controlspage.handle_events()
+        
     if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
         pygame.display.flip()
     elif gamestate.drawing_mode == gamestate.DrawingModes.DIRTY_RECTS:
