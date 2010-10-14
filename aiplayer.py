@@ -72,10 +72,10 @@ class Bot(player.Player):
                 attack_action_type = None
                 
                 if attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
-                    attack_action_type = "punch"
+                    attack_action_type = player.AttackTypes.PUNCH
                 
                 else:
-                    attack_action_type = "kick"
+                    attack_action_type = player.AttackTypes.KICK
                 
                 attack_action = factory.create_attack(attack_action_type, attack_animation, self.model)
                 
