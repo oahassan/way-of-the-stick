@@ -22,6 +22,12 @@ class InputActionTypes():
     MOVE_DOWN = 'movedown'
     ATTACK = 'attack'
     BLOCK = 'block'
+    WEAK_PUNCH = 'weakpunch'
+    MEDIUM_PUNCH = 'mediumpunch'
+    STRONG_PUNCH = 'strongpunch'
+    WEAK_KICK = 'weakkick'
+    MEDIUM_KICK = 'mediumkick'
+    STRONG_KICK = 'strongkick'
 
 MOVEMENT_DB_FILE_NM = "movements_wots.dat"
 ATTACK_DB_FILE_NM = "attacks_wots.dat"
