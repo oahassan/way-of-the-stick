@@ -14,6 +14,11 @@ class InputActionTypes():
     WEAK_KICK = 'weakkick'
     MEDIUM_KICK = 'mediumkick'
     STRONG_KICK = 'strongkick'
+    
+    ATTACKS = [
+        WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH,
+        WEAK_KICK, MEDIUM_KICK, STRONG_KICK
+    ]
 
 CONTROlS_DB_FILE_NM = 'controls_wots.dat'
 

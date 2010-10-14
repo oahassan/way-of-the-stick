@@ -152,15 +152,19 @@ class HumanPlayer(player.Player):
         self.key_bindings[move_left_key] = [walk_left_action,run_left_action]
         
         #Set attack actions
-        for attack_name, attack_animation in moveset.attack_animations.iteritems():
-            attack_type = moveset.attack_types[attack_name]
+        for attack_type, attack_animation in moveset.attack_animations.iteritems():
             
-            attack_key = None
-            
-            if moveset.attack_is_complete(attack_name):
-                attack_key = moveset.attack_keys[attack_name]
-                attack_type = moveset.attack_types[attack_name]
-                attack_action = factory.create_attack(attack_type, attack_animation, self.model)
+            if attack_type in InputActionTypes.ATTACKS:
+                attack_action_type = None
+                
+                if attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
+                    attack_action_type = "punch"
+                
+                else:
+                    attack_action_type = "kick"
+                
+                attack_key = get_control_key(attack_type)
+                attack_action = factory.create_attack(attack_action_type, attack_animation, self.model)
                 input_action = player.InputAction(attack_action, None, attack_key)
                 
                 self.key_bindings[attack_key] = [input_action]

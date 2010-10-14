@@ -2,6 +2,7 @@ import copy
 import physics
 import animationexplorer
 import player
+from controlsdata import InputActionTypes
 
 class Bot(player.Player):
     """an algorithm controlled player"""
@@ -65,10 +66,18 @@ class Bot(player.Player):
         self.actions[player.PlayerStates.ATTACKING] = []
         
         #load attack actions
-        for attack_name, attack_animation in moveset.attack_animations.iteritems():
-            if moveset.attack_is_complete(attack_name):
-                attack_type = moveset.attack_types[attack_name]
-                attack_action = factory.create_attack(attack_type, attack_animation, self.model)
+        for attack_type, attack_animation in moveset.attack_animations.iteritems():
+            
+            if attack_type in InputActionTypes.ATTACKS:
+                attack_action_type = None
+                
+                if attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
+                    attack_action_type = "punch"
+                
+                else:
+                    attack_action_type = "kick"
+                
+                attack_action = factory.create_attack(attack_action_type, attack_animation, self.model)
                 
                 self.actions[player.PlayerStates.ATTACKING].append(attack_action)
         
