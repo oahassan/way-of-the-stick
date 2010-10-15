@@ -155,16 +155,9 @@ class HumanPlayer(player.Player):
         for attack_type, attack_animation in moveset.attack_animations.iteritems():
             
             if attack_type in InputActionTypes.ATTACKS:
-                attack_action_type = None
-                
-                if attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
-                    attack_action_type = player.AttackTypes.PUNCH
-                
-                else:
-                    attack_action_type = player.AttackTypes.KICK
                 
                 attack_key = get_control_key(attack_type)
-                attack_action = factory.create_attack(attack_action_type, attack_animation, self.model)
+                attack_action = factory.create_attack(attack_type, attack_animation, self.model)
                 input_action = player.InputAction(attack_action, None, attack_key)
                 
                 self.key_bindings[attack_key] = [input_action]

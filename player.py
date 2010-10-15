@@ -7,6 +7,7 @@ import physics
 import mathfuncs
 import stick
 import pulltool
+from controlsdata import InputActionTypes
 
 class PlayerTypes:
     HUMAN = 'Human'
@@ -240,7 +241,9 @@ class Player():
                     previous_relative_position
                 )
             
-            self.point_name_to_point_damage[point_name] += additional_damage
+            #use multiplier to adjust damage given the attack type
+            self.point_name_to_point_damage[point_name] += \
+                additional_damage * self.action.get_damage_multiplier()
     
     def get_point_relative_position(self, point_name, point_position_dictionary):
         """determines the relative position of point based on the positions in the 
@@ -559,6 +562,20 @@ class Attack(Action):
         self.attack_lines = []
         self.range = (0,0)
         self.use_animation_physics = False
+        self.acceleration = Player.ACCELERATION
+    
+    def set_acceleration(self, action_type):
+        """sets the animation acceleration for a given InputActionType.  Only
+        attack input action types are valid."""
+        
+        if action_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.WEAK_KICK]:
+            self.acceleration = 2 * Player.ACCELERATION
+            
+        elif action_type in [InputActionTypes.MEDIUM_PUNCH, InputActionTypes.MEDIUM_KICK]:
+            self.acceleration = Player.ACCELERATION
+            
+        elif action_type in [InputActionTypes.STRONG_PUNCH, InputActionTypes.STRONG_KICK]:
+            self.acceleration = .5 * Player.ACCELERATION
     
     def test_state_change(self, player):
         
@@ -566,6 +583,9 @@ class Attack(Action):
             return False
         else:
             return Action.test_state_change(self, player)
+    
+    def get_damage_multiplier(self):
+        return Player.ACCELERATION / (2 * self.acceleration)
     
     def set_attack_data(self, model):
         """called after the animations of an attack has been set to intialize other data"""
@@ -758,11 +778,33 @@ class ActionFactory():
         
         return return_stun
     
-    def create_attack(self, attack_type, animation, model):
-        """create an attack model for the given attack type"""
-        return_attack = Attack(attack_type)
+    def create_attack(self, action_type, animation, model):
+        """create an attack model for the given action type"""
         
-        self._set_action_animations(return_attack, animation)
+        return_attack = None
+        
+        if action_type in \
+        [
+            InputActionTypes.WEAK_PUNCH,
+            InputActionTypes.MEDIUM_PUNCH,
+            InputActionTypes.STRONG_PUNCH
+        ]:
+            return_attack = Attack(AttackTypes.PUNCH)
+        elif action_type in \
+        [
+            InputActionTypes.WEAK_KICK,
+            InputActionTypes.MEDIUM_KICK,
+            InputActionTypes.STRONG_KICK
+        ]:
+            return_attack = Attack(AttackTypes.KICK)
+        
+        return_attack.set_acceleration(action_type)
+        
+        self._set_action_animations(
+            return_attack,
+            animation,
+            return_attack.acceleration
+        )
         
         return_attack.set_attack_data(model)
         
