@@ -169,7 +169,7 @@ class Label(wotsui.UIObjectBase):
         self.height = text_dimensions[1]
     
     def draw(self, surface):
-        """draw text of lable on a surface"""
+        """draw text of label on a surface"""
         wotsui.UIObjectBase.draw(self, surface)
         
         text_surface = self.font.render(self.text, 1, self.text_color)

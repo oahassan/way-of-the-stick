@@ -400,6 +400,31 @@ def get_new_network_message_notifications():
             #TODO - Raise invalid value error here
             pass
 
+def remove_expired_network_message_notifications():
+    global network_message_notifications
+    
+    removable_messages = \
+        [notification \
+        for notification in network_message_notifications if notification.expired()]
+    
+    [network_message_notifications.remove(notification) \
+    for notification in removable_messages]
+
+def layout_network_message_notifications():
+    global network_message_notifications
+    
+    network_message_count = len(network_message_notifications)
+    
+    row_count = min(5, network_message_count)
+    
+    first_row_position = (50, gamestate._HEIGHT - (row_count * 20))
+    current_row_position = first_row_position
+    
+    for notification in network_message_notifications:
+        notification.set_position(current_row_position)
+        
+        current_row_position = (50, current_row_position[1] + 20)
+
 def handle_local_player_ui_changes():
     """change ui if local or remote player states change"""
     global player_status_ui_dictionary
@@ -472,31 +497,6 @@ def reset_empty_position_uis():
             set_player_state_label_position(new_ui, player_position)
             
             player_status_ui_dictionary[player_position] = new_ui
-
-def remove_expired_network_message_notifications():
-    global network_message_notifications
-    
-    removable_messages = \
-        [notification \
-        for notification in network_message_notifications if notification.expired()]
-    
-    [network_message_notifications.remove(notification) \
-    for notification in removable_messages]
-
-def layout_network_message_notifications():
-    global network_message_notifications
-    
-    network_message_count = len(network_message_notifications)
-    
-    row_count = min(5, network_message_count)
-    
-    first_row_position = (50, gamestate._HEIGHT - (row_count * 20))
-    current_row_position = first_row_position
-    
-    for notification in network_message_notifications:
-        notification.set_position(current_row_position)
-        
-        current_row_position = (50, current_row_position[1] + 20)
     
 def get_local_player_setup_container_position(player_position):
     if player_position == versusserver.PlayerPositions.PLAYER1:

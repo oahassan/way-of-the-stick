@@ -729,3 +729,76 @@ class TextEntryBox(wotsui.SelectableObjectBase):
         
         if self.selected:
             self._update()
+
+class TextBox(wotsui.UIObjectBase):
+    
+    def __init__(
+        self,
+        text = '',
+        width = 0,
+        position = (0, 0),
+        text_color = (255, 255, 255),
+        font_size = 30
+    ):
+        wotsui.UIObjectBase.__init__(self)
+        
+        self.font = pygame.font.Font('freesansbold.ttf', font_size)
+        self.text = text
+        self.width = width
+        self.text_color = text_color
+        self.font_size = font_size
+        self.text_lines = []
+        self.fixed_dimensions = True
+        self.layout_text()
+    
+    def set_text(self, text):
+        self.text = text
+        self.layout_text()
+    
+    def layout_text(self):
+        """renders the text of a text box as wrapped lines of text"""
+        self.text_lines = []
+        self.children = []
+        
+        self.create_text_lines()
+        self.set_text_line_positions()
+        
+        self.height = 0
+        
+        for line in self.text_lines:
+            self.height += line.height
+    
+    def create_text_lines(self):
+        """breaks the text box's text into lines less than the text box's width"""
+        
+        words = self.text.split(' ')
+        line_text = words[0]
+        
+        for word_idx in range(1, len(words)):
+            word = words[word_idx]
+            
+            if self.font.size(line_text + ' ' + word)[0] < self.width:
+                line_text += ' ' + word
+            else:
+                self.text_lines.append(
+                    button.Label((0,0), line_text, self.text_color, self.font_size)
+                )
+                self.add_child(self.text_lines[-1])
+                
+                line_text = word
+        
+        self.text_lines.append(
+            button.Label((0,0), line_text, self.text_color, self.font_size)
+        )
+        self.add_child(self.text_lines[-1])
+    
+    def set_text_line_positions(self):
+        """positions the text lines so that they line up left-aligned"""
+        
+        x_position = self.position[0]
+        y_position = self.position[1]
+        
+        for line in self.text_lines:
+            line.set_position((x_position, y_position))
+            
+            y_position += line.height
