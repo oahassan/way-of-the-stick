@@ -529,14 +529,11 @@ class Stun(Action):
             self.pull_player(player)
             
             #adjust knocback vector for gravity
-            y_displacement = (
-                player.model.velocity[1]*player.model.time_passed + 
-                (.5*player.model.gravity*(player.model.time_passed**2))
-            )
+            gravity_velocity_copmonent = player.model.gravity*player.model.time_passed
             knockback_vector = player.knockback_vector
             player.knockback_vector = (
                 knockback_vector[0], 
-                knockback_vector[1] + y_displacement
+                knockback_vector[1] + gravity_velocity_copmonent
             )
         
         player.apply_physics(player.model.time_passed)
