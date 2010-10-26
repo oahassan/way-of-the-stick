@@ -276,6 +276,14 @@ class Player():
         """Returns the damage dealt when attacked from the given point"""
         return self.point_name_to_point_damage[point_name]
     
+    def get_stun_timeout(self):
+        """only call when attacking"""
+        return 1 / (self.action.acceleration)
+    
+    def set_stun_timeout(self, timeout):
+        self.stun_timeout = timeout
+    
+    
     def set_health(self, health_value):
         
         self.health_meter = health_value
@@ -524,7 +532,7 @@ class Stun(Action):
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
         
-        if player.stun_timer < 500:
+        if player.stun_timer < player.stun_timeout:
             
             self.pull_player(player)
             
