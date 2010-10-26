@@ -318,7 +318,7 @@ def handle_unblocked_attack_collision(attacker, receiver, attacker_hitboxes, rec
     colliding_lines = (attacker.model.lines[colliding_line_names[0]], \
                        receiver.model.lines[colliding_line_names[1]])
     
-    interaction_points = get_interaction_points(colliding_lines)
+    interaction_points = get_interaction_points(receiver, colliding_lines)
     
     receiver.health_meter = max(0, receiver.health_meter - attacker.get_point_damage(interaction_points[0].name))
     
@@ -338,14 +338,14 @@ def get_knockback_vector(attacker, attack_point):
     
     return attacker.get_point_position_change(attack_point.name)
 
-def get_interaction_points(colliding_lines):
+def get_interaction_points(receiver, colliding_lines):
     attacker_line_index = 0
     receiver_line_index = 1
     
     attack_point1 = colliding_lines[attacker_line_index].endPoint1
     attack_point2 = colliding_lines[attacker_line_index].endPoint2
-    receiver_point1 = colliding_lines[receiver_line_index].endPoint1
-    receiver_point2 = colliding_lines[receiver_line_index].endPoint2
+    receiver_point1 = receiver.get_point(stick.PointNames.TORSO_TOP) #colliding_lines[receiver_line_index].endPoint1
+    receiver_point2 = receiver.get_point(stick.PointNames.TORSO_BOTTOM) #colliding_lines[receiver_line_index].endPoint2
     
     point_pairs = [(attack_point1, receiver_point1), \
                    (attack_point1, receiver_point2), \
@@ -375,7 +375,7 @@ def apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitb
     colliding_lines = (attacker.model.lines[colliding_line_names[0]], \
                        receiver.model.lines[colliding_line_names[1]])
     
-    interaction_points = get_interaction_points(colliding_lines)
+    interaction_points = get_interaction_points(receiver, colliding_lines)
     # print('attacker point: ' + interaction_points[0].name)
     # print('receiver point: ' + interaction_points[1].name)
     # print('receiver: ' + get_player(receiver))

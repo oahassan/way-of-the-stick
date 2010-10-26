@@ -208,6 +208,9 @@ class Player():
     def get_attack_lines(self):
         return self.action.attack_lines
     
+    def get_point(self, point_name):
+        return self.model.points[point_name]
+    
     def init_point_damage_dictionary(self):
         """initializes the point damage dictionary. NOTE: model must be intialized before
         calling."""
