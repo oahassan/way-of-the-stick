@@ -26,6 +26,7 @@ import onlineversusmovesetselect
 import onlinemenupage
 import onlinematchloader
 import controlspage
+import chat
 
 import gamestate
 
@@ -76,12 +77,19 @@ while 1:
         versusmovesetselect.handle_events()
     elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMODE:
         onlineversusmode.handle_events()
+        chat.handle_events()
+        
     elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT:
         onlineversusmovesetselect.handle_events()
+        chat.handle_events()
+        
     elif gamestate.mode == gamestate.Modes.ONLINEMENUPAGE:
         onlinemenupage.handle_events()
+        
     elif gamestate.mode == gamestate.Modes.ONLINEMATCHLOADER:
         onlinematchloader.handle_events()
+        chat.handle_events()
+        
     elif gamestate.mode == gamestate.Modes.CONTROLSPAGE:
         controlspage.handle_events()
         
