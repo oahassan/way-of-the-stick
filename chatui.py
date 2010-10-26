@@ -4,6 +4,19 @@ import wotsuievents
 from wotsuicontainers import TextBox
 import eztext
 
+class NetworkMessageNotification(TextBox):
+    
+    def __init__(self, text, timeout = 3000):
+        TextBox.__init__(self, text, 500, (0,0), (255,255,255), 20)
+        self.timer = 0
+        self.timeout = timeout
+    
+    def update(self, time_passed):
+        self.timer += time_passed
+    
+    def expired(self):
+        return self.timer > self.timeout
+
 class MessageEntryBox(TextBox):
     MESSAGE_PROMPT = 'Type your message: '
     
@@ -32,16 +45,6 @@ class MessageEntryBox(TextBox):
             )
         
         self.set_text()
-    
-    def draw(self, surface):
-        """draws the message input box on the screen over any other renderings"""
-        
-        if self.visible:
-            message_surface = pygame.Surface((self.width, self.height))
-            
-            TextBox.draw(self, message_surface)
-            
-            surface.blit(message_surface, self.position)
     
     def get_message(self):
         

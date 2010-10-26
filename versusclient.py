@@ -25,6 +25,7 @@ class ServerActions:
     INITIAL_PLAYER_STATES_RECEIVED = "initial_player_states_received"
     SEND_INITIAL_PLAYER_STATE = "send_initial_player_state"
     UPDATE_PLAYER_STATE = "update_player_state"
+    SEND_CHAT_MESSAGE = "send_chat_message"
 
 class ClientConnectionListener(ConnectionListener):
     def __init__(self):
@@ -51,6 +52,16 @@ class ClientConnectionListener(ConnectionListener):
         self.actions_received = []
         
         return actions_received
+    
+    def send_chat_message(self, message):
+        
+        data = {
+            DataKeys.ACTION : ServerActions.SEND_CHAT_MESSAGE,
+            DataKeys.MESSAGE : message,
+            DataKeys.NICKNAME : self.player_nicknames[self.player_id]
+        }
+        
+        connection.Send(data)
     
     def player_ready(self):
         data = {DataKeys.ACTION : ServerActions.PLAYER_READY}
@@ -228,6 +239,8 @@ class ClientConnectionListener(ConnectionListener):
             
             self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
     
+    def Network_receive_chat_message(self, data):
+        pass
     
     # built in stuff
 
@@ -306,6 +319,17 @@ def get_player_id_at_position(player_position):
 
 def get_player_nickname(player_id):
     return listener.player_nicknames[player_id]
+
+def connected():
+    if listener == None:
+        return False
+    elif listener.connection_status == ConnectionStatus.CONNECTED:
+        return True
+    else:
+        return False
+
+def send_chat_message(message):
+    listener.send_chat_message(message)
 
 def client_was_connected():
     return not listener.player_id == None

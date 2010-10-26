@@ -23,6 +23,7 @@ class DataKeys:
     SERVER_MODE = "server mode"
     PLAYER_STATE = "player state"
     POINT_POSITIONS = "point positions"
+    MESSAGE = "message"
 
 class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
@@ -36,6 +37,7 @@ class ClientActions:
     RECEIVE_PLAYER_INITIAL_STATE = "receive_player_initial_state"
     SET_GAME_MODE = "set_game_mode"
     UPDATE_PLAYER_STATE = "update_player_state"
+    RECEIVE_CHAT_MESSAGE = "receive_chat_message"
 
 class ServerModes:
     MOVESET_SELECT = "moveset select"
@@ -54,6 +56,11 @@ class ClientChannel(Channel):
         #print("Server channel")
         #print(data)
         pass
+    
+    def Network_send_chat_message(self, data):
+        
+        data[DataKeys.ACTION] = ClientActions.RECEIVE_CHAT_MESSAGE
+        self._server.send_to_all(data)
     
     def Network_join_match(self, data):
         player_position = self._server.add_player(self)

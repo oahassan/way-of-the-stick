@@ -755,6 +755,16 @@ class TextBox(wotsui.UIObjectBase):
         self.text = text
         self.layout_text()
     
+    def draw(self, surface):
+        """draws the text box on the screen over any other renderings"""
+        
+        if self.visible:
+            message_surface = pygame.Surface((self.width, self.height))
+            
+            wotsui.UIObjectBase.draw(self, message_surface)
+            
+            surface.blit(message_surface, self.position)
+    
     def layout_text(self):
         """renders the text of a text box as wrapped lines of text"""
         self.text_lines = []

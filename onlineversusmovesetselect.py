@@ -10,7 +10,7 @@ import versusserver
 import versusclient
 
 import button
-from onlineversusmovesetselectui import NetworkMessageNotification, LocalPlayerSetupContainer, RemotePlayerStateLabel
+from onlineversusmovesetselectui import LocalPlayerSetupContainer, RemotePlayerStateLabel
 import movesetselectui
 import wotsuicontainers
 
@@ -29,7 +29,6 @@ remote_player_state = None
 ip_address_input = None
 connect_button = None
 connected = False
-network_message_notifications = []
 join_match_button = None
 local_player_container_created = False
 assigned_positions = None
@@ -59,7 +58,6 @@ def load():
     global join_match_button
     global assigned_positions
     global spectate_button
-    global network_message_notifications
     
     exit_button = button.ExitButton()
     loaded = True
@@ -67,7 +65,6 @@ def load():
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
     assigned_positions = []
-    network_message_notifications = []
     
     init_player_status_ui_dictionary()
     
@@ -118,7 +115,6 @@ def unload():
     join_match_button = None
     assigned_positions = None
     spectate_button = None
-    network_message_notifications = []
     connect_button = None
     player_status_ui_dictionary = None
     local_player_position = None
@@ -152,7 +148,6 @@ def handle_events():
     global ip_address_input
     global connect_button
     global connected
-    global network_message_notifications
     global player_status_ui_dictionary
     global join_match_button
     global local_player_container_created
@@ -329,16 +324,6 @@ def handle_events():
             versusclient.listener.Pump()
             versusclient.get_network_messages()
             
-            remove_expired_network_message_notifications()
-            get_new_network_message_notifications()
-            layout_network_message_notifications()
-            
-            time_passed = gamestate.clock.get_time()
-            
-            for notification in network_message_notifications:
-                notification.draw(gamestate.screen)
-                notification.update(time_passed)
-            
             if (versusclient.listener.server_mode == 
             versusserver.ServerModes.LOADING_MATCH_DATA) or \
             (versusclient.listener.server_mode == versusserver.ServerModes.MATCH):
@@ -346,84 +331,6 @@ def handle_events():
         
         if gamestate.hosting:
             versusserver.server.Pump()
-
-def get_new_network_message_notifications():
-    received_data = versusclient.listener.pop_received_data()
-    
-    for data in received_data:
-        if (data[versusserver.DataKeys.ACTION] == 
-        versusserver.ClientActions.SPECTATOR_JOINED):
-            
-            network_message_notifications.append(
-                NetworkMessageNotification(
-                    data[versusserver.DataKeys.NICKNAME] + " is now spectating."
-                )
-            )
-        
-        elif (data[versusserver.DataKeys.ACTION] ==
-        versusserver.ClientActions.PLAYER_DISCONNECTED):
-            
-            network_message_notifications.append(
-                NetworkMessageNotification(
-                    data[versusserver.DataKeys.NICKNAME] + " has left the game."
-                )
-            )
-        
-        elif (data[versusserver.DataKeys.ACTION] ==
-        versusserver.ClientActions.PLAYER_JOINED_MATCH):
-            
-            network_message_notifications.append(
-                NetworkMessageNotification(
-                    data[versusserver.DataKeys.NICKNAME] + " has joined the game."
-                )
-            )
-        
-        elif (data[versusserver.DataKeys.ACTION] ==
-        versusserver.ClientActions.MATCH_FULL):
-            
-            network_message_notifications.append(
-                NetworkMessageNotification(
-                    "The match is full."
-                )
-            )
-        
-        elif (data[versusserver.DataKeys.ACTION] ==
-        versusserver.ClientActions.PLAYER_DISCONNECTED):
-            
-            network_message_notifications.append(
-                NetworkMessageNotification(
-                    data[versusserver.DataKeys.NICKNAME] + " has left the game."
-                )
-            )
-        
-        else:
-            #TODO - Raise invalid value error here
-            pass
-
-def remove_expired_network_message_notifications():
-    global network_message_notifications
-    
-    removable_messages = \
-        [notification \
-        for notification in network_message_notifications if notification.expired()]
-    
-    [network_message_notifications.remove(notification) \
-    for notification in removable_messages]
-
-def layout_network_message_notifications():
-    global network_message_notifications
-    
-    network_message_count = len(network_message_notifications)
-    
-    row_count = min(5, network_message_count)
-    
-    first_row_position = (50, gamestate._HEIGHT - (row_count * 20))
-    current_row_position = first_row_position
-    
-    for notification in network_message_notifications:
-        notification.set_position(current_row_position)
-        
-        current_row_position = (50, current_row_position[1] + 20)
 
 def handle_local_player_ui_changes():
     """change ui if local or remote player states change"""
