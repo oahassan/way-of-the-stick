@@ -522,7 +522,19 @@ class Stun(Action):
         """place holder for function that sets the new position of the model"""
         
         if player.stun_timer < 500:
+            
             self.pull_player(player)
+            
+            #adjust knocback vector for gravity
+            y_displacement = (
+                player.model.velocity[1]*player.model.time_passed + 
+                (.5*player.model.gravity*(player.model.time_passed**2))
+            )
+            knockback_vector = player.knockback_vector
+            player.knockback_vector = (
+                knockback_vector[0], 
+                knockback_vector[1] + y_displacement
+            )
         
         player.apply_physics(player.model.time_passed)
         
