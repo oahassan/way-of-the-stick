@@ -203,12 +203,12 @@ def handle_events():
         else:
             human.handle_events(bot)
         
-        if bot_type == PlayerTypes.BOT:
-            bot.handle_events(human)
-        else:
-            bot.handle_events()
+        #if bot_type == PlayerTypes.BOT:
+        #    bot.handle_events(human)
+        #else:
+        #    bot.handle_events()
         
-        handle_interactions()
+        #handle_interactions()
     
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):

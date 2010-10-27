@@ -329,11 +329,19 @@ class Player():
             or  (self.action.action_state == PlayerStates.JUMPING)):
                 self.actions[PlayerStates.LANDING].set_player_state(self)
         
-        if self.model.position[0] + self.model.width > gamestate.stage.right_wall.position[0]:
-            system.append(gamestate.stage.right_wall)
+        if self.model.orientation == physics.Orientations.FACING_RIGHT:
+            if self.model.position[0] + self.model.width > gamestate.stage.right_wall.position[0]:
+                system.append(gamestate.stage.right_wall)
+        elif self.model.orientation == physics.Orientations.FACING_LEFT:
+            if self.model.position[0] > gamestate.stage.right_wall.position[0]:
+                system.append(gamestate.stage.right_wall)
         
-        if self.model.position[0] < gamestate.stage.left_wall.position[0]:
-            system.append(gamestate.stage.left_wall)
+        if self.model.orientation == physics.Orientations.FACING_RIGHT:
+            if self.model.position[0] < gamestate.stage.left_wall.position[0]:
+                system.append(gamestate.stage.left_wall)
+        elif self.model.orientation == physics.Orientations.FACING_LEFT:
+            if self.model.position[0] - self.model.width < gamestate.stage.left_wall.position[0]:
+                system.append(gamestate.stage.left_wall)
         
         self.model.resolve_system(system, duration)
 
@@ -380,9 +388,12 @@ class Action():
         player.model.animation_run_time = 0     
         
         if direction == PlayerStates.FACING_LEFT:
-            self.animation = self.left_animation
+            self.animation = self.right_animation
+            player.model.orientation = physics.Orientations.FACING_LEFT
+            
         elif direction == PlayerStates.FACING_RIGHT:
             self.animation = self.right_animation
+            player.model.orientation = physics.Orientations.FACING_RIGHT
         
         #Check if the player is in the air.  If not, shift back to the gRound after
         #changing to the new animation.
@@ -681,9 +692,12 @@ class Attack(Action):
         player.current_attack = self
         
         if player.direction == PlayerStates.FACING_LEFT:
-            self.animation = self.left_animation
+            self.animation = self.right_animation
+            player.model.orientation = physics.Orientations.FACING_LEFT
+            
         elif player.direction == PlayerStates.FACING_RIGHT:
             self.animation = self.right_animation
+            player.model.orientation = physics.Orientations.FACING_RIGHT
         
         #Check if the player is in the air.  If not, shift back to the gRound after
         #changing to the new animation.
@@ -761,7 +775,11 @@ class Attack(Action):
             x_velocity = self.animation.get_lateral_velocity(displacement_start_time,frame_index)
             y_velocity = self.animation.get_jump_velocity(displacement_start_time,frame_index)
             
-            player.model.velocity = (x_velocity, y_velocity)
+            if player.model.orientation == physics.Orientations.FACING_RIGHT:
+                player.model.velocity = (x_velocity, y_velocity)
+            elif player.model.orientation == physics.Orientations.FACING_LEFT:
+                player.model.velocity = (-x_velocity, y_velocity)
+            
             player.apply_physics(duration)
 
 class ActionFactory():
@@ -795,24 +813,28 @@ class ActionFactory():
         """create a movement model for the given movement state"""
         return_walk = Walk(direction)
         
-        if direction == PlayerStates.FACING_RIGHT:
-            return_walk.right_animation = self.crte_player_animation(animation)
-            return_walk.right_animation.set_animation_point_path_data(Player.ACCELERATION)
-        if direction == PlayerStates.FACING_LEFT:
-            return_walk.left_animation = self.crte_player_animation(animation.flip())
-            return_walk.left_animation.set_animation_point_path_data(Player.ACCELERATION)
+        self._set_action_animations(return_walk, animation)
+        
+        #if direction == PlayerStates.FACING_RIGHT:
+        #    return_walk.right_animation = self.crte_player_animation(animation)
+        #    return_walk.right_animation.set_animation_point_path_data(Player.ACCELERATION)
+        #if direction == PlayerStates.FACING_LEFT:
+        #    return_walk.left_animation = self.crte_player_animation(animation.flip())
+        #    return_walk.left_animation.set_animation_point_path_data(Player.ACCELERATION)
         
         return return_walk
     
     def create_run(self, direction, animation):
         return_run = Run(direction)
         
-        if direction == PlayerStates.FACING_RIGHT:
-            return_run.right_animation = self.crte_player_animation(animation)
-            return_run.right_animation.set_animation_point_path_data(Player.ACCELERATION)
-        if direction == PlayerStates.FACING_LEFT:
-            return_run.left_animation = self.crte_player_animation(animation.flip())
-            return_run.left_animation.set_animation_point_path_data(Player.ACCELERATION)
+        self._set_action_animations(return_run, animation)
+        
+        #if direction == PlayerStates.FACING_RIGHT:
+        #    return_run.right_animation = self.crte_player_animation(animation)
+        #    return_run.right_animation.set_animation_point_path_data(Player.ACCELERATION)
+        #if direction == PlayerStates.FACING_LEFT:
+        #    return_run.left_animation = self.crte_player_animation(animation.flip())
+        #    return_run.left_animation.set_animation_point_path_data(Player.ACCELERATION)
         
         return return_run
     

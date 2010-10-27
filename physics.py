@@ -239,7 +239,11 @@ class Model(Object):
         point_position = self.points[point_name].pos
         reference_position = self.get_reference_position()
         
-        return point_position[0] - reference_position[0], point_position[1] - reference_position[1]
+        if self.orientation == Orientations.FACING_RIGHT:
+            return point_position[0] - reference_position[0], point_position[1] - reference_position[1]
+            
+        elif self.orientation == Orientations.FACING_LEFT:
+            return reference_position[0] - point_position[0], point_position[1] - reference_position[1]
     
     def get_top_left_and_bottom_right(self):
         """Finds the top left and bottom right containers of a rectangle containg the
@@ -292,21 +296,38 @@ class Model(Object):
     
     def set_frame_point_pos(self, deltas):
         """Sets the position of each point with respect to the reference point"""
-        current_position = (self.position[0],self.position[1])
+        current_position = self.get_reference_position() #(self.position[0],self.position[1])
         
         for point_name, pos_delta in deltas.iteritems():
-            self.points[point_name].pos = (self.position[0] + pos_delta[0], \
-                                           self.position[1] + pos_delta[1])
+            if self.orientation == Orientations.FACING_RIGHT:
+                self.points[point_name].pos = (
+                    self.position[0] + pos_delta[0],
+                    self.position[1] + pos_delta[1]
+                )
+            elif self.orientation == Orientations.FACING_LEFT:
+                self.points[point_name].pos = (
+                    self.position[0] - pos_delta[0],
+                    self.position[1] + pos_delta[1]
+                )
         
         self.move_model(current_position)
     
     def set_point_position(self, deltas):
-        """Incerements the position of each point by point specific deltas"""
+        """Changes the position of each point by point specific deltas"""
         
         for point_name, pos_delta in deltas.iteritems():
             point_position = self.points[point_name].pos
-            self.points[point_name].pos = (point_position[0] + deltas[point_name][0], \
-                                           point_position[1] + deltas[point_name][1])
+            
+            if self.orientation == Orientations.FACING_RIGHT:
+                self.points[point_name].pos = (
+                    point_position[0] + deltas[point_name][0],
+                    point_position[1] + deltas[point_name][1]
+                )
+            elif self.orientation == Orientations.FACING_LEFT:
+                self.points[point_name].pos = (
+                    point_position[0] - deltas[point_name][0],
+                    point_position[1] + deltas[point_name][1]
+                )
         
         self.position = self.get_reference_position()
         self.set_dimensions()
@@ -318,9 +339,19 @@ class Model(Object):
         current_position = (self.position[0],self.position[1])
         
         for point_name, pos_delta in deltas.iteritems():
+            
             point_position = self.points[point_name].pos
-            self.points[point_name].pos = (point_position[0] + deltas[point_name][0], \
-                                           point_position[1] + deltas[point_name][1])
+            
+            if self.orientation == Orientations.FACING_RIGHT:
+                self.points[point_name].pos = (
+                    point_position[0] + deltas[point_name][0],
+                    point_position[1] + deltas[point_name][1]
+                )
+            elif self.orientation == Orientations.FACING_LEFT:
+                self.points[point_name].pos = (
+                    point_position[0] - deltas[point_name][0],
+                    point_position[1] + deltas[point_name][1]
+                )
         
         self.move_model(current_position)
     
