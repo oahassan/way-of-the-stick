@@ -418,8 +418,8 @@ def apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitb
     attack_point = interaction_points[0]
     receiver.pull_point = interaction_points[1]
     receiver.knockback_vector = get_knockback_vector(attacker, attack_point)
-    receiver.model.accelerate(receiver.knockback_vector[0]/400, \
-                              receiver.knockback_vector[1]/400)
+    receiver.model.accelerate(receiver.knockback_vector[0]/75, \
+                              receiver.knockback_vector[1]/75)
 
 def get_direction_sign(attacker, receiver):
     receiver_pos = receiver.model.position
