@@ -320,6 +320,8 @@ def handle_unblocked_attack_collision(attacker, receiver, attacker_hitboxes, rec
     
     interaction_points = get_interaction_points(receiver, colliding_lines)
     
+    #receiver.set_pull_point(interaction_points[1])
+    
     receiver.set_stun_timeout(attacker.get_stun_timeout())
     receiver.health_meter = max(0, receiver.health_meter - attacker.get_point_damage(interaction_points[0].name))
     

@@ -283,6 +283,8 @@ class Player():
     def set_stun_timeout(self, timeout):
         self.stun_timeout = timeout
     
+    def set_pull_point(self, point):
+        self.pull_point = point
     
     def set_health(self, health_value):
         
@@ -512,22 +514,33 @@ class Stun(Action):
         Action.__init__(self, PlayerStates.STUNNED)
     
     def pull_player(self, player):
-        pull_point_pos = player.pull_point.pos
-        knock_back_vector = player.knockback_vector
-        new_pos = (pull_point_pos[0] + knock_back_vector[0],
-                   pull_point_pos[1] + knock_back_vector[1])
-        point_to_lines = player.model.build_point_to_lines(player.model.lines.values())
-        player.model.pull_point(
-            player.pull_point,
-            new_pos,
-            player.pull_point,
-            [],
-            point_to_lines
-        )
+        
+        knockback_vector = player.knockback_vector
+        self.pull_point(player, player.pull_point, player.knockback_vector)
+        
+        if player.is_aerial() == False:
+            physics_vector = (0, knockback_vector[1])
+            
+            for point_name, point in player.model.points.iteritems():
+                if point_name != player.pull_point.name:
+                    self.pull_point(player, point, physics_vector)
         
         #resync position of physics model and model
         player.model.position = player.model.get_reference_position()
         player.model.set_dimensions()
+    
+    def pull_point(self, player, point, deltas):
+        pull_point_pos = point.pos
+        new_pos = (pull_point_pos[0] + deltas[0],
+                   pull_point_pos[1] + deltas[1])
+        point_to_lines = player.model.build_point_to_lines(player.model.lines.values())
+        player.model.pull_point(
+            point,
+            new_pos,
+            point,
+            [],
+            point_to_lines
+        )
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
@@ -537,11 +550,15 @@ class Stun(Action):
             self.pull_player(player)
             
             #adjust knocback vector for gravity
-            gravity_velocity_copmonent = player.model.gravity*player.model.time_passed
+            gravity_displacement_component = (
+                (.5*player.model.gravity*(player.model.time_passed**2) + \
+                player.model.gravity*player.model.time_passed)
+            )
+            
             knockback_vector = player.knockback_vector
             player.knockback_vector = (
                 knockback_vector[0], 
-                knockback_vector[1] + gravity_velocity_copmonent
+                knockback_vector[1] + gravity_displacement_component
             )
         
         player.apply_physics(player.model.time_passed)
