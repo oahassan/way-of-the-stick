@@ -77,7 +77,7 @@ class Bot(player.Player):
         self.actions[player.PlayerStates.STANDING].set_player_state(self)
     
     def handle_events(self, enemy):
-        #self.set_action(enemy)
+        self.set_action(enemy)
         player.Player.handle_events(self)
     
     def set_action(self, enemy):

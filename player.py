@@ -542,26 +542,43 @@ class Stun(Action):
             point_to_lines
         )
     
+    def apply_pull_physics(self, player):
+        
+        self.pull_player(player)
+        
+        #adjust knocback vector for gravity
+        gravity_displacement_component = (
+            (.5*player.model.gravity*(player.model.time_passed**2) + \
+            player.model.gravity*player.model.time_passed)
+        )
+        
+        knockback_vector = player.knockback_vector
+        player.knockback_vector = (
+            knockback_vector[0], 
+            knockback_vector[1] + gravity_displacement_component
+        )
+        
+        system = []
+        if player.is_aerial() == False:
+            system.append(gamestate.stage.ground)
+        
+        if player.model.position[0] + player.model.width > gamestate.stage.right_wall.position[0]:
+            system.append(gamestate.stage.right_wall)
+        
+        if player.model.position[0] < gamestate.stage.left_wall.position[0]:
+            system.append(gamestate.stage.left_wall)
+        
+        #player.model.resolve_system(system, player.model.time_passed)
+    
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
         
-        if player.stun_timer < player.stun_timeout:
-            
-            self.pull_player(player)
-            
-            #adjust knocback vector for gravity
-            gravity_displacement_component = (
-                (.5*player.model.gravity*(player.model.time_passed**2) + \
-                player.model.gravity*player.model.time_passed)
-            )
-            
-            knockback_vector = player.knockback_vector
-            player.knockback_vector = (
-                knockback_vector[0], 
-                knockback_vector[1] + gravity_displacement_component
-            )
-        
-        player.apply_physics(player.model.time_passed)
+        if ((player.stun_timer < .1 * player.stun_timeout) or
+        (player.stun_timer > .4 * player.stun_timeout)):
+            self.apply_pull_physics(player)
+            player.apply_physics(player.model.time_passed)
+        else:
+            player.apply_physics(player.model.time_passed)
         
         if player.stun_timer >= player.stun_timeout:
             
