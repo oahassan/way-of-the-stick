@@ -310,8 +310,12 @@ def draw_receiver_hitboxes(hitbox_dictionary):
         for hitbox in hitboxes:
             pygame.draw.rect(gamestate.screen, (0,0,255), hitbox, 1)
 
-def handle_unblocked_attack_collision(attacker, receiver, attacker_hitboxes, receiver_hitboxes):
-    apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
+def handle_unblocked_attack_collision(
+    attacker,
+    receiver,
+    attacker_hitboxes,
+    receiver_hitboxes
+):
     
     colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
     
@@ -319,11 +323,41 @@ def handle_unblocked_attack_collision(attacker, receiver, attacker_hitboxes, rec
                        receiver.model.lines[colliding_line_names[1]])
     
     interaction_points = get_interaction_points(receiver, colliding_lines)
+    damage = attacker.get_point_damage(interaction_points[0].name)
     
-    receiver.set_stun_timeout(attacker.get_stun_timeout())
-    receiver.health_meter = max(0, receiver.health_meter - attacker.get_point_damage(interaction_points[0].name))
+    if receiver.get_player_state() == player.PlayerStates.STUNNED:
+        attack_knockback_vector = get_knockback_vector(attacker, interaction_points[0])
+        stun_knockback_vector = receiver.knockback_vector
+        
+        if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
+            pass
+        else:
+            apply_collision_physics(
+                attacker,
+                receiver,
+                attacker_hitboxes,
+                receiver_hitboxes
+            )
+            receiver.health_meter = max(0, receiver.health_meter - damage)
+            receiver.set_stun_timeout(attacker.get_stun_timeout())
+    else:
+        apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
+        
+        receiver.set_stun_timeout(attacker.get_stun_timeout())
+        receiver.health_meter = max(0, receiver.health_meter - damage)
+        
+        receiver.set_player_state(player.PlayerStates.STUNNED)
+
+def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
+    attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])
+    attack_y_sign = mathfuncs.sign(attack_knockback_vector[1])
+    stun_x_sign = mathfuncs.sign(stun_knockback_vector[0])
+    stun_y_sign = mathfuncs.sign(stun_knockback_vector[1])
     
-    receiver.set_player_state(player.PlayerStates.STUNNED)
+    if (attack_x_sign != stun_x_sign) or (attack_y_sign != stun_y_sign):
+        return True
+    else:
+        return False
 
 def get_separation_vector(attacker, receiver):
     x_delta = receiver.model.position[0] - attacker.model.position[0]
