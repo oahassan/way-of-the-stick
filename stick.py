@@ -274,11 +274,20 @@ class Line:
                 (bottom_right_x, bottom_right_y))
     
     def get_reference_position(self):
-        radius = (.5 * mathfuncs.distance(self.endPoint1.pos, \
-                                          self.endPoint2.pos))
+        x_half_length = .5 * abs(self.endPoint1.pos[0] - self.endPoint2.pos[0])
+        y_half_length = .5 * abs(self.endPoint1.pos[1] - self.endPoint2.pos[1])
+        
         pos = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
         
-        return (pos[0] - radius, pos[1] - radius)
+        return (int(pos[0] - x_half_length), int(pos[1] - y_half_length))
+    
+    def get_top_right_reference_position(self):
+        x_half_length = .5 * abs(self.endPoint1.pos[0] - self.endPoint2.pos[0])
+        y_half_length = .5 * abs(self.endPoint1.pos[1] - self.endPoint2.pos[1])
+        
+        pos = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
+        
+        return (int(pos[0] + x_half_length), int(pos[1] - y_half_length))
 
 class Circle(Line):
     """A circle with a radius that is one half the distance between two given
@@ -347,6 +356,20 @@ class Circle(Line):
                           (int(pos[0]), int(pos[1])), \
                           int(radius), \
                           int(line_thickness))
+   
+    def get_reference_position(self):
+        radius = (.5 * mathfuncs.distance(self.endPoint1.pos, \
+                                          self.endPoint2.pos))
+        pos = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
+        
+        return (pos[0] - radius, pos[1] - radius)
+    
+    def get_top_right_reference_position(self):
+        radius = (.5 * mathfuncs.distance(self.endPoint1.pos, \
+                                          self.endPoint2.pos))
+        pos = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
+        
+        return (pos[0] + radius, pos[1] - radius)
 
 def coalesce_top_right_and_bottom_left(*args):
     """Finds the top left and bottom right of a list of top left and bottom right pairs"""

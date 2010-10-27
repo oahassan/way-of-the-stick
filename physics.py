@@ -119,6 +119,10 @@ class Wall(Object):
             
             object.shift((self.position[0] + 1 - object.position[0], 0))
 
+class Orientations:
+    FACING_LEFT = "FACING_LEFT"
+    FACING_RIGHT = "FACING_RIGHT"
+
 class Model(Object):
     """A representation of the stick figure used to keep tack of its position"""
     def __init__(self, position):
@@ -127,6 +131,7 @@ class Model(Object):
         self.lines = {}
         self.animation_run_time = 0
         self.time_passed = 0
+        self.orientation = Orientations.FACING_RIGHT
     
     def init_stick_data(self):
         self.load_points()
@@ -171,10 +176,15 @@ class Model(Object):
         """Calculates the position of the top left corner of a rectangle
         enclosing the points of the model"""
         min_x_pos = 99999999
+        max_x_pos = 0
         min_y_pos = 99999999
         
         for line in self.lines.values():
             reference_position = line.get_reference_position()
+            top_right_reference_position = line.get_top_right_reference_position()
+            
+            if top_right_reference_position[0] > max_x_pos:
+                max_x_pos = reference_position[0]
             
             if reference_position[0] < min_x_pos:
                 min_x_pos = reference_position[0]
@@ -185,13 +195,19 @@ class Model(Object):
         for point in self.points.values():
             reference_position = point.pos
             
+            if reference_position[0] > max_x_pos:
+                max_x_pos = reference_position[0]
+            
             if reference_position[0] < min_x_pos:
                 min_x_pos = reference_position[0]
             
             if reference_position[1] < min_y_pos:
                 min_y_pos = reference_position[1]
         
-        return min_x_pos, min_y_pos
+        if self.orientation == Orientations.FACING_RIGHT:
+            return min_x_pos, min_y_pos
+        elif self.orientation == Orientations.FACING_LEFT:
+            return max_x_pos, min_y_pos
     
     def get_enclosing_rect(self):
         """returns a tuple for the enclosing rect as a pygame rect"""
