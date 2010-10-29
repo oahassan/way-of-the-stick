@@ -61,6 +61,7 @@ class Player():
         self.current_attack = None
         self.action = None
         self.color = (255,255,255)
+        self.outline_color = self.color
         self.current_animation = None
         self.direction = PlayerStates.FACING_RIGHT
         self.stun_timeout = 500
@@ -102,6 +103,8 @@ class Player():
         if self.action.action_state == PlayerStates.ATTACKING:
             self.update_point_damage()
         
+        self.set_outline_color()
+        
         draw_model(self)
         
         if self.dash_timer < self.dash_timeout:
@@ -112,6 +115,15 @@ class Player():
         
         if self.stun_timer < self.stun_timeout:
             self.stun_timer += time_passed
+    
+    def set_outline_color(self):
+        if self.get_player_state() == PlayerStates.STUNNED:
+            if (self.stun_timer % 30) >= 15:
+                self.outline_color = (255, 255, 0)
+            else:
+                self.outline_color = (255, 0, 0)
+        else:
+            self.outline_color = self.color
     
     def get_player_point_positions(self):
         """builds a dictionary of point name to point position for each point in the
@@ -930,7 +942,7 @@ def draw_line(line, player):
     point2 = line.endPoint2.pixel_pos()
     
     pygame.draw.line(gamestate.screen, \
-                    player.color, \
+                    player.outline_color, \
                     point1, \
                     point2, \
                     int(7))
