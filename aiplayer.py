@@ -1,3 +1,4 @@
+from random import choice
 import copy
 import physics
 import animationexplorer
@@ -125,11 +126,13 @@ class Bot(player.Player):
             movement.set_player_state(self)
     
     def get_in_range_attack(self, enemy):
-        in_range_attack = None
+        in_range_attacks = []
         
         for attack in self.actions[player.PlayerStates.ATTACKING]:
             if self.attack_in_range(attack, enemy):
-                in_range_attack = attack
-                break
+                in_range_attacks.append(attack)
         
-        return in_range_attack
+        if len(in_range_attacks) > 0:
+            return choice(in_range_attacks)
+        else:
+            return None
