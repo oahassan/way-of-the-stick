@@ -117,7 +117,10 @@ class Wall(Object):
                 x_velocity = 0
                 object.velocity = (x_velocity, y_velocity)
             
-            object.shift((self.position[0] + 1 - object.position[0], 0))
+            if object.orientation == Orientations.FACING_RIGHT:
+                object.shift((self.position[0] + 1 - object.position[0], 0))
+            elif object.orientation == Orientations.FACING_LEFT:
+                object.shift((self.position[0] + 1 - object.position[0] + object.width, 0))
 
 class Orientations:
     FACING_LEFT = "FACING_LEFT"
@@ -272,17 +275,33 @@ class Model(Object):
     def set_dimensions(self):
         """sets the height and width of the model"""
         position = self.get_reference_position()
-        bottom_right_x, bottom_right_y = position
         
-        for point in self.points.values():
-            if point.pos[0] > bottom_right_x:
-                bottom_right_x = point.pos[0]
+        if self.orientation == Orientations.FACING_RIGHT:
+            bottom_right_x, bottom_right_y = position
             
-            if point.pos[1] > bottom_right_y:
-                bottom_right_y = point.pos[1]
-        
-        self.height = bottom_right_y - position[1]
-        self.width = bottom_right_x - position[0]
+            for point in self.points.values():
+                if point.pos[0] > bottom_right_x:
+                    bottom_right_x = point.pos[0]
+                
+                if point.pos[1] > bottom_right_y:
+                    bottom_right_y = point.pos[1]
+            
+            self.height = bottom_right_y - position[1]
+            self.width = bottom_right_x - position[0]
+
+        elif self.orientation == Orientations.FACING_LEFT:
+            bottom_left_x, bottom_right_y = position
+            
+            for point in self.points.values():
+                if point.pos[0] < bottom_left_x:
+                    bottom_left_x = point.pos[0]
+                
+                if point.pos[1] > bottom_right_y:
+                    bottom_right_y = point.pos[1]
+            
+            self.height = bottom_right_y - position[1]
+            self.width = position[0] - bottom_left_x
+            
     
     def set_absolute_point_positions(self, point_position_dictionary):
         """sets the position of each point in the model by name from the
