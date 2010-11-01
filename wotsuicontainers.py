@@ -761,12 +761,12 @@ class TextBox(wotsui.UIObjectBase):
         self.layout_text()
     
     def draw(self, surface):
-        """draws the text box on the screen over any other renderings"""
+        """draws the text box on the screen over any other renderings drawn before it"""
         
         if self.visible:
             message_surface = pygame.Surface((self.width, self.height))
             
-            wotsui.UIObjectBase.draw(self, message_surface)
+            wotsui.UIObjectBase.draw_relative(self, message_surface, self.position)
             
             surface.blit(message_surface, self.position)
     
