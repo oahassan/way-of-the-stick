@@ -28,6 +28,7 @@ class PlayerStateData:
     HEALTH = "health"
     ATTACK_SEQUENCE = "attack sequence"
     ATTACK_LINE_NAMES = "attack line names"
+    ATTACK_TYPE = "attack type"
 
 class NetworkPlayer():
     
@@ -57,7 +58,7 @@ class NetworkPlayer():
                 
             elif data_key == PlayerStateData.HEALTH:
                 #set player health
-                health_value = player_state_dictinoary[PlayerStateData.HEALTH]
+                health_value = player_state_dictionary[PlayerStateData.HEALTH]
                 
                 self.set_health(health_value)
 
@@ -69,6 +70,7 @@ class RemotePlayer(player.Player, NetworkPlayer):
         
         self.player_state = player.PlayerStates.STANDING
         self.attack_line_names = []
+        self.attack_type = None
     
     def sync_to_server_data(self):
         """syncs a players state to that given from the server"""
@@ -101,6 +103,10 @@ class RemotePlayer(player.Player, NetworkPlayer):
                 attack_line_names = player_state_dictionary[PlayerStateData.ATTACK_LINE_NAMES]
                 
                 self.attack_line_names = attack_line_names
+            
+            elif data_key == PlayerStateData.ATTACK_TYPE:
+                #set player attack type
+                self.attack_type = player_state_dictionary[PlayerStateData.ATTACK_TYPE]
     
     def sync_player_state_to_server(self, player_state_dictionary):
         """sets the current state of the player and any state changes associated with a
@@ -122,6 +128,9 @@ class RemotePlayer(player.Player, NetworkPlayer):
     
     def get_player_state(self):
         return self.player_state
+    
+    def get_attack_type(self):
+        return self.attack_type
     
     def get_attack_lines(self):
         return \
@@ -163,6 +172,7 @@ class LocalPlayer(NetworkPlayer):
         if player_state == player.PlayerStates.ATTACKING:
             player_state_dictionary[PlayerStateData.ATTACK_SEQUENCE] = self.attack_sequence
             player_state_dictionary[PlayerStateData.ATTACK_LINE_NAMES] = self.get_attack_line_names()
+            player_state_dictionary[PlayerStateData.ATTACK_TYPE] = self.get_attack_type()
         
         return player_state_dictionary
     
