@@ -342,11 +342,9 @@ def handle_unblocked_attack_collision(
             receiver.set_stun_timeout(attacker.get_stun_timeout())
     else:
         apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
-        
+        receiver.set_player_state(player.PlayerStates.STUNNED)
         receiver.set_stun_timeout(attacker.get_stun_timeout())
         receiver.health_meter = max(0, receiver.health_meter - damage)
-        
-        receiver.set_player_state(player.PlayerStates.STUNNED)
 
 def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
     attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])
@@ -367,7 +365,25 @@ def get_separation_vector(attacker, receiver):
         y_delta = -1 * y_delta
     
     return (x_delta, y_delta)
-    
+
+#def get_overlap(attacker, receiver):
+#    
+#    attacker_rect = pygame.Rect(*attacker.get_enclosing_rect())
+#    receiver_rect = pygame.Rect(*receiver.get_enclosing_rect())
+#    
+#    x_overlap = 0
+#    
+#    if receiver_rect.centerx > attacker_rect.centerx:
+#       x_overlap = attacker_rect.right - receiver_rect.left
+#    else:
+#        x_overlap = attacker_rect.left - receiver_rect.right
+#   
+#   if ((receiver_rect.top =< attacker_rect.top) and
+#   (receiver_rect.right >= attacker_rect.right)):
+#        x_overlap = attacker_rect.right - receiver_rect.left
+#    else:
+#       x_overlap = attacker_rect.left - receiver_rect.right
+
 def get_knockback_vector(attacker, attack_point):
     """get the direction and magnitude of the knockback"""
     
