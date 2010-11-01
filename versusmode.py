@@ -79,19 +79,24 @@ def init():
     bot_wins_label.set_position(bot_wins_label_position)
     
     if player_type == PlayerTypes.BOT:
-        new_player = aiplayer.Bot((200, 367))
+        new_player = aiplayer.Bot((0, 0))
     else:
-        new_player = humanplayer.HumanPlayer((200, 367))
+        new_player = humanplayer.HumanPlayer((0, 0))
+    
     
     if bot_type == PlayerTypes.HUMAN:
-        second_player = humanplayer.HumanPlayer((500, 367))
+        second_player = humanplayer.HumanPlayer((0, 0))
     else:
-        second_player = aiplayer.Bot((500, 367))
+        second_player = aiplayer.Bot((0, 0))
+    
     
     human = new_player
     human.init_state()
+    human.model.move_model((200, 367))
+    
     bot = second_player
     bot.init_state()
+    bot.model.move_model((500, 367))
     bot.color = (0,255,0)
     
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH

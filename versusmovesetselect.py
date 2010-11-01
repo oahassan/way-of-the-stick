@@ -151,7 +151,9 @@ def handle_events():
         bot_moveset_select.handle_events()
         
         if ((player_moveset_select.selected_moveset != None) and
-            (bot_moveset_select.selected_moveset != None)):
+            (player_type_select.selected_button != None) and
+            (bot_moveset_select.selected_moveset != None) and
+            (bot_type_select.selected_button != None)):
             if start_match_label.active == False:
                 start_match_label.activate()
         else:
