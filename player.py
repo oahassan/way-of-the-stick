@@ -740,14 +740,26 @@ class Attack(Action):
     
     def get_attack_lines(self, model):
         """get the lines that used to attack in the animation"""
+        
         attack_lines = {}
         
-        if self.attack_type == AttackTypes.PUNCH:
+        if self.attack_type in \
+        [
+            InputActionTypes.WEAK_PUNCH,
+            InputActionTypes.MEDIUM_PUNCH,
+            InputActionTypes.STRONG_PUNCH
+        ]:
             attack_lines[stick.LineNames.RIGHT_UPPER_ARM] = model.lines[stick.LineNames.RIGHT_UPPER_ARM]
             attack_lines[stick.LineNames.RIGHT_FOREARM] = model.lines[stick.LineNames.RIGHT_FOREARM]
             attack_lines[stick.LineNames.LEFT_UPPER_ARM] = model.lines[stick.LineNames.LEFT_UPPER_ARM]
             attack_lines[stick.LineNames.LEFT_FOREARM] = model.lines[stick.LineNames.LEFT_FOREARM]
-        elif self.attack_type == AttackTypes.KICK:
+            
+        elif self.attack_type in \
+        [
+            InputActionTypes.WEAK_KICK,
+            InputActionTypes.MEDIUM_KICK,
+            InputActionTypes.STRONG_KICK
+        ]:
             attack_lines[stick.LineNames.RIGHT_UPPER_LEG] = model.lines[stick.LineNames.RIGHT_UPPER_LEG]
             attack_lines[stick.LineNames.RIGHT_LOWER_LEG] = model.lines[stick.LineNames.RIGHT_LOWER_LEG]
             attack_lines[stick.LineNames.LEFT_UPPER_LEG] = model.lines[stick.LineNames.LEFT_UPPER_LEG]
@@ -872,22 +884,7 @@ class ActionFactory():
     def create_attack(self, action_type, animation, model):
         """create an attack model for the given action type"""
         
-        return_attack = None
-        
-        if action_type in \
-        [
-            InputActionTypes.WEAK_PUNCH,
-            InputActionTypes.MEDIUM_PUNCH,
-            InputActionTypes.STRONG_PUNCH
-        ]:
-            return_attack = Attack(AttackTypes.PUNCH)
-        elif action_type in \
-        [
-            InputActionTypes.WEAK_KICK,
-            InputActionTypes.MEDIUM_KICK,
-            InputActionTypes.STRONG_KICK
-        ]:
-            return_attack = Attack(AttackTypes.KICK)
+        return_attack = Attack(action_type)
         
         return_attack.set_acceleration(action_type)
         
