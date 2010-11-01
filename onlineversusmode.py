@@ -29,6 +29,7 @@ class PlayerStateData:
     ATTACK_SEQUENCE = "attack sequence"
     ATTACK_LINE_NAMES = "attack line names"
     ATTACK_TYPE = "attack type"
+    STUN_TIMER = "stun timer"
 
 class NetworkPlayer():
     
@@ -107,6 +108,9 @@ class RemotePlayer(player.Player, NetworkPlayer):
             elif data_key == PlayerStateData.ATTACK_TYPE:
                 #set player attack type
                 self.attack_type = player_state_dictionary[PlayerStateData.ATTACK_TYPE]
+            
+            elif data_key == PlayerStateData.STUN_TIMER:
+                self.stun_timer = player_state_dictionary[PlayerStateData.STUN_TIMER]
     
     def sync_player_state_to_server(self, player_state_dictionary):
         """sets the current state of the player and any state changes associated with a
@@ -149,6 +153,7 @@ class RemotePlayer(player.Player, NetworkPlayer):
         
         self.sync_to_server_data()
         
+        self.set_outline_color()
         player.draw_model(self)
 
 class LocalPlayer(NetworkPlayer):
@@ -166,7 +171,8 @@ class LocalPlayer(NetworkPlayer):
                 PlayerStateData.POINT_POSITIONS : self.get_player_point_positions(),
                 PlayerStateData.POINT_DAMAGES : self.point_name_to_point_damage,
                 PlayerStateData.PLAYER_STATE : player_state,
-                PlayerStateData.HEALTH : self.health_meter
+                PlayerStateData.HEALTH : self.health_meter,
+                PlayerStateData.STUN_TIMER : self.stun_timer
             }
         
         if player_state == player.PlayerStates.ATTACKING:

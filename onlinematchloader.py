@@ -118,6 +118,7 @@ def set_player_initial_state(player_position, player):
     player.init_state()
     
     player.color = get_player_color(player_position)
+    player.outline_color = player.color
     
     player.direction = get_player_model_direction(player_position)
     
