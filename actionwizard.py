@@ -10,6 +10,7 @@ import button
 import menupage
 import gamestate
 import player
+import controlsdata
 
 class ActionDictionaries():
     INPUT_ACTIONS = "inputactions"
@@ -126,7 +127,9 @@ def save_unbound_action(action_type, animation):
 def save_animation(animation_type, animation):
     if animation_type in player.PlayerStates.MOVEMENTS:
         save_movement(animation_type, animation)
-    elif animation_type in player.AttackTypes.ATTACK_TYPES:
+        
+    elif ((animation_type in player.AttackTypes.ATTACK_TYPES) or
+    (animation_type in controlsdata.InputActionTypes.ATTACKS)):
         save_attack(animation_type, animation)
 
 def save_attack(attack_type, animation):

@@ -482,6 +482,7 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
                 action_type = player.AttackTypes.KICK
             
             animations = actionwizard.get_attack_animations(action_type)
+            animations.extend(actionwizard.get_attack_animations(self.animation_type))
         
         return animations
     
