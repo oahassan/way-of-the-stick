@@ -84,14 +84,20 @@ def load():
     spectate_button.set_position((600, 50))
     spectate_button.inactivate()
     
+    connect_button = button.TextButton("Connect to server")
+    connect_button.set_position((10, 50))
+    connect_button.inactivate()
+    
     if gamestate.hosting:
         versusserver.start_lan_server()
         versusclient.connect_to_host(versusserver.get_lan_ip_address())
+        
         connected = True
-    else:
-        connect_button = button.TextButton("Connect to server")
-        connect_button.set_position((10, 50))
-        connect_button.inactivate()
+        
+        ip_address_input.set_text(versusserver.get_lan_ip_address())
+        ip_address_input.inactivate()
+        
+        connect_button.hide()
 
 def unload():
     global loaded
@@ -252,38 +258,41 @@ def handle_events():
         start_match_label.draw(gamestate.screen)
         spectate_button.draw(gamestate.screen)
         
-        if gamestate.hosting == False:
-            if ip_address_input.active:
-                ip_address_input.handle_events()
-            
-            server_address = ip_address_input.text_entry_box.value.strip()
-            
-            if re.match(VALID_IPV4_ADDRESS_REGEX, server_address) and not connected:
-                connect_button.activate()
-            else:
-                connect_button.inactivate()
-            
-            if connect_button.active and connect_button.contains(wotsuievents.mouse_pos):
-                if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
-                    connect_button.handle_selected()
-                    
-                if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
+        #IP adress handle events
+        if ip_address_input.active:
+            ip_address_input.handle_events()
+        
+        server_address = ip_address_input.text_entry_box.value.strip()
+        
+        if re.match(VALID_IPV4_ADDRESS_REGEX, server_address) and not connected:
+            connect_button.activate()
+        else:
+            connect_button.inactivate()
+        
+        if connect_button.active and connect_button.contains(wotsuievents.mouse_pos):
+            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+                connect_button.handle_selected()
                 
-                    if connect_button.selected:
-                        ip_address_input.inactivate()
-                    
-                        versusclient.connect_to_host(server_address)
-                        versusclient.get_network_messages()
-                        versusclient.listener.Pump()
-                        
-                        connect_button.handle_deselected()
-                        connect_button.inactivate()
-                        
-                        connected = True
-                        
-                    else:
-                        connect_button.handle_deselected()
+            if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
             
+                if connect_button.selected:
+                    ip_address_input.inactivate()
+                
+                    versusclient.connect_to_host(server_address)
+                    versusclient.get_network_messages()
+                    versusclient.listener.Pump()
+                    
+                    connect_button.handle_deselected()
+                    connect_button.inactivate()
+                    
+                    connected = True
+                    
+                else:
+                    connect_button.handle_deselected()
+        
+        ip_address_input.draw(gamestate.screen)
+        
+        if gamestate.hosting == False:
             if versusclient.listener.connection_status == \
             versusclient.ConnectionStatus.DISCONNECTED:
                 
@@ -303,7 +312,7 @@ def handle_events():
                     start_match_label.inactivate()
             
             if not versusclient.client_was_connected():
-                ip_address_input.draw(gamestate.screen)
+                
                 connect_button.draw(gamestate.screen)
         
         if connected or gamestate.hosting:

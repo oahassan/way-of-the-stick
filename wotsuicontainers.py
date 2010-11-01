@@ -692,6 +692,10 @@ class TextEntryBox(wotsui.SelectableObjectBase):
         
         self.color = text_color
     
+    def set_text(self, text):
+        """sets the value of the text entry box to the given text"""
+        self.text_entry_box.value = text
+    
     def set_position(self, position):
         """moves the top left of the text entry box to the given position"""
         wotsui.SelectableObjectBase.set_position(self, position)
@@ -714,21 +718,22 @@ class TextEntryBox(wotsui.SelectableObjectBase):
     def handle_events(self):
         """handle events that affect the text entry box"""
         
-        if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
-            if self.contains(wotsuievents.mouse_pos):
-                if self.selected:
-                    self.handle_deselected()
-                    
+        if self.active:
+            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+                if self.contains(wotsuievents.mouse_pos):
+                    if self.selected:
+                        self.handle_deselected()
+                        
+                    else:
+                        self.handle_selected()
                 else:
-                    self.handle_selected()
-            else:
-                if self.selected:
-                    self.handle_deselected()
+                    if self.selected:
+                        self.handle_deselected()
+                
+            self.text_entry_box.color = self.color
             
-        self.text_entry_box.color = self.color
-        
-        if self.selected:
-            self._update()
+            if self.selected:
+                self._update()
 
 class TextBox(wotsui.UIObjectBase):
     
