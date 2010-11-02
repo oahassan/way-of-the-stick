@@ -6,7 +6,7 @@ import wotsuievents
 import gamestate
 import movesetdata
 import actionwizard
-from controlsdata import InputActionTypes, get_control_key
+from controlsdata import InputActionTypes, get_control_key, get_controls
 
 class HumanPlayer(player.Player):
     def __init__(self, position):
@@ -15,6 +15,9 @@ class HumanPlayer(player.Player):
         self.bound_keys = []
         self.key_bindings = {}
         self.player_type = player.PlayerTypes.HUMAN
+        self.controls = None
+        self.attack_keys = []
+        self.aerial_movement_keys = []
     
     def set_action(self):
         #Change state if key is released
@@ -29,11 +32,13 @@ class HumanPlayer(player.Player):
                 if self.is_aerial():
                     if key == pygame.K_UP:
                         self.handle_key_input(key)
-                    elif ((key in self.moveset.movement_key_to_movement_type.keys())
-                    and (self.moveset.movement_key_to_movement_type[key] in movesetdata.MovementTypes.AERIAL_MOVEMENT_TYPES)):
+                        
+                    elif key in self.aerial_movement_keys:
                         self.handle_aerial_motion_input(key)
-                    elif key in self.moveset.attack_keys.values():
+                        
+                    elif key in self.attack_keys:
                         self.handle_key_input(key)
+                        
                 elif self.action.action_state == player.PlayerStates.STUNNED:
                     if key in self.moveset.movement_key_to_movement_type.keys():
                         self.handle_stun_motion_input(key)
@@ -103,6 +108,12 @@ class HumanPlayer(player.Player):
         self.moveset = moveset
         
         factory = player.ActionFactory()
+        
+        for action_type in InputActionTypes.AERIAL_MOVEMENTS:
+            self.aerial_movement_keys.append(get_control_key(action_type))
+        
+        for action_type in InputActionTypes.ATTACKS:
+            self.attack_keys.append(get_control_key(action_type))
         
         for movement in player.PlayerStates.UNBOUND_MOVEMENTS:
             if movement == player.PlayerStates.STUNNED:

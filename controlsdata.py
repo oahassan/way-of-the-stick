@@ -15,6 +15,7 @@ class InputActionTypes():
     MEDIUM_KICK = 'mediumkick'
     STRONG_KICK = 'strongkick'
     
+    AERIAL_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN]
     ATTACKS = [
         WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH,
         WEAK_KICK, MEDIUM_KICK, STRONG_KICK
@@ -41,6 +42,15 @@ def open_controls_shelf():
         controls[InputActionTypes.STRONG_KICK] = pygame.K_d
     
     return controls
+
+def get_controls():
+    controls = open_controls_shelf()
+    
+    return_controls = dict([(key, value) for key, value in controls.iteritems()])
+    import pdb;pdb.set_trace()
+    controls.close()
+    
+    return return_controls
 
 def get_control_key(action_type):
     controls = open_controls_shelf()
