@@ -572,7 +572,7 @@ class Animation:
     
     def set_animation_deltas(self):
         """populates the dictionary of distances between the position of the points in
-        each frame and the reference position of the first frame"""
+        each frame"""
         id_delta_dictionaires = self.bld_frame_to_frame_deltas()
         
         for frame_index, dictionary in id_delta_dictionaires.iteritems():
@@ -785,33 +785,62 @@ class Animation:
         x_displacements = []
         x_initial_velocities = [0,]
         x_accelerations = []
+        
+        #X displacement equation
+        #.5*a(t**2) + v0*t = x1 - x0
+        #velocity given time and acceleration
+        #v0 = ((x1 - x0) - (.5*a(t**2))/t
         #For each frame
         for frame_index in range(0, len(self.frames) - 1):
             #Calculate x displacement between the two frames
             current_frame_reference_position = self.frames[frame_index].get_reference_position()
             next_frame_reference_position = self.frames[frame_index + 1].get_reference_position()
             
-            x_displacement = next_frame_reference_position[0] - current_frame_reference_position[0]
-            x_acceleration = mathfuncs.sign(x_displacement)*acceleration
+            #x_displacement = next_frame_reference_position[0] - current_frame_reference_position[0]
+            displacement_sign = \
+                mathfuncs.sign(
+                    next_frame_reference_position[0] - current_frame_reference_position[0]
+                )
+            x_displacement = displacement_sign * self.get_animation_x_displacement(frame_index)
+            #x_acceleration = mathfuncs.sign(x_displacement)*acceleration
             
-            #Set initial velocity to 0 if the x displacement changes direction.  This
-            #avoids having to make the figure slow down in the previous frame and creates
-            #a more dramatic movement.
-            if (frame_index != 0 and
-            mathfuncs.sign(x_displacement) != mathfuncs.sign(x_displacements[frame_index - 1])):
-                x_initial_velocities[frame_index] = 0
+            ##Set initial velocity to 0 if the x displacement changes direction.  This
+            ##avoids having to make the figure slow down in the previous frame and creates
+            ##a more dramatic movement.
+            #if (frame_index != 0 and
+            #mathfuncs.sign(x_displacement) != mathfuncs.sign(x_displacements[frame_index - 1])):
+            #    x_initial_velocities[frame_index] = 0
             
-            #Calculate the final velocity and save it as the initial velocity of the next frame
-            final_velocity = self.calculate_velocity_without_time(initial_velocity=x_initial_velocities[frame_index],
-                                                                  acceleration=x_acceleration,
-                                                                  displacement=x_displacement)
-            x_initial_velocities.append(final_velocity)
+            ##Calculate the final velocity and save it as the initial velocity of the next frame
+            #final_velocity = self.calculate_velocity_without_time(initial_velocity=x_initial_velocities[frame_index],
+            #                                                      acceleration=x_acceleration,
+            #                                                      displacement=x_displacement)
+            velocity = x_displacement / self.frame_times[frame_index]
+            #x_initial_velocities.append(final_velocity)
+            x_initial_velocities.append(velocity)
+            
             x_displacements.append(x_displacement)
-            x_accelerations.append(x_acceleration)
+            #x_accelerations.append(x_acceleration)
+            x_accelerations.append(0)
         
         x_accelerations.append(0)
         
         return x_initial_velocities, x_accelerations
+    
+    def get_animation_x_displacement(self, frame_index):
+        """returns the smallest delta for each point in the given frame_index from the
+        previous frame_index"""
+        
+        if frame_index == 0:
+            return 0
+        
+        return_delta = abs(self.animation_deltas[frame_index].values()[0][0])
+        
+        for delta in self.animation_deltas[frame_index].values():
+            if abs(delta[0]) < abs(return_delta):
+                return_delta = abs(delta[0])
+        
+        return return_delta
     
     def get_jump_frame_intervals(self):
         """returns a list of tuples for the starting and ending frames of jumps in an
