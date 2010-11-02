@@ -790,6 +790,8 @@ class Animation:
         #.5*a(t**2) + v0*t = x1 - x0
         #velocity given time and acceleration
         #v0 = ((x1 - x0) - (.5*a(t**2))/t
+        #a = (2*((x1 - x0) - v0t))/(t**2)
+        
         #For each frame
         for frame_index in range(0, len(self.frames) - 1):
             #Calculate x displacement between the two frames
@@ -803,6 +805,11 @@ class Animation:
                 )
             x_displacement = displacement_sign * self.get_animation_x_displacement(frame_index)
             #x_acceleration = mathfuncs.sign(x_displacement)*acceleration
+            x_acceleration = 0
+            
+            v0 = x_initial_velocities[frame_index]
+            t = self.frame_times[frame_index]
+            x_acceleration = (2*(x_displacement - (v0*t)))/(t**2)
             
             ##Set initial velocity to 0 if the x displacement changes direction.  This
             ##avoids having to make the figure slow down in the previous frame and creates
@@ -815,13 +822,12 @@ class Animation:
             #final_velocity = self.calculate_velocity_without_time(initial_velocity=x_initial_velocities[frame_index],
             #                                                      acceleration=x_acceleration,
             #                                                      displacement=x_displacement)
-            velocity = x_displacement / self.frame_times[frame_index]
+            vf = v0 + x_acceleration*t
             #x_initial_velocities.append(final_velocity)
-            x_initial_velocities.append(velocity)
+            x_initial_velocities.append(vf)
             
             x_displacements.append(x_displacement)
-            #x_accelerations.append(x_acceleration)
-            x_accelerations.append(0)
+            x_accelerations.append(x_acceleration)
         
         x_accelerations.append(0)
         
