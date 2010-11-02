@@ -13,6 +13,11 @@ class PlayerTypes:
     HUMAN = 'HUMAN'
     BOT = 'BOT'
 
+class MatchStates:
+    READY = 'ready'
+    FIGHT = 'fight'
+    END = 'end'
+
 gamestate.stage = stage.Stage(pygame.image.load('arenabkg.png'), 447)
 
 initialized = False
@@ -22,7 +27,7 @@ fight_label = None
 ready_label = None
 human_wins_label = None
 bot_wins_label = None
-fight_indicator = False
+match_state = None
 exit_button = button.ExitButton()
 exit_indicator = False
 versus_mode_start_time = None
@@ -44,7 +49,7 @@ def init():
     global fight_label
     global human_wins_label
     global bot_wins_label
-    global fight_indicator
+    global match_state
     global fight_end_timer
     global versus_mode_start_timer
     global fight_start_timer
@@ -53,7 +58,7 @@ def init():
     global bot_type
     
     fps_label = button.Label((200,200), str(gamestate.clock.get_fps()),(255,255,255),50)
-    fight_indicator = False
+    match_state = MatchStates.READY
     fight_end_timer = 0
     versus_mode_start_timer = 0
     fight_start_timer = 0
@@ -117,7 +122,7 @@ def exit():
     global fight_label
     global human_wins_label
     global bot_wins_label
-    global fight_indicator
+    global match_state
     global versus_mode_start_timer
     global fight_start_timer
     global fight_end_timer
@@ -126,7 +131,7 @@ def exit():
     fight_label = None
     human_wins_label = None
     bot_wins_label = None
-    fight_indicator = False
+    match_state = None
     versus_mode_start_timer = None
     fight_start_timer = None
     fight_end_timer = None
@@ -145,7 +150,7 @@ def handle_events():
     global fight_label
     global human_wins_label
     global bot_wins_label
-    global fight_indicator
+    global match_state
     global versus_mode_start_timer
     global fight_start_timer
     global fight_end_timer
@@ -170,14 +175,14 @@ def handle_events():
         versus_mode_start_timer += gamestate.clock.get_time()
     else:
         fight_start_timer += gamestate.clock.get_time()
-        fight_indicator = True
+        match_state = MatchStates.FIGHT
         
         if fight_start_timer < 1000:
             fight_label.draw(gamestate.screen)
             gamestate.new_dirty_rects.append(pygame.Rect(fight_label.position,(fight_label.width,fight_label.height)))
     
     if bot.health_meter == 0:
-        fight_indicator = False
+        match_state = MatchStates.END
         
         if fight_end_timer < 3000:
             fight_end_timer += gamestate.clock.get_time()
@@ -190,7 +195,7 @@ def handle_events():
             gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
             exit()
     elif human.health_meter == 0:
-        fight_indicator = False
+        match_state = MatchStates.END
         
         if fight_end_timer < 3000:
             fight_end_timer += gamestate.clock.get_time()
@@ -202,7 +207,8 @@ def handle_events():
             gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
             exit()
     
-    if exit_indicator == False and fight_indicator:
+    if ((exit_indicator == False) and 
+    ((match_state == MatchStates.FIGHT) or (match_state == MatchStates.END))):
         if player_type == PlayerTypes.HUMAN:
             human.handle_events()
         else:
@@ -345,11 +351,17 @@ def handle_unblocked_attack_collision(
             )
             receiver.health_meter = max(0, receiver.health_meter - damage)
             receiver.set_stun_timeout(attacker.get_stun_timeout())
+            
+            if receiver.health_meter == 0:
+                receiver.set_stun_timeout(3000)
     else:
         apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
         receiver.set_player_state(player.PlayerStates.STUNNED)
         receiver.set_stun_timeout(attacker.get_stun_timeout())
         receiver.health_meter = max(0, receiver.health_meter - damage)
+        
+        if receiver.health_meter == 0:
+            receiver.set_stun_timeout(3000)
 
 def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
     attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])
