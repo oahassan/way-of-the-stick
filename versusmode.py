@@ -197,7 +197,7 @@ def handle_events():
     elif human.health_meter == 0:
         match_state = MatchStates.END
         
-        if fight_end_timer < 3000:
+        if fight_end_timer < 8000:
             fight_end_timer += gamestate.clock.get_time()
             bot_wins_label.draw(gamestate.screen)
             gamestate.new_dirty_rects.append(pygame.Rect(bot_wins_label.position, \
@@ -353,7 +353,7 @@ def handle_unblocked_attack_collision(
             receiver.set_stun_timeout(attacker.get_stun_timeout())
             
             if receiver.health_meter == 0:
-                receiver.set_stun_timeout(3000)
+                receiver.set_stun_timeout(8000)
     else:
         apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
         receiver.set_player_state(player.PlayerStates.STUNNED)
@@ -361,7 +361,7 @@ def handle_unblocked_attack_collision(
         receiver.health_meter = max(0, receiver.health_meter - damage)
         
         if receiver.health_meter == 0:
-            receiver.set_stun_timeout(3000)
+            receiver.set_stun_timeout(8000)
 
 def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
     attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])
