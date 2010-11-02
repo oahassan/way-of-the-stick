@@ -73,8 +73,8 @@ class Player():
         self.model = physics.Model(position)
         self.walk_speed = .4
         self.run_speed = .75
-        self.jump_speed = -1
-        self.high_jump_speed = -1.25
+        self.jump_speed = -.5
+        self.high_jump_speed = -.75
         self.aerial_acceleration = .04
         self.actions = {}
         self.knockback_vector = (0,0)

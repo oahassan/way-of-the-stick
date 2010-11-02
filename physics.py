@@ -3,7 +3,7 @@ import mathfuncs
 import stick
 import pygame
 
-GRAVITY = .005
+GRAVITY = .001
 FRICTION = .003
 
 class Object():
