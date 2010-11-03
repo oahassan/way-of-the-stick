@@ -747,6 +747,7 @@ class TextBox(wotsui.UIObjectBase):
     ):
         wotsui.UIObjectBase.__init__(self)
         
+        self.position = position
         self.font = pygame.font.Font('freesansbold.ttf', font_size)
         self.text = text
         self.width = width

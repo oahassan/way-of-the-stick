@@ -1,5 +1,6 @@
 import pygame
 
+from wotsuicontainers import TextBox
 import button
 import stick
 
@@ -36,6 +37,7 @@ class Tool(button.Button):
         self.line_thickness = Tool._ButtonLineThickness
         self.color = Tool._InactiveColor
         self.fixed_dimensions = True
+        self.fixed_position = True
         
         #Variables for managing state while using a point tool
         self.frame = None
@@ -45,10 +47,15 @@ class Tool(button.Button):
         self.label = None
         
         if label_text != None:
-            self.label = button.Label((self.position[0],self.position[1]+self.height+Tool._ButtonLineThickness), \
-                                      label_text, \
-                                      (255,255,255), \
-                                      15)
+            self.label = \
+                TextBox(
+                    label_text,
+                    Tool._BUTTON_WIDTH,
+                    (self.position[0], self.position[1] + Tool._BUTTON_HEIGHT + Tool._ButtonLineThickness),
+                    (255,255,255),
+                    15
+                )
+            
             self.height += self.label.height
             self.width = max(self.width,self.label.width)
             self.add_child(self.label)
