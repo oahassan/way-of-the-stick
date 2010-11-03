@@ -375,31 +375,41 @@ def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
         return False
 
 def get_separation_vector(attacker, receiver):
-    x_delta = receiver.model.position[0] - attacker.model.position[0]
+    #x_delta = receiver.model.position[0] - attacker.model.position[0]
     y_delta = receiver.model.position[1] - attacker.model.position[1]
+    
+    #x_delta, y_delta = get_overlap(attacker, receiver)
+    x_delta = 0
+    
+    if receiver.model.position[0] < attacker.model.position[0]:
+        x_delta = receiver.model.position[0] - attacker.model.position[0]
+    else:
+        x_delta = attacker.model.position[0] - receiver.model.position[0]
     
     if y_delta > 0:
         y_delta = -1 * y_delta
     
     return (x_delta, y_delta)
 
-#def get_overlap(attacker, receiver):
-#    
-#    attacker_rect = pygame.Rect(*attacker.get_enclosing_rect())
-#    receiver_rect = pygame.Rect(*receiver.get_enclosing_rect())
-#    
-#    x_overlap = 0
-#    
-#    if receiver_rect.centerx > attacker_rect.centerx:
-#       x_overlap = attacker_rect.right - receiver_rect.left
-#    else:
-#        x_overlap = attacker_rect.left - receiver_rect.right
-#   
-#   if ((receiver_rect.top =< attacker_rect.top) and
-#   (receiver_rect.right >= attacker_rect.right)):
-#        x_overlap = attacker_rect.right - receiver_rect.left
-#    else:
-#       x_overlap = attacker_rect.left - receiver_rect.right
+def get_overlap(attacker, receiver):
+    
+    attacker_rect = pygame.Rect(*attacker.get_enclosing_rect())
+    receiver_rect = pygame.Rect(*receiver.get_enclosing_rect())
+    
+    x_overlap = 0
+    y_overlap = 0
+    
+    if receiver_rect.centerx > attacker_rect.centerx:
+        x_overlap = attacker_rect.right - receiver_rect.left
+    else:
+        x_overlap = attacker_rect.left - receiver_rect.right
+   
+    if receiver_rect.centery > attacker_rect.centery:
+        y_overlap = receiver_rect.top - attacker_rect.bottom
+    else:
+       y_overlap = attacker_rect.top - receiver_rect.bottom
+   
+    return x_overlap, y_overlap
 
 def get_knockback_vector(attacker, attack_point):
     """get the direction and magnitude of the knockback"""
