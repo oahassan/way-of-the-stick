@@ -610,18 +610,15 @@ class Stun(Action):
         
         if player.model.position[0] < gamestate.stage.left_wall.position[0]:
             system.append(gamestate.stage.left_wall)
-        
-        #player.model.resolve_system(system, player.model.time_passed)
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
         
         if ((player.stun_timer < .1 * player.stun_timeout) or
-        (player.stun_timer > .8 * player.stun_timeout)):
+        (player.stun_timer > .5 * player.stun_timeout)):
             self.apply_pull_physics(player)
-            player.apply_physics(player.model.time_passed)
-        else:
-            player.apply_physics(player.model.time_passed)
+    
+        player.apply_physics(player.model.time_passed)
         
         if player.stun_timer >= player.stun_timeout:
             
