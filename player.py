@@ -187,10 +187,13 @@ class Player():
             self.action.set_player_state(self)
     
     def set_neutral_state(self):
-        if self.is_aerial():
-            self.actions[PlayerStates.FLOATING].set_player_state(self)
-        else:
+        if self.get_player_state() == PlayerStates.LANDING:
             self.actions[PlayerStates.STANDING].set_player_state(self)
+        else:
+            if self.is_aerial():
+                self.actions[PlayerStates.FLOATING].set_player_state(self)
+            else:
+                self.actions[PlayerStates.STANDING].set_player_state(self)
     
     def set_velocity(self):
         velocity = self.model.velocity
