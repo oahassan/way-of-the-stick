@@ -727,11 +727,11 @@ class Attack(Action):
         
         #Check if the player is in the air.  If not, shift back to the gRound after
         #changing to the new animation.
-        if player.is_aerial():
+        player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+        
+        if not player.is_aerial():
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
-        else:
-            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
-            player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
+            player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
         
         player.reset_point_damage()
         
