@@ -304,7 +304,7 @@ class Circle(Line):
     def get_top_left_and_bottom_right(self):
         position = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
         position = (int(position[0]), int(position[1]))
-        radius = int(self.diameter / 2)
+        radius = int(mathfuncs.distance(self.endPoint1.pos, self.endPoint2.pos) / 2)
         point_radius = max(self.endPoint1.radius, self.endPoint2.radius)
         
         point1_top_left, point1_bottom_right = self.endPoint1.get_top_left_and_bottom_right()

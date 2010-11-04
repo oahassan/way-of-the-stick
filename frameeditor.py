@@ -28,6 +28,7 @@ animation = None
 currentTool = None
 slctd_tool = None
 previous_tool = None
+play_tool = None
 exit_state = gamestate.Modes.ANIMATIONEXPLORER
 exit_ind = False
 loaded = False
@@ -41,6 +42,7 @@ def load(animation_type, edit_animation, rtn_state):
     global exit_state
     global tools
     global loaded
+    global play_tool
     
     animation = edit_animation
     animation.frame_index = 0
@@ -63,7 +65,10 @@ def load(animation_type, edit_animation, rtn_state):
     tools.append(framenavigator.PrevFrameTool())
     tools.append(framenavigator.NextFrameTool())
     tools.append(pathtool.PathTool())
-    tools.append(playtool.PlayTool())
+    
+    play_tool = playtool.PlayTool()
+    play_tool.animation_type = animation_type
+    tools.append(play_tool)
     
     save_tool = savetool.SaveTool()
     save_tool.animation_type = animation_type
@@ -81,7 +86,9 @@ def unload():
     global exit_state
     global tools
     global loaded
+    global play_tool
     
+    play_tool = None
     animation = None
     currentTool = None
     slctd_tool = None
@@ -178,7 +185,10 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
     
     if loaded:
         draw(surface)
-        animation.draw_frame(surface)
+        
+        if currentTool != play_tool:
+            animation.draw_frame(surface)
+        
         animation.draw_frames(surface, (20, 540))
     
 def get_slctd_tool(mousePos):
