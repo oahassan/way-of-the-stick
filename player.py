@@ -52,7 +52,7 @@ class PlayerStates():
     }
 
 class Player():
-    ANIMATION_HEIGHT = 80
+    ANIMATION_HEIGHT = 100
     REFERENCE_HEIGHT = 170
     ACCELERATION = .00200
     
