@@ -68,7 +68,8 @@ class Player():
         self.stun_timer = self.stun_timeout
         self.dash_timeout = 500
         self.dash_timer = self.dash_timeout
-        self.high_jump_timeout = 500
+        self.high_jump_timeout = 300
+        self.short_jump_timeout = 200
         self.jump_timer = self.high_jump_timeout
         self.model = physics.Model(position)
         self.walk_speed = .4
@@ -514,7 +515,8 @@ class Jump(Action):
         change_state = False
         
         if ((player.action.action_state == PlayerStates.JUMPING) and
-            (player.jump_timer < player.high_jump_timeout)):
+            (player.jump_timer < player.high_jump_timeout) and
+            (player.jump_timer > player.short_jump_timeout)):
             change_state = True
         else:
             change_state = Action.test_state_change(self, player)
@@ -525,10 +527,11 @@ class Jump(Action):
         Action.set_player_state(self, player, player.direction)
         player.model.velocity = (player.model.velocity[0], player.jump_speed)
         
-        if player.jump_timer < player.high_jump_timeout:
+        if ((player.jump_timer > player.short_jump_timeout) and
+        (player.jump_timer < player.high_jump_timeout)):
             player.model.velocity = (player.model.velocity[0], player.high_jump_speed)
             player.jump_timer = player.high_jump_timeout
-        else:
+        elif player.jump_timer >= player.high_jump_timeout:
             player.jump_timer = 0
 
 class Stand(Action):

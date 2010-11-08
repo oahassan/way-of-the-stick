@@ -1,6 +1,7 @@
 import shelve
 import player
 
+#create new interface to data for just player created and unlocked movesets
 _MOVESET_DB_FILE_NM = "moveset_wots.dat"
 
 def get_movesets():
