@@ -54,7 +54,7 @@ class PlayerStates():
 class Player():
     ANIMATION_HEIGHT = 100
     REFERENCE_HEIGHT = 400
-    ACCELERATION = .00200
+    ACCELERATION = .00400
     
     def __init__(self, position):
         self.player_type = None
@@ -716,6 +716,7 @@ class Attack(Action):
             player.handle_animation_end()
     
     def set_player_state(self, player):
+        previous_state = player.get_player_state()
         player.action = self
         player.model.animation_run_time = 0     
         player.current_attack = self
@@ -728,13 +729,19 @@ class Attack(Action):
             self.animation = self.right_animation
             player.model.orientation = physics.Orientations.FACING_RIGHT
         
-        #Check if the player is in the air.  If not, shift back to the gRound after
-        #changing to the new animation.
-        player.model.set_frame_point_pos(self.animation.frame_deltas[0])
-        
-        if not player.is_aerial():
+        #set the point positions affects whether the player is grounded, so there are extra case statements here
+        #if the player was in a grounded state shift back to the ground after setting the initial point positions
+        if previous_state in [PlayerStates.WALKING, PlayerStates.STANDING, PlayerStates.CROUCHING, PlayerStates.RUNNING]:
+            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
+        
+        elif not player.is_aerial():
+            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+            player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
+        else:
+            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
         
         player.reset_point_damage()
         
