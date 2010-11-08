@@ -53,7 +53,7 @@ class PlayerStates():
 
 class Player():
     ANIMATION_HEIGHT = 100
-    REFERENCE_HEIGHT = 170
+    REFERENCE_HEIGHT = 400
     ACCELERATION = .00200
     
     def __init__(self, position):
@@ -797,18 +797,15 @@ class Attack(Action):
         y_velocity = 0
         
         for frame_index in range(start_frame_index, end_frame_index + 1):
+            #Initialize the frame times to match start and end of frame
             displacement_start_time = self.animation.frame_start_times[frame_index]
             displacement_end_time = (displacement_start_time + 
                                      self.animation.frame_times[frame_index])
             elapsed_time = 0
             if frame_index == start_frame_index:
                 displacement_start_time = start_time
-                elapsed_time = start_time - self.animation.frame_start_times[frame_index]
-                displacement_end_time = (displacement_start_time + 
-                                         self.animation.frame_times[frame_index] - 
-                                         elapsed_time)
             
-            if frame_index == end_frame_index:
+            if displacement_end_time > end_time:
                 displacement_end_time = end_time
             
             duration = displacement_end_time - displacement_start_time
@@ -916,6 +913,7 @@ class ActionFactory():
         return return_attack
     
     def _set_action_animations(self, action, animation, acceleration = Player.ACCELERATION):
+        
         action.right_animation = self.crte_player_animation(animation)
         action.right_animation.set_animation_point_path_data(Player.ACCELERATION)
         action.right_animation.set_animation_reference_point_path_data(acceleration,
@@ -927,8 +925,7 @@ class ActionFactory():
     
     def crte_player_animation(self, animation):
         rtn_animation = copy.deepcopy(animation)
-        rtn_animation.set_animation_height(Player.ANIMATION_HEIGHT, \
-                                           Player.REFERENCE_HEIGHT)
+        rtn_animation.scale(.8)
         rtn_animation.set_frame_deltas()
         rtn_animation.set_animation_deltas()
         

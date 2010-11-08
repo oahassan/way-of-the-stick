@@ -546,6 +546,10 @@ class Animation:
                 scale = relative_height / frame.image_height()
                 frame.scale(scale)
     
+    def scale(self, scale):
+        for frame in self.frames:
+            frame.scale(scale)
+    
     def set_frame_positions(self, reference_pos):
         """sets the position of each frame with respect to the reference
         position"""
@@ -639,15 +643,18 @@ class Animation:
             if frame_index == start_frame_index:
                 displacement_start_time = start_time
                 start_time_difference = start_time - self.frame_start_times[frame_index]
-                displacement_end_time = displacement_start_time + self.frame_times[frame_index] - start_time_difference
+                displacement_end_time = self.frame_start_times[frame_index] + self.frame_times[frame_index]
             
-            if frame_index == end_frame_index:
+            if displacement_end_time > end_time:
                 displacement_end_time = end_time
             
-            displacement = self.calculate_point_displacement(frame_index, \
-                                                             point_id, \
-                                                             displacement_start_time, \
-                                                             displacement_end_time)
+            displacement = \
+                self.calculate_point_displacement(
+                    frame_index,
+                    point_id,
+                    displacement_start_time,
+                    displacement_end_time
+                )
             x_displacement += displacement[0]
             y_displacement += displacement[1]
         
@@ -674,21 +681,34 @@ class Animation:
         # if self.point_names[stick.PointNames.RIGHT_FOOT] == point_id:
             # print([acceleration,frame_initial_velocity])
         
-        strat_time_velocity = (self.calculate_velocity(acceleration[0], \
-                                                       frame_initial_velocity[0], \
-                                                       used_frame_time), \
-                               self.calculate_velocity(acceleration[1], \
-                                                       frame_initial_velocity[1], \
-                                                       used_frame_time))
+        start_time_velocity = \
+            (
+                self.calculate_velocity(
+                    acceleration[0],
+                    frame_initial_velocity[0],
+                    used_frame_time
+                ),
+                self.calculate_velocity(
+                    acceleration[1],
+                    frame_initial_velocity[1],
+                    used_frame_time
+                )
+            )
         
         duration = end_time - start_time
         
-        x_displacement = self.calculate_displacement(acceleration[0], \
-                                                     strat_time_velocity[0], \
-                                                     duration)
-        y_displacement = self.calculate_displacement(acceleration[1], \
-                                                     strat_time_velocity[1], \
-                                                     duration)
+        x_displacement = \
+            self.calculate_displacement(
+                acceleration[0],
+                start_time_velocity[0],
+                duration
+            )
+        y_displacement = \
+            self.calculate_displacement(
+                acceleration[1],
+                start_time_velocity[1],
+                duration
+            )
         
         return (x_displacement, y_displacement)
     
@@ -769,6 +789,7 @@ class Animation:
         
         acceleration: maximum acceleration allowed in pixels per millisecond
         gravity: constant acceleration of gravity"""
+        
         self.gravity = gravity
         self.jump_intervals = self.get_jump_frame_intervals()
         self.jump_interval_durations = self.get_jump_interval_durations(gravity, self.jump_intervals)
@@ -803,7 +824,7 @@ class Animation:
                 mathfuncs.sign(
                     next_frame_reference_position[0] - current_frame_reference_position[0]
                 )
-            x_displacement = displacement_sign * self.get_animation_x_displacement(frame_index)
+            x_displacement = self.get_animation_x_displacement(frame_index) #displacement_sign * self.get_animation_x_displacement(frame_index)
             #x_acceleration = mathfuncs.sign(x_displacement)*acceleration
             x_acceleration = 0
             
@@ -837,16 +858,18 @@ class Animation:
         """returns the smallest delta for each point in the given frame_index from the
         previous frame_index"""
         
-        if frame_index == 0:
+        if frame_index == len(self.frames) - 1:
             return 0
         
-        return_delta = abs(self.animation_deltas[frame_index].values()[0][0])
+        return self.frames[frame_index + 1].get_reference_position()[0] - self.frames[frame_index].get_reference_position()[0]
         
-        for delta in self.animation_deltas[frame_index].values():
-            if abs(delta[0]) < abs(return_delta):
-                return_delta = abs(delta[0])
+        # return_delta = abs(self.animation_deltas[frame_index].values()[0][0])
         
-        return return_delta
+        # for delta in self.animation_deltas[frame_index].values():
+            # if abs(delta[0]) < abs(return_delta):
+                # return_delta = abs(delta[0])
+        
+        # return return_delta
     
     def get_jump_frame_intervals(self):
         """returns a list of tuples for the starting and ending frames of jumps in an
@@ -1229,15 +1252,26 @@ class Animation:
         
         duration = -1
         
-        if acceleration[0] != 0:
-            x_velocity_final = self.calculate_velocity_without_time(initial_velocity[0],acceleration[0],displacement[0])
-            
-            duration = float(x_velocity_final - initial_velocity[0]) / acceleration[0]
+        if abs(displacement[0]) > abs(displacement[1]):
+            if acceleration[0] != 0:
+                x_velocity_final = self.calculate_velocity_without_time(initial_velocity[0],acceleration[0],displacement[0])
+                
+                duration = float(x_velocity_final - initial_velocity[0]) / acceleration[0]
+            else:
+                if acceleration[1] != 0:
+                    y_velocity_final = self.calculate_velocity_without_time(initial_velocity[1],acceleration[1],displacement[1])
+                    
+                    duration = float(y_velocity_final - initial_velocity[1]) / acceleration[1]
         else:
             if acceleration[1] != 0:
-                y_velocity_final = self.calculate_velocity_without_time(initial_velocity[1],acceleration[1],displacement[1])
+                x_velocity_final = self.calculate_velocity_without_time(initial_velocity[1],acceleration[1],displacement[1])
                 
-                duration = float(y_velocity_final - initial_velocity[1]) / acceleration[1]
+                duration = float(x_velocity_final - initial_velocity[1]) / acceleration[1]
+            else:
+                if acceleration[0] != 0:
+                    y_velocity_final = self.calculate_velocity_without_time(initial_velocity[0],acceleration[0],displacement[0])
+                    
+                    duration = float(y_velocity_final - initial_velocity[0]) / acceleration[0]
         
         # x_velocity_final = min(32,math.sqrt(initial_velocity[0]**2 + ((2 * acceleration[0])*(displacement[0]))))
         
