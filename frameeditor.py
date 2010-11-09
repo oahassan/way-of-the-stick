@@ -188,6 +188,14 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
         
         if currentTool != play_tool:
             animation.draw_frame(surface)
+            
+            pygame.draw.line(
+                surface,
+                (255, 255, 255),
+                (0, 500),
+                (800, 500),
+                5
+            )
         
         animation.draw_frames(surface, (20, 540))
     
