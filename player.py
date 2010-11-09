@@ -54,7 +54,7 @@ class PlayerStates():
 class Player():
     ANIMATION_HEIGHT = 100
     REFERENCE_HEIGHT = 400
-    ACCELERATION = .00400
+    ACCELERATION = .00300
     
     def __init__(self, position):
         self.player_type = None
@@ -950,21 +950,21 @@ def draw_model(player):
     
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
-            draw_outer_point(point, player.color)
+            draw_outer_point(point, player.outline_color)
     
     for name, line in player.model.lines.iteritems():
         if name == stick.LineNames.HEAD:
-            draw_outer_circle(line, player.color)
+            draw_outer_circle(line, player.outline_color)
         else:
             draw_outline(line, player)
     
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
-            draw_inner_point(point, player.color)
+            draw_inner_point(point, player.health_color)
     
     for name, line in player.model.lines.iteritems():
         if name == stick.LineNames.HEAD:
-            draw_inner_circle(line, player.color)
+            draw_inner_circle(line, player.health_color)
         else:
             draw_health_line(line, player)
 
@@ -982,7 +982,7 @@ def draw_health_line(line, player):
                     player.health_color, \
                     health_point1, \
                     health_point2, \
-                    int(5))
+                    int(10))
 
 def draw_outline(line, player):
     point1 = line.endPoint1.pixel_pos()
@@ -992,7 +992,7 @@ def draw_outline(line, player):
                     player.outline_color, \
                     point1, \
                     point2, \
-                    int(7))
+                    int(14))
 
 def draw_outer_circle(circle, color):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
@@ -1012,7 +1012,7 @@ def draw_inner_circle(circle, color):
     pygame.draw.circle(gamestate.screen, \
                       (0, 100, 0), \
                       (int(pos[0]), int(pos[1])), \
-                      int(radius - 1))
+                      int(radius - 2))
 
 def draw_outer_point(point, color):
     position = point.pixel_pos()
@@ -1020,7 +1020,7 @@ def draw_outer_point(point, color):
     pygame.draw.circle(gamestate.screen, \
                        color, \
                        position, \
-                       int(3))
+                       int(7))
 
 def draw_inner_point(point, color):
     """Draws a point on a surface
@@ -1032,4 +1032,4 @@ def draw_inner_point(point, color):
     pygame.draw.circle(gamestate.screen, \
                        color, \
                        position, \
-                       int(3))
+                       int(5))
