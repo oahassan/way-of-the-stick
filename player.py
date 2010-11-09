@@ -935,7 +935,7 @@ class ActionFactory():
     
     def crte_player_animation(self, animation):
         rtn_animation = copy.deepcopy(animation)
-        rtn_animation.scale(.8)
+        rtn_animation.scale(.7)
         rtn_animation.set_frame_deltas()
         rtn_animation.set_animation_deltas()
         
@@ -950,23 +950,27 @@ def draw_model(player):
     
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
-            draw_point(point, player.color)
+            draw_outer_point(point, player.color)
     
     for name, line in player.model.lines.iteritems():
         if name == stick.LineNames.HEAD:
-            draw_circle(line, player.color)
+            draw_outer_circle(line, player.color)
         else:
-            draw_line(line, player)
+            draw_outline(line, player)
+    
+    for name, point in player.model.points.iteritems():
+        if name != stick.PointNames.HEAD_TOP:
+            draw_inner_point(point, player.color)
+    
+    for name, line in player.model.lines.iteritems():
+        if name == stick.LineNames.HEAD:
+            draw_inner_circle(line, player.color)
+        else:
+            draw_health_line(line, player)
 
-def draw_line(line, player):
+def draw_health_line(line, player):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
-    
-    pygame.draw.line(gamestate.screen, \
-                    player.outline_color, \
-                    point1, \
-                    point2, \
-                    int(7))
     
     health_point1 = point1
     health_level = float(player.health_meter) / player.health_max
@@ -980,7 +984,17 @@ def draw_line(line, player):
                     health_point2, \
                     int(5))
 
-def draw_circle(circle, color):
+def draw_outline(line, player):
+    point1 = line.endPoint1.pixel_pos()
+    point2 = line.endPoint2.pixel_pos()
+    
+    pygame.draw.line(gamestate.screen, \
+                    player.outline_color, \
+                    point1, \
+                    point2, \
+                    int(7))
+
+def draw_outer_circle(circle, color):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
@@ -989,25 +1003,33 @@ def draw_circle(circle, color):
                       color, \
                       (int(pos[0]), int(pos[1])), \
                       int(radius))
+
+def draw_inner_circle(circle, color):
+    radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
+                                      circle.endPoint2.pos))
+    pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
     
     pygame.draw.circle(gamestate.screen, \
                       (0, 100, 0), \
                       (int(pos[0]), int(pos[1])), \
                       int(radius - 1))
 
-def draw_point(point, color):
-    """Draws a point on a surface
-    
-    surface: the pygame surface to draw the point on"""
-    #pygame.draw.rect(gamestate.screen, (100,100,100),point.get_enclosing_rect(),1)
+def draw_outer_point(point, color):
     position = point.pixel_pos()
     
     pygame.draw.circle(gamestate.screen, \
                        color, \
                        position, \
                        int(3))
+
+def draw_inner_point(point, color):
+    """Draws a point on a surface
+    
+    surface: the pygame surface to draw the point on"""
+    
+    position = point.pixel_pos()
     
     pygame.draw.circle(gamestate.screen, \
-                       (0,0,0), \
+                       color, \
                        position, \
-                       int(2))
+                       int(3))
