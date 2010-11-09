@@ -824,20 +824,21 @@ class Animation:
                 mathfuncs.sign(
                     next_frame_reference_position[0] - current_frame_reference_position[0]
                 )
-            x_displacement = self.get_animation_x_displacement(frame_index) #displacement_sign * self.get_animation_x_displacement(frame_index)
+            x_displacement = self.get_animation_x_displacement(frame_index)
+            
+            #Set initial velocity to 0 if the x displacement changes direction.  This
+            #avoids having to make the figure slow down in the previous frame and creates
+            #a more dramatic movement.
+            if (frame_index != 0 and
+            mathfuncs.sign(x_displacement) != mathfuncs.sign(x_displacements[frame_index - 1])):
+                x_initial_velocities[frame_index] = 0
+            
             #x_acceleration = mathfuncs.sign(x_displacement)*acceleration
             x_acceleration = 0
             
             v0 = x_initial_velocities[frame_index]
             t = self.frame_times[frame_index]
             x_acceleration = (2*(x_displacement - (v0*t)))/(t**2)
-            
-            ##Set initial velocity to 0 if the x displacement changes direction.  This
-            ##avoids having to make the figure slow down in the previous frame and creates
-            ##a more dramatic movement.
-            #if (frame_index != 0 and
-            #mathfuncs.sign(x_displacement) != mathfuncs.sign(x_displacements[frame_index - 1])):
-            #    x_initial_velocities[frame_index] = 0
             
             ##Calculate the final velocity and save it as the initial velocity of the next frame
             #final_velocity = self.calculate_velocity_without_time(initial_velocity=x_initial_velocities[frame_index],
