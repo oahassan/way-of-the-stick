@@ -384,6 +384,7 @@ class Action():
         self.right_animation = None
         self.left_animation = None
         self.animation = None
+        self.last_frame_index = 0
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
@@ -398,9 +399,11 @@ class Action():
         else:
             player.model.animation_run_time += player.model.time_passed
         
-        point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
+        frame_index = self.animation.get_frame_index_at_time(end_time)
+        player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
         
-        player.model.set_point_position_in_place(point_deltas)
+        #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
+        #player.model.set_point_position_in_place(point_deltas)
         
         player.apply_physics(end_time - start_time)
         
@@ -416,6 +419,8 @@ class Action():
         return change_state
     
     def set_player_state(self, player, direction):
+        self.last_frame_index = 0
+        
         player.action = self
         player.direction = direction
         player.model.animation_run_time = 0     
@@ -706,9 +711,11 @@ class Attack(Action):
         else:
             player.model.animation_run_time += player.model.time_passed
         
-        point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
+        frame_index = self.animation.get_frame_index_at_time(end_time)
+        player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
         
-        player.model.set_point_position_in_place(point_deltas)
+        #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
+        #player.model.set_point_position_in_place(point_deltas)
         
         if self.use_animation_physics:
             self.apply_animation_physics(player, start_time, end_time)
@@ -723,6 +730,7 @@ class Attack(Action):
         player.action = self
         player.model.animation_run_time = 0     
         player.current_attack = self
+        self.last_frame_index = 0
         
         if player.direction == PlayerStates.FACING_LEFT:
             self.animation = self.right_animation
@@ -736,11 +744,9 @@ class Attack(Action):
         #if the player was in a grounded state shift back to the ground after setting the initial point positions
         if previous_state in [PlayerStates.WALKING, PlayerStates.STANDING, PlayerStates.CROUCHING, PlayerStates.RUNNING]:
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
-            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
         
         elif not player.is_aerial():
-            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
         else:
