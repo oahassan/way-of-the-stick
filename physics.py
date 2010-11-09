@@ -235,7 +235,7 @@ class Model(Object):
         width = bottom_right_x - top_left_x
         height = bottom_right_y - top_left_y
         
-        return ((top_left_x, top_left_y), (width, height))
+        return ((top_left_x - 5, top_left_y - 5), (width + 10, height + 10))
     
     def get_point_relative_position(self, point_name):
         """gets the position of a point relative to the reference point"""
