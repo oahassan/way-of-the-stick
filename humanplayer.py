@@ -14,6 +14,7 @@ class HumanPlayer(player.Player):
         self.input_action = None
         self.bound_keys = []
         self.key_bindings = {}
+        self.negating_keys = {} #a dictionary for keys that can't be pressed simultaneously
         self.player_type = player.PlayerTypes.HUMAN
         self.controls = None
         self.attack_keys = []
@@ -28,6 +29,11 @@ class HumanPlayer(player.Player):
                 self.input_action = None
         
         for key in wotsuievents.keys_pressed:
+            if (self.input_action != None and
+            key in self.negating_keys[self.input_action.key]):
+                #This key can't be pressed at the same time as a currently pressed key
+                continue
+            
             if key in self.key_bindings.keys():
                 if self.is_aerial():
                     if key == pygame.K_UP:
@@ -138,6 +144,10 @@ class HumanPlayer(player.Player):
                                            crouch_key)
         self.key_bindings[crouch_key] = [crouch_action]
         
+        #set jump and crouch buttons as negating keys
+        self.add_negating_keys(jump_key, crouch_key)
+        self.add_negating_keys(crouch_key, jump_key)
+        
         #Set move right actions
         move_right_key = get_control_key(InputActionTypes.MOVE_RIGHT)
         walk_right_action = self.create_action(player.PlayerStates.WALKING, \
@@ -162,6 +172,10 @@ class HumanPlayer(player.Player):
                                              move_left_key)
         self.key_bindings[move_left_key] = [walk_left_action,run_left_action]
         
+        #set move left and move right buttons as negating keys
+        self.add_negating_keys(move_right_key, move_left_key)
+        self.add_negating_keys(move_left_key, move_right_key)
+        
         #Set attack actions
         for attack_type, attack_animation in moveset.attack_animations.iteritems():
             
@@ -174,6 +188,15 @@ class HumanPlayer(player.Player):
                 self.key_bindings[attack_key] = [input_action]
         
         self.actions[player.PlayerStates.STANDING].set_player_state(self)
+    
+    def add_negating_keys(self, key, negated_key):
+        """adds a two keys to the list of keys that can't be pressed simultaneously"""
+        
+        if key in self.negating_keys.keys():
+            self.negating_keys[key].append(negated_key)
+        
+        else:
+            self.negating_keys[key] = [negated_key]
     
     def create_action(self, action_type, animation = None, direction = None, key = None):
         return_action = None
