@@ -57,7 +57,7 @@ class TestPlayer(player.Player):
         return return_action
     
     def handle_animation_end(self):
-        self.time_passed = 0
+        self.model.time_passed = 0
         self.action.set_player_state(self)
         
         position = (250, gamestate.stage.ground.position[1] - self.model.height)
