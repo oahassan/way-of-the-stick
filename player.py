@@ -712,7 +712,14 @@ class Attack(Action):
             player.model.animation_run_time += player.model.time_passed
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
-        player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
+        
+        #set the point positions affects whether the player is grounded, so there are extra case statements here
+        #if the player was in a grounded state shift back to the ground after setting the initial point positions
+        if not player.is_aerial():
+            player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
+            player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
+        else:
+            player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
         
         #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         #player.model.set_point_position_in_place(point_deltas)
