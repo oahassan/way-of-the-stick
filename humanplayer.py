@@ -30,6 +30,7 @@ class HumanPlayer(player.Player):
         
         for key in wotsuievents.keys_pressed:
             if (self.input_action != None and
+            self.input_action.key in self.negating_keys.keys() and
             key in self.negating_keys[self.input_action.key]):
                 #This key can't be pressed at the same time as a currently pressed key
                 continue
