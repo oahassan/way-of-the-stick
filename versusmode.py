@@ -414,7 +414,31 @@ def get_overlap(attacker, receiver):
 def get_knockback_vector(attacker, attack_point):
     """get the direction and magnitude of the knockback"""
     
-    return attacker.get_point_position_change(attack_point.name)
+    return scale_up_knockback(attacker.get_point_position_change(attack_point.name))
+
+
+def scale_up_knockback(knockback_vector):
+    """increases the scale of a knockback vector if its too small to ensure
+    that the model is moved by the knockback"""
+    
+    minimax_component = 5
+    x_scale_factor = 5
+    y_scale_factor = 1
+    max_component = max(knockback_vector)
+    
+    scaled_x_component = knockback_vector[0]
+    scaled_y_component = knockback_vector[1]
+    
+    if max_component < minimax_component and max_component > 0:
+        
+        if knockback_vector[0] == max_component:
+            scaled_x_component = x_scale_factor
+            scaled_y_component = int((knockback_vector[1] / knockback_vector[0]) * y_scale_factor)
+        else:
+            scaled_y_component = y_scale_factor
+            scaled_x_component = int((knockback_vector[0] / knockback_vector[1]) * x_scale_factor)
+    
+    return scaled_x_component, scaled_y_component
 
 def get_interaction_points(receiver, colliding_lines):
     attacker_line_index = 0
