@@ -34,6 +34,6 @@ def sign(number):
     if number == 0:
         return_sign = 0
     else:
-        return_sign = number / abs(number)
+        return_sign = int(number / abs(number))
     
     return return_sign

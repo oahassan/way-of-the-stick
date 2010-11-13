@@ -422,8 +422,8 @@ def scale_up_knockback(knockback_vector):
     that the model is moved by the knockback"""
     
     minimax_component = 5
-    x_scale_factor = 5
-    y_scale_factor = 1
+    x_scale_factor = .5
+    y_scale_factor = .1
     max_component = max(knockback_vector)
     
     scaled_x_component = knockback_vector[0]

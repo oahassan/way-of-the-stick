@@ -16,7 +16,7 @@ class Frame:
         self.circle_dictionary = {}
         self.point_to_lines = {}
         self.point_to_circles = {}
-        self.reference_pos = None
+        self.reference_pos = (0,0)
     
     def clear(self):
         """removes all points, lines, and circles from a frame"""
@@ -25,7 +25,7 @@ class Frame:
         self.circle_dictionary = {}
         self.point_to_lines = {}
         self.point_to_circles = {}
-        self.reference_pos = None
+        self.reference_pos = (0,0)
     
     def points(self):
         """Returns all the points in the point dictionary"""
@@ -242,10 +242,10 @@ class Frame:
     def get_top_left_and_bottom_right(self):
         """Finds the top left and bottom right containers of a rectangle containg the
         points and lines of the frame"""
-        top_left_x = None
-        top_left_y = None
-        bottom_right_x = None
-        bottom_right_y = None
+        top_left_x = self.lines()[0].endPoint1.pos[0]
+        top_left_y = self.lines()[0].endPoint1.pos[1]
+        bottom_right_x = self.lines()[0].endPoint1.pos[0]
+        bottom_right_y = self.lines()[0].endPoint1.pos[1]
         
         for line in self.lines():
             top_left_and_bottom_right = line.get_top_left_and_bottom_right()

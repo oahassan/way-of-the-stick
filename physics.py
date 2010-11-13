@@ -214,24 +214,19 @@ class Model(Object):
     
     def get_enclosing_rect(self):
         """returns a tuple for the enclosing rect as a pygame rect"""
-        top_left_x = None
-        top_left_y = None
-        bottom_right_x = None
-        bottom_right_y = None
+        top_left_x = self.position[0]
+        top_left_y = self.position[1]
+        bottom_right_x = self.position[0]
+        bottom_right_y = self.position[1]
         
         for line in self.lines.values():
             top_left, bottom_right = line.get_top_left_and_bottom_right()
-            
-            if top_left_x == None:
-                top_left_x = top_left[0]
-                top_left_y = top_left[1]
-                bottom_right_x = bottom_right[0]
-                bottom_right_y = bottom_right[1]
-            else:
-                top_left_x = min(top_left_x,top_left[0])
-                top_left_y = min(top_left_y,top_left[1])
-                bottom_right_x = max(bottom_right_x,bottom_right[0])
-                bottom_right_y = max(bottom_right_y,bottom_right[1])
+
+            top_left_x = min(top_left_x,top_left[0])
+            top_left_y = min(top_left_y,top_left[1])
+            bottom_right_x = max(bottom_right_x,bottom_right[0])
+            bottom_right_y = max(bottom_right_y,bottom_right[1])
+        
         width = bottom_right_x - top_left_x
         height = bottom_right_y - top_left_y
         
@@ -251,10 +246,10 @@ class Model(Object):
     def get_top_left_and_bottom_right(self):
         """Finds the top left and bottom right containers of a rectangle containg the
         points and lines of the frame"""
-        top_left_x = None
-        top_left_y = None
-        bottom_right_x = None
-        bottom_right_y = None
+        top_left_x = self.position[0]
+        top_left_y = self.position[1]
+        bottom_right_x = self.position[0]
+        bottom_right_y = self.position[1]
         
         for line in self.lines.values():
             top_left, bottom_right = line.get_top_left_and_bottom_right()
@@ -355,7 +350,7 @@ class Model(Object):
         """Incerements the position of each point by point specific deltas without 
         changing the reference point"""
         
-        current_position = (self.position[0],self.position[1])
+        current_position = self.get_reference_position() #(self.position[0],self.position[1])
         
         for point_name, pos_delta in deltas.iteritems():
             
@@ -389,7 +384,7 @@ class Model(Object):
         self.set_dimensions()
     
     def shift(self, deltas):
-        position = self.position
+        position = self.get_reference_position() #self.position
         self.position = (position[0] + deltas[0], \
                          position[1] + deltas[1])
         

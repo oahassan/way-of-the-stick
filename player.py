@@ -106,6 +106,17 @@ class Player():
         
         self.set_outline_color()
         
+        enclosing_rect = self.model.get_enclosing_rect()
+        
+        if (enclosing_rect == None or
+        enclosing_rect[0] == None or
+        enclosing_rect[0][0] == None or
+        enclosing_rect[0][1] == None or
+        enclosing_rect[1] == None or
+        enclosing_rect[1][0] == None or
+        enclosing_rect[1][1] == None):
+            import pdb;pdb.set_trace()
+        
         draw_model(self)
         
         if self.dash_timer < self.dash_timeout:
