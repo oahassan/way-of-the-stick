@@ -421,22 +421,37 @@ def scale_up_knockback(knockback_vector):
     """increases the scale of a knockback vector if its too small to ensure
     that the model is moved by the knockback"""
     
-    minimax_component = 5
-    x_scale_factor = .5
-    y_scale_factor = .1
-    max_component = max(knockback_vector)
+    minimum_knockback = .5
+    maximum_knockback = 4
+    
+    x_minimum_knockback = 2
+    y_minimum_knockback = 1
+    
+    x_maximum_knockback = 4
+    y_maximum_knockback = 2
+    
+    max_knockback_component = max(knockback_vector)
     
     scaled_x_component = knockback_vector[0]
     scaled_y_component = knockback_vector[1]
     
-    if max_component < minimax_component and max_component > 0:
+    if max_knockback_component < minimum_knockback and max_knockback_component > 0:
         
-        if knockback_vector[0] == max_component:
-            scaled_x_component = x_scale_factor
-            scaled_y_component = int((knockback_vector[1] / knockback_vector[0]) * y_scale_factor)
+        if knockback_vector[0] == max_knockback_component:
+            scaled_x_component = x_minimum_knockback
+            scaled_y_component = int((knockback_vector[1] / knockback_vector[0]) * y_minimum_knockback)
         else:
-            scaled_y_component = y_scale_factor
-            scaled_x_component = int((knockback_vector[0] / knockback_vector[1]) * x_scale_factor)
+            scaled_y_component = y_minimum_knockback
+            scaled_x_component = int((knockback_vector[0] / knockback_vector[1]) * x_minimum_knockback)
+    
+    if max_knockback_component > maximum_knockback:
+        
+        if knockback_vector[0] == max_knockback_component:
+            scaled_x_component = x_maximum_knockback
+            scaled_y_component = int((knockback_vector[1] / knockback_vector[0]) * y_maximum_knockback)
+        else:
+            scaled_y_component = y_maximum_knockback
+            scaled_x_component = int((knockback_vector[0] / knockback_vector[1]) * x_maximum_knockback)
     
     return scaled_x_component, scaled_y_component
 
