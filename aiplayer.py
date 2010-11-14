@@ -92,12 +92,17 @@ class Bot(player.Player):
         
         self.direction = direction
         attack = self.get_in_range_attack(enemy)
+        next_action = None
         
         if attack != None:
             if attack.test_state_change(self):
-                attack.set_player_state(self)
+                next_action = attack
         else:
-            self.move_towards_enemy(enemy)
+            next_action = self.move_towards_enemy(enemy)
+        
+        if (next_action != None
+        and next_action != self.action):
+            self.transition(next_action)
     
     def move_towards_enemy(self, enemy):
         x_distance = abs(enemy.model.position[0] - self.model.position[0])
@@ -126,7 +131,9 @@ class Bot(player.Player):
         
         if ((movement != None) and
             (movement.test_state_change(self))):
-            movement.set_player_state(self)
+            return movement
+        else:
+            return None
     
     def get_in_range_attack(self, enemy):
         in_range_attacks = []

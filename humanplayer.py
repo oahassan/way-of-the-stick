@@ -25,7 +25,7 @@ class HumanPlayer(player.Player):
         if (self.input_action != None and
             wotsuievents.key_released(self.input_action.key)):
                 if self.input_action.key_release_action != None:
-                    self.input_action.key_release_action.set_player_state(self)
+                    self.transition(self.input_action.key_release_action)
                 self.input_action = None
         
         for key in wotsuievents.keys_pressed:
@@ -55,7 +55,10 @@ class HumanPlayer(player.Player):
     def handle_key_input(self,key):
         for input_action in self.key_bindings[key]:    
             if input_action.action.test_state_change(self):
-                input_action.action.set_player_state(self)
+                if input_action.action != self.action:
+                    self.transition(input_action.action)
+                else:
+                    input_action.action.set_player_state(self)
                 self.input_action = input_action
                 break
     

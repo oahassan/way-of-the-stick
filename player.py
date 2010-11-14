@@ -173,14 +173,14 @@ class Player():
     
     def handle_animation_end(self):
         if self.action.action_state == PlayerStates.JUMPING:
-            self.actions[PlayerStates.FLOATING].set_player_state(self)
+            self.transition(self.actions[PlayerStates.FLOATING])
         elif self.action.action_state == PlayerStates.LANDING:
-            self.set_neutral_state()
+            self.transition(self.get_neutral_state())
         elif self.action.action_state == PlayerStates.ATTACKING:
             self.current_attack = None
-            self.transition()
+            self.transition(self.get_neutral_state())
         elif self.action.action_state == PlayerStates.TRANSITION:
-            self.actions[self.action.next_action_state].set_player_state(self)
+            self.action.next_action.set_player_state(self)
         elif self.action.action_state == PlayerStates.STUNNED:
             #self.actions[PlayerStates.TRANSITION].init_transition(self.action, self.get_neutral_state())
             self.set_neutral_state()
@@ -195,8 +195,8 @@ class Player():
         elif self.action.action_state == PlayerStates.RUNNING:
             self.action.set_player_state(self)
     
-    def transition(self):
-        self.actions[PlayerStates.TRANSITION].init_transition(self.action, self.get_neutral_state())
+    def transition(self, next_state):
+        self.actions[PlayerStates.TRANSITION].init_transition(self.action, next_state)
         self.actions[PlayerStates.TRANSITION].set_player_state(self)
     
     def set_neutral_state(self):
@@ -485,11 +485,11 @@ class Action():
 class Transition(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.TRANSITION)
-        self.next_action_state = None
+        self.next_action = None
     
     def init_transition(self, current_action, next_action):
         self.set_animation(current_action, next_action)
-        self.next_action_state = next_action.action_state
+        self.next_action = next_action
     
     def set_animation(self, current_action, next_action):
         last_frame_index = len(current_action.animation.frames) - 1
