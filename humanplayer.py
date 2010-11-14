@@ -125,6 +125,8 @@ class HumanPlayer(player.Player):
         for movement in player.PlayerStates.UNBOUND_MOVEMENTS:
             if movement == player.PlayerStates.STUNNED:
                 self.actions[movement] = self.create_action(movement)
+            elif movement == player.PlayerStates.TRANSITION:
+                self.actions[movement] = player.Transition()
             else:
                 movement_animation = moveset.movement_animations[movement]
                 self.actions[movement] = self.create_action(movement, movement_animation)

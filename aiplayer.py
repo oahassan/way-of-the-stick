@@ -56,9 +56,12 @@ class Bot(player.Player):
         float_animation = moveset.movement_animations[player.PlayerStates.FLOATING]
         self.actions[player.PlayerStates.FLOATING] = factory.create_float(float_animation)
         
-        #load stunned animation
+        #load stunned action
         self.actions[player.PlayerStates.STUNNED] = factory.create_stun()
         
+        #load transition action
+        self.actions[player.PlayerStates.TRANSITION] = player.Transition()
+                
         #load crouch animation
         crouch_animation = moveset.movement_animations[player.PlayerStates.CROUCHING]
         crouch_action = factory.create_crouch(crouch_animation)
@@ -78,7 +81,7 @@ class Bot(player.Player):
         self.actions[player.PlayerStates.STANDING].set_player_state(self)
     
     def handle_events(self, enemy):
-        self.set_action(enemy)
+        #self.set_action(enemy)
         player.Player.handle_events(self)
     
     def set_action(self, enemy):

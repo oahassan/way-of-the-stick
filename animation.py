@@ -174,6 +174,16 @@ class Frame:
             new_y = position[1] + pos_delta[1]
             point.pos = (new_x, new_y)
     
+    def set_position(self, position):
+        """moves the frames' reference position to the given position"""
+        reference_position = self.get_reference_position()
+        
+        deltas = \
+            (position[0] - reference_position[0],
+            position[1] - reference_position[1])
+        
+        self.move(deltas)
+    
     def scale(self, scale):
         """scales the lines in a frame by the given ratio
         

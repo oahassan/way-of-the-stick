@@ -2,6 +2,7 @@ import copy
 import pygame
 
 import gamestate
+import animation
 import animationexplorer
 import physics
 import mathfuncs
@@ -37,25 +38,29 @@ class PlayerStates():
     MOVEMENTS = [STANDING,WALKING,RUNNING,JUMPING,FLOATING, \
                  LANDING,CROUCHING]
     
-    UNBOUND_MOVEMENTS = [STANDING,FLOATING,LANDING,STUNNED]
+    UNBOUND_MOVEMENTS = [STANDING,FLOATING,LANDING,STUNNED, \
+                        TRANSITION]
     
-    PRESSED_KEY_STATE_TRANSITIONS = { \
-        STANDING : [WALKING,RUNNING,JUMPING,CROUCHING,ATTACKING], \
-        WALKING : [WALKING,STANDING,JUMPING,CROUCHING,ATTACKING], \
-        RUNNING : [RUNNING,STANDING,JUMPING,CROUCHING,ATTACKING], \
-        CROUCHING : [STANDING,ATTACKING], \
-        JUMPING : [FLOATING,LANDING,ATTACKING], \
-        LANDING : [STANDING,CROUCHING,ATTACKING,JUMPING,WALKING], \
-        FLOATING : [LANDING,ATTACKING], \
-        ATTACKING : [STANDING, FLOATING], \
-        STUNNED : [FLOATING,LANDING,STANDING], \
-        BLOCKING : [STANDING,CROUCHING] \
+    PRESSED_KEY_STATE_TRANSITIONS = {
+        STANDING : [WALKING,RUNNING,JUMPING,CROUCHING,ATTACKING],
+        WALKING : [WALKING,STANDING,JUMPING,CROUCHING,ATTACKING],
+        RUNNING : [RUNNING,STANDING,JUMPING,CROUCHING,ATTACKING],
+        CROUCHING : [STANDING,ATTACKING],
+        JUMPING : [FLOATING,LANDING,ATTACKING],
+        LANDING : [STANDING,CROUCHING,ATTACKING,JUMPING,WALKING],
+        FLOATING : [LANDING,ATTACKING],
+        ATTACKING : [STANDING, FLOATING],
+        STUNNED : [FLOATING,LANDING,STANDING],
+        BLOCKING : [STANDING,CROUCHING],
+        TRANSITION : [STANDING,WALKING,RUNNING,JUMPING,FLOATING,
+            LANDING,CROUCHING,ATTACKING,BLOCKING]
     }
 
 class Player():
     ANIMATION_HEIGHT = 100
     REFERENCE_HEIGHT = 400
     ACCELERATION = .00300
+    TRANSITION_ACCELERATION = .006
     
     def __init__(self, position):
         self.player_type = None
@@ -174,11 +179,12 @@ class Player():
             self.set_neutral_state()
         elif self.action.action_state == PlayerStates.ATTACKING:
             self.current_attack = None
-            self.set_neutral_state()
-        elif self.action.action_state == PlayerStates.STUNNED:
-            if self.action.test_state_change(self):
-                self.set_neutral_state()
+            self.actions[PlayerStates.TRANSITION].init_transition(self.action, self.get_neutral_state())
+            self.actions[PlayerStates.TRANSITION].set_player_state(self)
         elif self.action.action_state == PlayerStates.TRANSITION:
+            self.actions[self.action.next_action_state].set_player_state(self)
+        elif self.action.action_state == PlayerStates.STUNNED:
+            #self.actions[PlayerStates.TRANSITION].init_transition(self.action, self.get_neutral_state())
             self.set_neutral_state()
         elif self.action.action_state == PlayerStates.STANDING:
             self.action.set_player_state(self)
@@ -192,13 +198,16 @@ class Player():
             self.action.set_player_state(self)
     
     def set_neutral_state(self):
+        self.get_neutral_state().set_player_state(self)
+    
+    def get_neutral_state(self):
         if self.get_player_state() == PlayerStates.LANDING:
-            self.actions[PlayerStates.STANDING].set_player_state(self)
+            return self.actions[PlayerStates.STANDING]
         else:
             if self.is_aerial():
-                self.actions[PlayerStates.FLOATING].set_player_state(self)
+                return self.actions[PlayerStates.FLOATING]
             else:
-                self.actions[PlayerStates.STANDING].set_player_state(self)
+                return self.actions[PlayerStates.STANDING]
     
     def set_velocity(self):
         velocity = self.model.velocity
@@ -414,7 +423,8 @@ class Action():
         if end_time >= self.animation.animation_length:
             end_time = self.animation.animation_length
             player.model.animation_run_time = end_time
-            player.model.time_passed = start_time + player.model.time_passed - self.animation.animation_length
+            player.model.time_passed = \
+                start_time + player.model.time_passed - self.animation.animation_length
             # player.model.time_passed = 0
         else:
             player.model.animation_run_time += player.model.time_passed
@@ -470,6 +480,73 @@ class Action():
         if player.model.time_passed > 0:
             self.move_player(player)
 
+class Transition(Action):
+    def __init__(self):
+        Action.__init__(self, PlayerStates.TRANSITION)
+        self.next_action_state = None
+    
+    def init_transition(self, current_action, next_action):
+        self.set_animation(current_action, next_action)
+        self.next_action_state = next_action.action_state
+    
+    def set_animation(self, current_action, next_action):
+        last_frame_index = len(current_action.animation.frames) - 1
+        first_frame = \
+            copy.deepcopy(
+                current_action.animation.frames[last_frame_index]
+            )
+        
+        last_frame = self.create_last_frame(first_frame, current_action, next_action)
+        
+        last_frame.set_position(first_frame.get_reference_position())
+        
+        transition_animation = animation.Animation()
+        
+        transition_animation.point_names = current_action.right_animation.point_names
+        transition_animation.frames = [first_frame, last_frame]
+        transition_animation.set_frame_deltas()
+        transition_animation.set_animation_deltas()
+        transition_animation.set_animation_point_path_data(Player.TRANSITION_ACCELERATION)
+        
+        self.right_animation = transition_animation
+        self.left_animation = transition_animation
+    
+    def create_last_frame(self, first_frame, current_action, next_action):
+        """Creates a frame with ids that match the first frame"""
+        
+        last_frame = copy.deepcopy(first_frame)
+        last_frame_point_positions = next_action.right_animation.frame_deltas[0]
+        
+        for point_name, point_id in current_action.right_animation.point_names.iteritems():
+            position = last_frame_point_positions[point_name]
+            last_frame.point_dictionary[point_id].pos = position
+        
+        return last_frame
+        
+    def move_player(self, player):
+        """place holder for function that sets the new position of the model"""
+        start_time = player.model.animation_run_time
+        end_time = start_time + player.model.time_passed
+        
+        if end_time >= self.animation.animation_length:
+            end_time = self.animation.animation_length
+            player.model.animation_run_time = end_time
+            player.model.time_passed = \
+                start_time + player.model.time_passed - self.animation.animation_length
+            
+        else:
+            player.model.animation_run_time += player.model.time_passed
+        
+        point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
+        player.model.set_point_position_in_place(point_deltas)
+        
+        player.apply_physics(end_time - start_time)
+        
+        if player.model.animation_run_time >= self.animation.animation_length:
+            player.handle_animation_end()
+    def set_player_state(self, player):
+        Action.set_player_state(self, player, player.direction)
+    
 class InputAction():
     def __init__(self, action, key_release_action, key):
         self.action = action
