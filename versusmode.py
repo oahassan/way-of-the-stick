@@ -416,6 +416,13 @@ def get_knockback_vector(attacker, attack_point):
     
     return scale_knockback(attacker.get_point_position_change(attack_point.name))
 
+def get_pull_point_deltas(attacker, attack_point):
+    """gets the knockback applied to the interaction point to move the lines in the
+    model"""
+    
+    knockback_vector = attacker.get_point_position_change(attack_point.name)
+    
+    return knockback_vector
 
 def scale_knockback(knockback_vector):
     """binds the scale of a knockback vector to control stun animation"""
@@ -474,8 +481,9 @@ def apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitb
     # print('receiver: ' + get_player(receiver))
     # print('attacker: ' + get_player(attacker))
     attack_point = interaction_points[0]
-    receiver.pull_point = interaction_points[1]
     receiver.knockback_vector = get_knockback_vector(attacker, attack_point)
+    receiver.interaction_point = interaction_points[1]
+    receiver.interaction_vector = get_pull_point_deltas(attacker, attack_point)
     receiver.model.accelerate(receiver.knockback_vector[0], \
                               receiver.knockback_vector[1])
 

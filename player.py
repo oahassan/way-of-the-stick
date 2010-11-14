@@ -79,7 +79,8 @@ class Player():
         self.aerial_acceleration = .04
         self.actions = {}
         self.knockback_vector = (0,0)
-        self.pull_point = None
+        self.interaction_vector = (0,0)
+        self.interaction_point = None
         self.knockback_multiplier = 4
         self.health_max = 2000
         self.health_meter = self.health_max
@@ -318,6 +319,20 @@ class Player():
     
     def set_pull_point(self, point):
         self.pull_point = point
+    
+    def pull_point(self, deltas):
+        pull_point_pos = self.interaction_point.pos
+        new_pos = (pull_point_pos[0] + deltas[0],
+                   pull_point_pos[1] + deltas[1])
+        point_to_lines = self.model.build_point_to_lines(self.model.lines.values())
+        
+        self.model.pull_point(
+            self.interaction_point,
+            new_pos,
+            self.interaction_point,
+            [],
+            point_to_lines
+        )
     
     def set_health(self, health_value):
         
@@ -567,16 +582,16 @@ class Stun(Action):
         player_position = player.model.get_reference_position()
         
         knockback_vector = player.knockback_vector
-        self.pull_point(player, player.pull_point, player.knockback_vector)
+        self.pull_point(player, player.interaction_point, player.interaction_vector)
         
-        if player.is_aerial() == False:
-            physics_vector = (0, knockback_vector[1])
+        #if player.is_aerial() == False:
+        #    physics_vector = (0, knockback_vector[1])
             
-            for point_name, point in player.model.points.iteritems():
-                
-                if (point_name in [stick.PointNames.RIGHT_FOOT, stick.PointNames.LEFT_FOOT, stick.PointNames.RIGHT_HAND, stick.PointNames.LEFT_HAND] and
-                point_name != player.pull_point.name):
-                    self.pull_point(player, point, physics_vector)
+            #for point_name, point in player.model.points.iteritems():
+            #    
+            #    if (point_name in [stick.PointNames.RIGHT_FOOT, stick.PointNames.LEFT_FOOT, stick.PointNames.RIGHT_HAND, stick.PointNames.LEFT_HAND] and
+            #    point_name != player.pull_point.name):
+            #        self.pull_point(player, point, physics_vector)
         
         #keep model in place and update its dimensions
         player.model.move_model(player_position) 
@@ -748,7 +763,7 @@ class Attack(Action):
         
         #set the point positions affects whether the player is grounded, so there are extra case statements here
         #if the player was in a grounded state shift back to the ground after setting the initial point positions
-        if previous_state in [PlayerStates.WALKING, PlayerStates.STANDING, PlayerStates.CROUCHING, PlayerStates.RUNNING]:
+        if previous_state in [PlayerStates.WALKING, PlayerStates.STANDING, PlayerStates.CROUCHING, PlayerStates.RUNNING, PlayerStates.LANDING]:
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
         
