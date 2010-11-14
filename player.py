@@ -32,6 +32,7 @@ class PlayerStates():
     CROUCHING = 'CROUCHING'
     STUNNED = 'STUNNED'
     BLOCKING = 'BLOCKING'
+    TRANSITION = 'TRANSITION'
     
     MOVEMENTS = [STANDING,WALKING,RUNNING,JUMPING,FLOATING, \
                  LANDING,CROUCHING]
@@ -177,6 +178,8 @@ class Player():
         elif self.action.action_state == PlayerStates.STUNNED:
             if self.action.test_state_change(self):
                 self.set_neutral_state()
+        elif self.action.action_state == PlayerStates.TRANSITION:
+            self.set_neutral_state()
         elif self.action.action_state == PlayerStates.STANDING:
             self.action.set_player_state(self)
         elif self.action.action_state == PlayerStates.FLOATING:
