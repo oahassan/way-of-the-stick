@@ -333,6 +333,9 @@ class Player():
             [],
             point_to_lines
         )
+        
+        self.model.position = self.model.get_reference_position()
+        self.model.set_dimensions()
     
     def set_health(self, health_value):
         
@@ -577,25 +580,41 @@ class Float(Action):
 class Stun(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.STUNNED)
+        self.physics_vector = (0,0)
     
     def pull_player(self, player):
         player_position = player.model.get_reference_position()
         
         knockback_vector = player.knockback_vector
-        self.pull_point(player, player.interaction_point, player.interaction_vector)
+        #self.pull_point(player, player.interaction_point, player.interaction_vector)
         
-        #if player.is_aerial() == False:
-        #    physics_vector = (0, knockback_vector[1])
+        if player.is_aerial() == False:
+            self.physics_vector = self.physics_vector[0] + 5, self.physics_vector [1] - 5
+            x_sign = mathfuncs.sign(player.knockback_vector[0])
             
-            #for point_name, point in player.model.points.iteritems():
-            #    
-            #    if (point_name in [stick.PointNames.RIGHT_FOOT, stick.PointNames.LEFT_FOOT, stick.PointNames.RIGHT_HAND, stick.PointNames.LEFT_HAND] and
-            #    point_name != player.pull_point.name):
-            #        self.pull_point(player, point, physics_vector)
+            for point_name in [stick.PointNames.TORSO_TOP, stick.PointNames.TORSO_BOTTOM, stick.PointNames.RIGHT_ELBOW, stick.PointNames.LEFT_ELBOW, stick.PointNames.RIGHT_KNEE, stick.PointNames.LEFT_KNEE, stick.PointNames.RIGHT_HAND, stick.PointNames.LEFT_HAND, stick.PointNames.RIGHT_FOOT, stick.PointNames.LEFT_FOOT, stick.PointNames.HEAD_TOP]:
+                point = player.model.points[point_name]
+                #if (point_name in [stick.PointNames.RIGHT_FOOT, stick.PointNames.LEFT_FOOT, stick.PointNames.RIGHT_HAND, stick.PointNames.LEFT_HAND] and
+                #point_name != player.interaction_point.name):
+                #if point.pos[0] > player.model.center()[0]:
+                if point.pos[0] < gamestate.stage.ground.position[1]:
+                    self.pull_point(player, point, (x_sign * self.physics_vector[0], self.physics_vector[1]))
+                else:
+                    self.pull_point(player, point, (x_sign * self.physics_vector[0], 0))
+                #else:
+                #    if point.pos[0] < gamestate.stage.ground.position[1]:
+                #        self.pull_point(player, point, (-self.physics_vector[0], self.physics_vector[1]))
+                #    else:
+                #        self.pull_point(player, point, (-self.physics_vector[0], 0))
+        else:
+            self.physics_vector = (0,0)
         
         #keep model in place and update its dimensions
-        player.model.move_model(player_position) 
+        #player.model.move_model(player_position) 
         player.model.set_dimensions()
+    
+    def get_highest_point(self, player):
+        highest_point = player.model.points[stick.PointNames.HEAD_TOP]
     
     def pull_point(self, player, point, deltas):
         pull_point_pos = point.pos
@@ -640,7 +659,7 @@ class Stun(Action):
         """place holder for function that sets the new position of the model"""
         
         if ((player.stun_timer < .1 * player.stun_timeout) or
-        (player.stun_timer > .5 * player.stun_timeout)):
+        (player.stun_timer > .2 * player.stun_timeout)):
             self.apply_pull_physics(player)
     
         player.apply_physics(player.model.time_passed)

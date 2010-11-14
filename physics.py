@@ -136,6 +136,12 @@ class Model(Object):
         self.time_passed = 0
         self.orientation = Orientations.FACING_RIGHT
     
+    def center(self):
+        if self.orientation == Orientations.FACING_RIGHT:
+            return (self.position[0] + (self.width / 2), self.position[1] + (self.height / 2))
+        else:
+            return (self.position[0] - (self.width / 2), self.position[1] + (self.height / 2))
+    
     def init_stick_data(self):
         self.load_points()
         self.load_lines()
