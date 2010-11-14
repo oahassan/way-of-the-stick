@@ -52,8 +52,7 @@ class PlayerStates():
         ATTACKING : [STANDING, FLOATING],
         STUNNED : [FLOATING,LANDING,STANDING],
         BLOCKING : [STANDING,CROUCHING],
-        TRANSITION : [STANDING,WALKING,RUNNING,JUMPING,FLOATING,
-            LANDING,CROUCHING,ATTACKING,BLOCKING]
+        TRANSITION : []
     }
 
 class Player():
@@ -179,8 +178,7 @@ class Player():
             self.set_neutral_state()
         elif self.action.action_state == PlayerStates.ATTACKING:
             self.current_attack = None
-            self.actions[PlayerStates.TRANSITION].init_transition(self.action, self.get_neutral_state())
-            self.actions[PlayerStates.TRANSITION].set_player_state(self)
+            self.transition()
         elif self.action.action_state == PlayerStates.TRANSITION:
             self.actions[self.action.next_action_state].set_player_state(self)
         elif self.action.action_state == PlayerStates.STUNNED:
@@ -196,6 +194,10 @@ class Player():
             self.action.set_player_state(self)
         elif self.action.action_state == PlayerStates.RUNNING:
             self.action.set_player_state(self)
+    
+    def transition(self):
+        self.actions[PlayerStates.TRANSITION].init_transition(self.action, self.get_neutral_state())
+        self.actions[PlayerStates.TRANSITION].set_player_state(self)
     
     def set_neutral_state(self):
         self.get_neutral_state().set_player_state(self)
