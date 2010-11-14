@@ -414,46 +414,22 @@ def get_overlap(attacker, receiver):
 def get_knockback_vector(attacker, attack_point):
     """get the direction and magnitude of the knockback"""
     
-    return scale_up_knockback(attacker.get_point_position_change(attack_point.name))
+    return scale_knockback(attacker.get_point_position_change(attack_point.name))
 
 
-def scale_up_knockback(knockback_vector):
-    """increases the scale of a knockback vector if its too small to ensure
-    that the model is moved by the knockback"""
+def scale_knockback(knockback_vector):
+    """binds the scale of a knockback vector to control stun animation"""
     
-    minimum_knockback = .5
-    maximum_knockback = 4
+    x = knockback_vector[0]
+    y = knockback_vector[1]
+    hypotenuse = mathfuncs.distance((x,0),(0,y))
     
-    x_minimum_knockback = 2
-    y_minimum_knockback = 1
+    knockback = .1
     
-    x_maximum_knockback = 4
-    y_maximum_knockback = 2
-    
-    max_knockback_component = max(knockback_vector)
-    
-    scaled_x_component = knockback_vector[0]
-    scaled_y_component = knockback_vector[1]
-    
-    if max_knockback_component < minimum_knockback and max_knockback_component > 0:
-        
-        if knockback_vector[0] == max_knockback_component:
-            scaled_x_component = x_minimum_knockback
-            scaled_y_component = int((knockback_vector[1] / knockback_vector[0]) * y_minimum_knockback)
-        else:
-            scaled_y_component = y_minimum_knockback
-            scaled_x_component = int((knockback_vector[0] / knockback_vector[1]) * x_minimum_knockback)
-    
-    if max_knockback_component > maximum_knockback:
-        
-        if knockback_vector[0] == max_knockback_component:
-            scaled_x_component = x_maximum_knockback
-            scaled_y_component = int((knockback_vector[1] / knockback_vector[0]) * y_maximum_knockback)
-        else:
-            scaled_y_component = y_maximum_knockback
-            scaled_x_component = int((knockback_vector[0] / knockback_vector[1]) * x_maximum_knockback)
-    
-    return scaled_x_component, scaled_y_component
+    if hypotenuse == 0:
+        return 0, 0
+    else:
+        return knockback * x / hypotenuse, knockback * y / hypotenuse
 
 def get_interaction_points(receiver, colliding_lines):
     attacker_line_index = 0
@@ -500,8 +476,8 @@ def apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitb
     attack_point = interaction_points[0]
     receiver.pull_point = interaction_points[1]
     receiver.knockback_vector = get_knockback_vector(attacker, attack_point)
-    receiver.model.accelerate(receiver.knockback_vector[0]/75, \
-                              receiver.knockback_vector[1]/75)
+    receiver.model.accelerate(receiver.knockback_vector[0], \
+                              receiver.knockback_vector[1])
 
 def get_direction_sign(attacker, receiver):
     receiver_pos = receiver.model.position

@@ -106,17 +106,6 @@ class Player():
         
         self.set_outline_color()
         
-        enclosing_rect = self.model.get_enclosing_rect()
-        
-        if (enclosing_rect == None or
-        enclosing_rect[0] == None or
-        enclosing_rect[0][0] == None or
-        enclosing_rect[0][1] == None or
-        enclosing_rect[1] == None or
-        enclosing_rect[1][0] == None or
-        enclosing_rect[1][1] == None):
-            import pdb;pdb.set_trace()
-        
         draw_model(self)
         
         if self.dash_timer < self.dash_timeout:
@@ -349,8 +338,7 @@ class Player():
                                   top_left[1])
         
         attack_rect = pygame.Rect(attack_range_point, (attack.range[0], attack.range[1]))
-        enemy_rect = pygame.Rect(enemy.model.position, \
-                                 (enemy.model.width, enemy.model.height))
+        enemy_rect = pygame.Rect(enemy.model.position, (enemy.model.width, enemy.model.height))
         
         in_range = attack_rect.colliderect(enemy_rect)
         
@@ -967,7 +955,9 @@ class ActionFactory():
 
 def draw_model(player):
     """draws the model to the screen"""
-    enclosing_rect = pygame.Rect(*player.model.get_enclosing_rect())
+    
+    enclosing_rect = pygame.Rect(*player.model.get_enclosing_rect())  
+    
     gamestate.new_dirty_rects.append(enclosing_rect)
     
     pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)

@@ -230,7 +230,7 @@ class Model(Object):
         width = bottom_right_x - top_left_x
         height = bottom_right_y - top_left_y
         
-        return ((top_left_x - 5, top_left_y - 5), (width + 10, height + 10))
+        return ((int(top_left_x) - 5, int(top_left_y) - 5), (int(width) + 10, int(height) + 10))
     
     def get_point_relative_position(self, point_name):
         """gets the position of a point relative to the reference point"""
@@ -560,17 +560,25 @@ class ModelCollision():
         
         if box_count > 0:
             for position in self.get_hitbox_positions(box_count, line):
-                line_hitboxes.append(Hitbox(model,
-                                            line,
-                                            [position, 
-                                             (ModelCollision.HITBOX_SIDE_LENGTH, 
-                                              ModelCollision.HITBOX_SIDE_LENGTH)]))
+                line_hitboxes.append(
+                    Hitbox(
+                        model,
+                        line,
+                        [position, 
+                         (ModelCollision.HITBOX_SIDE_LENGTH, 
+                         ModelCollision.HITBOX_SIDE_LENGTH)]
+                     )
+                 )
         else:
-            line_hitboxes.append(Hitbox(model,
-                                        line,
-                                        [line.endPoint1.pos, 
-                                         (ModelCollision.HITBOX_SIDE_LENGTH,
-                                          ModelCollision.HITBOX_SIDE_LENGTH)]))
+            line_hitboxes.append(
+                Hitbox(
+                    model,
+                    line,
+                    [line.endPoint1.pos, 
+                    (ModelCollision.HITBOX_SIDE_LENGTH,
+                    ModelCollision.HITBOX_SIDE_LENGTH)]
+                )
+            )
         
         return line_hitboxes
 
