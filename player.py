@@ -183,8 +183,7 @@ class Player():
         elif self.action.action_state == PlayerStates.TRANSITION:
             self.action.next_action.set_player_state(self)
         elif self.action.action_state == PlayerStates.STUNNED:
-            #self.actions[PlayerStates.TRANSITION].init_transition(self.action, self.get_neutral_state())
-            self.set_neutral_state()
+            self.transition(self.get_neutral_state())
         elif self.action.action_state == PlayerStates.STANDING:
             self.action.set_player_state(self)
         elif self.action.action_state == PlayerStates.FLOATING:
@@ -696,6 +695,8 @@ class Stun(Action):
         stun_animation.set_animation_deltas()
         stun_animation.set_animation_point_path_data(Player.STUN_ACCELERATION)
         
+        self.right_animation = stun_animation
+        self.left_animation = stun_animation
         self.animation = stun_animation
     
     def init_toy_model_point_positions(self, player):
