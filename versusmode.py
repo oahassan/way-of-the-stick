@@ -493,7 +493,7 @@ def apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitb
     receiver.knockback_vector = get_knockback_vector(attacker, attack_point)
     receiver.interaction_point = interaction_points[1]
     receiver.interaction_vector = get_pull_point_deltas(attacker, attack_point)
-    #receiver.pull_point(receiver.interaction_vector)
+    receiver.pull_point(receiver.interaction_vector)
     receiver.model.accelerate(receiver.knockback_vector[0], \
                               receiver.knockback_vector[1])
 
