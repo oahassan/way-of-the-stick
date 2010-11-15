@@ -421,7 +421,7 @@ class Model(Object):
         
         pulled_points = []
         
-        point.pos = new_pos
+        point.pos = (new_pos[0], new_pos[1])
         
         #anchors points pull first
         for line in point_to_lines[point.name]:

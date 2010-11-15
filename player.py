@@ -60,6 +60,7 @@ class Player():
     REFERENCE_HEIGHT = 400
     ACCELERATION = .00300
     TRANSITION_ACCELERATION = .006
+    STUN_ACCELERATION = .001
     
     def __init__(self, position):
         self.player_type = None
@@ -546,6 +547,7 @@ class Transition(Action):
         
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
+    
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
     
@@ -663,87 +665,109 @@ class Stun(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.STUNNED)
         self.physics_vector = (0,0)
+        self.toy_model = physics.Model((0,0))
+        self.toy_model.init_stick_data()
     
-    def pull_player(self, player):
-        player_position = player.model.get_reference_position()
+    def set_animation(self, player):
+        """creates a stun animation from the player model."""
+        stun_animation = animation.Animation()
+        stun_animation.frames = []
+        stun_animation.point_names = player.action.animation.point_names
         
-        knockback_vector = player.knockback_vector
-        #self.pull_point(player, player.interaction_point, player.interaction_vector)
+        first_frame = copy.deepcopy(player.action.animation.frames[0])
         
-        if player.is_aerial() == False:
-            self.physics_vector = self.physics_vector[0] + 5, self.physics_vector [1] - 5
-            x_sign = mathfuncs.sign(player.knockback_vector[0])
-            
-            for point_name in [stick.PointNames.TORSO_TOP, stick.PointNames.TORSO_BOTTOM, stick.PointNames.RIGHT_ELBOW, stick.PointNames.LEFT_ELBOW, stick.PointNames.RIGHT_KNEE, stick.PointNames.LEFT_KNEE, stick.PointNames.RIGHT_HAND, stick.PointNames.LEFT_HAND, stick.PointNames.RIGHT_FOOT, stick.PointNames.LEFT_FOOT, stick.PointNames.HEAD_TOP]:
-                point = player.model.points[point_name]
-                #if (point_name in [stick.PointNames.RIGHT_FOOT, stick.PointNames.LEFT_FOOT, stick.PointNames.RIGHT_HAND, stick.PointNames.LEFT_HAND] and
-                #point_name != player.interaction_point.name):
-                #if point.pos[0] > player.model.center()[0]:
-                if point.pos[0] < gamestate.stage.ground.position[1]:
-                    self.pull_point(player, point, (x_sign * self.physics_vector[0], self.physics_vector[1]))
-                else:
-                    self.pull_point(player, point, (x_sign * self.physics_vector[0], 0))
-                #else:
-                #    if point.pos[0] < gamestate.stage.ground.position[1]:
-                #        self.pull_point(player, point, (-self.physics_vector[0], self.physics_vector[1]))
-                #    else:
-                #        self.pull_point(player, point, (-self.physics_vector[0], 0))
-        else:
-            self.physics_vector = (0,0)
+        self.init_toy_model_point_positions(player)
+        self.physics_vector = (0,0)
         
-        #keep model in place and update its dimensions
-        #player.model.move_model(player_position) 
-        player.model.set_dimensions()
+        new_frame = self.save_model_point_positions_to_frame(first_frame, stun_animation.point_names)
+        
+        stun_animation.frames.append(new_frame)
+        
+        for i in range(20):
+            self.pull_toy_model(player)
+        
+        new_frame = self.save_model_point_positions_to_frame(first_frame, stun_animation.point_names)
+        stun_animation.frames.append(new_frame)
+        
+        if player.model.orientation == physics.Orientations.FACING_LEFT:
+            stun_animation = stun_animation.flip()
+        
+        stun_animation.set_frame_deltas()
+        stun_animation.set_animation_deltas()
+        stun_animation.set_animation_point_path_data(Player.STUN_ACCELERATION)
+        
+        self.animation = stun_animation
     
-    def get_highest_point(self, player):
-        highest_point = player.model.points[stick.PointNames.HEAD_TOP]
+    def init_toy_model_point_positions(self, player):
+        """makes the stun action's model match the player model"""
+        
+        for point_name, point in self.toy_model.points.iteritems():
+            position = player.model.points[point_name].pos
+            point.pos = (position[0], position[1])
+        
+        for line in self.toy_model.lines.values():
+            line.set_length()
+        
+        self.toy_model.position = self.toy_model.get_reference_position()
+        self.toy_model.set_dimensions()
     
-    def pull_point(self, player, point, deltas):
+    def save_model_point_positions_to_frame(self, frame, point_names):
+        """Creates a frame with ids that match the first frame"""
+        
+        save_frame = copy.deepcopy(frame)
+        
+        for point_name, point_id in point_names.iteritems():
+            position = self.toy_model.points[point_name].pos
+            save_frame.point_dictionary[point_id].pos = (position[0], position[1])
+        
+        return save_frame
+    
+    def pull_toy_model(self, player):
+        
+        self.pull_toy_point(self.toy_model.points[player.interaction_point.name], player.interaction_vector)
+        
+        #self.toy_model.position = self.toy_model.get_reference_position()
+        #self.toy_model.set_dimensions()
+    
+    def pull_toy_point(self, point, deltas):
         pull_point_pos = point.pos
+        
         new_pos = (pull_point_pos[0] + deltas[0],
                    pull_point_pos[1] + deltas[1])
-        point_to_lines = player.model.build_point_to_lines(player.model.lines.values())
-        player.model.pull_point(
+        point_to_lines = self.toy_model.build_point_to_lines(self.toy_model.lines.values())
+        
+        self.toy_model.pull_point(
             point,
             new_pos,
             point,
             [],
             point_to_lines
         )
-    
-    def apply_pull_physics(self, player):
         
-        self.pull_player(player)
-        
-        #adjust knocback vector for gravity
-        gravity_displacement_component = player.model.gravity*player.model.time_passed #(
-            #(.5*player.model.gravity*(player.model.time_passed**2) + \
-            #player.model.gravity*player.model.time_passed)
-        #)
-        
-        knockback_vector = player.knockback_vector
-        player.knockback_vector = (
-            knockback_vector[0], 
-            knockback_vector[1] + gravity_displacement_component
-        )
-        
-        system = []
-        if player.is_aerial() == False:
-            system.append(gamestate.stage.ground)
-        
-        if player.model.position[0] + player.model.width > gamestate.stage.right_wall.position[0]:
-            system.append(gamestate.stage.right_wall)
-        
-        if player.model.position[0] < gamestate.stage.left_wall.position[0]:
-            system.append(gamestate.stage.left_wall)
+        #import pdb;pdb.set_trace()
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
         
-        if ((player.stun_timer < .1 * player.stun_timeout) or
-        (player.stun_timer > .2 * player.stun_timeout)):
-            self.apply_pull_physics(player)
-    
+        if player.model.animation_run_time < self.animation.animation_length:
+            start_time = player.model.animation_run_time
+            end_time = start_time + player.model.time_passed    
+            
+            if end_time >= self.animation.animation_length:
+                end_time = self.animation.animation_length
+                player.model.animation_run_time = end_time
+                player.model.time_passed = \
+                    start_time + player.model.time_passed - self.animation.animation_length
+                
+            else:
+                player.model.animation_run_time += player.model.time_passed
+            
+            #frame_index = self.animation.get_frame_index_at_time(end_time)
+            #player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
+            
+            point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
+            player.model.set_point_position_in_place(point_deltas)
+            
         player.apply_physics(player.model.time_passed)
         
         if player.stun_timer >= player.stun_timeout:
@@ -759,6 +783,8 @@ class Stun(Action):
         return change_state
     
     def set_player_state(self, player):
+        
+        self.set_animation(player)
         
         player.action = self
         player.model.animation_run_time = 0
@@ -1138,6 +1164,9 @@ def draw_inner_circle(circle, color):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
+    
+    if radius <= 2:
+        radius = 3
     
     pygame.draw.circle(gamestate.screen, \
                       (0, 100, 0), \
