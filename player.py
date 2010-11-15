@@ -196,7 +196,7 @@ class Player():
             self.action.set_player_state(self)
     
     def transition(self, next_state):
-        self.actions[PlayerStates.TRANSITION].init_transition(self.action, next_state)
+        self.actions[PlayerStates.TRANSITION].init_transition(self, next_state)
         self.actions[PlayerStates.TRANSITION].set_player_state(self)
     
     def set_neutral_state(self):
@@ -487,24 +487,28 @@ class Transition(Action):
         Action.__init__(self, PlayerStates.TRANSITION)
         self.next_action = None
     
-    def init_transition(self, current_action, next_action):
-        self.set_animation(current_action, next_action)
+    def init_transition(self, player, next_action):
+        self.set_animation(player, next_action)
         self.next_action = next_action
     
-    def set_animation(self, current_action, next_action):
-        last_frame_index = len(current_action.animation.frames) - 1
+    def set_animation(self, player, next_action):
+        last_frame_index = len(player.action.animation.frames) - 1
         first_frame = \
             copy.deepcopy(
-                current_action.animation.frames[last_frame_index]
+                player.action.animation.frames[last_frame_index]
             )
         
-        last_frame = self.create_last_frame(first_frame, current_action, next_action)
+        last_frame = self.create_last_frame(first_frame, player.action, next_action)
+        
+        if (next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING]
+        and next_action.direction != player.direction):
+            last_frame.flip()
         
         last_frame.set_position(first_frame.get_reference_position())
         
         transition_animation = animation.Animation()
         
-        transition_animation.point_names = current_action.right_animation.point_names
+        transition_animation.point_names = player.action.right_animation.point_names
         transition_animation.frames = [first_frame, last_frame]
         transition_animation.set_frame_deltas()
         transition_animation.set_animation_deltas()
@@ -548,7 +552,10 @@ class Transition(Action):
             player.handle_animation_end()
     
     def set_player_state(self, player):
-        Action.set_player_state(self, player, player.direction)
+        if self.next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING]:
+            Action.set_player_state(self, player, self.next_action.direction)
+        else:
+            Action.set_player_state(self, player, player.direction)
     
 class InputAction():
     def __init__(self, action, key_release_action, key):
