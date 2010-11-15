@@ -440,7 +440,7 @@ def scale_knockback(knockback_vector):
     y = knockback_vector[1]
     hypotenuse = mathfuncs.distance((x,0),(0,y))
     
-    knockback = .4
+    knockback = .1
     
     if hypotenuse == 0:
         return 0, 0
