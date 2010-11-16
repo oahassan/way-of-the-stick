@@ -450,6 +450,14 @@ class Action():
         
         return change_state
     
+    def test_change_to_action(self, action):
+        change_state = False
+        
+        if action.action_state in PlayerStates.PRESSED_KEY_STATE_TRANSITIONS[self.action_state]:
+            change_state = True
+        
+        return change_state
+    
     def set_player_state(self, player, direction):
         self.last_frame_index = 0
         
