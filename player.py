@@ -699,7 +699,7 @@ class Stun(Action):
         
         stun_animation.frames.append(new_frame)
         
-        for i in range(20):
+        for i in range(10):
             self.pull_toy_model(player)
         
         new_frame = self.save_model_point_positions_to_frame(first_frame, stun_animation.point_names)

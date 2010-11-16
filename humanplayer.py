@@ -53,15 +53,16 @@ class HumanPlayer(player.Player):
                     self.handle_key_input(key)
     
     def handle_key_input(self,key):
-        for input_action in self.key_bindings[key]:    
-            if input_action.action.test_state_change(self):
-                if input_action.action != self.action:
-                    
-                    self.transition(input_action.action)
-                else:
-                    input_action.action.set_player_state(self)
-                self.input_action = input_action
-                break
+        if self.get_player_state() != player.PlayerStates.TRANSITION:
+            for input_action in self.key_bindings[key]:    
+                if input_action.action.test_state_change(self):
+                    if input_action.action != self.action:
+                        
+                        self.transition(input_action.action)
+                    else:
+                        input_action.action.set_player_state(self)
+                    self.input_action = input_action
+                    break
     
     def handle_aerial_motion_input(self,key):
         movement_type = self.moveset.movement_key_to_movement_type[key]

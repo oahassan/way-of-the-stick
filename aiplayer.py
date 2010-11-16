@@ -81,7 +81,7 @@ class Bot(player.Player):
         self.actions[player.PlayerStates.STANDING].set_player_state(self)
     
     def handle_events(self, enemy):
-        #self.set_action(enemy)
+        self.set_action(enemy)
         player.Player.handle_events(self)
     
     def set_action(self, enemy):
@@ -101,7 +101,8 @@ class Bot(player.Player):
             next_action = self.move_towards_enemy(enemy)
         
         if (next_action != None
-        and next_action != self.action):
+        and next_action != self.action
+        and self.get_player_state() != player.PlayerStates.TRANSITION):
             self.transition(next_action)
     
     def move_towards_enemy(self, enemy):
