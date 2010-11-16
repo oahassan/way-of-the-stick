@@ -796,6 +796,9 @@ class Stun(Action):
             
             point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
             player.model.set_point_position_in_place(point_deltas)
+        else:
+            self.set_animation(player)
+            player.model.animation_run_time = 0
             
         player.apply_physics(player.model.time_passed)
         
