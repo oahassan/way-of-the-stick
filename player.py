@@ -607,8 +607,11 @@ class Run(Action):
         change_state = Action.test_state_change(self, player)
         
         if change_state:
-            if ((player.action.action_state == PlayerStates.STANDING or player.action.action_state == PlayerStates.TRANSITION) and 
+            if ((player.action.action_state == PlayerStates.STANDING) and 
                 (player.dash_timer < player.dash_timeout)):
+                change_state = True
+            elif (player.get_player_state() == PlayerStates.TRANSITION and
+            player.action.next_action.action_state == PlayerStates.STANDING):
                 change_state = True
             elif ((player.action.action_state == PlayerStates.RUNNING) and
                   (player.direction != self.direction)):

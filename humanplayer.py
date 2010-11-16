@@ -23,7 +23,8 @@ class HumanPlayer(player.Player):
     def set_action(self):
         #Change state if key is released
         if (self.input_action != None and
-            wotsuievents.key_released(self.input_action.key)):
+            wotsuievents.key_released(self.input_action.key) and
+            len(wotsuievents.keys_pressed) == 0):
                 if self.input_action.key_release_action != None:
                     self.transition(self.input_action.key_release_action)
                 self.input_action = None
@@ -31,7 +32,8 @@ class HumanPlayer(player.Player):
         for key in wotsuievents.keys_pressed:
             if (self.input_action != None and
             self.input_action.key in self.negating_keys.keys() and
-            key in self.negating_keys[self.input_action.key]):
+            key in self.negating_keys[self.input_action.key] and
+            self.input_action.key in wotsuievents.keys_pressed):
                 #This key can't be pressed at the same time as a currently pressed key
                 continue
             
@@ -53,16 +55,18 @@ class HumanPlayer(player.Player):
                     self.handle_key_input(key)
     
     def handle_key_input(self,key):
-        if self.get_player_state() != player.PlayerStates.TRANSITION:
-            for input_action in self.key_bindings[key]:    
-                if input_action.action.test_state_change(self):
-                    if input_action.action != self.action:
-                        
+        for input_action in self.key_bindings[key]:    
+            if input_action.action.test_state_change(self):
+                if self.get_player_state() == player.PlayerStates.TRANSITION:
+                    if self.action.next_action != input_action.action:
                         self.transition(input_action.action)
-                    else:
-                        input_action.action.set_player_state(self)
-                    self.input_action = input_action
-                    break
+                elif input_action.action != self.action:
+                    
+                    self.transition(input_action.action)
+                else:
+                    input_action.action.set_player_state(self)
+                self.input_action = input_action
+                break
     
     def handle_aerial_motion_input(self,key):
         movement_type = self.moveset.movement_key_to_movement_type[key]
