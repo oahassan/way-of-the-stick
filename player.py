@@ -52,7 +52,7 @@ class PlayerStates():
         ATTACKING : [STANDING, FLOATING],
         STUNNED : [FLOATING,LANDING,STANDING],
         BLOCKING : [STANDING,CROUCHING],
-        TRANSITION : []
+        TRANSITION : [RUNNING]
     }
 
 class Player():
@@ -493,16 +493,12 @@ class Transition(Action):
     
     def set_animation(self, player, next_action):
         last_frame_index = len(player.action.animation.frames) - 1
-        first_frame = \
-            copy.deepcopy(
-                player.action.animation.frames[last_frame_index]
-            )
+        first_frame = self.create_first_frame(player)
         
         last_frame = self.create_last_frame(first_frame, player.action, next_action)
         
-        if (next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING]
-        and next_action.direction != player.direction):
-            last_frame.flip()
+        if player.model.orientation == physics.Orientations.FACING_LEFT:
+            first_frame.flip()
         
         last_frame.set_position(first_frame.get_reference_position())
         
@@ -516,6 +512,20 @@ class Transition(Action):
         
         self.right_animation = transition_animation
         self.left_animation = transition_animation
+    
+    def create_first_frame(self, player):
+        """creates a frame from the model of the player"""
+        
+        first_frame = \
+            copy.deepcopy(
+                player.action.animation.frames[0]
+            )
+        
+        for point_name, point_id in player.action.animation.point_names.iteritems():
+            position = player.model.points[point_name].pos
+            first_frame.point_dictionary[point_id].pos = (position[0], position[1])
+        
+        return first_frame
     
     def create_last_frame(self, first_frame, current_action, next_action):
         """Creates a frame with ids that match the first frame"""
@@ -597,7 +607,7 @@ class Run(Action):
         change_state = Action.test_state_change(self, player)
         
         if change_state:
-            if ((player.action.action_state == PlayerStates.STANDING) and 
+            if ((player.action.action_state == PlayerStates.STANDING or player.action.action_state == PlayerStates.TRANSITION) and 
                 (player.dash_timer < player.dash_timeout)):
                 change_state = True
             elif ((player.action.action_state == PlayerStates.RUNNING) and

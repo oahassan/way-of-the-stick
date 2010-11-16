@@ -56,6 +56,7 @@ class HumanPlayer(player.Player):
         for input_action in self.key_bindings[key]:    
             if input_action.action.test_state_change(self):
                 if input_action.action != self.action:
+                    
                     self.transition(input_action.action)
                 else:
                     input_action.action.set_player_state(self)
