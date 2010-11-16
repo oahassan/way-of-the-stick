@@ -39,6 +39,8 @@ fight_start_timer = None
 fps_label = None
 player_type = None
 bot_type = None
+hit_sound = pygame.mixer.Sound("./sounds/hit-sound.ogg")
+clash_sound = pygame.mixer.Sound("./sounds/clash-sound.ogg")
 
 def init():
     global initialized
@@ -354,6 +356,7 @@ def handle_unblocked_attack_collision(
             
             if receiver.health_meter == 0:
                 receiver.set_stun_timeout(8000)
+            
     else:
         apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
         receiver.set_player_state(player.PlayerStates.STUNNED)
@@ -362,6 +365,8 @@ def handle_unblocked_attack_collision(
         
         if receiver.health_meter == 0:
             receiver.set_stun_timeout(8000)
+        
+        hit_sound.play()
 
 def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
     attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])
@@ -475,6 +480,8 @@ def handle_blocked_attack_collision(attacker, receiver, attacker_hitboxes, recei
     
     apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
     apply_collision_physics(receiver, attacker, receiver_hitboxes, attacker_hitboxes)
+    
+    clash_sound.play()
 
 def apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes):
     separation_vector = get_separation_vector(attacker,receiver)
