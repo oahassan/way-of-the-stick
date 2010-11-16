@@ -643,6 +643,7 @@ class Crouch(Action):
 class Jump(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.JUMPING)
+        self.sound = pygame.mixer.Sound("./sounds/jump-sound.ogg")
     
     def test_state_change(self, player):
         change_state = False
@@ -841,6 +842,50 @@ class Attack(Action):
         self.range = (0,0)
         self.use_animation_physics = False
         self.acceleration = Player.ACCELERATION
+        self.frame_sounds = []
+        self.frame_sound_index = 0
+    
+    def set_frame_sounds(self):
+        """Defines sounds for each frame index of the attack"""
+        
+        frame_sound = None
+        
+        if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
+            frame_sound = pygame.mixer.Sound("./sounds/punch-sound.ogg")
+        else:
+            frame_sound = pygame.mixer.Sound("./sounds/kick-sound.ogg")
+        
+        self.frame_sounds.append(frame_sound)
+        
+        if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
+            
+            for frame_index in range(len(self.right_animation.frames) - 1):
+                if (self.test_delta_change(stick.PointNames.RIGHT_HAND, frame_index) or
+                self.test_delta_change(stick.PointNames.LEFT_HAND, frame_index)):
+                #self.test_delta_change(stick.PointNames.RIGHT_ELBOW, frame_index) or
+                #self.test_delta_change(stick.PointNames.LEFT_ELBOW, frame_index)):
+                    self.frame_sounds.append(frame_sound)
+                else:
+                    self.frame_sounds.append(None)
+        else:
+            for frame_index in range(len(self.right_animation.frames) - 1):
+                if (self.test_delta_change(stick.PointNames.RIGHT_FOOT, frame_index) or
+                    self.test_delta_change(stick.PointNames.LEFT_FOOT, frame_index)):
+                    #self.test_delta_change(stick.PointNames.RIGHT_ELBOW, frame_index) or
+                    #self.test_delta_change(stick.PointNames.LEFT_ELBOW, frame_index)):
+                    self.frame_sounds.append(frame_sound)
+                else:
+                    self.frame_sounds.append(None)
+    
+    def test_delta_change(self, point_name, frame_index):
+        delta = self.right_animation.animation_deltas[frame_index][point_name]
+        last_delta = self.right_animation.animation_deltas[frame_index - 1][point_name]
+        
+        if (mathfuncs.sign(delta[0]) != mathfuncs.sign(last_delta[0])): #or
+        #mathfuncs.sign(delta[1]) != mathfuncs.sign(last_delta[1])):
+            return True
+        else:
+            return False
     
     def set_acceleration(self, action_type):
         """sets the animation acceleration for a given InputActionType.  Only
@@ -886,6 +931,11 @@ class Attack(Action):
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
         
+        if frame_index == self.frame_sound_index:
+            if self.frame_sounds[frame_index] != None:
+                self.frame_sounds[frame_index].play()
+            self.frame_sound_index += 1
+        
         #set the point positions affects whether the player is grounded, so there are extra case statements here
         #if the player was in a grounded state shift back to the ground after setting the initial point positions
         if not player.is_aerial():
@@ -911,6 +961,7 @@ class Attack(Action):
         player.model.animation_run_time = 0     
         player.current_attack = self
         self.last_frame_index = 0
+        self.frame_sound_index = 0
         
         if player.direction == PlayerStates.FACING_LEFT:
             self.animation = self.right_animation
@@ -1105,6 +1156,7 @@ class ActionFactory():
         )
         
         return_attack.set_attack_data(model)
+        return_attack.set_frame_sounds()
         
         return return_attack
     
