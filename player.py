@@ -416,6 +416,7 @@ class Action():
         self.left_animation = None
         self.animation = None
         self.last_frame_index = 0
+        self.current_sound_channel = None
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
@@ -818,6 +819,9 @@ class Stun(Action):
     def set_player_state(self, player):
         
         self.set_animation(player)
+        if (player.action.current_sound_channel != None and
+        player.action.current_sound_channel.get_busy()):
+            player.action.current_sound_channel.stop()
         
         player.action = self
         player.model.animation_run_time = 0
@@ -844,6 +848,7 @@ class Attack(Action):
         self.acceleration = Player.ACCELERATION
         self.frame_sounds = []
         self.frame_sound_index = 0
+        self.current_sound_channel = None
     
     def set_frame_sounds(self):
         """Defines sounds for each frame index of the attack"""
@@ -933,7 +938,11 @@ class Attack(Action):
         
         if frame_index == self.frame_sound_index:
             if self.frame_sounds[frame_index] != None:
-                self.frame_sounds[frame_index].play()
+                if self.current_sound_channel == None:
+                     self.current_sound_channel = self.frame_sounds[frame_index].play()
+                elif self.current_sound_channel.get_busy() == False:
+                    self.current_sound_channel = self.frame_sounds[frame_index].play()
+                
             self.frame_sound_index += 1
         
         #set the point positions affects whether the player is grounded, so there are extra case statements here

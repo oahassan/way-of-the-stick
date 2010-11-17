@@ -39,6 +39,8 @@ fight_start_timer = None
 fps_label = None
 player_type = None
 bot_type = None
+
+stun_channel = None
 hit_sound = pygame.mixer.Sound("./sounds/hit-sound.ogg")
 clash_sound = pygame.mixer.Sound("./sounds/clash-sound.ogg")
 
@@ -329,6 +331,7 @@ def handle_unblocked_attack_collision(
     attacker_hitboxes,
     receiver_hitboxes
 ):
+    global stun_channel
     
     colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
     
@@ -357,6 +360,10 @@ def handle_unblocked_attack_collision(
             if receiver.health_meter == 0:
                 receiver.set_stun_timeout(8000)
             
+            if (stun_channel == None or
+            stun_channel.get_busy() == False):
+                stun_channel = hit_sound.play()
+            
     else:
         apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
         receiver.set_player_state(player.PlayerStates.STUNNED)
@@ -366,7 +373,9 @@ def handle_unblocked_attack_collision(
         if receiver.health_meter == 0:
             receiver.set_stun_timeout(8000)
         
-        hit_sound.play()
+        #if (stun_channel == None or
+        #stun_channel.get_busy() == False):
+        stun_channel = hit_sound.play()
 
 def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
     attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])
