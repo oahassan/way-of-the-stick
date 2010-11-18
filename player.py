@@ -849,6 +849,8 @@ class Attack(Action):
         self.frame_sounds = []
         self.frame_sound_index = 0
         self.current_sound_channel = None
+        self.hit_sound = None
+        self.hit_sound_channel = None
     
     def set_frame_sounds(self):
         """Defines sounds for each frame index of the attack"""
@@ -920,6 +922,15 @@ class Attack(Action):
         self.range = (self.right_animation.get_widest_frame().image_width(), 
                       self.right_animation.get_tallest_frame().image_height())
         self.attack_lines = self.get_attack_lines(model)
+        
+        if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.WEAK_KICK]:
+            self.hit_sound = pygame.mixer.Sound("sounds/hit-sound.ogg")
+            
+        elif self.attack_type in [InputActionTypes.MEDIUM_PUNCH, InputActionTypes.MEDIUM_KICK]:
+            self.hit_sound = pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
+            
+        elif self.attack_type in [InputActionTypes.STRONG_PUNCH, InputActionTypes.STRONG_KICK]:
+            self.hit_sound = pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
     
     def move_player(self, player):
         
