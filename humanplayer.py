@@ -18,7 +18,8 @@ class HumanPlayer(player.Player):
         self.player_type = player.PlayerTypes.HUMAN
         self.controls = None
         self.attack_keys = []
-        self.aerial_movement_keys = []
+        self.aerial_movement_keys = {}
+        self.stun_movement_keys = {}
     
     def set_action(self):
         #Change state if key is released
@@ -43,14 +44,14 @@ class HumanPlayer(player.Player):
                     if key == pygame.K_UP:
                         self.handle_key_input(key)
                         
-                    elif key in self.aerial_movement_keys:
+                    elif key in self.aerial_movement_keys.keys():
                         self.handle_aerial_motion_input(key)
                         
                     elif key in self.attack_keys:
                         self.handle_key_input(key)
                         
                 elif self.action.action_state == player.PlayerStates.STUNNED:
-                    if key in self.moveset.movement_key_to_movement_type.keys():
+                    if key in self.stun_movement_keys.keys():
                         self.handle_stun_motion_input(key)
                 else:
                     self.handle_key_input(key)
@@ -71,27 +72,27 @@ class HumanPlayer(player.Player):
                 break
     
     def handle_aerial_motion_input(self,key):
-        movement_type = self.moveset.movement_key_to_movement_type[key]
+        movement_type = self.stun_movement_keys[key]
         
-        if movement_type == movesetdata.MovementTypes.MOVE_LEFT:
+        if movement_type == InputActionTypes.MOVE_LEFT:
             self.model.accelerate(-1*self.aerial_acceleration,0)
-        elif movement_type == movesetdata.MovementTypes.MOVE_RIGHT:
+        elif movement_type == InputActionTypes.MOVE_RIGHT:
             self.model.accelerate(self.aerial_acceleration,0)
         # elif movement_type == movesetdata.MovementTypes.MOVE_UP:
             # self.model.accelerate(0,-1*self.aerial_acceleration)
-        elif movement_type == movesetdata.MovementTypes.MOVE_DOWN:
+        elif movement_type == InputActionTypes.MOVE_DOWN:
             self.model.accelerate(0,5*self.aerial_acceleration)
     
     def handle_stun_motion_input(self,key):
-        movement_type = self.moveset.movement_key_to_movement_type[key]
+        movement_type = self.stun_movement_keys[key]
         
-        if movement_type == movesetdata.MovementTypes.MOVE_LEFT:
+        if movement_type == InputActionTypes.MOVE_LEFT:
             self.model.accelerate(-1*self.aerial_acceleration,0)
-        elif movement_type == movesetdata.MovementTypes.MOVE_RIGHT:
+        elif movement_type == InputActionTypes.MOVE_RIGHT:
             self.model.accelerate(self.aerial_acceleration,0)
-        elif movement_type == movesetdata.MovementTypes.MOVE_UP:
+        elif movement_type == InputActionTypes.MOVE_UP:
             self.model.accelerate(0,-1*self.aerial_acceleration)
-        elif movement_type == movesetdata.MovementTypes.MOVE_DOWN:
+        elif movement_type == InputActionTypes.MOVE_DOWN:
             self.model.accelerate(0,5*self.aerial_acceleration)
     
     def load_actions(self):
@@ -128,7 +129,10 @@ class HumanPlayer(player.Player):
         factory = player.ActionFactory()
         
         for action_type in InputActionTypes.AERIAL_MOVEMENTS:
-            self.aerial_movement_keys.append(get_control_key(action_type))
+            self.aerial_movement_keys[get_control_key(action_type)] = action_type
+        
+        for action_type in InputActionTypes.STUN_MOVEMENTS:
+            self.stun_movement_keys[get_control_key(action_type)] = action_type
         
         for action_type in InputActionTypes.ATTACKS:
             self.attack_keys.append(get_control_key(action_type))

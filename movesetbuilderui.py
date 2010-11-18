@@ -475,14 +475,20 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
         if self.animation_type in player.PlayerStates.MOVEMENTS:
             animations = actionwizard.get_movement_animations(self.animation_type)
         elif self.animation_type in InputActionTypes.ATTACKS:
-        
-            action_type = player.AttackTypes.PUNCH
+            
+            animations = []
             
             if self.animation_type in [InputActionTypes.WEAK_KICK, InputActionTypes.MEDIUM_KICK, InputActionTypes.STRONG_KICK]:
-                action_type = player.AttackTypes.KICK
-            
-            animations = actionwizard.get_attack_animations(action_type)
-            animations.extend(actionwizard.get_attack_animations(self.animation_type))
+                
+                animations.extend(actionwizard.get_attack_animations(player.AttackTypes.KICK))
+                animations.extend(actionwizard.get_attack_animations(InputActionTypes.WEAK_KICK))
+                animations.extend(actionwizard.get_attack_animations(InputActionTypes.MEDIUM_KICK))
+                animations.extend(actionwizard.get_attack_animations(InputActionTypes.STRONG_KICK))
+            else:
+                animations.extend(actionwizard.get_attack_animations(player.AttackTypes.PUNCH))
+                animations.extend(actionwizard.get_attack_animations(InputActionTypes.WEAK_PUNCH))
+                animations.extend(actionwizard.get_attack_animations(InputActionTypes.MEDIUM_PUNCH))
+                animations.extend(actionwizard.get_attack_animations(InputActionTypes.STRONG_PUNCH))
         
         return animations
     
