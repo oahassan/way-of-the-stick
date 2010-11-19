@@ -362,7 +362,7 @@ class WotsServer(Server):
 
 server = None
 
-DFLT_PORT = 749387
+DFLT_PORT = 45000
 
 listner = None
 
