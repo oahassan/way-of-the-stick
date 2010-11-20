@@ -1,4 +1,6 @@
 import copy
+from random import choice
+
 import pygame
 
 import gamestate
@@ -582,10 +584,49 @@ class InputAction():
         self.key_release_action = key_release_action
         self.key = key
 
-class Walk(Action):
+class GroundMovement():
+    def __init__(self):
+        self.point_on_ground = {
+                stick.PointNames.RIGHT_HAND : False,
+                stick.PointNames.LEFT_HAND : False,
+                stick.PointNames.RIGHT_FOOT : False,
+                stick.PointNames.LEFT_FOOT : False
+            }
+        self.walk_sounds = [
+            pygame.mixer.Sound("sounds/step1-sound.ogg"),
+            pygame.mixer.Sound("sounds/step2-sound.ogg"),
+            pygame.mixer.Sound("sounds/step3-sound.ogg"),
+            pygame.mixer.Sound("sounds/step4-sound.ogg")
+        ]
+    
+    def play_sounds(self, player):
+        
+        for point_name, on_ground in self.point_on_ground.iteritems():
+            if player.model.points[point_name].pos[1] <= gamestate.stage.ground.position[1]:
+                if not on_ground:
+                    choice(self.walk_sounds).play()
+                    self.point_on_ground[point_name] = True
+            else:
+                if on_ground:
+                    self.point_on_ground[point_name] = False
+    
+    def init_points_on_ground(self, player):
+        for point_name in self.point_on_ground.keys():
+            if player.model.points[point_name].pos[1] <= gamestate.stage.ground.position[1]:
+                self.point_on_ground[point_name] = True
+            else:
+                self.point_on_ground[point_name] = False
+
+class Walk(Action, GroundMovement):
     def __init__(self, direction):
         Action.__init__(self, PlayerStates.WALKING)
+        GroundMovement.__init__(self)
         self.direction = direction
+    
+    def move_player(self, player):
+        Action.move_player(self, player)
+        
+        self.play_sounds(player)
     
     def test_state_change(self, player):
         change_state = Action.test_state_change(self, player)
@@ -606,11 +647,19 @@ class Walk(Action):
     def set_player_state(self, player):
         Action.set_player_state(self, player, self.direction)
         player.dash_timer = 0
+        self.init_points_on_ground(player)
 
-class Run(Action):
+class Run(Action, GroundMovement):
     def __init__(self, direction):
         Action.__init__(self, PlayerStates.RUNNING)
+        GroundMovement.__init__(self)
+        
         self.direction = direction
+    
+    def move_player(self, player):
+        Action.move_player(self, player)
+        
+        self.play_sounds(player)
     
     def test_state_change(self, player):
         change_state = Action.test_state_change(self, player)
@@ -633,6 +682,7 @@ class Run(Action):
     def set_player_state(self, player):
         Action.set_player_state(self, player, self.direction)
         self.dash_timer = player.dash_timeout
+        self.init_points_on_ground(player)
 
 class Crouch(Action):
     def __init__(self):
