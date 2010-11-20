@@ -1,4 +1,5 @@
 import copy
+import math
 from random import choice
 
 import pygame
@@ -1079,6 +1080,13 @@ class Attack(Action):
                 
             self.frame_sound_index += 1
         
+        #apply animation physics first to determine what the player's position 
+        #should be.
+        if self.use_animation_physics:
+            self.apply_animation_physics(player, start_time, end_time)
+        else:
+            player.apply_physics(end_time - start_time)
+        
         #set the point positions affects whether the player is grounded, so there are extra case statements here
         #if the player was in a grounded state shift back to the ground after setting the initial point positions
         if not player.is_aerial():
@@ -1089,11 +1097,6 @@ class Attack(Action):
         
         #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         #player.model.set_point_position_in_place(point_deltas)
-        
-        if self.use_animation_physics:
-            self.apply_animation_physics(player, start_time, end_time)
-        else:
-            player.apply_physics(end_time - start_time)
         
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
@@ -1114,6 +1117,8 @@ class Attack(Action):
             self.animation = self.right_animation
             player.model.orientation = physics.Orientations.FACING_RIGHT
         
+        print("is aerial before setting first frame: " + str(player.is_aerial()))
+        
         #set the point positions affects whether the player is grounded, so there are extra case statements here
         #if the player was in a grounded state shift back to the ground after setting the initial point positions
         if previous_state in [PlayerStates.WALKING, PlayerStates.STANDING, PlayerStates.CROUCHING, PlayerStates.RUNNING, PlayerStates.LANDING]:
@@ -1123,8 +1128,11 @@ class Attack(Action):
         elif not player.is_aerial():
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
+            print("shifted to ground")
         else:
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+        
+        print("is aerial after setting first frame: " + str(player.is_aerial()))
         
         player.reset_point_damage()
         
@@ -1140,7 +1148,7 @@ class Attack(Action):
         else:
             self.use_animation_physics = True
         
-        #print(self.use_animation_physics)
+        print("using animation physics: " + str(self.use_animation_physics))
         
         if player.model.time_passed > 0:
             self.move_player(player)

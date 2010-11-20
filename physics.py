@@ -202,7 +202,7 @@ class Model(Object):
                 min_y_pos = reference_position[1]
         
         for point in self.points.values():
-            reference_position = point.pos
+            reference_position = point.pixel_pos()
             
             if reference_position[0] > max_x_pos:
                 max_x_pos = reference_position[0]
@@ -281,11 +281,11 @@ class Model(Object):
             bottom_right_x, bottom_right_y = position
             
             for point in self.points.values():
-                if point.pos[0] > bottom_right_x:
-                    bottom_right_x = point.pos[0]
+                if point.pixel_pos()[0] > bottom_right_x:
+                    bottom_right_x = point.pixel_pos()[0]
                 
-                if point.pos[1] > bottom_right_y:
-                    bottom_right_y = point.pos[1]
+                if point.pixel_pos()[1] > bottom_right_y:
+                    bottom_right_y = point.pixel_pos()[1]
             
             self.height = bottom_right_y - position[1]
             self.width = bottom_right_x - position[0]
@@ -294,11 +294,11 @@ class Model(Object):
             bottom_left_x, bottom_right_y = position
             
             for point in self.points.values():
-                if point.pos[0] < bottom_left_x:
-                    bottom_left_x = point.pos[0]
+                if point.pixel_pos()[0] < bottom_left_x:
+                    bottom_left_x = point.pixel_pos()[0]
                 
                 if point.pos[1] > bottom_right_y:
-                    bottom_right_y = point.pos[1]
+                    bottom_right_y = point.pixel_pos()[1]
             
             self.height = bottom_right_y - position[1]
             self.width = position[0] - bottom_left_x

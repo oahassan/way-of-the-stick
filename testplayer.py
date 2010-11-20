@@ -1,6 +1,8 @@
 import pygame
 import player
 import gamestate
+import math
+
 from controlsdata import InputActionTypes
 
 class TestPlayer(player.Player):
@@ -14,8 +16,14 @@ class TestPlayer(player.Player):
         
         self.action = self.create_action(action_type, animation)
         self.action.animation = self.action.right_animation
+        
+        #position model to be on ground when its synced to the first frame
+        self.set_initial_position()
         self.action.set_player_state(self)
-        position = (250, gamestate.stage.ground.position[1] - self.model.height)
+    
+    def set_initial_position(self):
+        self.model.set_frame_point_pos(self.action.animation.frame_deltas[0])
+        position = (250, math.ceil(gamestate.stage.ground.position[1] - self.model.height))
         
         self.model.move_model(position)
     
@@ -58,7 +66,5 @@ class TestPlayer(player.Player):
     
     def handle_animation_end(self):
         self.model.time_passed = 0
+        self.set_initial_position()
         self.action.set_player_state(self)
-        
-        position = (250, gamestate.stage.ground.position[1] - self.model.height)
-        self.model.move_model(position)

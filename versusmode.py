@@ -188,7 +188,7 @@ def handle_events():
     if bot.health_meter == 0:
         match_state = MatchStates.END
         
-        if fight_end_timer < 3000:
+        if fight_end_timer < 8000:
             fight_end_timer += gamestate.clock.get_time()
             human_wins_label.draw(gamestate.screen)
             gamestate.new_dirty_rects.append(pygame.Rect(human_wins_label.position, \

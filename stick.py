@@ -362,14 +362,14 @@ class Circle(Line):
                                           self.endPoint2.pos))
         pos = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
         
-        return (pos[0] - radius, pos[1] - radius)
+        return (int(pos[0] - radius), int(pos[1] - radius))
     
     def get_top_right_reference_position(self):
         radius = (.5 * mathfuncs.distance(self.endPoint1.pos, \
                                           self.endPoint2.pos))
         pos = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
         
-        return (pos[0] + radius, pos[1] - radius)
+        return (int(pos[0] + radius), int(pos[1] - radius))
 
 def coalesce_top_right_and_bottom_left(*args):
     """Finds the top left and bottom right of a list of top left and bottom right pairs"""
