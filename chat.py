@@ -62,8 +62,21 @@ def handle_events():
         time_passed = gamestate.clock.get_time()
         
         for notification in network_message_notifications:
+            
+            if gamestate.drawing_mode == gamestate.DrawingModes.DIRTY_RECTS:
+                gamestate.new_dirty_rects.append(
+                    pygame.Rect(notification.position,
+                    (notification.width, notification.height))
+                )
+            
             notification.draw(gamestate.screen)
             notification.update(time_passed)
+    
+    if gamestate.drawing_mode == gamestate.DrawingModes.DIRTY_RECTS:
+        gamestate.new_dirty_rects.append(
+            pygame.Rect(entry_box.position,
+            (entry_box.width, entry_box.height))
+        )
     
     entry_box.draw(gamestate.screen)
 

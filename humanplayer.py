@@ -20,6 +20,7 @@ class HumanPlayer(player.Player):
         self.attack_keys = []
         self.aerial_movement_keys = {}
         self.stun_movement_keys = {}
+        self.handle_input_events = True
     
     def set_action(self):
         #Change state if key is released
@@ -252,5 +253,8 @@ class HumanPlayer(player.Player):
         return return_action
     
     def handle_events(self):
-        self.set_action()
+        
+        if self.handle_input_events:
+            self.set_action()
+        
         player.Player.handle_events(self)

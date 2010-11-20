@@ -94,7 +94,7 @@ def load():
         
         connected = True
         
-        ip_address_input.set_text(versusserver.get_public_ip_address())
+        ip_address_input.set_text(versusserver.get_lan_ip_address())
         ip_address_input.inactivate()
         
         connect_button.hide()

@@ -96,6 +96,68 @@ class Player():
         self.moveset = None
         self.point_name_to_point_damage = {} #Point name to PointDamage object
         self.previous_point_positions = {}
+        
+        self.play_sound_indicator = True
+        self.sound_channel = None
+        self.hit_sound_channel = None
+        
+        self.movement_sounds = {
+            PlayerStates.WALKING : [
+                pygame.mixer.Sound("sounds/step1-sound.ogg"),
+                pygame.mixer.Sound("sounds/step2-sound.ogg"),
+                pygame.mixer.Sound("sounds/step3-sound.ogg"),
+                pygame.mixer.Sound("sounds/step4-sound.ogg")
+            ],
+            PlayerStates.WALKING : [
+                pygame.mixer.Sound("sounds/step1-sound.ogg"),
+                pygame.mixer.Sound("sounds/step2-sound.ogg"),
+                pygame.mixer.Sound("sounds/step3-sound.ogg"),
+                pygame.mixer.Sound("sounds/step4-sound.ogg")
+            ],
+            PlayerStates.JUMPING : [
+                pygame.mixer.Sound("sounds/jump-sound.ogg")
+            ]
+        }
+        self.attack_sounds = {
+            InputActionTypes.WEAK_PUNCH : [
+                pygame.mixer.Sound("sounds/punch-sound.ogg")
+            ],
+            InputActionTypes.MEDIUM_PUNCH : [
+                pygame.mixer.Sound("sounds/punch-sound.ogg")
+            ],
+            InputActionTypes.STRONG_PUNCH : [
+                pygame.mixer.Sound("sounds/punch-sound.ogg")
+            ],
+            InputActionTypes.WEAK_KICK : [
+                pygame.mixer.Sound("sounds/kick-sound.ogg")
+            ],
+            InputActionTypes.MEDIUM_KICK : [
+                pygame.mixer.Sound("sounds/kick-sound.ogg")
+            ],
+            InputActionTypes.STRONG_KICK : [
+                pygame.mixer.Sound("sounds/kick-sound.ogg")
+            ]
+        }
+        self.hit_sounds = {
+            InputActionTypes.WEAK_PUNCH : [
+                pygame.mixer.Sound("sounds/hit-sound.ogg")
+            ],
+            InputActionTypes.MEDIUM_PUNCH : [
+                pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
+            ],
+            InputActionTypes.STRONG_PUNCH : [
+                pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
+            ],
+            InputActionTypes.WEAK_KICK : [
+                pygame.mixer.Sound("sounds/hit-sound.ogg")
+            ],
+            InputActionTypes.MEDIUM_KICK : [
+                pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
+            ],
+            InputActionTypes.STRONG_KICK : [
+                pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
+            ]
+        }
     
     def init_state(self):
         self.model.load_points()
@@ -117,6 +179,10 @@ class Player():
         
         draw_model(self)
         
+        if self.play_sound_indicator:
+            self.play_sound()
+            self.play_sound_indicator = False
+        
         if self.dash_timer < self.dash_timeout:
             self.dash_timer += time_passed
         
@@ -125,6 +191,46 @@ class Player():
         
         if self.stun_timer < self.stun_timeout:
             self.stun_timer += time_passed
+    
+    def play_sound(self):
+        
+        player_state = self.get_player_state()
+        
+        if not self.movement_sound_is_playing():
+            if player_state == PlayerStates.ATTACKING:
+                sound = choice(self.attack_sounds[self.get_attack_type()])
+                self.start_sound(sound)
+                
+            elif player_state in self.movement_sounds.keys():
+                sound = choice(self.movement_sounds[player_state])
+                self.start_sound(sound)
+    
+    def start_sound(self, sound):
+        if self.sound_channel == None:
+            self.sound_channel = sound.play()
+        else:
+            self.sound_channel.stop()
+            self.sound_channel = sound.play()
+    
+    def movement_sound_is_playing(self):
+        if (self.sound_channel == None or
+            self.sound_channel.get_busy() == False):
+            return False
+        else:
+            return True
+    
+    def hit_sound_is_playing(self):
+        if (self.hit_sound_channel == None or
+            self.hit_sound_channel.get_busy() == False):
+            return False
+        else:
+            return True
+    
+    def play_hit_sound(self):
+        if self.get_attack_type() in self.hit_sounds.keys():
+            self.hit_sound_channel = choice(self.hit_sounds[self.get_attack_type()]).play()
+        else:
+            self.hit_sound_channel =  pygame.mixer.Sound().play()
     
     def set_outline_color(self):
         if self.get_player_state() == PlayerStates.STUNNED:
@@ -592,19 +698,13 @@ class GroundMovement():
                 stick.PointNames.RIGHT_FOOT : False,
                 stick.PointNames.LEFT_FOOT : False
             }
-        self.walk_sounds = [
-            pygame.mixer.Sound("sounds/step1-sound.ogg"),
-            pygame.mixer.Sound("sounds/step2-sound.ogg"),
-            pygame.mixer.Sound("sounds/step3-sound.ogg"),
-            pygame.mixer.Sound("sounds/step4-sound.ogg")
-        ]
     
     def play_sounds(self, player):
         
         for point_name, on_ground in self.point_on_ground.iteritems():
             if player.model.points[point_name].pos[1] <= gamestate.stage.ground.position[1]:
                 if not on_ground:
-                    choice(self.walk_sounds).play()
+                    player.play_sound_indicator = True
                     self.point_on_ground[point_name] = True
             else:
                 if on_ground:
@@ -694,8 +794,6 @@ class Crouch(Action):
 class Jump(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.JUMPING)
-        self.sound = pygame.mixer.Sound("./sounds/jump-sound.ogg")
-        self.sound_channel = None
     
     def test_state_change(self, player):
         change_state = False
@@ -713,10 +811,7 @@ class Jump(Action):
         Action.set_player_state(self, player, player.direction)
         player.model.velocity = (player.model.velocity[0], player.jump_speed)
         
-        if self.sound_channel == None:
-            self.sound_channel = self.sound.play()
-        elif self.sound_channel.get_busy() == False:
-            self.sound_channel = self.sound.play()
+        player.play_sound_indicator = True
         
         if ((player.jump_timer > player.short_jump_timeout) and
         (player.jump_timer < player.high_jump_timeout)):
@@ -911,34 +1006,19 @@ class Attack(Action):
     def set_frame_sounds(self):
         """Defines sounds for each frame index of the attack"""
         
-        frame_sound = None
+        self.frame_sounds.append(True)
         
-        if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
-            frame_sound = pygame.mixer.Sound("./sounds/punch-sound.ogg")
-        else:
-            frame_sound = pygame.mixer.Sound("./sounds/kick-sound.ogg")
-        
-        self.frame_sounds.append(frame_sound)
-        
-        if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
-            
-            for frame_index in range(len(self.right_animation.frames) - 1):
-                if (self.test_delta_change(stick.PointNames.RIGHT_HAND, frame_index) or
-                self.test_delta_change(stick.PointNames.LEFT_HAND, frame_index)):
-                #self.test_delta_change(stick.PointNames.RIGHT_ELBOW, frame_index) or
-                #self.test_delta_change(stick.PointNames.LEFT_ELBOW, frame_index)):
-                    self.frame_sounds.append(frame_sound)
-                else:
-                    self.frame_sounds.append(None)
-        else:
-            for frame_index in range(len(self.right_animation.frames) - 1):
-                if (self.test_delta_change(stick.PointNames.RIGHT_FOOT, frame_index) or
-                    self.test_delta_change(stick.PointNames.LEFT_FOOT, frame_index)):
-                    #self.test_delta_change(stick.PointNames.RIGHT_ELBOW, frame_index) or
-                    #self.test_delta_change(stick.PointNames.LEFT_ELBOW, frame_index)):
-                    self.frame_sounds.append(frame_sound)
-                else:
-                    self.frame_sounds.append(None)
+        for frame_index in range(1, len(self.right_animation.frames) - 1):
+            if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
+                self.frame_sounds.append(
+                    self.test_delta_change(stick.PointNames.RIGHT_HAND, frame_index) or
+                    self.test_delta_change(stick.PointNames.LEFT_HAND, frame_index)
+                )
+            else:
+                self.frame_sounds.append(
+                    self.test_delta_change(stick.PointNames.RIGHT_FOOT, frame_index) or
+                    self.test_delta_change(stick.PointNames.LEFT_FOOT, frame_index)
+                )
     
     def test_delta_change(self, point_name, frame_index):
         delta = self.right_animation.animation_deltas[frame_index][point_name]
@@ -978,15 +1058,6 @@ class Attack(Action):
         self.range = (self.right_animation.get_widest_frame().image_width(), 
                       self.right_animation.get_tallest_frame().image_height())
         self.attack_lines = self.get_attack_lines(model)
-        
-        if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.WEAK_KICK]:
-            self.hit_sound = pygame.mixer.Sound("sounds/hit-sound.ogg")
-            
-        elif self.attack_type in [InputActionTypes.MEDIUM_PUNCH, InputActionTypes.MEDIUM_KICK]:
-            self.hit_sound = pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
-            
-        elif self.attack_type in [InputActionTypes.STRONG_PUNCH, InputActionTypes.STRONG_KICK]:
-            self.hit_sound = pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
     
     def move_player(self, player):
         
@@ -1004,11 +1075,7 @@ class Attack(Action):
         frame_index = self.animation.get_frame_index_at_time(end_time)
         
         if frame_index == self.frame_sound_index:
-            if self.frame_sounds[frame_index] != None:
-                if self.current_sound_channel == None:
-                     self.current_sound_channel = self.frame_sounds[frame_index].play()
-                elif self.current_sound_channel.get_busy() == False:
-                    self.current_sound_channel = self.frame_sounds[frame_index].play()
+            player.play_sound_indicator = True
                 
             self.frame_sound_index += 1
         

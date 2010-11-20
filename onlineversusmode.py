@@ -12,6 +12,7 @@ import stage
 import stick
 import mathfuncs
 import versusmode
+from controlsdata import InputActionTypes
 
 exit_button = button.ExitButton()
 exit_indicator = False
@@ -242,6 +243,7 @@ fight_start_timer = None
 fps_label = None
 player_type = None
 bot_type = None
+chatting = False
 
 def init():
     global initialized
@@ -259,7 +261,9 @@ def init():
     global fps_label
     global player_type
     global bot_type
+    global chatting
     
+    chatting = False
     fps_label = button.Label((200,200), str(gamestate.clock.get_fps()),(255,255,255),50)
     fight_indicator = False
     fight_end_timer = 0
@@ -308,7 +312,9 @@ def exit():
     global versus_mode_start_timer
     global fight_start_timer
     global fight_end_timer
+    global chatting
     
+    chatting = False
     ready_label = None
     fight_label = None
     human_wins_label = None
@@ -334,6 +340,7 @@ def handle_events():
     global exit_button
     global exit_indicator
     global players
+    global chatting
     
     for rect in gamestate.old_dirty_rects:
         rect_surface = pygame.Surface((rect.width,rect.height))
@@ -350,6 +357,19 @@ def handle_events():
         
         else:
             current_player.handle_events()
+    
+    if pygame.K_t in wotsuievents.keys_pressed:
+        chatting = True
+        
+        if versusclient.local_player_is_in_match():
+            players[versusclient.get_local_player_position()].handle_input_events = False
+    
+    if (pygame.K_RETURN in wotsuievents.keys_pressed or
+    pygame.K_ESCAPE in wotsuievents.keys_pressed):
+        chatting = False
+        
+        if versusclient.local_player_is_in_match():
+            players[versusclient.get_local_player_position()].handle_input_events = True    
     
     handle_interactions()
     
