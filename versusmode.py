@@ -586,13 +586,13 @@ def get_line_hitboxes(line):
     line_rects = []
     
     line.set_length()
-    box_count = line.length / 3.5
+    box_count = line.length / 7
     
     if box_count > 0:
         for pos in get_hitbox_positions(box_count, line):
-            line_rects.append(pygame.Rect(pos, (7,7)))
+            line_rects.append(pygame.Rect(pos, (14,14)))
     else:
-        line_rects.append(pygame.Rect(line.endPoint1.pos, (7,7)))
+        line_rects.append(pygame.Rect(line.endPoint1.pos, (14,14)))
     
     return line_rects
 
@@ -612,7 +612,7 @@ def get_hitbox_positions(box_count, line):
         length_to_hit_box_center = 0
         increment = line.length / box_count
         
-        hitbox_positions.append((int(end_pos[0] - 3.5), int(end_pos[1] - 3.5)))
+        hitbox_positions.append((int(end_pos[0] - 7), int(end_pos[1] - 7)))
         
         length_to_hit_box_center += increment
         x_pos = start_pos[0] + x_delta - ((x_delta / length) * length_to_hit_box_center)
@@ -620,14 +620,14 @@ def get_hitbox_positions(box_count, line):
         box_center = (x_pos, y_pos)
         
         for i in range(int(box_count)):
-            hitbox_positions.append((int(box_center[0] - 3.5), int(box_center[1] - 3.5)))
+            hitbox_positions.append((int(box_center[0] - 7), int(box_center[1] - 7)))
             
             length_to_hit_box_center += increment
             x_pos = start_pos[0] + x_delta - ((x_delta / length) * length_to_hit_box_center)
             y_pos = start_pos[1] + y_delta - ((y_delta / length) * length_to_hit_box_center)
             box_center = (x_pos, y_pos)
         
-        hitbox_positions.append((int(start_pos[0] - 3.5), int(start_pos[1] - 3.5)))
+        hitbox_positions.append((int(start_pos[0] - 7), int(start_pos[1] - 7)))
         
         return hitbox_positions
 
