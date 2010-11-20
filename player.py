@@ -645,6 +645,7 @@ class Jump(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.JUMPING)
         self.sound = pygame.mixer.Sound("./sounds/jump-sound.ogg")
+        self.sound_channel = None
     
     def test_state_change(self, player):
         change_state = False
@@ -661,6 +662,11 @@ class Jump(Action):
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
         player.model.velocity = (player.model.velocity[0], player.jump_speed)
+        
+        if self.sound_channel == None:
+            self.sound_channel = self.sound.play()
+        elif self.sound_channel.get_busy() == False:
+            self.sound_channel = self.sound.play()
         
         if ((player.jump_timer > player.short_jump_timeout) and
         (player.jump_timer < player.high_jump_timeout)):
