@@ -1,4 +1,5 @@
 import copy
+from random import choice
 import pygame
 import animationexplorer
 import player
@@ -25,11 +26,13 @@ class HumanPlayer(player.Player):
     def set_action(self):
         #Change state if key is released
         if (self.input_action != None and
-            wotsuievents.key_released(self.input_action.key) and
-            len(wotsuievents.keys_pressed) == 0):
-                if (self.input_action.key_release_action != None and
-                self.get_player_state() != player.PlayerStates.TRANSITION):
-                    self.transition(self.input_action.key_release_action)
+            wotsuievents.key_released(self.input_action.key)):
+                if self.input_action.key_release_action != None:
+                    if self.get_player_state() != player.PlayerStates.TRANSITION:
+                        self.transition(self.input_action.key_release_action)
+                    elif self.action.next_action != self.input_action.key_release_action:
+                        self.transition(self.input_action.key_release_action)
+                    
                 self.input_action = None
         
         for key in wotsuievents.keys_pressed:
@@ -41,7 +44,9 @@ class HumanPlayer(player.Player):
                 continue
             
             if key in self.key_bindings.keys():
-                if self.is_aerial():
+                if (self.is_aerial() and
+                self.get_player_state() in [player.PlayerStates.JUMPING, player.PlayerStates.FLOATING, player.PlayerStates.STUNNED]):
+                    
                     if key == pygame.K_UP:
                         self.handle_key_input(key)
                         

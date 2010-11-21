@@ -242,6 +242,15 @@ class Player():
         else:
             self.outline_color = self.color
     
+    def move_to_ground(self):
+        
+        position = (
+            self.model.position[0], 
+            gamestate.stage.ground.position[1] - self.model.height
+        )
+        
+        self.model.move_model(position)
+    
     def get_player_point_positions(self):
         """builds a dictionary of point name to point position for each point in the
         model"""
@@ -617,7 +626,20 @@ class Transition(Action):
         
         last_frame = self.create_last_frame(first_frame, player.action, next_action)
         
-        if player.model.orientation == physics.Orientations.FACING_LEFT:
+        #when running or walking is the next action state the reference 
+        #position may change. So special logic is here to handle correctly
+        #orienting the transition animations
+        if next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING]:
+            if (player.model.orientation == physics.Orientations.FACING_RIGHT and
+            next_action.direction == PlayerStates.FACING_LEFT):
+                first_frame.flip()
+            elif (player.model.orientation == physics.Orientations.FACING_LEFT):
+                if (next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING] and
+                    next_action.direction == PlayerStates.FACING_RIGHT):
+                    pass
+                else:
+                    first_frame.flip()
+        elif player.model.orientation == physics.Orientations.FACING_LEFT:
             first_frame.flip()
         
         last_frame.set_position(first_frame.get_reference_position())
@@ -675,6 +697,9 @@ class Transition(Action):
         
         point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         player.model.set_point_position_in_place(point_deltas)
+        
+        if self.last_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING, PlayerStates.STANDING, PlayerStates.CROUCHING]:
+            player.move_to_ground()
         
         player.apply_physics(end_time - start_time)
         
