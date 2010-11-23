@@ -1352,7 +1352,7 @@ def draw_model(player):
     
     gamestate.new_dirty_rects.append(enclosing_rect)
     
-    pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)
+    #pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)
     
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
