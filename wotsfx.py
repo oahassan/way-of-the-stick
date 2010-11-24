@@ -9,9 +9,13 @@ class Effect():
         max_height,
         inner_circle_ratio,
         fade_rate,
-        time_multiplier):
+        time_multiplier
+    ):
         
         self.time_passed = 0
+        self.height = 0
+        self.width = 0
+        self.position = center
         self.center = center
         self.angle = angle
         self.max_width = max_width
@@ -20,32 +24,53 @@ class Effect():
         self.fade_rate = fade_rate
         self.time_multiplier = time_multiplier
     
-    def draw_ellipse_effect(
+    def update(
         self,
-        time_passed,
-        surface):
-        
+        time_passed
+    ):
         ratio = float(self.max_height) / float(self.max_width)
         
-        #create effect dimensions by size
         self.time_passed += (self.time_multiplier * time_passed)
         
-        big_height = min(ratio * self.time_passed, self.max_height)
-        big_width = min(self.time_passed, self.max_width)
+        self.height = min(ratio * self.time_passed, self.max_height)
+        self.width = min(self.time_passed, self.max_width)
+        self.position = (
+            self.center[0] - (.5 * self.width),
+            self.center[1] - (.5 * self.height)
+        )
+    
+    def get_enclosing_rect():
+        return (self.position, (self.width, self.height))
+    
+    def effect_over(self):
+        ratio = float(self.max_height) / float(self.max_width)
         
         small_height = (self.inner_circle_ratio * ratio) * self.time_passed
         small_width = self.inner_circle_ratio * self.time_passed
         
-        if small_height > big_height + (ratio*2) and small_width > big_width + 2:
+        return (small_height > self.height + (ratio*2)) and (small_width > self.width + 2)
+    
+    def draw_ellipse_effect(
+        self,
+        surface
+    ):
+        
+        ratio = float(self.max_height) / float(self.max_width)
+        
+        #create effect dimensions by size
+        small_height = (self.inner_circle_ratio * ratio) * self.time_passed
+        small_width = self.inner_circle_ratio * self.time_passed
+        
+        if self.effect_over():
             self.time_passed = 0
         
         #create effect surface
-        effect_surface = pygame.Surface((big_width, big_height)).convert()
+        effect_surface = pygame.Surface((self.width, self.height)).convert()
         
         effect_position_big = (0,0)
-        effect_position_small = (-2, (.5 * big_height) - (.5 * small_height))
+        effect_position_small = (-2, (.5 * self.height) - (.5 * small_height))
         
-        pygame.draw.ellipse(effect_surface, (255,255,255), (effect_position_big, (big_width, big_height)))
+        pygame.draw.ellipse(effect_surface, (255,255,255), (effect_position_big, (self.width, self.height)))
         pygame.draw.ellipse(effect_surface, (0,0,0), (effect_position_small, (small_width, small_height)))
         
         effect_surface.set_colorkey((0,0,0))

@@ -1,4 +1,5 @@
 import pygame
+import wotsfx
 import wotsuievents
 import gamestate
 import player
@@ -8,6 +9,7 @@ import button
 import stage
 import stick
 import mathfuncs
+import math
 
 class PlayerTypes:
     HUMAN = 'HUMAN'
@@ -39,6 +41,7 @@ fight_start_timer = None
 fps_label = None
 player_type = None
 bot_type = None
+effects = None
 
 stun_channel = None
 hit_sound = pygame.mixer.Sound("./sounds/hit-sound.ogg")
@@ -60,7 +63,9 @@ def init():
     global fps_label
     global player_type
     global bot_type
+    global effects
     
+    effects = []
     fps_label = button.Label((200,200), str(gamestate.clock.get_fps()),(255,255,255),50)
     match_state = MatchStates.READY
     fight_end_timer = 0
@@ -130,7 +135,9 @@ def exit():
     global versus_mode_start_timer
     global fight_start_timer
     global fight_end_timer
+    global effects
     
+    effects = []
     ready_label = None
     fight_label = None
     human_wins_label = None
@@ -159,6 +166,7 @@ def handle_events():
     global fight_start_timer
     global fight_end_timer
     global fps_label
+    global effects
     
     for rect in gamestate.old_dirty_rects:
         rect_surface = pygame.Surface((rect.width,rect.height))
@@ -222,6 +230,10 @@ def handle_events():
             bot.handle_events(human)
         else:
             bot.handle_events()
+        
+        for effect in effects:
+            effect.update(gamestate.time_passed)
+            
         
         handle_interactions()
     
@@ -341,8 +353,31 @@ def handle_unblocked_attack_collision(
     interaction_points = get_interaction_points(receiver, colliding_lines)
     damage = attacker.get_point_damage(interaction_points[0].name)
     
+    attack_knockback_vector = get_knockback_vector(attacker, interaction_points[0])
+    
+    degree_in_angles = 0
+    
+    if attack_knockback_vector[0] == 0:
+        if mathfuncs.sign(attack_knockback_vector[1]) == 1:
+            degree_in_angles = 90
+        else:
+            degree_in_angles = 270
+            
+    elif attack_knockback_vector[1] == 0:
+        if mathfuncs.sign(attack_knockback_vector[0]) == 1:
+            degree_in_angles = 0
+        else:
+            degree_in_angles = 180
+        
+    else:
+        degree_in_angles = math.degrees(
+            math.asin(attack_knockback_vector[1] / math.hypot(
+                attack_knockback_vector[0], math.asin(attack_knockback_vector[1])
+            ))
+        )
+    
     if receiver.get_player_state() == player.PlayerStates.STUNNED:
-        attack_knockback_vector = get_knockback_vector(attacker, interaction_points[0])
+        
         stun_knockback_vector = receiver.knockback_vector
         
         if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):

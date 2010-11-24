@@ -166,8 +166,8 @@ class Player():
         self.init_point_damage_dictionary()
     
     def handle_events(self):
-        time_passed = gamestate.clock.get_time()
-        self.model.time_passed = time_passed
+        
+        self.model.time_passed = gamestate.time_passed
         
         self.set_previous_point_positions()
         
@@ -185,13 +185,13 @@ class Player():
             self.play_sound_indicator = False
         
         if self.dash_timer < self.dash_timeout:
-            self.dash_timer += time_passed
+            self.dash_timer += gamestate.time_passed
         
         if self.jump_timer < self.high_jump_timeout:
-            self.jump_timer += time_passed
+            self.jump_timer += gamestate.time_passed
         
         if self.stun_timer < self.stun_timeout:
-            self.stun_timer += time_passed
+            self.stun_timer += gamestate.time_passed
     
     def play_sound(self):
         
