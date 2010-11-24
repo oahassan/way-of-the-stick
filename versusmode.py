@@ -1,5 +1,5 @@
 import pygame
-import wotsfx
+from wotsfx import Effect
 import wotsuievents
 import gamestate
 import player
@@ -233,7 +233,17 @@ def handle_events():
         
         for effect in effects:
             effect.update(gamestate.time_passed)
-            
+            gamestate.new_dirty_rects.append(pygame.Rect(effect.get_enclosing_rect()))
+            effect.draw_ellipse_effect(gamestate.screen)
+        
+        dead_effects = []
+        
+        for effect in effects:
+            if effect.effect_over():
+                dead_effects.append(effect)
+        
+        for effect in dead_effects:
+            effects.remove(effect)
         
         handle_interactions()
     
@@ -344,6 +354,7 @@ def handle_unblocked_attack_collision(
     receiver_hitboxes
 ):
     global stun_channel
+    global effects
     
     colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
     
@@ -355,22 +366,22 @@ def handle_unblocked_attack_collision(
     
     attack_knockback_vector = get_knockback_vector(attacker, interaction_points[0])
     
-    degree_in_angles = 0
+    angle_in_degrees = 0
     
     if attack_knockback_vector[0] == 0:
         if mathfuncs.sign(attack_knockback_vector[1]) == 1:
-            degree_in_angles = 90
+            angle_in_degrees = 90
         else:
-            degree_in_angles = 270
+            angle_in_degrees = 270
             
     elif attack_knockback_vector[1] == 0:
         if mathfuncs.sign(attack_knockback_vector[0]) == 1:
-            degree_in_angles = 0
+            angle_in_degrees = 0
         else:
-            degree_in_angles = 180
+            angle_in_degrees = 180
         
     else:
-        degree_in_angles = math.degrees(
+        angle_in_degrees = math.degrees(
             math.asin(attack_knockback_vector[1] / math.hypot(
                 attack_knockback_vector[0], math.asin(attack_knockback_vector[1])
             ))
@@ -397,6 +408,7 @@ def handle_unblocked_attack_collision(
             
             if not attacker.hit_sound_is_playing():
                 attacker.play_hit_sound()
+                effects.append(Effect(interaction_points[0].pos, angle_in_degrees, 40, 200, .7, 1.1, .1))
             
     else:
         apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
@@ -410,6 +422,8 @@ def handle_unblocked_attack_collision(
         #if (stun_channel == None or
         #stun_channel.get_busy() == False):
         attacker.play_hit_sound()
+        effects.append(Effect(interaction_points[0].pos, angle_in_degrees, 40, 200, .7, 1.1, .1))
+        
 
 def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
     attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])

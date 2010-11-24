@@ -32,14 +32,21 @@ class Effect():
         
         self.time_passed += (self.time_multiplier * time_passed)
         
-        self.height = min(ratio * self.time_passed, self.max_height)
-        self.width = min(self.time_passed, self.max_width)
+        big_height = min(ratio * self.time_passed, self.max_height)
+        big_width = min(self.time_passed, self.max_width)
+        
+        effect_surface = pygame.Surface((big_width, big_height)).convert()
+        effect_surface = pygame.transform.rotate(effect_surface, self.angle)
+        effect_surface_rect = effect_surface.get_rect()
+        
+        self.height = effect_surface_rect.height
+        self.width = effect_surface_rect.width
         self.position = (
             self.center[0] - (.5 * self.width),
             self.center[1] - (.5 * self.height)
         )
     
-    def get_enclosing_rect():
+    def get_enclosing_rect(self):
         return (self.position, (self.width, self.height))
     
     def effect_over(self):
@@ -58,19 +65,18 @@ class Effect():
         ratio = float(self.max_height) / float(self.max_width)
         
         #create effect dimensions by size
+        big_height = min(ratio * self.time_passed, self.max_height)
+        big_width = min(self.time_passed, self.max_width)
         small_height = (self.inner_circle_ratio * ratio) * self.time_passed
         small_width = self.inner_circle_ratio * self.time_passed
         
-        if self.effect_over():
-            self.time_passed = 0
-        
         #create effect surface
-        effect_surface = pygame.Surface((self.width, self.height)).convert()
+        effect_surface = pygame.Surface((big_width, big_height)).convert()
         
         effect_position_big = (0,0)
-        effect_position_small = (-2, (.5 * self.height) - (.5 * small_height))
+        effect_position_small = (-2, (.5 * big_height) - (.5 * small_height))
         
-        pygame.draw.ellipse(effect_surface, (255,255,255), (effect_position_big, (self.width, self.height)))
+        pygame.draw.ellipse(effect_surface, (255,255,255), (effect_position_big, (big_width, big_height)))
         pygame.draw.ellipse(effect_surface, (0,0,0), (effect_position_small, (small_width, small_height)))
         
         effect_surface.set_colorkey((0,0,0))
