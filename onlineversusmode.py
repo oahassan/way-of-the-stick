@@ -424,8 +424,8 @@ def handle_events():
             
             gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
         
-        versusclient.listener.Pump()
         versusclient.get_network_messages()
+        versusclient.listener.Pump()
     
     if gamestate.hosting:
         versusserver.server.Pump()

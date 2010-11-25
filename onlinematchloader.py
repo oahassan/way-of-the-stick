@@ -54,8 +54,8 @@ def handle_events():
         onlineversusmode.init()
         gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
     
-    versusclient.listener.Pump()
     versusclient.get_network_messages()
+    versusclient.listener.Pump()
     
     if gamestate.hosting:
         versusserver.server.Pump()

@@ -128,8 +128,8 @@ def unload():
     
     if connected:
         #clean up any remaining messages to the client
-        versusclient.listener.Pump()
         versusclient.get_network_messages()
+        versusclient.listener.Pump()
         
         versusclient.listener.close()
         versusclient.unload()
@@ -330,8 +330,8 @@ def handle_events():
                 if join_match_button.active:
                     join_match_button.inactivate()
             
-            versusclient.listener.Pump()
             versusclient.get_network_messages()
+            versusclient.listener.Pump()            
             
             if (versusclient.listener.server_mode == 
             versusserver.ServerModes.LOADING_MATCH_DATA) or \

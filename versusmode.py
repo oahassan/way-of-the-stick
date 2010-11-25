@@ -407,7 +407,7 @@ def handle_unblocked_attack_collision(
             receiver.set_stun_timeout(attacker.get_stun_timeout())
             
             if receiver.health_meter == 0:
-                receiver.set_stun_timeout(8000)
+                receiver.set_stun_timeout(9000)
             
             if not attacker.hit_sound_is_playing():
                 attacker.play_hit_sound()
@@ -422,7 +422,7 @@ def handle_unblocked_attack_collision(
         receiver.health_meter = max(0, receiver.health_meter - damage)
         
         if receiver.health_meter == 0:
-            receiver.set_stun_timeout(8000)
+            receiver.set_stun_timeout(9000)
         
         #if (stun_channel == None or
         #stun_channel.get_busy() == False):
