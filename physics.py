@@ -5,6 +5,7 @@ import pygame
 
 GRAVITY = .001
 FRICTION = .003
+STUN_FRICTION = .001
 
 class Object():
     def __init__(self, \

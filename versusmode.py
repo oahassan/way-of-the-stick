@@ -509,12 +509,12 @@ def scale_knockback(knockback_vector):
     y = knockback_vector[1]
     hypotenuse = math.hypot(x,y)
     
-    knockback = .1
+    knockback = .2
     
     if hypotenuse == 0:
         return 0, 0
     else:
-        return knockback * x / hypotenuse, knockback * y / hypotenuse
+        return 2 * knockback * x / hypotenuse, knockback * y / hypotenuse
 
 def get_interaction_points(receiver, colliding_lines):
     attacker_line_index = 0

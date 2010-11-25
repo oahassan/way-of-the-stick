@@ -711,6 +711,8 @@ class Transition(Action):
             Action.set_player_state(self, player, self.next_action.direction)
         else:
             Action.set_player_state(self, player, player.direction)
+        
+        player.model.friction = physics.FRICTION
     
 class InputAction():
     def __init__(self, action, key_release_action, key):
@@ -1007,6 +1009,7 @@ class Stun(Action):
         
         player.stun_timeout = 500 #min(500,int(1000 * ((player.health_max - player.health_meter) / player.health_max)) + 200)
         player.stun_timer = 0
+        player.model.friction = physics.STUN_FRICTION
         
         if player.model.time_passed > 0:
             self.move_player(player)
