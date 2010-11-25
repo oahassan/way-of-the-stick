@@ -41,7 +41,7 @@ fight_start_timer = None
 fps_label = None
 player_type = None
 bot_type = None
-effects = None
+point_effects = {}
 
 stun_channel = None
 hit_sound = pygame.mixer.Sound("./sounds/hit-sound.ogg")
@@ -63,9 +63,9 @@ def init():
     global fps_label
     global player_type
     global bot_type
-    global effects
+    global point_effects
     
-    effects = []
+    point_effects = {}
     fps_label = button.Label((200,200), str(gamestate.clock.get_fps()),(255,255,255),50)
     match_state = MatchStates.READY
     fight_end_timer = 0
@@ -135,9 +135,9 @@ def exit():
     global versus_mode_start_timer
     global fight_start_timer
     global fight_end_timer
-    global effects
+    global point_effects
     
-    effects = []
+    point_effects = {}
     ready_label = None
     fight_label = None
     human_wins_label = None
@@ -231,20 +231,6 @@ def handle_events():
         else:
             bot.handle_events()
         
-        for effect in effects:
-            effect.update(gamestate.time_passed)
-            gamestate.new_dirty_rects.append(pygame.Rect(effect.get_enclosing_rect()))
-            effect.draw_ellipse_effect(gamestate.screen)
-        
-        dead_effects = []
-        
-        for effect in effects:
-            if effect.effect_over():
-                dead_effects.append(effect)
-        
-        for effect in dead_effects:
-            effects.remove(effect)
-        
         handle_interactions()
     
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
@@ -336,6 +322,20 @@ def handle_attacks(attacker, receiver):
                 # draw_receiver_hitboxes(receiver_hitboxes)
                 
                 handle_unblocked_attack_collision(attacker, receiver, attacker_attack_hitboxes, receiver_hitboxes)
+    
+    for effect in point_effects.values():
+        effect.update(gamestate.time_passed)
+        gamestate.new_dirty_rects.append(pygame.Rect(effect.get_enclosing_rect()))
+        effect.draw_ellipse_effect(gamestate.screen)
+    
+    dead_effects = []
+    
+    for point_id, effect in point_effects.iteritems():
+        if effect.effect_over():
+            dead_effects.append(point_id)
+    
+    for point_id in dead_effects:
+        del point_effects[point_id]
 
 def draw_attacker_hitboxes(hitbox_dictionary):
     for name, hitboxes in hitbox_dictionary.iteritems():
@@ -354,7 +354,7 @@ def handle_unblocked_attack_collision(
     receiver_hitboxes
 ):
     global stun_channel
-    global effects
+    global point_effects
     
     colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
     
@@ -364,26 +364,29 @@ def handle_unblocked_attack_collision(
     interaction_points = get_interaction_points(receiver, colliding_lines)
     damage = attacker.get_point_damage(interaction_points[0].name)
     
-    attack_knockback_vector = get_knockback_vector(attacker, interaction_points[0])
+    attack_knockback_vector = attacker.get_point_position_change(interaction_points[0].name)
+    effect_height = max(50, damage)
+    effect_width = max(50, .2 * damage)
+    fade_rate =  1 / (effect_height / effect_width)
     
     angle_in_degrees = 0
     
     if attack_knockback_vector[0] == 0:
         if mathfuncs.sign(attack_knockback_vector[1]) == 1:
-            angle_in_degrees = 90
-        else:
-            angle_in_degrees = 270
-            
-    elif attack_knockback_vector[1] == 0:
-        if mathfuncs.sign(attack_knockback_vector[0]) == 1:
             angle_in_degrees = 0
         else:
             angle_in_degrees = 180
+            
+    elif attack_knockback_vector[1] == 0:
+        if mathfuncs.sign(attack_knockback_vector[0]) == 1:
+            angle_in_degrees = 90
+        else:
+            angle_in_degrees = 270
         
     else:
         angle_in_degrees = math.degrees(
             math.asin(attack_knockback_vector[1] / math.hypot(
-                attack_knockback_vector[0], math.asin(attack_knockback_vector[1])
+                attack_knockback_vector[0], attack_knockback_vector[1]
             ))
         )
     
@@ -391,7 +394,7 @@ def handle_unblocked_attack_collision(
         
         stun_knockback_vector = receiver.knockback_vector
         
-        if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
+        if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector) and receiver.health_meter > 0:
             pass
         else:
             apply_collision_physics(
@@ -408,7 +411,9 @@ def handle_unblocked_attack_collision(
             
             if not attacker.hit_sound_is_playing():
                 attacker.play_hit_sound()
-                effects.append(Effect(interaction_points[0].pos, angle_in_degrees, 40, 200, .7, 1.1, .1))
+            
+            #if not interaction_points[0].id in point_effects:
+            #    point_effects[interaction_points[0].id] = Effect(interaction_points[0].pos, angle_in_degrees, effect_width, effect_height, .7, fade_rate, .6)
             
     else:
         apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
@@ -422,7 +427,9 @@ def handle_unblocked_attack_collision(
         #if (stun_channel == None or
         #stun_channel.get_busy() == False):
         attacker.play_hit_sound()
-        effects.append(Effect(interaction_points[0].pos, angle_in_degrees, 40, 200, .7, 1.1, .1))
+        
+    if not interaction_points[0].id in point_effects:
+        point_effects[interaction_points[0].id] = Effect(interaction_points[0].pos, angle_in_degrees, effect_width, effect_height, .7, fade_rate, .6)
         
 
 def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
@@ -486,7 +493,7 @@ def get_pull_point_deltas(attacker, attack_point):
     
     x = knockback_vector[0]
     y = knockback_vector[1]
-    hypotenuse = mathfuncs.distance((x,0),(0,y))
+    hypotenuse = math.hypot(x,y)
     
     knockback = 3
     
@@ -500,7 +507,7 @@ def scale_knockback(knockback_vector):
     
     x = knockback_vector[0]
     y = knockback_vector[1]
-    hypotenuse = mathfuncs.distance((x,0),(0,y))
+    hypotenuse = math.hypot(x,y)
     
     knockback = .1
     
