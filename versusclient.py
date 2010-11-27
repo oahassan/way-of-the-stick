@@ -12,6 +12,7 @@ import movesetselectui
 import wotsuicontainers
 
 class ConnectionStatus:
+    CONNECTING = 'connecting'
     CONNECTED = 'connected'
     DISCONNECTED = 'disconnected'
     ERROR = 'error'
@@ -341,6 +342,7 @@ def connect_to_host(host_ip_address):
     if listener == None:
         listener = ClientConnectionListener()
     
+    listener.connection_status = ConnectionStatus.CONNECTING
     listener.Connect((host_ip_address, DFLT_PORT))
 
 def get_network_messages():
