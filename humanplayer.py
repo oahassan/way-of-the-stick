@@ -81,22 +81,15 @@ class HumanPlayer(player.Player):
         movement_type = self.stun_movement_keys[key]
         
         if movement_type == InputActionTypes.MOVE_LEFT:
-            self.model.accelerate(-1*self.get_aerial_acceleration(),0)
+            self.model.accelerate(self.get_aerial_acceleration(-1), 0)
             
-            if self.aerial_drifting_indicator == False:
-                self.aerial_drifting_indicator = True
         elif movement_type == InputActionTypes.MOVE_RIGHT:
-            self.model.accelerate(self.get_aerial_acceleration(),0)
+            self.model.accelerate(self.get_aerial_acceleration(1), 0)
             
-            if self.aerial_drifting_indicator == False:
-                self.aerial_drifting_indicator = True
         # elif movement_type == movesetdata.MovementTypes.MOVE_UP:
             # self.model.accelerate(0,-1*self.aerial_acceleration)
         elif movement_type == InputActionTypes.MOVE_DOWN:
-            self.model.accelerate(0,5*self.get_aerial_acceleration())
-            
-            if self.aerial_drifting_indicator == False:
-                self.aerial_drifting_indicator = True
+            self.model.accelerate(0, player.Player.AERIAL_ACCELERATION)
     
     def handle_stun_motion_input(self,key):
         movement_type = self.stun_movement_keys[key]

@@ -64,7 +64,8 @@ class Player():
     ACCELERATION = .00300
     TRANSITION_ACCELERATION = .006
     STUN_ACCELERATION = .002
-    MAX_AERIAL_ACCELERATION = .2
+    AERIAL_ACCELERATION = .01
+    MAX_DRIFT_VELOCITY_COMPONENT = .3
     
     def __init__(self, position):
         self.player_type = None
@@ -82,7 +83,7 @@ class Player():
         self.short_jump_timeout = 200
         self.jump_timer = self.high_jump_timeout
         self.aerial_acceleration_timer = 0
-        self.aerial_drifting_indicator = False
+        self.drift_velocity_component = 0
         self.model = physics.Model(position)
         self.walk_speed = .4
         self.run_speed = .75
@@ -195,9 +196,6 @@ class Player():
         
         if self.stun_timer < self.stun_timeout:
             self.stun_timer += gamestate.time_passed
-        
-        if self.aerial_drifting_indicator:
-            self.aerial_acceleration_timer += gamestate.time_passed
     
     def play_sound(self):
         
@@ -248,8 +246,21 @@ class Player():
         else:
             self.outline_color = self.color
     
-    def get_aerial_acceleration(self):
-        return (1 / self.aerial_acceleration_timer) * Player.MAX_AERIAL_ACCELERATION
+    def get_aerial_acceleration(self, direction):
+        """returns the acceleration when a player is moving while floating.
+        
+        direction should -1, 0 or 1 for the direction the acceleration is going in."""
+        new_component = self.drift_velocity_component + (direction * Player.AERIAL_ACCELERATION)
+        
+        if abs(new_component) <= Player.MAX_DRIFT_VELOCITY_COMPONENT:
+            
+            self.drift_velocity_component = new_component
+            
+            return direction * Player.AERIAL_ACCELERATION
+        
+        else:
+            
+            return 0
     
     def move_to_ground(self):
         
@@ -718,6 +729,7 @@ class Transition(Action):
     def set_player_state(self, player):
         if self.next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING]:
             Action.set_player_state(self, player, self.next_action.direction)
+            
         else:
             Action.set_player_state(self, player, player.direction)
         
@@ -850,8 +862,7 @@ class Jump(Action):
         Action.set_player_state(self, player, player.direction)
         player.model.velocity = (player.model.velocity[0], player.jump_speed)
         
-        if player.aerial_drifting_indicator == False:
-            player.aerial_acceleration_timer = 1
+        player.drift_velocity_component = 0
         
         player.play_sound_indicator = True
         
@@ -875,7 +886,6 @@ class Land(Action):
     
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
-        player.aerial_drifting_indicator = False
 
 class Float(Action):
     def __init__(self):
