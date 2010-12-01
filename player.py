@@ -1158,7 +1158,11 @@ class Attack(Action):
             player.handle_animation_end()
     
     def set_player_state(self, player):
-        previous_state = player.action.last_action.action_state
+        previous_state = player.get_player_state()
+        
+        if previous_state == PlayerStates.TRANSITION:
+            previous_state = player.action.last_action.action_state
+        
         player.action = self
         player.model.animation_run_time = 0     
         player.current_attack = self

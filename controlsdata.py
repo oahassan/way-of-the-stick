@@ -49,7 +49,7 @@ def get_controls():
     controls = open_controls_shelf()
     
     return_controls = dict([(key, value) for key, value in controls.iteritems()])
-    import pdb;pdb.set_trace()
+    
     controls.close()
     
     return return_controls

@@ -45,7 +45,7 @@ class HumanPlayer(player.Player):
             
             if key in self.key_bindings.keys():
                 if (self.is_aerial() and
-                self.get_player_state() in [player.PlayerStates.JUMPING, player.PlayerStates.FLOATING, player.PlayerStates.STUNNED]):
+                self.get_player_state() in [player.PlayerStates.JUMPING, player.PlayerStates.FLOATING]):
                     
                     if key == pygame.K_UP:
                         self.handle_key_input(key)
