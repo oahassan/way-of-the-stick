@@ -527,9 +527,10 @@ class Player():
         if self.is_aerial() == False:
             system.append(gamestate.stage.ground)
             
-            if ((self.action.action_state == PlayerStates.FLOATING)
-            or  (self.action.action_state == PlayerStates.JUMPING)):
-                self.actions[PlayerStates.LANDING].set_player_state(self)
+            if (((self.action.action_state == PlayerStates.FLOATING)
+            or  (self.action.action_state == PlayerStates.JUMPING)) and
+            (mathfuncs.sign(self.model.velocity[1]) > 0)):
+                self.transition(self.actions[PlayerStates.LANDING])
         
         if self.model.orientation == physics.Orientations.FACING_RIGHT:
             if self.model.position[0] + self.model.width > gamestate.stage.right_wall.position[0]:
@@ -858,8 +859,7 @@ class Jump(Action):
         
         return change_state
     
-    def set_player_state(self, player):
-        Action.set_player_state(self, player, player.direction)
+    def set_player_jump_velocity(self, player):
         player.model.velocity = (player.model.velocity[0], player.jump_speed)
         
         player.drift_velocity_component = 0
@@ -872,6 +872,10 @@ class Jump(Action):
             player.jump_timer = player.high_jump_timeout
         elif player.jump_timer >= player.high_jump_timeout:
             player.jump_timer = 0
+    
+    def set_player_state(self, player):
+        self.set_player_jump_velocity(player)
+        Action.set_player_state(self, player, player.direction)
 
 class Stand(Action):
     def __init__(self):
