@@ -182,8 +182,6 @@ class Player():
         
         self.set_outline_color()
         
-        draw_model(self)
-        
         if self.play_sound_indicator:
             self.play_sound()
             self.play_sound_indicator = False

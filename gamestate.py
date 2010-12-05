@@ -59,6 +59,11 @@ def update_screen():
     pygame.display.update(new_dirty_rects)
     old_dirty_rects = new_dirty_rects
     new_dirty_rects = []
+    
+    for rect in old_dirty_rects:
+        rect_surface = pygame.Surface((rect.width,rect.height))
+        rect_surface.blit(stage.background_image,((-rect.left,-rect.top)))
+        screen.blit(rect_surface,rect.topleft)
 
 def collapse_new_dirty_rects():
     global old_dirty_rects

@@ -33,7 +33,7 @@ class Object():
         self.velocity = velocity
     
     def shift(self, deltas):
-        self.position = (self.position[0] + delta[1], self.position[1] + deltas[1])
+        self.position = (self.position[0] + deltas[0], self.position[1] + deltas[1])
     
     def collide(self, object, duration):
         pass

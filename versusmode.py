@@ -20,7 +20,7 @@ class MatchStates:
     FIGHT = 'fight'
     END = 'end'
 
-gamestate.stage = stage.Stage(pygame.image.load('arenabkg.png'), 447)
+gamestate.stage = stage.ScrollableStage(447, 0, gamestate._WIDTH)
 
 initialized = False
 human = None
@@ -119,7 +119,7 @@ def init():
     gamestate.frame_rate = 100
     gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
     
-    gamestate.stage.draw(gamestate.screen)
+    gamestate.screen.blit(gamestate.stage.background_image, (0,0))
     gamestate.new_dirty_rects.append(pygame.Rect((0,0),(gamestate._WIDTH, gamestate._HEIGHT)))
 
 def exit():
@@ -167,11 +167,6 @@ def handle_events():
     global fight_end_timer
     global fps_label
     global effects
-    
-    for rect in gamestate.old_dirty_rects:
-        rect_surface = pygame.Surface((rect.width,rect.height))
-        rect_surface.blit(gamestate.stage.bkg_image,((-rect.left,-rect.top)))
-        gamestate.screen.blit(rect_surface,rect.topleft)
     
     exit_button.draw(gamestate.screen)
     gamestate.new_dirty_rects.append(pygame.Rect(exit_button.position, (exit_button.width,exit_button.height)))
@@ -232,7 +227,12 @@ def handle_events():
             bot.handle_events()
         
         handle_interactions()
-    
+        
+        gamestate.stage.scroll_background([human.model, bot.model])
+        gamestate.stage.draw()
+        player.draw_model(human)
+        player.draw_model(bot)
+        
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
             exit_indicator = True
