@@ -378,10 +378,13 @@ def handle_events():
     
     handle_interactions()
     
-    gamestate.stage.scroll_background([player.model for player in players.values])
+    gamestate.stage.scroll_background(
+        [current_player.model for current_player in players.values()]
+    )
     gamestate.stage.draw()
-    player.draw_model(human)
-    player.draw_model(bot)
+    
+    for current_player in players.values():
+        player.draw_model(current_player)
     
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
