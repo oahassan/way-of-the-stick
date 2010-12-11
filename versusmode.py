@@ -66,7 +66,7 @@ def init():
     global point_effects
     
     point_effects = {}
-    fps_label = button.Label((200,200), str(gamestate.clock.get_fps()),(255,255,255),50)
+    fps_label = button.Label((20,20), str(gamestate.clock.get_fps()),(255,255,255),30)
     match_state = MatchStates.READY
     fight_end_timer = 0
     versus_mode_start_timer = 0
@@ -116,7 +116,7 @@ def init():
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH
     initialized = True
     
-    gamestate.frame_rate = 100
+    gamestate.frame_rate = 60
     gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
     
     gamestate.screen.blit(gamestate.stage.background_image, (0,0))
@@ -171,9 +171,9 @@ def handle_events():
     exit_button.draw(gamestate.screen)
     gamestate.new_dirty_rects.append(pygame.Rect(exit_button.position, (exit_button.width,exit_button.height)))
     
-    # fps_label.set_text(str(gamestate.clock.get_fps()))
-    # fps_label.draw(gamestate.screen)
-    # gamestate.new_dirty_rects.append(pygame.Rect(fps_label.position,(fps_label.width,fps_label.height)))
+    fps_label.set_text(str(gamestate.clock.get_fps()))
+    fps_label.draw(gamestate.screen)
+    gamestate.new_dirty_rects.append(pygame.Rect(fps_label.position,(fps_label.width,fps_label.height)))
     
     if versus_mode_start_timer < 3000:
         ready_label.draw(gamestate.screen)
@@ -229,7 +229,7 @@ def handle_events():
         handle_interactions()
         
         gamestate.stage.scroll_background([human.model, bot.model])
-        gamestate.stage.draw()
+        gamestate.stage.draw(gamestate.screen)
         player.draw_model(human)
         player.draw_model(bot)
         

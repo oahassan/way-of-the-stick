@@ -154,5 +154,5 @@ class ScrollableStage():
         
         return min_and_max_positions 
     
-    def draw(self):
+    def draw(self, surface):
         pass

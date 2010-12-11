@@ -39,7 +39,7 @@ class PlayTool(EditorTools.Tool):
         gamestate.frame_rate = 100
         gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
         
-        gamestate.stage.draw(gamestate.screen)
+        gamestate.screen.blit(gamestate.stage.background_image, (0,0))
         gamestate.new_dirty_rects.append(pygame.Rect((0,0),(gamestate._WIDTH, gamestate._HEIGHT)))
     
     def clear_state(self):
@@ -65,7 +65,7 @@ class PlayTool(EditorTools.Tool):
         else:
             for rect in gamestate.old_dirty_rects:
                 rect_surface = pygame.Surface((rect.width,rect.height))
-                rect_surface.blit(gamestate.stage.bkg_image,((-rect.left,-rect.top)))
+                rect_surface.blit(gamestate.stage.background_image,((-rect.left,-rect.top)))
                 gamestate.screen.blit(rect_surface,rect.topleft)
             
             self.test_player.handle_events()
