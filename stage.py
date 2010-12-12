@@ -51,13 +51,16 @@ class ScrollableStage():
     
     def create_background(self):
         background_surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
-        pygame.draw.line(
-            background_surface,
-            (255,255,255),
-            (self.left_wall.position[0], self.floor_height),
-            (self.right_wall.position[0], self.floor_height),
-            3
-        )
+        background_surface.fill((255,255,255))
+        
+        for i in range(80, 100):
+            pygame.draw.line(
+                background_surface,
+                (int(255 * i / 100), int(255 * i / 100), int(255 * i / 100)),
+                (self.left_wall.position[0], self.floor_height + i - 80),
+                (self.right_wall.position[0], self.floor_height + i - 80),
+                3
+            )
         
         return background_surface
     
