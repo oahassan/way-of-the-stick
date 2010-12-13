@@ -28,6 +28,7 @@ import onlinemenupage
 import onlinematchloader
 import controlspage
 import chat
+import splash
 
 import gamestate
 
@@ -94,6 +95,9 @@ while 1:
         
     elif gamestate.mode == gamestate.Modes.CONTROLSPAGE:
         controlspage.handle_events()
+    
+    elif gamestate.mode == gamestate.Modes.SPLASH:
+        splash.handle_events()
         
     if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
         pygame.display.flip()
