@@ -1535,7 +1535,14 @@ def draw_reflection(player, surface):
     reflection_surface = pygame.transform.flip(reflection_surface, False, True)
     reflection_surface = pygame.transform.scale(
         reflection_surface,
-        (player_rect.width, int(.75 * player_rect.height))
+        (
+            max(int(player_rect.width * player_rect.bottom / gamestate.stage.floor_height), 10),
+            max(int(
+                (.75 * player_rect.height) *
+                player_rect.bottom /
+                gamestate.stage.floor_height
+            ), 10)
+        )
     ).convert()
     reflection_surface.set_alpha(150)
     
