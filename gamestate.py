@@ -31,7 +31,7 @@ frame_rate = 20
 time_passed = 0
 
 drawing_mode = DrawingModes.UPDATE_ALL
-mode = Modes.MAINMENU
+mode = Modes.SPLASH
 animation = None
 
 screen = pygame.display.set_mode((_WIDTH, _HEIGHT))

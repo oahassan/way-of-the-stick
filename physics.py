@@ -402,6 +402,33 @@ class Model(Object):
         
         self.set_dimensions()
     
+    def scale(self, scale):
+        """scales the lines in a frame by the given ratio
+        
+        scale: floating number to multiply the size of the frame by"""
+        reference_position = self.position
+        center = pygame.Rect(*self.get_enclosing_rect()).center
+        
+        for point in self.points.values():
+            x_delta = point.pos[0] - reference_position[0]
+            new_x = reference_position[0] + (scale * x_delta)
+            
+            y_delta = point.pos[1] - reference_position[1]
+            new_y = reference_position[1] + (scale * y_delta)
+            
+            point.pos = (new_x, new_y)
+        
+        new_center = pygame.Rect(*self.get_enclosing_rect()).center
+        
+        x_delta = new_center[0] - center[0]
+        y_delta = new_center[1] - center[1]
+        
+        self.position = (
+            reference_position[0] + x_delta,
+            reference_position[1] + y_delta
+        )
+        self.set_dimensions()
+    
     def pull_point(self, 
                   point,
                   new_pos,

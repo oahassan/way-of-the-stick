@@ -1404,7 +1404,7 @@ def draw_model(player, surface):
         if name == stick.LineNames.HEAD:
             draw_outer_circle(line, player.outline_color, surface)
         else:
-            draw_outer_line(line, player, surface)
+            draw_outer_line(line, player.outline_color, surface)
     
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
@@ -1442,12 +1442,12 @@ def draw_outline_line(line, color, surface):
                     point2, \
                     int(18))
 
-def draw_outer_line(line, player, surface):
+def draw_outer_line(line, color, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
     pygame.draw.line(surface, \
-                    player.outline_color, \
+                    color, \
                     point1, \
                     point2, \
                     int(14))
