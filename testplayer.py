@@ -33,7 +33,7 @@ class TestPlayer(player.Player):
         
         self.action.move_player(self)
         
-        player.draw_model(self)
+        player.draw_model(self, gamestate.screen)
     
     def create_action(self, action_type, animation = None, direction = player.PlayerStates.FACING_RIGHT, key = pygame.K_UP):
         return_action = None
