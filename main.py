@@ -33,7 +33,7 @@ import splash
 import gamestate
 
 screen = gamestate.screen
-
+pygame.display.set_caption("Way of the Stick")
 while 1:
     if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
         screen.fill((0,0,0))
