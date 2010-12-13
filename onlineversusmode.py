@@ -384,7 +384,7 @@ def handle_events():
     gamestate.stage.draw()
     
     for current_player in players.values():
-        player.draw_model(current_player)
+        player.draw_model(current_player, gamestate.screen)
     
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):

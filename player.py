@@ -1377,7 +1377,7 @@ class ActionFactory():
         
         return rtn_animation
 
-def draw_model(player):
+def draw_model(player, surface):
     """draws the model to the screen"""
     
     enclosing_rect = pygame.Rect(*player.model.get_enclosing_rect())  
@@ -1388,35 +1388,35 @@ def draw_model(player):
     
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
-            draw_outline_point(point, (0,0,0))
+            draw_outline_point(point, (0,0,0), surface)
     
     for name, line in player.model.lines.iteritems():
         if name == stick.LineNames.HEAD:
-            draw_outline_circle(line, (0,0,0))
+            draw_outline_circle(line, (0,0,0), surface)
         else:
-            draw_outline_line(line, (0,0,0))
+            draw_outline_line(line, (0,0,0), surface)
     
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
-            draw_outer_point(point, player.outline_color)
+            draw_outer_point(point, player.outline_color, surface)
     
     for name, line in player.model.lines.iteritems():
         if name == stick.LineNames.HEAD:
-            draw_outer_circle(line, player.outline_color)
+            draw_outer_circle(line, player.outline_color, surface)
         else:
-            draw_outer_line(line, player)
+            draw_outer_line(line, player, surface)
     
     for name, point in player.model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
-            draw_inner_point(point, player.health_color)
+            draw_inner_point(point, player.health_color, surface)
     
     for name, line in player.model.lines.iteritems():
         if name == stick.LineNames.HEAD:
-            draw_inner_circle(line, player.health_color)
+            draw_inner_circle(line, player.health_color, surface)
         else:
-            draw_health_line(line, player)
+            draw_health_line(line, player, surface)
 
-def draw_health_line(line, player):
+def draw_health_line(line, player, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
@@ -1426,53 +1426,53 @@ def draw_health_line(line, player):
     y_delta = health_level * (point2[1] - health_point1[1])
     health_point2 = (point1[0] + x_delta, point1[1] + y_delta)
     
-    pygame.draw.line(gamestate.screen, \
+    pygame.draw.line(surface, \
                     player.health_color, \
                     health_point1, \
                     health_point2, \
                     int(10))
 
-def draw_outline_line(line, color):
+def draw_outline_line(line, color, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
-    pygame.draw.line(gamestate.screen, \
+    pygame.draw.line(surface, \
                     color, \
                     point1, \
                     point2, \
                     int(18))
 
-def draw_outer_line(line, player):
+def draw_outer_line(line, player, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
-    pygame.draw.line(gamestate.screen, \
+    pygame.draw.line(surface, \
                     player.outline_color, \
                     point1, \
                     point2, \
                     int(14))
 
-def draw_outline_circle(circle, color):
+def draw_outline_circle(circle, color, surface):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
     
-    pygame.draw.circle(gamestate.screen, \
+    pygame.draw.circle(surface, \
                       color, \
                       (int(pos[0]), int(pos[1])), \
                       int(radius) + 2)
 
-def draw_outer_circle(circle, color):
+def draw_outer_circle(circle, color, surface):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
     
-    pygame.draw.circle(gamestate.screen, \
+    pygame.draw.circle(surface, \
                       color, \
                       (int(pos[0]), int(pos[1])), \
                       int(radius))
 
-def draw_inner_circle(circle, color):
+def draw_inner_circle(circle, color, surface):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
@@ -1480,36 +1480,73 @@ def draw_inner_circle(circle, color):
     if radius <= 2:
         radius = 3
     
-    pygame.draw.circle(gamestate.screen, \
+    pygame.draw.circle(surface, \
                       (0, 100, 0), \
                       (int(pos[0]), int(pos[1])), \
                       int(radius - 2))
 
 
-def draw_outline_point(point, color):
+def draw_outline_point(point, color, surface):
     position = point.pixel_pos()
     
-    pygame.draw.circle(gamestate.screen, \
+    pygame.draw.circle(surface, \
                        color, \
                        position, \
                        int(9))
 
-def draw_outer_point(point, color):
+def draw_outer_point(point, color, surface):
     position = point.pixel_pos()
     
-    pygame.draw.circle(gamestate.screen, \
+    pygame.draw.circle(surface, \
                        color, \
                        position, \
                        int(7))
 
-def draw_inner_point(point, color):
+def draw_inner_point(point, color, surface):
     """Draws a point on a surface
     
     surface: the pygame surface to draw the point on"""
     
     position = point.pixel_pos()
     
-    pygame.draw.circle(gamestate.screen, \
+    pygame.draw.circle(surface, \
                        color, \
                        position, \
                        int(5))
+
+def draw_reflection(player, surface):
+    """draws the reflection of the player on the given surface"""
+
+    player_rect = pygame.Rect(*player.model.get_enclosing_rect())
+    previous_position = (player.model.position[0], player.model.position[1])
+    
+    if player.model.orientation == physics.Orientations.FACING_RIGHT:
+        player.model.move_model((8,8))
+    else:
+        player.model.move_model((player_rect.width - 8, 8))
+    
+    #create a surface to perform the reflection on that tightly surounds the player
+    reflection_surface = pygame.Surface((player_rect.width, player_rect.height))
+    reflection_surface.fill((1,234,25))
+    reflection_surface.set_colorkey((1,234,25))
+    draw_model(player, reflection_surface)
+    
+    #flip and scale the surface and decrease its opacity to make the reflection
+    reflection_surface = pygame.transform.flip(reflection_surface, False, True)
+    reflection_surface = pygame.transform.scale(
+        reflection_surface,
+        (player_rect.width, int(.75 * player_rect.height))
+    ).convert()
+    reflection_surface.set_alpha(150)
+    
+    reflection_position = (player_rect.left, gamestate.stage.floor_height - 3)
+    surface.blit(reflection_surface, reflection_position)
+    
+    gamestate.new_dirty_rects.append(
+        pygame.Rect(
+            reflection_position,
+            (reflection_surface.get_width(), reflection_surface.get_height())
+        )
+    )
+    
+    player.model.move_model(previous_position)
