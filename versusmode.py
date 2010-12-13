@@ -116,11 +116,12 @@ def init():
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH
     initialized = True
     
-    gamestate.frame_rate = 60
+    gamestate.frame_rate = 100
     gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
     
     gamestate.screen.blit(gamestate.stage.background_image, (0,0))
     gamestate.new_dirty_rects.append(pygame.Rect((0,0),(gamestate._WIDTH, gamestate._HEIGHT)))
+    gamestate.clock.get_time()
 
 def exit():
     global initialized
@@ -235,6 +236,20 @@ def handle_events():
         player.draw_model(bot, gamestate.screen)
         player.draw_reflection(bot, gamestate.screen)
         
+        for effect in point_effects.values():
+            effect.update(gamestate.time_passed)
+            gamestate.new_dirty_rects.append(pygame.Rect(effect.get_enclosing_rect()))
+            effect.draw_ellipse_effect(gamestate.screen)
+        
+        dead_effects = []
+        
+        for point_id, effect in point_effects.iteritems():
+            if effect.effect_over():
+                dead_effects.append(point_id)
+        
+        for point_id in dead_effects:
+            del point_effects[point_id]
+        
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
             exit_indicator = True
@@ -324,20 +339,6 @@ def handle_attacks(attacker, receiver):
                 # draw_receiver_hitboxes(receiver_hitboxes)
                 
                 handle_unblocked_attack_collision(attacker, receiver, attacker_attack_hitboxes, receiver_hitboxes)
-    
-    for effect in point_effects.values():
-        effect.update(gamestate.time_passed)
-        gamestate.new_dirty_rects.append(pygame.Rect(effect.get_enclosing_rect()))
-        effect.draw_ellipse_effect(gamestate.screen)
-    
-    dead_effects = []
-    
-    for point_id, effect in point_effects.iteritems():
-        if effect.effect_over():
-            dead_effects.append(point_id)
-    
-    for point_id in dead_effects:
-        del point_effects[point_id]
 
 def draw_attacker_hitboxes(hitbox_dictionary):
     for name, hitboxes in hitbox_dictionary.iteritems():

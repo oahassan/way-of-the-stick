@@ -1481,7 +1481,7 @@ def draw_inner_circle(circle, color, surface):
         radius = 3
     
     pygame.draw.circle(surface, \
-                      (0, 100, 0), \
+                      color, \
                       (int(pos[0]), int(pos[1])), \
                       int(radius - 2))
 

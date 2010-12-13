@@ -72,14 +72,15 @@ class Effect():
         
         #create effect surface
         effect_surface = pygame.Surface((big_width, big_height)).convert()
+        effect_surface.fill((1,232,5))
         
         effect_position_big = (0,0)
         effect_position_small = (-2, (.5 * big_height) - (.5 * small_height))
         
-        pygame.draw.ellipse(effect_surface, (255,255,255), (effect_position_big, (big_width, big_height)))
-        pygame.draw.ellipse(effect_surface, (0,0,0), (effect_position_small, (small_width, small_height)))
+        pygame.draw.ellipse(effect_surface, (0,0,0), (effect_position_big, (big_width, big_height)))
+        pygame.draw.ellipse(effect_surface, (1,232,5), (effect_position_small, (small_width, small_height)))
         
-        effect_surface.set_colorkey((0,0,0))
+        effect_surface.set_colorkey((1,232,5))
         effect_surface.set_alpha((255 * ((100 - (self.fade_rate * self.time_passed)) / 100)))
         
         effect_surface = pygame.transform.rotate(effect_surface, self.angle)
