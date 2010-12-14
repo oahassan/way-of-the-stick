@@ -37,28 +37,39 @@ def load():
     start_match_label = movesetselectui.MovesetActionLabel((10, 500), "Start Match!")
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
-    player_type_select = wotsuicontainers.ButtonContainer((50,50),
-                                                          200,
-                                                          300,
-                                                          'Select Player Type',
-                                                          button.TextButton,
-                                                          [['Human',15], ['Bot',15]])
-    player_moveset_select = movesetselectui.MovesetSelectContainer((50, 270), \
-                                                                   200, \
-                                                                   100, \
-                                                                   'Select Your Moveset', \
-                                                                   playable_movesets)
-    bot_type_select = wotsuicontainers.ButtonContainer((400,50),
-                                                       200,
-                                                       300,
-                                                       'Select Enemy Type',
-                                                       button.TextButton,
-                                                       [['Human',15], ['Bot',15]])
-    bot_moveset_select = movesetselectui.MovesetSelectContainer((400, 270),
-                                                                200, \
-                                                                100, \
-                                                                'Select Enemy Moveset', \
-                                                                playable_movesets)
+    player_type_select = wotsuicontainers.ButtonContainer(
+        (50,50),
+        100,
+        300,
+        'Select Player Type',
+        button.TextButton,
+        [['Human',15], ['Bot',15]]
+    )
+    
+    player_moveset_select_position = (50, 50 + player_type_select.height + 30)
+    player_moveset_select = movesetselectui.MovesetSelectContainer(
+        player_moveset_select_position,
+        300,
+        100,
+        'Select Your Moveset',
+        playable_movesets
+    )
+    bot_type_select = wotsuicontainers.ButtonContainer(
+        (400,50),
+        100,
+        300,
+        'Select Enemy Type',
+        button.TextButton,
+        [['Human',15], ['Bot',15]]
+    )
+    bot_moveset_select_position = (400, 50 + bot_type_select.height + 30)
+    bot_moveset_select = movesetselectui.MovesetSelectContainer(
+        bot_moveset_select_position,
+        300, \
+        100, \
+        'Select Enemy Moveset', \
+        playable_movesets
+    )
     
 def unload():
     global loaded
