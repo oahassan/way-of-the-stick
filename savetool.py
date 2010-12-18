@@ -24,7 +24,7 @@ class SaveTool(EditorTools.Tool):
                                       y=SaveTool._TEXT_BOX_Y_POS, \
                                       prompt='Type animation name: ', \
                                       color=(255,255,255), \
-                                      font=pygame.font.Font(None, 12))
+                                      font=pygame.font.Font('freesansbold.ttf', 20))
         self.animation_saved = False
         self.draw_input = False
         self.animation_type = None
@@ -123,13 +123,16 @@ class SaveTool(EditorTools.Tool):
 class SaveButton(button.Button):
     _WIDTH = 30
     _HEIGHT = 30
-    _POSITION = (400, 10)
+    _POSITION = (500, 10)
     
     def __init__(self):
         button.Button.__init__(self)
         self.width = SaveButton._WIDTH
         self.height = SaveButton._HEIGHT
-        self.position = SaveButton._POSITION
+        self.position = (
+            SaveTool._TEXT_BOX_X_POS,
+            SaveTool._TEXT_BOX_Y_POS + self.height + 10
+        )
         self.line_thickness = SaveTool._SYMBOL_LINE_THICKNESS
         self.symbol.draw = SaveButton.draw_symbol
     
