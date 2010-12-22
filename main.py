@@ -22,12 +22,12 @@ import keybinding
 import movesetbuilder
 import movesetselect
 import versusmovesetselect
-#import onlineversusmode
-#import onlineversusmovesetselect
-#import onlinemenupage
-#import onlinematchloader
+import onlineversusmode
+import onlineversusmovesetselect
+import onlinemenupage
+import onlinematchloader
 import controlspage
-#import chat
+import chat
 import splash
 
 import gamestate
@@ -78,20 +78,20 @@ while 1:
         movesetselect.handle_events()
     elif gamestate.mode == gamestate.Modes.VERSUSMOVESETSELECT:
         versusmovesetselect.handle_events()
-    #elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMODE:
-    #    onlineversusmode.handle_events()
-    #    chat.handle_events()
+    elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMODE:
+        onlineversusmode.handle_events()
+        chat.handle_events()
         
-    #elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT:
-    #    onlineversusmovesetselect.handle_events()
-    #    chat.handle_events()
+    elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT:
+        onlineversusmovesetselect.handle_events()
+        chat.handle_events()
         
-    #elif gamestate.mode == gamestate.Modes.ONLINEMENUPAGE:
-    #    onlinemenupage.handle_events()
+    elif gamestate.mode == gamestate.Modes.ONLINEMENUPAGE:
+        onlinemenupage.handle_events()
         
-    #elif gamestate.mode == gamestate.Modes.ONLINEMATCHLOADER:
-    #    onlinematchloader.handle_events()
-    #    chat.handle_events()
+    elif gamestate.mode == gamestate.Modes.ONLINEMATCHLOADER:
+        onlinematchloader.handle_events()
+        chat.handle_events()
         
     elif gamestate.mode == gamestate.Modes.CONTROLSPAGE:
         controlspage.handle_events()
