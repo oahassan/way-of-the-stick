@@ -311,7 +311,7 @@ def init():
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH
     initialized = True
     
-    gamestate.frame_rate = 100
+    gamestate.frame_rate = gamestate.VERSUSMODE_FRAMERATE
     gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
     
     gamestate.screen.blit(gamestate.stage.background_image, (0,0))
@@ -352,7 +352,7 @@ def exit():
     
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.NONE
     gamestate.drawing_mode = gamestate.DrawingModes.UPDATE_ALL
-    gamestate.frame_rate = 20
+    gamestate.frame_rate = gamestate.NORMAL_FRAMERATE
 
 def handle_events():
     global exit_button

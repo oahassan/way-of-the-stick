@@ -27,7 +27,10 @@ class DrawingModes():
 
 stage = None
 
-frame_rate = 20
+VERSUSMODE_FRAMERATE = 100
+NORMAL_FRAMERATE = 100
+
+frame_rate = 100
 time_passed = 0
 
 drawing_mode = DrawingModes.UPDATE_ALL
