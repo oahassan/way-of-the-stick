@@ -171,6 +171,8 @@ class LocalPlayer(NetworkPlayer):
     def __init__(self, player_position):
         
         NetworkPlayer.__init__(self, player_position)
+        
+        self.update_timer = 0
     
     def build_player_state_dictionary(self):
         
@@ -214,10 +216,13 @@ class LocalHumanPlayer(humanplayer.HumanPlayer, LocalPlayer):
     
     def handle_events(self):
         humanplayer.HumanPlayer.handle_events(self)
+        self.update_timer += gamestate.time_passed
         
-        player_state_dictionary = self.build_player_state_dictionary()
-        
-        versusclient.update_player_state(player_state_dictionary, self.player_position)
+        if self.update_timer > 30:
+            self.update_timer = 0
+            player_state_dictionary = self.build_player_state_dictionary()
+            
+            versusclient.update_player_state(player_state_dictionary, self.player_position)
 
 class LocalBot(aiplayer.Bot, LocalPlayer):
     
@@ -227,10 +232,13 @@ class LocalBot(aiplayer.Bot, LocalPlayer):
     
     def handle_events(self, opponent):
         aiplayer.Bot.handle_events(self, opponent)
+        self.update_timer += gamestate.time_passed
         
-        player_state_dictionary = self.build_player_state_dictionary()
-        
-        versusclient.update_player_state(player_state_dictionary, self.player_position)
+        if self.update_timer > 30:
+            self.update_timer = 0
+            player_state_dictionary = self.build_player_state_dictionary()
+            
+            versusclient.update_player_state(player_state_dictionary, self.player_position)
 
 gamestate.stage = stage.ScrollableStage(447, 0, gamestate._WIDTH)
 

@@ -1,8 +1,8 @@
 import urllib
 import socket
 
-from PodSixNet.Channel import Channel
-from PodSixNet.Server import Server
+from wotsprot.udpserver import Server
+from wotsprot.channel import Channel
 
 class PlayerPositions:
     NONE = "none"
@@ -167,8 +167,8 @@ class ClientChannel(Channel):
 class WotsServer(Server):
     channelClass = ClientChannel
     
-    def __init__(self, channelClass=None, localaddr=("127.0.0.1", 31425), listeners=5):
-        Server.__init__(self, channelClass, localaddr, listeners)
+    def __init__(self, *args, **kwargs):
+        Server.__init__(self, *args, **kwargs)
         self.player_name_count = 0
         self.player_positions = \
             {PlayerPositions.PLAYER1 : None, PlayerPositions.PLAYER2 : None}
@@ -383,12 +383,12 @@ def get_lan_ip_address():
 def start_public_server():
     global server
     
-    server = WotsServer(localaddr=(get_public_ip_address(), int(DFLT_PORT)))
+    server = WotsServer(address=(get_public_ip_address(), int(DFLT_PORT)))
 
 def start_lan_server():
     global server
     
-    server = WotsServer(localaddr=(get_lan_ip_address(), int(DFLT_PORT)))
+    server = WotsServer(address=(get_lan_ip_address(), int(DFLT_PORT)))
 
 def server_ready():
     if server:

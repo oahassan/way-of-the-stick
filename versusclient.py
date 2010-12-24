@@ -1,5 +1,5 @@
 import pygame
-from PodSixNet.Connection import connection, ConnectionListener
+from wotsprot.udpclient import EndPoint
 
 import wotsuievents
 import movesetdata
@@ -28,8 +28,9 @@ class ServerActions:
     UPDATE_PLAYER_STATE = "update_player_state"
     SEND_CHAT_MESSAGE = "send_chat_message"
 
-class ClientConnectionListener(ConnectionListener):
+class ClientConnectionListener(EndPoint):
     def __init__(self):
+        EndPoint.__init__(self, local_address=("",0))
         self.connection_status = ConnectionStatus.DISCONNECTED
         self.player_positions = \
             {PlayerPositions.PLAYER1 : None, PlayerPositions.PLAYER2 : None}
@@ -43,8 +44,8 @@ class ClientConnectionListener(ConnectionListener):
         self.player_id = None
         self.server_mode = None
     
-    def close(self):
-        connection.Close()
+    def Close(self):
+        EndPoint.Close(self)
         self.connection_status = ConnectionStatus.DISCONNECTED
     
     def pop_received_data(self):
@@ -62,19 +63,19 @@ class ClientConnectionListener(ConnectionListener):
             DataKeys.NICKNAME : self.player_nicknames[self.player_id]
         }
         
-        connection.Send(data)
+        self.Send(data)
     
     def player_ready(self):
         data = {DataKeys.ACTION : ServerActions.PLAYER_READY}
-        connection.Send(data)
+        self.Send(data)
     
     def join_match(self):
         data = {DataKeys.ACTION : ServerActions.JOIN_MATCH}
-        connection.Send(data)
+        self.Send(data)
     
     def spectate_match(self):
         data = {DataKeys.ACTION : ServerActions.SPECTATE_MATCH}
-        connection.Send(data)
+        self.Send(data)
     
     def load_match_data(self):
         data = {
@@ -82,7 +83,7 @@ class ClientConnectionListener(ConnectionListener):
             DataKeys.SERVER_MODE : ServerModes.LOADING_MATCH_DATA
         }
         
-        connection.Send(data)
+        self.Send(data)
     
     def start_match(self):
         data = {
@@ -90,14 +91,14 @@ class ClientConnectionListener(ConnectionListener):
             DataKeys.SERVER_MODE : ServerModes.MATCH
         }
         
-        connection.Send(data)
+        self.Send(data)
     
     def end_match(self):
         data = {
             DataKeys.ACTION : ServerActions.END_MATCH
         }
         
-        connection.Send(data)
+        self.Send(data)
     
     def del_player(self, player_to_delete_id):
         del self.player_nicknames[player_to_delete_id]
@@ -136,7 +137,7 @@ class ClientConnectionListener(ConnectionListener):
                 DataKeys.PLAYER_POSITION : get_local_player_position()
             }
         
-        connection.Send(data)
+        self.Send(data)
     
     def update_player_state(self, player_state_dictionary, player_position):
         
@@ -148,7 +149,7 @@ class ClientConnectionListener(ConnectionListener):
                     DataKeys.PLAYER_POSITION : get_local_player_position()
                 }
             
-            connection.Send(data)
+            self.Send(data)
         
     def clear_player_states(self):
         for player_position in self.player_states.keys():
@@ -211,7 +212,7 @@ class ClientConnectionListener(ConnectionListener):
             #notify server that all player states have been received
             data = {DataKeys.ACTION : ServerActions.INITIAL_PLAYER_STATES_RECEIVED}
             
-            connection.Send(data)
+            self.Send(data)
     
     def Network_match_full(self, data):
         pass
@@ -254,12 +255,11 @@ class ClientConnectionListener(ConnectionListener):
     
     def Network_error(self, data):
         print 'error:', data['error'][1]
-        connection.Close()
+        self.Close()
         self.connection_status = ConnectionStatus.ERROR
     
     def Network_disconnected(self, data):
         print 'Server disconnected'
-        #connection.Close()
         self.connection_status = ConnectionStatus.DISCONNECTED
         self.player_id = None
         self.server_mode = ServerModes.MOVESET_SELECT
@@ -346,7 +346,7 @@ def connect_to_host(host_ip_address):
     listener.Connect((host_ip_address, DFLT_PORT))
 
 def get_network_messages():
-    connection.Pump()
+    listener.Pump()
 
 def clear_player_states():
     """sets all player states to None"""
