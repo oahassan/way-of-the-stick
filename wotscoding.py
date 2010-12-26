@@ -54,29 +54,29 @@ LINE_VALUES = {
 LINE_VALUES_REVERSE = dict([[v,k] for k,v in LINE_VALUES.iteritems()])
 
 PLAYER_STATE_VALUES = {
-    FACING_RIGHT : 0
-    FACING_LEFT : 1
-    STANDING : 2
-    WALKING : 3
-    RUNNING : 4
-    JUMPING : 5
-    FLOATING : 6
-    LANDING : 7
-    ATTACKING : 8
-    CROUCHING : 9
-    STUNNED : 10
-    BLOCKING : 11
-    TRANSITION : 12
+    PlayerStates.FACING_RIGHT : 0,
+    PlayerStates.FACING_LEFT : 1,
+    PlayerStates.STANDING : 2,
+    PlayerStates.WALKING : 3,
+    PlayerStates.RUNNING : 4,
+    PlayerStates.JUMPING : 5,
+    PlayerStates.FLOATING : 6,
+    PlayerStates.LANDING : 7,
+    PlayerStates.ATTACKING : 8,
+    PlayerStates.CROUCHING : 9,
+    PlayerStates.STUNNED : 10,
+    PlayerStates.BLOCKING : 11,
+    PlayerStates.TRANSITION : 12
 }
 PLAYER_STATE_VALUES_REVERSE = dict([[v,k] for k,v in PLAYER_STATE_VALUES.iteritems()])
 
 ATTACK_TYPE_VALUES = {
-    WEAK_PUNCH : 1,
-    MEDIUM_PUNCH : 2,
-    STRONG_PUNCH : 3,
-    WEAK_KICK : 4,
-    MEDIUM_KICK : 5,
-    STRONG_KICK : 6
+    InputActionTypes.WEAK_PUNCH : 1,
+    InputActionTypes.MEDIUM_PUNCH : 2,
+    InputActionTypes.STRONG_PUNCH : 3,
+    InputActionTypes.WEAK_KICK : 4,
+    InputActionTypes.MEDIUM_KICK : 5,
+    InputActionTypes.STRONG_KICK : 6
 }
 ATTACK_TYPE_VALUES_REVERSE = dict([[v,k] for k,v in ATTACK_TYPE_VALUES.iteritems()])
 
@@ -97,7 +97,7 @@ def decode_point_positions(encoded_string):
         x_position = positions[i*2]
         y_position = positions[i*2+1]
         
-        point_positions_dictionary[point_name] = (x_position, y_positions)
+        point_positions_dictionary[point_name] = (x_position, y_position)
     
     return point_positions_dictionary
 
@@ -105,7 +105,7 @@ def encode_point_damages(point_damage_dictionary):
     encoded_damages = []
     
     for point_name in PointNames.POINT_NAMES:
-        encoded_damages.extend(point_damage_dictionary[point_name])
+        encoded_damages.append(point_damage_dictionary[point_name])
     
     return struct.pack('>ddddddddddd', *encoded_damages)
 
@@ -122,7 +122,7 @@ def encode_datatype(data_type):
 def decode_datatype(encoded_string):
     global DATATYPE_VALUES_REVERSE
     
-    return DATATYPE_VALUES_REVERSE[struct.unpack('>H', encoded_string)]
+    return DATATYPE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
 
 def encode_attack_line_names(line_names):
     global LINE_VALUES
@@ -138,7 +138,7 @@ def decode_attack_line_names(encoded_string):
     
     encoded_names = struct.unpack('>HHHH', encoded_string)
     
-    return [LINE_VALES_REVERSE[name_code] for name_code in encoded_names]
+    return [LINE_VALUES_REVERSE[name_code] for name_code in encoded_names]
 
 def encode_player_state(player_state):
     global PLAYER_STATE_VALUES
@@ -148,31 +148,31 @@ def encode_player_state(player_state):
 def decode_player_state(encoded_string):
     global PLAYER_STATE_VALUES_REVERSE
     
-    return PLAYER_STATE_VALUES_REVERSE[struct.unpack('>H', encoded_string)]
+    return PLAYER_STATE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
 
 def encode_health(player_health):
     return struct.pack('>H', player_health)
 
 def decode_health(encoded_string):
-    return struct.unpack('>H', encoded_string)
+    return struct.unpack('>H', encoded_string)[0]
 
 def encode_stun_timer(stun_timer):
     return struct.pack('>d', stun_timer)
 
 def decode_stun_timer(encoded_string):
-    return struct.unpack('>d', encoded_string)
+    return struct.unpack('>d', encoded_string)[0]
 
 def encode_sound_indicator(sound_indicator):
     return struct.pack('>?', sound_indicator)
 
 def decode_sound_indicator(encoded_string):
-    return struct.unpack('>?', encoded_string)
+    return struct.unpack('>?', encoded_string)[0]
 
 def encode_attack_sequence(attack_sequence):
     return struct.pack('>H', attack_sequence)
 
 def decode_attack_sequence(encoded_string):
-    return struct.unpack('>H', encoded_string)
+    return struct.unpack('>H', encoded_string)[0]
 
 def encode_attack_type(attack_type):
     global ATTACK_TYPE_VALUES
@@ -182,7 +182,7 @@ def encode_attack_type(attack_type):
 def decode_attack_type(encoded_string):
     global ATTACK_TYPE_VALUES_REVERSE
     
-    return ATTACK_TYPE_VALUES_REVERSE[struct.unpack('>H', encoded_string)]
+    return ATTACK_TYPE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
 
 ENCODING_FUNCS = {
     PlayerStateData.POINT_POSITIONS : encode_point_positions,
@@ -208,13 +208,13 @@ DECODING_FUNCS = {
     PlayerStateData.PLAY_SOUND : decode_sound_indicator
 }
 
-def encode_player_state_dictioanry(player_state_dictionary):
+def encode_player_state_dictionary(player_state_dictionary):
     global ENCODING_FUNCS
     
     encoded_dictionary = {}
     
     for key, value in player_state_dictionary.iteritems():
-        encoded_dictionary[encode_data_type(key)] = \
+        encoded_dictionary[encode_datatype(key)] = \
             ENCODING_FUNCS[key](value)
     
     return encoded_dictionary
@@ -225,7 +225,7 @@ def decode_player_state_dictionary(encoded_dictionary):
     decoded_dictionary = {}
     
     for key, value in encoded_dictionary.iteritems():
-        decoded_key = decode_data_type(key)
+        decoded_key = decode_datatype(key)
         
         decoded_dictionary[decoded_key] = \
             DECODING_FUNCS[decoded_key](value)

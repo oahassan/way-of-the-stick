@@ -1,5 +1,6 @@
 import pygame
 from wotsprot.udpclient import EndPoint
+from wotscoding import encode_player_state_dictionary, decode_player_state_dictionary
 
 import wotsuievents
 import movesetdata
@@ -133,7 +134,7 @@ class ClientConnectionListener(EndPoint):
         data = \
             {
                 DataKeys.ACTION : ServerActions.SEND_INITIAL_PLAYER_STATE,
-                DataKeys.PLAYER_STATE : player_state_dictionary,
+                DataKeys.PLAYER_STATE : encode_player_state_dictionary(player_state_dictionary),
                 DataKeys.PLAYER_POSITION : get_local_player_position()
             }
         
@@ -145,7 +146,7 @@ class ClientConnectionListener(EndPoint):
             data = \
                 {
                     DataKeys.ACTION : ServerActions.UPDATE_PLAYER_STATE,
-                    DataKeys.PLAYER_STATE : player_state_dictionary,
+                    DataKeys.PLAYER_STATE : encode_player_state_dictionary(player_state_dictionary),
                     DataKeys.PLAYER_POSITION : get_local_player_position()
                 }
             
@@ -206,7 +207,7 @@ class ClientConnectionListener(EndPoint):
         notify the server."""
         player_position = data[DataKeys.PLAYER_POSITION]
         
-        self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
+        self.player_states[player_position] = decode_player_state_dictionary(data[DataKeys.PLAYER_STATE])
         
         if self.all_player_states_received():
             #notify server that all player states have been received
@@ -239,7 +240,7 @@ class ClientConnectionListener(EndPoint):
         if self.server_mode == ServerModes.MATCH:
             player_position = data[DataKeys.PLAYER_POSITION]
             
-            self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
+            self.player_states[player_position] = decode_player_state_dictionary(data[DataKeys.PLAYER_STATE])
     
     def Network_receive_chat_message(self, data):
         pass
