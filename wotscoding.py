@@ -86,10 +86,11 @@ def encode_point_positions(point_position_dictionary):
     for point_name in PointNames.POINT_NAMES:
         encoded_positions.extend(point_position_dictionary[point_name])
     
-    return struct.pack('>dddddddddddddddddddddd', *encoded_positions)
+    #return struct.pack('>dddddddddddddddddddddd', *encoded_positions)
+    return encoded_positions
 
 def decode_point_positions(encoded_string):
-    positions = struct.unpack('>dddddddddddddddddddddd', encoded_string)
+    positions = encoded_string #struct.unpack('>dddddddddddddddddddddd', encoded_string)
     point_positions_dictionary = {}
     
     for i in range(len(PointNames.POINT_NAMES)):
@@ -107,22 +108,25 @@ def encode_point_damages(point_damage_dictionary):
     for point_name in PointNames.POINT_NAMES:
         encoded_damages.append(point_damage_dictionary[point_name])
     
-    return struct.pack('>ddddddddddd', *encoded_damages)
+    #return struct.pack('>ddddddddddd', *encoded_damages)
+    return encoded_damages
 
 def decode_point_damages(encoded_string):
-    point_damages = struct.unpack('>ddddddddddd', encoded_string)
+    point_damages = encoded_string #struct.unpack('>ddddddddddd', encoded_string)
     
     return dict(zip(PointNames.POINT_NAMES, point_damages))
 
 def encode_datatype(data_type):
     global DATATYPE_VALUES
     
-    return struct.pack('>H', DATATYPE_VALUES[data_type])
+    #return struct.pack('>H', DATATYPE_VALUES[data_type])
+    return DATATYPE_VALUES[data_type]
 
 def decode_datatype(encoded_string):
     global DATATYPE_VALUES_REVERSE
     
-    return DATATYPE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
+    #return DATATYPE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
+    return DATATYPE_VALUES_REVERSE[encoded_string]
 
 def encode_attack_line_names(line_names):
     global LINE_VALUES
@@ -131,58 +135,71 @@ def encode_attack_line_names(line_names):
     for name in line_names:
         encoded_names.append(LINE_VALUES[name])
     
-    return struct.pack('>HHHH', *encoded_names)
+    #return struct.pack('>HHHH', *encoded_names)
+    return encoded_names
 
 def decode_attack_line_names(encoded_string):
     global LINE_VALUES_REVERSE
     
-    encoded_names = struct.unpack('>HHHH', encoded_string)
+    encoded_names = encoded_string #struct.unpack('>HHHH', encoded_string)
     
     return [LINE_VALUES_REVERSE[name_code] for name_code in encoded_names]
 
 def encode_player_state(player_state):
     global PLAYER_STATE_VALUES
     
-    return struct.pack('>H', PLAYER_STATE_VALUES[player_state])
+    #return struct.pack('>H', PLAYER_STATE_VALUES[player_state])
+    return PLAYER_STATE_VALUES[player_state]
 
 def decode_player_state(encoded_string):
     global PLAYER_STATE_VALUES_REVERSE
     
-    return PLAYER_STATE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
+    #return PLAYER_STATE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
+    return PLAYER_STATE_VALUES_REVERSE[encoded_string]
 
 def encode_health(player_health):
-    return struct.pack('>H', player_health)
+    #return struct.pack('>H', player_health)
+    return player_health
 
 def decode_health(encoded_string):
-    return struct.unpack('>H', encoded_string)[0]
+    #return struct.unpack('>H', encoded_string)[0]
+    return encoded_string
 
 def encode_stun_timer(stun_timer):
-    return struct.pack('>d', stun_timer)
+    #return struct.pack('>d', stun_timer)
+    return stun_timer
 
 def decode_stun_timer(encoded_string):
-    return struct.unpack('>d', encoded_string)[0]
+    #return struct.unpack('>d', encoded_string)[0]
+    return encoded_string
 
 def encode_sound_indicator(sound_indicator):
-    return struct.pack('>?', sound_indicator)
+    #return struct.pack('>?', sound_indicator)
+    return sound_indicator
 
 def decode_sound_indicator(encoded_string):
-    return struct.unpack('>?', encoded_string)[0]
+    #return struct.unpack('>?', encoded_string)[0]
+    return encoded_string
 
 def encode_attack_sequence(attack_sequence):
-    return struct.pack('>H', attack_sequence)
+    #return struct.pack('>H', attack_sequence)
+    return attack_sequence
 
 def decode_attack_sequence(encoded_string):
-    return struct.unpack('>H', encoded_string)[0]
+    #return struct.unpack('>H', encoded_string)[0]
+    return encoded_string
 
 def encode_attack_type(attack_type):
     global ATTACK_TYPE_VALUES
     
-    return struct.pack('>H', ATTACK_TYPE_VALUES[attack_type])
+    #return struct.pack('>H', ATTACK_TYPE_VALUES[attack_type])
+    return ATTACK_TYPE_VALUES[attack_type]
 
 def decode_attack_type(encoded_string):
     global ATTACK_TYPE_VALUES_REVERSE
     
-    return ATTACK_TYPE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
+    #return ATTACK_TYPE_VALUES_REVERSE[struct.unpack('>H', encoded_string)[0]]
+    return ATTACK_TYPE_VALUES_REVERSE[encoded_string]
 
 ENCODING_FUNCS = {
     PlayerStateData.POINT_POSITIONS : encode_point_positions,
