@@ -64,6 +64,21 @@ class ScrollableStage():
         
         return background_surface
     
+    def create_black_background(self):
+        background_surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
+        background_surface.fill((0,0,0))
+        
+        for i in range(20):
+            pygame.draw.line(
+                background_surface,
+                (int(100 * (20 - i)/20), int(100 * (20 - i)/20), int(100 * (20 - i)/20)),
+                (self.left_wall.position[0], self.floor_height + i - 20),
+                (self.right_wall.position[0], self.floor_height + i - 20),
+                3
+            )
+        
+        return background_surface
+    
     def scroll_background(self, player_models):
         """Move the players and background so that it appears that the background is
         scrolling along with the player's movement"""

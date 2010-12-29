@@ -39,6 +39,7 @@ class PlayTool(EditorTools.Tool):
         gamestate.frame_rate = 100
         gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
         
+        gamestate.stage.background_image = gamestate.stage.create_black_background()
         gamestate.screen.blit(gamestate.stage.background_image, (0,0))
         gamestate.new_dirty_rects.append(pygame.Rect((0,0),(gamestate._WIDTH, gamestate._HEIGHT)))
     
