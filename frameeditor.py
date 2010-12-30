@@ -150,7 +150,7 @@ def draw_frame(surface, frame):
         
     for circle in frame.circles():
         circle.draw(surface, \
-                    LINE_COLORS[line.name])
+                    LINE_COLORS[circle.name])
         
     for point in frame.points():
         point.draw(surface)
@@ -213,10 +213,10 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
     
     if loaded:
         draw(surface)
-        draw_frame(surface, animation.frames[animation.frame_index])
         
         if currentTool != play_tool:
-            animation.draw_frame(surface)
+            #animation.draw_frame(surface)
+            draw_frame(surface, animation.frames[animation.frame_index])
             
             pygame.draw.line(
                 surface,

@@ -201,11 +201,11 @@ def add_names_to_points_and_lines(animation):
 
 def add_line_names_to_frame(name_to_points, frame):
     
+    for circle in frame.circles():
+        circle.name = stick.LineNames.HEAD
+    
     for line in frame.lines():
-        if line in frame.point_to_circles[name_to_points[stick.PointNames.HEAD_TOP]]:
-            line.name = stick.LineNames.HEAD
-            
-        elif (line in frame.point_to_lines[name_to_points[stick.PointNames.TORSO_TOP]] and
+        if (line in frame.point_to_lines[name_to_points[stick.PointNames.TORSO_TOP]] and
         line in frame.point_to_lines[name_to_points[stick.PointNames.TORSO_BOTTOM]]):
             line.name = stick.LineNames.TORSO
             
