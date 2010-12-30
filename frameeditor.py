@@ -140,20 +140,46 @@ def draw(surface):
     
     exit_button.draw(surface)
 
-def draw_frame(surface, frame):
+def draw_reference_frames(surface):
+    global animation
+    
+    if animation.frame_index > 0:
+        draw_frame(
+            surface,
+            animation.frames[animation.frame_index - 1],
+            100
+        )
+    
+    if animation.frame_index < len(animation.frames) - 1:
+        draw_frame(
+            surface,
+            animation.frames[animation.frame_index + 1],
+            100
+        )
+    
+    draw_frame(surface, animation.frames[animation.frame_index])
+
+def draw_frame(surface, frame, opacity=255):
     """draws all the points, lines and circles in a frame"""
     global LINE_COLORS
     
+    frame_rect = frame.get_enclosing_rect()
+    frame_surface = pygame.Surface((frame_rect.width, frame_rect.height))
+    pos_delta = (-frame_rect.left, -frame_rect.top)
+    
     for line in frame.lines():
-        line.draw(surface, \
-                 LINE_COLORS[line.name])
+        line.draw(frame_surface, LINE_COLORS[line.name], pos_delta = pos_delta)
         
     for circle in frame.circles():
-        circle.draw(surface, \
-                    LINE_COLORS[circle.name])
+        circle.draw(frame_surface, LINE_COLORS[circle.name], pos_delta = pos_delta)
         
     for point in frame.points():
-        point.draw(surface)
+        point.draw(frame_surface, pos_delta = pos_delta)
+    
+    frame_surface.set_colorkey((0,0,0))
+    frame_surface.set_alpha(opacity)
+    
+    surface.blit(frame_surface, (frame_rect.left, frame_rect.top))
 
 def handle_events(surface, mousePos, mouseButtonsPressed, events):
     """handles events based on the selected tool
@@ -216,7 +242,7 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
         
         if currentTool != play_tool:
             #animation.draw_frame(surface)
-            draw_frame(surface, animation.frames[animation.frame_index])
+            draw_reference_frames(surface)
             
             pygame.draw.line(
                 surface,

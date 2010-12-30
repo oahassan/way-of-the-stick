@@ -197,7 +197,15 @@ class Frame:
             new_y = reference_position[1] + \
                     (scale * pos_delta_dictionary[point.id][1])
             point.pos = (new_x, new_y)
+    
+    def get_enclosing_rect(self):   
+        top_left, bottom_right = self.get_top_left_and_bottom_right()
         
+        width = bottom_right[0] - top_left[0]
+        height = bottom_right[1] - top_left[1]
+        
+        return pygame.Rect(top_left, (width, height))
+    
     def get_reference_position(self):
         """Calculates the position of the top left corner of a rectangle
         enclosing the image in a frame"""
