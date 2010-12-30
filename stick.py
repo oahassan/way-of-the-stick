@@ -137,6 +137,7 @@ class Line:
         Line.set_max_length(self)
         self.id = id(self)
         self.color = Line.inactiveColor
+        self.name = ''
     
     def draw(self, \
             surface, \

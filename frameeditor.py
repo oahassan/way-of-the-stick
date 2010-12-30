@@ -17,6 +17,19 @@ import animation
 import stick
 
 
+LINE_COLORS = {
+    stick.LineNames.HEAD : (255,255,255),
+    stick.LineNames.LEFT_UPPER_ARM : (255,255,0),
+    stick.LineNames.LEFT_FOREARM : (255,255,0),
+    stick.LineNames.RIGHT_UPPER_ARM : (0,255,0),
+    stick.LineNames.RIGHT_FOREARM : (0,255,0),
+    stick.LineNames.TORSO : (255,255,255),
+    stick.LineNames.LEFT_UPPER_LEG : (255,255,0),
+    stick.LineNames.LEFT_LOWER_LEG : (255,255,0),
+    stick.LineNames.RIGHT_UPPER_LEG : (0,255,0),
+    stick.LineNames.RIGHT_LOWER_LEG : (0,255,0)
+}
+
 _HORIZONTAL_PADDING = 5
 _VERTICAL_PADDING = 5
 _ContainerLineThickness = 2
@@ -127,6 +140,21 @@ def draw(surface):
     
     exit_button.draw(surface)
 
+def draw_frame(surface, frame):
+    """draws all the points, lines and circles in a frame"""
+    global LINE_COLORS
+    
+    for line in frame.lines():
+        line.draw(surface, \
+                 LINE_COLORS[line.name])
+        
+    for circle in frame.circles():
+        circle.draw(surface, \
+                    LINE_COLORS[line.name])
+        
+    for point in frame.points():
+        point.draw(surface)
+
 def handle_events(surface, mousePos, mouseButtonsPressed, events):
     """handles events based on the selected tool
     
@@ -185,6 +213,7 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
     
     if loaded:
         draw(surface)
+        draw_frame(surface, animation.frames[animation.frame_index])
         
         if currentTool != play_tool:
             animation.draw_frame(surface)

@@ -490,6 +490,10 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
                 animations.extend(actionwizard.get_attack_animations(InputActionTypes.MEDIUM_PUNCH))
                 animations.extend(actionwizard.get_attack_animations(InputActionTypes.STRONG_PUNCH))
         
+        #FIX BAD NAME DATA
+        for move_animation in animations:
+            animationexplorer.add_names_to_points_and_lines(move_animation)
+        
         return animations
     
     def layout_thumbnails(self):
