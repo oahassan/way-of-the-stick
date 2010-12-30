@@ -72,22 +72,22 @@ def init():
     versus_mode_start_timer = 0
     fight_start_timer = 0
     
-    ready_label = button.Label((0,0),'READY...',(0,0,0),100)
+    ready_label = button.Label((0,0),'READY...',(0,0,255),100)
     ready_label_position = ((gamestate._WIDTH / 2) - (ready_label.width / 2), \
                             (gamestate._HEIGHT / 2) - (ready_label.height / 2))
     ready_label.set_position(ready_label_position)
     
-    fight_label = button.Label((0,0),'FIGHT!',(0,0,0),100)
+    fight_label = button.Label((0,0),'FIGHT!',(0,0,255),100)
     fight_label_position = ((gamestate._WIDTH / 2) - (fight_label.width / 2), \
                             (gamestate._HEIGHT / 2) - (fight_label.height / 2))
     fight_label.set_position(fight_label_position)
     
-    human_wins_label = button.Label((0,0),'YOU WIN!',(0,0,0),100)
+    human_wins_label = button.Label((0,0),'PLAYER 1 WINS!',(0,0,255),100)
     human_wins_label_position = ((gamestate._WIDTH / 2) - (human_wins_label.width / 2), \
                             (gamestate._HEIGHT / 2) - (human_wins_label.height / 2))
     human_wins_label.set_position(human_wins_label_position)
     
-    bot_wins_label = button.Label((0,0),'BOT WINS!',(0,0,0),100)
+    bot_wins_label = button.Label((0,0),'PLAYER 2 WINS!',(0,0,255),100)
     bot_wins_label_position = ((gamestate._WIDTH / 2) - (bot_wins_label.width / 2), \
                             (gamestate._HEIGHT / 2) - (bot_wins_label.height / 2))
     bot_wins_label.set_position(bot_wins_label_position)

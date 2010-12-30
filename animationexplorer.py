@@ -123,7 +123,7 @@ def create_WOTS_animation():
     WOTS_animation.point_names[stick.PointNames.TORSO_BOTTOM] = torso_bottom_point.id
     
     torso = stick.Line(torso_top_point, torso_bottom_point)
-    torso.name = TORSO
+    torso.name = stick.LineNames.TORSO
     
     left_elbow_point = stick.Point(left_elbow_pos)
     left_elbow_point.name = stick.PointNames.LEFT_ELBOW
