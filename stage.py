@@ -140,7 +140,7 @@ class ScrollableStage():
                     model_rect = pygame.Rect(model.get_enclosing_rect())
                     
                     if model_rect.right > self.right_wall.position[0]:
-                        model.shift((self.right_wall_position[0] - model_rect.right, 0))
+                        model.shift((self.right_wall.position[0] - model_rect.right, 0))
             elif mathfuncs.sign(model_furthest_right.velocity[0]) <= 0:
                 #The player is not moving towards the edge so no shifting should happen
                 pass
