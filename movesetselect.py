@@ -132,8 +132,8 @@ def handle_events():
         elif export_moveset_label.selected:
             export_moveset_label.handle_deselected()
             
-            if delete_moveset_label.contains(wotsuievents.mouse_pos):
-                pass
+            if export_moveset_label.contains(wotsuievents.mouse_pos):
+                movesetdata.export_moveset(moveset_select_container.selected_moveset)
     
     if loaded:
         moveset_select_container.handle_events()

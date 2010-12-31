@@ -1,9 +1,11 @@
 import os
 import shelve
 import player
-from wotsprot.rencode import dumps, loads
+from wotsprot.rencode import dumps, loads, serializable
 import string
 import unicodedata
+import stick
+import animation
 
 validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
@@ -21,12 +23,12 @@ def export_moveset(moveset):
     moveset_data = dumps(moveset)
     file_name =  removeDisallowedFilenameChars(moveset.name) + _MOVESET_SUFFIX
     
-    with open(os.path.join(_EXPORTED_MOVESETS_DIR, file_name)) as f:
+    with open(os.path.join(_EXPORTED_MOVESETS_DIR, file_name),'w') as f:
         f.write(moveset_data)
 
 def removeDisallowedFilenameChars(filename):
-    cleanedFilename = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore')
-    return ''.join(c for c in cleanedFilename if c in validFilenameChars)
+    
+    return ''.join(c for c in filename if c in validFilenameChars)
 
 def get_movesets():
     movesets = shelve.open(_MOVESET_DB_FILE_NM, "c")
@@ -138,3 +140,10 @@ class Moveset():
                 break
         
         return action_found_indicator
+
+serializable.register(stick.Point)
+serializable.register(stick.Line)
+serializable.register(stick.Circle)
+serializable.register(animation.Animation)
+serializable.register(animation.Frame)
+serializable.register(Moveset)
