@@ -257,7 +257,7 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
             
             pygame.draw.line(
                 surface,
-                (20, 20, 20),
+                (200, 200, 200),
                 (0, 500),
                 (800, 500),
                 1
