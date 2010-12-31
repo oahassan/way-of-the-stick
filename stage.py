@@ -47,7 +47,7 @@ class ScrollableStage():
             width = gamestate._WIDTH)
         self.background_image = self.create_black_background()
         
-        self.scroll_threshold = 50
+        self.scroll_threshold = 0
     
     def create_background(self):
         background_surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
@@ -116,9 +116,9 @@ class ScrollableStage():
                     
                     if model_rect.left < self.left_wall.position[0]:
                         model.shift((self.left_wall.position[0] - model_rect.left, 0))
-            elif mathfuncs.sign(model_furthest_left.velocity[0]) >= 0:
+            #elif mathfuncs.sign(model_furthest_left.velocity[0]) >= 0:
                 #The player is not moving towards the edge so no shifting should happen
-                pass
+            #    pass
             else:
                 x_displacement = left_threshold_position - furthest_left_position
                 
@@ -141,9 +141,9 @@ class ScrollableStage():
                     
                     if model_rect.right > self.right_wall.position[0]:
                         model.shift((self.right_wall.position[0] - model_rect.right, 0))
-            elif mathfuncs.sign(model_furthest_right.velocity[0]) <= 0:
+            #elif mathfuncs.sign(model_furthest_right.velocity[0]) <= 0:
                 #The player is not moving towards the edge so no shifting should happen
-                pass
+            #    pass
             else:
                 x_displacement = right_threshold_position - furthest_right_position
                 
