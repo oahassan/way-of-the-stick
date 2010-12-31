@@ -145,7 +145,7 @@ class PrevFrameTool(EditorTools.Tool):
     
     def __init__(self):
         """Creates a new previous frame tool"""
-        EditorTools.Tool.__init__(self,'previous frame')
+        EditorTools.Tool.__init__(self,'prev. frame')
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = PrevFrameTool.draw_symbol
     
