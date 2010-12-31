@@ -262,6 +262,7 @@ fps_label = None
 player_type = None
 bot_type = None
 chatting = False
+match_state = None
 
 def init():
     global initialized
@@ -282,28 +283,28 @@ def init():
     global chatting
     
     chatting = False
-    fps_label = button.Label((200,200), str(gamestate.clock.get_fps()),(255,255,255),50)
+    fps_label = button.Label((200,200), str(gamestate.clock.get_fps()),(0,0,255),50)
     fight_indicator = False
     fight_end_timer = 0
     versus_mode_start_timer = 0
     fight_start_timer = 0
     
-    ready_label = button.Label((0,0),'READY...',(255,255,255),100)
+    ready_label = button.Label((0,0),'READY...',(0,0,255),100)
     ready_label_position = ((gamestate._WIDTH / 2) - (ready_label.width / 2), \
                             (gamestate._HEIGHT / 2) - (ready_label.height / 2))
     ready_label.set_position(ready_label_position)
     
-    fight_label = button.Label((0,0),'FIGHT!',(255,255,255),100)
+    fight_label = button.Label((0,0),'FIGHT!',(0,0,255),100)
     fight_label_position = ((gamestate._WIDTH / 2) - (fight_label.width / 2), \
                             (gamestate._HEIGHT / 2) - (fight_label.height / 2))
     fight_label.set_position(fight_label_position)
     
-    human_wins_label = button.Label((0,0),'YOU WIN!',(255,255,255),100)
+    human_wins_label = button.Label((0,0),'YOU WIN!',(0,0,255),100)
     human_wins_label_position = ((gamestate._WIDTH / 2) - (human_wins_label.width / 2), \
                             (gamestate._HEIGHT / 2) - (human_wins_label.height / 2))
     human_wins_label.set_position(human_wins_label_position)
     
-    bot_wins_label = button.Label((0,0),'BOT WINS!',(255,255,255),100)
+    bot_wins_label = button.Label((0,0),'BOT WINS!',(0,0,255),100)
     bot_wins_label_position = ((gamestate._WIDTH / 2) - (bot_wins_label.width / 2), \
                             (gamestate._HEIGHT / 2) - (bot_wins_label.height / 2))
     bot_wins_label.set_position(bot_wins_label_position)
@@ -355,6 +356,15 @@ def exit():
     gamestate.frame_rate = gamestate.NORMAL_FRAMERATE
 
 def handle_events():
+    global ready_label
+    global fight_label
+    global human_wins_label
+    global bot_wins_label
+    global match_state
+    global versus_mode_start_timer
+    global fight_start_timer
+    global fight_end_timer
+    global fps_label
     global exit_button
     global exit_indicator
     global players
@@ -363,13 +373,62 @@ def handle_events():
     exit_button.draw(gamestate.screen)
     gamestate.new_dirty_rects.append(pygame.Rect(exit_button.position, (exit_button.width,exit_button.height)))
     
-    for player_position, current_player in players.iteritems():
-        if current_player.player_type == player.PlayerTypes.BOT:
-            for other_player_position in get_other_player_positions(player_position):
-                current_player.handle_events(players[other_player_position])
+    fps_label.set_text(str(gamestate.clock.get_fps()))
+    fps_label.draw(gamestate.screen)
+    gamestate.new_dirty_rects.append(pygame.Rect(fps_label.position,(fps_label.width,fps_label.height)))
+    
+    if versus_mode_start_timer < 3000:
+        ready_label.draw(gamestate.screen)
+        gamestate.new_dirty_rects.append(pygame.Rect(ready_label.position,(ready_label.width,ready_label.height)))
         
+        versus_mode_start_timer += gamestate.clock.get_time()
+    else:
+        fight_start_timer += gamestate.clock.get_time()
+        match_state = versusmode.MatchStates.FIGHT
+        
+        if fight_start_timer < 1000:
+            fight_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(pygame.Rect(fight_label.position,(fight_label.width,fight_label.height)))
+    
+    player1 = players[versusserver.PlayerPositions.PLAYER1]
+    player2 = players[versusserver.PlayerPositions.PLAYER2]
+    
+    if player2.health_meter == 0:
+        match_state = versusmode.MatchStates.END
+        
+        if fight_end_timer < 8000:
+            fight_end_timer += gamestate.clock.get_time()
+            human_wins_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(pygame.Rect(
+                human_wins_label.position,
+                (human_wins_label.width, human_wins_label.height)
+            ))
+            
         else:
-            current_player.handle_events()
+            versusclient.listener.end_match()
+    elif player1.health_meter == 0:
+        match_state = versusmode.MatchStates.END
+        
+        if fight_end_timer < 8000:
+            fight_end_timer += gamestate.clock.get_time()
+            bot_wins_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(pygame.Rect(\
+                bot_wins_label.position, 
+                (bot_wins_label.width, bot_wins_label.height)
+            ))
+        else:
+            versusclient.listener.end_match()
+    
+    if ((exit_indicator == False) and 
+    ((match_state == versusmode.MatchStates.FIGHT) or 
+    (match_state == versusmode.MatchStates.END))):
+        for player_position, current_player in players.iteritems():
+            if current_player.player_type == player.PlayerTypes.BOT:
+                for other_player_position in get_other_player_positions(player_position):
+                    current_player.handle_events(players[other_player_position])
+            
+            else:
+                current_player.handle_events()
     
     if pygame.K_t in wotsuievents.keys_pressed:
         chatting = True
