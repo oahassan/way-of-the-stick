@@ -110,8 +110,12 @@ class ScrollableStage():
             
         elif furthest_left_position < left_threshold_position:
             if self.left_wall.position[0] == 0:
-                #The player is on the edge of the stage so no shifting should happen
-                pass
+                #The player is on the edge of the stage so make sure they don't go off
+                for model in player_models:
+                    model_rect = pygame.Rect(model.get_enclosing_rect())
+                    
+                    if model_rect.left < self.left_wall.position[0]:
+                        model.shift((self.left_wall.position[0] - model_rect.left, 0))
             elif mathfuncs.sign(model_furthest_left.velocity[0]) >= 0:
                 #The player is not moving towards the edge so no shifting should happen
                 pass
@@ -131,8 +135,12 @@ class ScrollableStage():
         
         elif furthest_right_position > right_threshold_position:
             if self.right_wall.position[0] == gamestate._WIDTH:
-                #The player is on the edge of the stage so no shifting should happen
-                pass
+                #The player is on the edge of the stage so make sure they don't go off
+                for model in player_models:
+                    model_rect = pygame.Rect(model.get_enclosing_rect())
+                    
+                    if model_rect.right > self.right_wall.position[0]:
+                        model.shift((self.right_wall_position[0] - model_rect.right, 0))
             elif mathfuncs.sign(model_furthest_right.velocity[0]) <= 0:
                 #The player is not moving towards the edge so no shifting should happen
                 pass
