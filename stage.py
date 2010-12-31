@@ -45,7 +45,7 @@ class ScrollableStage():
         self.ground = physics.Ground(
             position = (0, floor_height),
             width = gamestate._WIDTH)
-        self.background_image = self.create_background()
+        self.background_image = self.create_black_background()
         
         self.scroll_threshold = 50
     
