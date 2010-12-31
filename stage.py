@@ -127,7 +127,7 @@ class ScrollableStage():
                 
                 left_wall_displacement = min(
                     x_displacement,
-                    0 - self.left_wall.position[0]
+                    self.left_screen_position - self.left_wall.position[0]
                 )
                 
                 self.left_wall.shift((left_wall_displacement, 0))
