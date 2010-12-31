@@ -198,13 +198,23 @@ class Frame:
                     (scale * pos_delta_dictionary[point.id][1])
             point.pos = (new_x, new_y)
     
-    def get_enclosing_rect(self):   
-        top_left, bottom_right = self.get_top_left_and_bottom_right()
+    def get_enclosing_rect(self, point_radius = None, line_thickness = None, circle_radius = None):   
         
-        width = bottom_right[0] - top_left[0]
-        height = bottom_right[1] - top_left[1]
+        line_rects = []
         
-        return pygame.Rect(top_left, (width, height))
+        for line in self.lines():
+            line_rects.append(line.get_enclosing_rect(point_radius=point_radius, line_thickness=line_thickness))
+        
+        circle_rects = [circle.get_enclosing_rect(radius=circle_radius, point_radius=point_radius, line_thickness=line_thickness) for circle in self.circles()]
+        
+        rects = line_rects
+        rects.extend(circle_rects)
+        union_rect = rects[0]
+        
+        for rect in rects:
+            union_rect.union_ip(rect)
+        
+        return union_rect
     
     def get_reference_position(self):
         """Calculates the position of the top left corner of a rectangle

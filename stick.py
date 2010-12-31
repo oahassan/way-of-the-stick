@@ -51,7 +51,7 @@ class Point:
     slctdColor = (255,0,0)
     inactiveColor = (100,100,100)
     anchorColor = (0,0,255)
-    radius = 5
+    radius = 10
     
     def __init__(self, pos):
         """Creates a new point
@@ -67,9 +67,12 @@ class Point:
         return ((self.pos[0] - self.radius - 2, self.pos[1] - self.radius - 2), 
                 (self.pos[0] + self.radius + 2, self.pos[1] + self.radius + 2))
     
-    def get_enclosing_rect(self):
-        return ((self.pos[0] - self.radius, self.pos[1] - self.radius), 
-                (2*self.radius, 2*self.radius))
+    def get_enclosing_rect(self, radius = None):
+        if radius == None:
+            radius = self.radius
+        position = self.pixel_pos()
+        return ((position[0] - radius, position[1] - radius), 
+                (2*radius, 2*radius))
     
     def pixel_pos(self):
         """Determines the pixel coordinates of a point by rounding its x and y
@@ -132,7 +135,7 @@ class Line:
         self.endPoint2 = point2
         self.points = [self.endPoint1, self.endPoint2]
         self.end_points = [self.endPoint1, self.endPoint2]
-        self.thickness = 3
+        self.thickness = 20
         Line.set_length(self)
         Line.set_max_length(self)
         self.id = id(self)
@@ -274,6 +277,15 @@ class Line:
         return ((top_left_x, top_left_y), 
                 (bottom_right_x, bottom_right_y))
     
+    def get_enclosing_rect(self, point_radius=None, line_thickness=None):
+        if line_thickness == None:
+            line_thickness = self.thickness
+        
+        enclosing_rect1 = pygame.Rect(*self.endPoint1.get_enclosing_rect(point_radius))
+        enclosing_rect2 = pygame.Rect(*self.endPoint2.get_enclosing_rect(point_radius))
+        
+        return enclosing_rect1.union(enclosing_rect2)
+    
     def get_reference_position(self):
         x_half_length = .5 * abs(self.endPoint1.pos[0] - self.endPoint2.pos[0])
         y_half_length = .5 * abs(self.endPoint1.pos[1] - self.endPoint2.pos[1])
@@ -322,21 +334,40 @@ class Circle(Line):
         endpoints"""
         self.set_length()
     
+    def get_enclosing_rect(self, radius=None, point_radius=None, line_thickness=None):
+        if line_thickness == None:
+            line_thickness = self.thickness
+        
+        if radius == None:
+            radius = (.5 * mathfuncs.distance(self.endPoint1.pos, \
+                                             self.endPoint2.pos))
+         
+        enclosing_rect1 = pygame.Rect(*self.endPoint1.get_enclosing_rect(point_radius))
+        enclosing_rect2 = pygame.Rect(*self.endPoint2.get_enclosing_rect(point_radius))
+        pos = self.center()
+        top_left = (int(pos[0] - radius - line_thickness), int(pos[1] - radius - line_thickness))
+        dimensions = (int(2*(radius + line_thickness)), int(2*(radius + line_thickness)))
+        enclosing_circle_rect = pygame.Rect(top_left, dimensions)
+        
+        return enclosing_rect1.union(enclosing_rect2).union (enclosing_circle_rect)
+    
     def draw(self, \
             surface, \
             color = None, \
             line_thickness = -1, \
             pos_delta = None, \
             frame_image_reference_pos = None, \
-            scale = 1):
+            scale = 1,
+            radius = None):
         """draws a circle on a surface
         
         surface: the pygame surface to draw the circle on"""
         if color == None:
             color = self.color
         
-        radius = (.5 * mathfuncs.distance(self.endPoint1.pos, \
-                                         self.endPoint2.pos))
+        if radius == None:
+            radius = (.5 * mathfuncs.distance(self.endPoint1.pos, \
+                                             self.endPoint2.pos))
         pos = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)
         
         if frame_image_reference_pos != None:
@@ -355,8 +386,8 @@ class Circle(Line):
         pygame.draw.circle(surface, \
                           color, \
                           (int(pos[0]), int(pos[1])), \
-                          int(radius), \
-                          int(line_thickness))
+                          int(radius))#, \
+                          #int(line_thickness))
    
     def get_reference_position(self):
         radius = (.5 * mathfuncs.distance(self.endPoint1.pos, \

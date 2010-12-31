@@ -15,19 +15,19 @@ import resizetool
 import savetool
 import animation
 import stick
-
+import mathfuncs
 
 LINE_COLORS = {
-    stick.LineNames.HEAD : (255,255,255),
-    stick.LineNames.LEFT_UPPER_ARM : (255,255,0),
-    stick.LineNames.LEFT_FOREARM : (255,255,0),
-    stick.LineNames.RIGHT_UPPER_ARM : (0,255,0),
-    stick.LineNames.RIGHT_FOREARM : (0,255,0),
-    stick.LineNames.TORSO : (255,255,255),
-    stick.LineNames.LEFT_UPPER_LEG : (255,255,0),
-    stick.LineNames.LEFT_LOWER_LEG : (255,255,0),
-    stick.LineNames.RIGHT_UPPER_LEG : (0,255,0),
-    stick.LineNames.RIGHT_LOWER_LEG : (0,255,0)
+    stick.LineNames.HEAD : (0,0,0),
+    stick.LineNames.LEFT_UPPER_ARM : (0,0,0),
+    stick.LineNames.LEFT_FOREARM : (0,0,0),
+    stick.LineNames.RIGHT_UPPER_ARM : (50,50,50),
+    stick.LineNames.RIGHT_FOREARM : (50,50,50),
+    stick.LineNames.TORSO : (0,0,0),
+    stick.LineNames.LEFT_UPPER_LEG : (0,0,0),
+    stick.LineNames.LEFT_LOWER_LEG : (0,0,0),
+    stick.LineNames.RIGHT_UPPER_LEG : (50,50,50),
+    stick.LineNames.RIGHT_LOWER_LEG : (50,50,50)
 }
 
 _HORIZONTAL_PADDING = 5
@@ -163,18 +163,29 @@ def draw_frame(surface, frame, opacity=255):
     """draws all the points, lines and circles in a frame"""
     global LINE_COLORS
     
-    frame_rect = frame.get_enclosing_rect()
+    frame_rect = frame.get_enclosing_rect(10, 16, 10)
     frame_surface = pygame.Surface((frame_rect.width, frame_rect.height))
     pos_delta = (-frame_rect.left, -frame_rect.top)
     
     for line in frame.lines():
-        line.draw(frame_surface, LINE_COLORS[line.name], pos_delta = pos_delta)
+        line.draw(frame_surface, (255,255,255), line_thickness = 20, pos_delta = pos_delta)
         
     for circle in frame.circles():
-        circle.draw(frame_surface, LINE_COLORS[circle.name], pos_delta = pos_delta)
+        outer_radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
+                                          circle.endPoint2.pos)) + 2
+        circle.draw(frame_surface, (255,255,255), pos_delta = pos_delta, radius = outer_radius)
         
     for point in frame.points():
-        point.draw(frame_surface, pos_delta = pos_delta)
+        point.draw(frame_surface, color=(255,255,255), radius=10, pos_delta = pos_delta)
+    
+    for line in frame.lines():
+        line.draw(frame_surface, LINE_COLORS[line.name], line_thickness = 16, pos_delta = pos_delta)
+    
+    for circle in frame.circles():
+        circle.draw(frame_surface, LINE_COLORS[circle.name], pos_delta = pos_delta)
+    
+    for point in frame.points():
+        point.draw(frame_surface, radius=8, pos_delta = pos_delta)
     
     frame_surface.set_colorkey((0,0,0))
     frame_surface.set_alpha(opacity)
