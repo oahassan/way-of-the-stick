@@ -53,15 +53,33 @@ class Point:
     anchorColor = (0,0,255)
     radius = 10
     
-    def __init__(self, pos):
+    def __init__(self, pos, color=None, uid=None, radius=None, name=None):
         """Creates a new point
         
         pos: the position of the point"""
         self.pos = (float(pos[0]), float(pos[1]))
-        self.color = Point.inactiveColor
-        self.id = id(self)
-        self.radius = Point.radius
-        self.name = ''
+        
+        if color==None:
+            color = Point.inactiveColor
+        
+        self.color = color
+        
+        if uid==None:
+            uid = id(self)
+        
+        self.id = uid
+        
+        if radius==None:
+            radius = Point.radius
+        self.radius = radius
+        
+        if name==None:
+            name = ''
+
+        self.name = name
+    
+    def _pack(self):
+        return (self.pos, self.color, self.id, self.radius, self.name)
     
     def get_top_left_and_bottom_right(self):
         return ((self.pos[0] - self.radius - 2, self.pos[1] - self.radius - 2), 
@@ -126,21 +144,37 @@ class Line:
     slctdColor = (255,0,0)
     inactiveColor = (255,255,255)
     
-    def __init__(self, point1, point2):
+    def __init__(self, endPoint1, endPoint2, thickness=None, uid=None, color=None, name=None):
         """creates a new line
         
         point1: an endpoint for the line
         point2: an endpoint for the line"""
-        self.endPoint1 = point1
-        self.endPoint2 = point2
+        self.endPoint1 = endPoint1
+        self.endPoint2 = endPoint2
         self.points = [self.endPoint1, self.endPoint2]
         self.end_points = [self.endPoint1, self.endPoint2]
-        self.thickness = 20
+        
+        if thickness==None:
+            thickness = 20
+        self.thickness = thickness
+        
         Line.set_length(self)
         Line.set_max_length(self)
-        self.id = id(self)
-        self.color = Line.inactiveColor
-        self.name = ''
+        
+        if uid==None:
+            uid = id(self)
+        self.id = uid
+        
+        if color==None:
+            color = Line.inactiveColor
+        
+        self.color = color
+        
+        if name==None:
+            self.name = ''
+    
+    def _pack(self):
+        return (self.endPoint1, self.endPoint2, self.thickness, self.id, self.color, self.name)
     
     def draw(self, \
             surface, \
@@ -306,13 +340,19 @@ class Circle(Line):
     """A circle with a radius that is one half the distance between two given
     points.  The two points lie opposite each other on the circle"""
     
-    def __init__(self, point1, point2):
+    def __init__(self, point1, point2, thickness=None, uid=None, color=None, name=None, diameter=None):
         """creates a new circle
         
         point1: a point that lies on the circle
         point2: a point that lies on the circle opposite of point1"""
-        Line.__init__(self, point1, point2)
-        self.diameter = 0
+        Line.__init__(self, point1, point2, thickness=thickness, uid=uid, color=color, name=name)
+        
+        if diameter==None:
+            diameter = 0
+        self.diameter = diameter
+    
+    def _pack(self):
+        return (self.endPoint1, self.endPoint2, self.thickness, self.id, self.color, self.name, self.diameter)
     
     def get_top_left_and_bottom_right(self):
         position = mathfuncs.midpoint(self.endPoint1.pos, self.endPoint2.pos)

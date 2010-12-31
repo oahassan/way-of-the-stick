@@ -9,14 +9,35 @@ import math
 class Frame:
     """contains the data in an animation frame"""
     
-    def __init__(self):
+    def __init__(self, point_dictionary=None, line_dictionary=None, circle_dictionary=None, point_to_lines=None, point_to_circles=None, reference_pos=None):
         """creates a new frame"""
-        self.point_dictionary = {}
-        self.line_dictionary = {}
-        self.circle_dictionary = {}
-        self.point_to_lines = {}
+        
+        if point_dictionary ==None:
+            point_dictionary = {}
+        self.point_dictionary = point_dictionary
+        
+        if line_dictionary==None:
+            line_dictionary = {}
+        self.line_dictionary = line_dictionary
+        
+        if circle_dictionary == None:
+            circle_dictionary = {}
+        self.circle_dictionary = circle_dictionary
+        
+        if point_to_lines==None:
+            point_to_lines = {}
+        self.point_to_lines = point_to_lines
+        
+        if point_to_circles==None:
+            point_to_circles = {}
         self.point_to_circles = {}
-        self.reference_pos = (0,0)
+        
+        if reference_pos==None:
+            reference_pos = (0,0)
+        self.reference_pos = reference_pos
+    
+    def _pack(self):
+        return (self.point_dictionary, self.line_dictionary, self.circle_dictionary, self.point_to_lines, self.point_to_circles, self.reference_pos)
     
     def clear(self):
         """removes all points, lines, and circles from a frame"""
@@ -361,13 +382,22 @@ class Animation:
     _ActiveThumbnailColor = (0,0,255)
     _PrevFrameColor = (50,50,50)
     
-    def __init__(self):
+    def __init__(self, frames=None, name=None, point_names=None):
         """creates a new animation"""
-        self.frames = []
-        self.frames.append(Frame())
+        if frames==None:
+            frames = [Frame()]
+        
+        self.frames = frames
         self.frame_index = 0
-        self.name = ""
-        self.point_names = {}
+        
+        if name==None:
+            name == ""
+        self.name = name
+        
+        if point_names == None:
+            point_names = {}
+        self.point_names = point_names
+        
         self.frame_deltas = []
         self.animation_deltas = []
         self.frame_times = []
@@ -382,6 +412,9 @@ class Animation:
         self.frame_point_final_velocities = []
         self.frame_point_accelerations = []
         self.animation_length = 0
+    
+    def _pack(self):
+        return (self.frames, self.name, self.point_names)
     
     def draw_frame(self, surface):
         """draws the current frame and sets the next frame

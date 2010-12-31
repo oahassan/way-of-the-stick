@@ -1,8 +1,32 @@
+import os
 import shelve
 import player
+from wotsprot.rencode import dumps, loads
+import string
+import unicodedata
 
-#create new interface to data for just player created and unlocked movesets
+validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+
+#TODO - create new interface to data for just player created and unlocked movesets
 _MOVESET_DB_FILE_NM = "moveset_wots.dat"
+_EXPORTED_MOVESETS_DIR = os.path.join("sharing", "exported movesets")
+_IMORTED_MOVESETS_DIR = os.path.join("sharing", "imported movesets")
+_SHARED_MOVESETS_DIR = os.path.join("sharing", "shared movesets")
+_MOVESET_SUFFIX = "-mov.mvs"
+
+def export_moveset(moveset):
+    global _MOVESET_SUFFIX
+    global _EXPORTED_MOVESETS
+    
+    moveset_data = dumps(moveset)
+    file_name =  removeDisallowedFilenameChars(moveset.name) + _MOVESET_SUFFIX
+    
+    with open(os.path.join(_EXPORTED_MOVESETS_DIR, file_name)) as f:
+        f.write(moveset_data)
+
+def removeDisallowedFilenameChars(filename):
+    cleanedFilename = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore')
+    return ''.join(c for c in cleanedFilename if c in validFilenameChars)
 
 def get_movesets():
     movesets = shelve.open(_MOVESET_DB_FILE_NM, "c")
@@ -51,11 +75,24 @@ class MovementTypes():
     AERIAL_MOVEMENT_TYPES = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN]
 
 class Moveset():
-    def __init__(self):
-        self.movement_animations = {}
-        self.attack_animations = {}
-        self.image = None
-        self.name = ''
+    def __init__(self, movement_animations=None, attack_animations=None, image=None, name=None):
+        
+        if movement_animations==None:
+            movement_animations = {}
+        self.movement_animations = movement_animations
+        
+        if attack_animations == None:
+            attack_animations = {}
+        self.attack_animations = attack_animations
+        
+        self.image = image
+        
+        if name == None:
+            name = ''
+        self.name = name
+    
+    def _pack(self):
+        return (self.movement_animations, self.attack_animations, self.image, self.name)
     
     def has_movement_animation(self, movement_type):
         return_indicator = False
