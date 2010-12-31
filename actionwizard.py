@@ -160,8 +160,9 @@ def save_movement(movement_type, animation):
 def delete_animation(animation_type, animation):
     if animation_type in player.PlayerStates.MOVEMENTS:
         delete_movement(animation_type, animation)
-    elif animation_type in player.AttackTypes.ATTACK_TYPES:
-        delete_attack(attack_type, animation)
+    elif (animation_type in player.AttackTypes.ATTACK_TYPES or
+    animation_type in controlsdata.InputActionTypes.ATTACKS):
+        delete_attack(animation_type, animation)
 
 def delete_attack(attack_type, animation):
     attacks = shelve.open(ATTACK_DB_FILE_NM, "c")
