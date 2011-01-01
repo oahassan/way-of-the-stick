@@ -398,6 +398,7 @@ class Animation:
             point_names = {}
         self.point_names = point_names
         
+        self._ThumbnailHeight = Animation._ThumbnailHeight
         self.frame_deltas = []
         self.animation_deltas = []
         self.frame_times = []

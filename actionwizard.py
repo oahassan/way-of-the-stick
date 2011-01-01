@@ -83,6 +83,10 @@ def get_attack_animations(attack_type):
         attack_type = enumerations.AttackTypes.KICK
     elif attack_type in enumerations.InputActionTypes.PUNCHES:
         attack_type = enumerations.AttackTypes.PUNCH
+    elif attack_type == enumerations.AttackTypes.KICK:
+        pass
+    elif attack_type == enumerations.AttackTypes.PUNCH:
+        pass
     else:
         raise Exception
     
