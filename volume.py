@@ -3,6 +3,7 @@ import pygame
 import gamestate
 import wotsuievents
 import wotsui
+import settingsdata
 from volumeui import VolumeControl
 from button import Label, ExitButton
 
@@ -43,6 +44,7 @@ def load():
     )
     sound_control.create_children()
     sound_control.set_layout_data(sound_control_position, 300)
+    sound_control.set_scroll_percent(settingsdata.get_sound_volume())
     
     music_label_position = sound_control_position = (
         sound_control.position[0],
@@ -61,6 +63,7 @@ def load():
         music_label_position[1] + music_label.height + 20
     )
     music_control.set_layout_data(music_control_position, 300)
+    music_control.set_scroll_percent(settingsdata.get_music_volume())
 
 def unload():
     global exit_button
@@ -70,6 +73,9 @@ def unload():
     global sound_control
     global music_label
     global music_control
+    
+    settingsdata.save_sound_volume(sound_control.get_scroll_percent())
+    settingsdata.save_music_volume(music_control.get_scroll_percent())
     
     exit_button = None
     exit_indicator = False
