@@ -15,6 +15,7 @@ edit_moveset_label = None
 delete_moveset_label = None
 moveset_select_container = None
 export_moveset_label = None
+import_movesets_label = None
 
 def load():
     global loaded
@@ -24,10 +25,15 @@ def load():
     global moveset_select_container
     global exit_button
     global export_moveset_label
+    global import_movesets_label
     
     exit_button = button.ExitButton()
     create_new_moveset_label = button.TextButton('Create New Moveset', 25)
     create_new_moveset_label.set_position((10,10))
+    
+    import_movesets_label_position = (10 + create_new_moveset_label.width + 20, create_new_moveset_label.position[1])
+    import_movesets_label = button.TextButton('Import Movesets', 25)
+    import_movesets_label.set_position(import_movesets_label_position)
     
     moveset_select_container_position = (10, 20 + create_new_moveset_label.height)
     moveset_select_container = movesetselectui.MovesetSelectContainer(
@@ -62,12 +68,15 @@ def unload():
     global moveset_select_container
     global exit_button
     global export_moveset_label
+    global import_movesets_label
     
     exit_button = None
     create_new_moveset_label = None
     edit_moveset_label = None
     delete_moveset_label = None
     moveset_select_container = None
+    export_moveset_label = None
+    import_movesets_label = None
     
     loaded = False
 
@@ -78,7 +87,8 @@ def handle_events():
     global edit_moveset_label
     global delete_moveset_label
     global moveset_select_container
-    global export_moveset_label_position
+    global export_moveset_label
+    global import_movesets_label
     
     if loaded == False:
         load()
@@ -89,6 +99,9 @@ def handle_events():
         
         if create_new_moveset_label.contains(wotsuievents.mouse_pos):
             create_new_moveset_label.handle_selected()
+        
+        if import_movesets_label.contains(wotsuievents.mouse_pos):
+            import_movesets_label.handle_selected()
         
         if edit_moveset_label.contains(wotsuievents.mouse_pos) and edit_moveset_label.active:
             edit_moveset_label.handle_selected()
@@ -113,6 +126,14 @@ def handle_events():
                 movesetbuilder.load(movesetdata.Moveset())
                 gamestate.mode = gamestate.Modes.MOVESETBUILDER
                 unload()
+        
+        elif import_movesets_label.selected:
+            import_movesets_label.handle_deselected()
+            
+            if import_movesets_label.contains(wotsuievents.mouse_pos):
+                movesetdata.import_movesets()
+                moveset_select_container.selected_moveset = None
+                moveset_select_container.load_movesets(movesetdata.get_movesets())
         
         elif edit_moveset_label.selected:
             edit_moveset_label.handle_deselected()
@@ -143,6 +164,7 @@ def handle_events():
         create_new_moveset_label.draw(gamestate.screen)
         delete_moveset_label.draw(gamestate.screen)
         export_moveset_label.draw(gamestate.screen)
+        import_movesets_label.draw(gamestate.screen)
         moveset_select_container.draw(gamestate.screen)
         
         if moveset_select_container.selected_moveset != None:

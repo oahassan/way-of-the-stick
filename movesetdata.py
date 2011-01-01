@@ -1,20 +1,87 @@
 import os
+import shutil
 import shelve
-import player
+import enumerations
 from wotsprot.rencode import dumps, loads, serializable
 import string
 import unicodedata
 import stick
 import animation
+import actionwizard
 
 validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 #TODO - create new interface to data for just player created and unlocked movesets
 _MOVESET_DB_FILE_NM = "moveset_wots.dat"
 _EXPORTED_MOVESETS_DIR = os.path.join("sharing", "exported movesets")
-_IMORTED_MOVESETS_DIR = os.path.join("sharing", "imported movesets")
+_IMPORTED_MOVESETS_DIR = os.path.join("sharing", "imported movesets")
 _SHARED_MOVESETS_DIR = os.path.join("sharing", "shared movesets")
 _MOVESET_SUFFIX = "-mov.mvs"
+
+def import_movesets():
+    
+    for mvs in os.listdir(_SHARED_MOVESETS_DIR):
+        
+        if mvs.endswith(_MOVESET_SUFFIX):
+            moveset = None
+            shared_path = os.path.join(_SHARED_MOVESETS_DIR, mvs)
+            
+            with open(shared_path) as mvs_file:
+                moveset = loads(mvs_file.read())
+            
+            save_imported_animations(moveset)
+            
+            #save the moveset if a moveset with its name doesn't already exist.  If it does exist find a name that has yet to be saved by appending '(#)' where # is a number.
+            existing_moveset = get_moveset(moveset.name)
+            
+            if existing_moveset == None:
+                save_moveset(moveset)
+            
+            else:
+                name_counter = 1
+                name = moveset.name
+                
+                while existing_moveset != None:
+                    name_counter += 1
+                    moveset.name = name + "(" + str(name_counter) + ")"
+                    
+                    existing_moveset = get_moveset(moveset.name)
+                
+                save_moveset(moveset)
+            
+            #move the imported moveset to the imported folder to show that it has been completed
+            shutil.move(shared_path, os.path.join(_IMPORTED_MOVESETS_DIR, mvs))
+
+def save_imported_animations(moveset):
+    for animation_type, animation in moveset.movement_animations.iteritems():
+        save_animation_without_overwrite(animation_type, animation)
+    
+    for animation_type, animation in moveset.attack_animations.iteritems():
+        if animation_type in []:
+            save_animation_without_overwrite(animation_type, animation)
+        elif animation_type in []:
+            save_animation_without_overwrite(animation_type, animation)
+        else:
+            save_animation_without_overwrite(animation_type, animation)
+
+def save_animation_without_overwrite(animation_type, animation):
+    #save the moveset if a moveset with its name doesn't already exist.  If it does exist find a name that has yet to be saved by appending '(#)' where # is a number.
+    existing_animation = actionwizard.get_animation(animation_type, animation.name)
+    
+    if existing_animation == None:
+        actionwizard.save_animation(animation_type, animation)
+    
+    else:
+        name_counter = 1
+        name = animation.name
+        
+        while existing_animation != None:
+            name_counter += 1
+            animation.name = name + "(" + str(name_counter) + ")"
+            
+            existing_animation = actionwizard.get_animation(animation_type, animation.name)
+        
+        actionwizard.save_animation(animation_type, animation)
 
 def export_moveset(moveset):
     global _MOVESET_SUFFIX
@@ -130,7 +197,7 @@ class Moveset():
         """validates that all unbound actions have been assigned animations"""
         action_found_indicator = True
         
-        for player_state in player.PlayerStates.MOVEMENTS:
+        for player_state in enumerations.PlayerStates.MOVEMENTS:
             if player_state in self.movement_animations.keys():
                 if self.movement_animations[player_state] == None:
                     action_found_indicator = False

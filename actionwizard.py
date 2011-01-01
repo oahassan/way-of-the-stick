@@ -9,8 +9,7 @@ import wotsuievents
 import button
 import menupage
 import gamestate
-import player
-import controlsdata
+import enumerations
 
 class ActionDictionaries():
     INPUT_ACTIONS = "inputactions"
@@ -80,6 +79,13 @@ def get_attack_animations(attack_type):
     
     attacks = shelve.open(ATTACK_DB_FILE_NM, "c")
     
+    if attack_type in enumerations.InputActionTypes.KICKS:
+        attack_type = enumerations.AttackTypes.KICK
+    elif attack_type in enumerations.InputActionTypes.PUNCHES:
+        attack_type = enumerations.AttackTypes.PUNCH
+    else:
+        raise Exception
+    
     if attack_type in attacks:
         return_attacks = attacks[attack_type].values()
     
@@ -125,16 +131,23 @@ def save_unbound_action(action_type, animation):
     actions.close()
 
 def save_animation(animation_type, animation):
-    if animation_type in player.PlayerStates.MOVEMENTS:
+    if animation_type in enumerations.PlayerStates.MOVEMENTS:
         save_movement(animation_type, animation)
         
-    elif ((animation_type in player.AttackTypes.ATTACK_TYPES) or
-    (animation_type in controlsdata.InputActionTypes.ATTACKS)):
+    elif ((animation_type in enumerations.AttackTypes.ATTACK_TYPES) or
+    (animation_type in enumerations.InputActionTypes.ATTACKS)):
         save_attack(animation_type, animation)
 
 def save_attack(attack_type, animation):
     attacks = shelve.open(ATTACK_DB_FILE_NM, "c")
     attack_type_dictionary = {}
+    
+    if attack_type in enumerations.InputActionTypes.KICKS:
+        attack_type = enumerations.AttackTypes.KICK
+    elif attack_type in enumerations.InputActionTypes.PUNCHES:
+        attack_type = enumerations.AttackTypes.PUNCH
+    else:
+        raise Exception
     
     if attack_type in attacks:
         attack_type_dictionary = attacks[attack_type]
@@ -157,16 +170,68 @@ def save_movement(movement_type, animation):
     
     movements.close()
 
+def get_animation(animation_type, name):
+    if animation_type in enumerations.PlayerStates.MOVEMENTS:
+        return get_movement(animation_type, name)
+        
+    elif ((animation_type in enumerations.AttackTypes.ATTACK_TYPES) or
+    (animation_type in enumerations.InputActionTypes.ATTACKS)):
+        return get_attack(animation_type, name)
+    
+    else:
+        raise Exception("Tried to retrieve invalid animation type: " + animation_type)
+
+def get_attack(attack_type, name):
+    attacks = shelve.open(ATTACK_DB_FILE_NM, "c")
+    
+    if attack_type in enumerations.InputActionTypes.KICKS:
+        attack_type = enumerations.AttackTypes.KICK
+    elif attack_type in enumerations.InputActionTypes.PUNCHES:
+        attack_type = enumerations.AttackTypes.PUNCH
+    else:
+        raise Exception
+    
+    attack_type_dictionary = attacks[attack_type]
+    
+    return_animation = None
+    
+    if name in attack_type_dictionary:
+        return_animation = attack_type_dictionary[name]
+    
+    attacks.close()
+    
+    return return_animation
+
+def get_movement(movement_type, name):
+    movements = shelve.open(MOVEMENT_DB_FILE_NM, "c")
+    movement_type_dictionary = movements[movement_type]
+    
+    return_animation = None
+    
+    if name in movement_type_dictionary:
+        return_animation = movement_type_dictionary[name]
+    
+    movements.close()
+    
+    return return_animation
+
 def delete_animation(animation_type, animation):
-    if animation_type in player.PlayerStates.MOVEMENTS:
+    if animation_type in enumerations.PlayerStates.MOVEMENTS:
         delete_movement(animation_type, animation)
-    elif (animation_type in player.AttackTypes.ATTACK_TYPES or
-    animation_type in controlsdata.InputActionTypes.ATTACKS):
+    elif (animation_type in enumerations.AttackTypes.ATTACK_TYPES or
+    animation_type in enumerations.InputActionTypes.ATTACKS):
         delete_attack(animation_type, animation)
 
 def delete_attack(attack_type, animation):
     attacks = shelve.open(ATTACK_DB_FILE_NM, "c")
     attack_type_dictionary = {}
+    
+    if attack_type in enumerations.InputActionTypes.KICKS:
+        attack_type = enumerations.AttackTypes.KICK
+    elif attack_type in enumerations.InputActionTypes.PUNCHES:
+        attack_type = enumerations.AttackTypes.PUNCH
+    else:
+        raise Exception
     
     if attack_type in attacks:
         attack_type_dictionary = attacks[attack_type]
