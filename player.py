@@ -12,6 +12,7 @@ import mathfuncs
 import stick
 import pulltool
 from controlsdata import InputActionTypes
+import settingsdata
 
 class PlayerTypes:
     HUMAN = 'Human'
@@ -113,7 +114,7 @@ class Player():
                 pygame.mixer.Sound("sounds/step3-sound.ogg"),
                 pygame.mixer.Sound("sounds/step4-sound.ogg")
             ],
-            PlayerStates.WALKING : [
+            PlayerStates.RUNNING : [
                 pygame.mixer.Sound("sounds/step1-sound.ogg"),
                 pygame.mixer.Sound("sounds/step2-sound.ogg"),
                 pygame.mixer.Sound("sounds/step3-sound.ogg"),
@@ -123,6 +124,7 @@ class Player():
                 pygame.mixer.Sound("sounds/jump-sound.ogg")
             ]
         }
+        self.set_sound_volumes(self.movement_sounds)
         self.attack_sounds = {
             InputActionTypes.WEAK_PUNCH : [
                 pygame.mixer.Sound("sounds/punch-sound.ogg")
@@ -143,6 +145,7 @@ class Player():
                 pygame.mixer.Sound("sounds/kick-sound.ogg")
             ]
         }
+        self.set_sound_volumes(self.attack_sounds)
         self.hit_sounds = {
             InputActionTypes.WEAK_PUNCH : [
                 pygame.mixer.Sound("sounds/hit-sound.ogg")
@@ -163,6 +166,12 @@ class Player():
                 pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
             ]
         }
+        self.set_sound_volumes(self.hit_sounds)
+    
+    def set_sound_volumes(self, sound_dict):
+        for sound_list in sound_dict.values():
+            for sound in sound_list:
+                sound.set_volume(settingsdata.get_sound_volume())
     
     def init_state(self):
         self.model.load_points()
