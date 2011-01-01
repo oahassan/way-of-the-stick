@@ -148,6 +148,7 @@ if __name__ == '__main__':
     slider.create_children()
     slider.set_layout_data((300, 100), 300, 20)
     scroll_percent = Label((10,10),'',(0,0,255))
+    slider.set_scroll_percent(.5)
     
     while True:
         wotsuievents.get_events()

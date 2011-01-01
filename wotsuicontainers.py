@@ -455,6 +455,16 @@ class VerticalScrollBar(wotsui.UIObjectBase):
     def get_scroll_percent(self):
         return float(self.scrolled_distance()) / self.scrollable_height()
     
+    def set_scroll_percent(self, percent):
+        scrolled_distance = self.scrollable_height() * percent
+        
+        bar_position = (
+            self.bar.position[0],
+            self.track.position[1] + scrolled_distance
+        )
+        
+        self.bar.set_position(bar_position)
+    
     def scroll(self, distance):
         
         bar_position = self.bar.position
@@ -562,6 +572,16 @@ class HorizontalScrollBar(wotsui.UIObjectBase):
     
     def get_scroll_percent(self):
         return float(self.scrolled_distance()) / self.scrollable_width()
+    
+    def set_scroll_percent(self, percent):
+        scrolled_distance = self.scrollable_width() * percent
+        
+        bar_position = (
+            self.track.position[0] + scrolled_distance,
+            self.bar.position[1]
+        )
+        
+        self.bar.set_position(bar_position)
     
     def scroll(self, distance):
         
