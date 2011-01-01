@@ -462,8 +462,7 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
             self.layout_thumbnails()
             self.add_children(self.animation_thumbnails, True)
         
-        self.init_vertical_scrollbar()
-        self.init_horizontal_scrollbar()
+        self.reset_scroll()
     
     def clear_animation_thumbnails(self):
         self.remove_children(self.animation_thumbnails, True)
@@ -481,8 +480,8 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
         return animations
     
     def layout_thumbnails(self):
-        current_position = (self.position[0] + 10, \
-                            self.position[1])
+        current_position = (self.scrollable_area.position[0] + 10, \
+                            self.scrollable_area.position[1])
         thumbnails = self.animation_thumbnails
         
         thumbnails[0].set_position(current_position)

@@ -56,6 +56,11 @@ class ScrollableContainer(wotsui.UIObjectBase):
             and (child != self.horizontal_scrollbar)):
                 child.show()
     
+    def reset_scroll(self):
+        self.scrollable_area.set_position(self.viewable_area.position)
+        self.init_vertical_scrollbar()
+        self.init_horizontal_scrollbar()
+    
     def is_vertically_scrollable(self):
         return self.scrollable_area.height > self.viewable_area.height
     
