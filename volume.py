@@ -1,172 +1,120 @@
 import sys
 import pygame
+import gamestate
 import wotsuievents
 import wotsui
-from wotsuicontainers import HorizontalScrollBar, Bar, Track, ScrollButton, SCROLL_LEFT, SCROLL_RIGHT, SCROLL_BUTTON_HEIGHT, SCROLL_BUTTON_WIDTH
-from button import Label
+from volumeui import VolumeControl
+from button import Label, ExitButton
 
-class Slider(HorizontalScrollBar):
-    
-    def __init__(self):
-        HorizontalScrollBar.__init__(self)
-    
-    def create_children(self):
-        self.scroll_left_button = VolumeButton(SCROLL_LEFT)
-        self.scroll_right_button = VolumeButton(SCROLL_RIGHT)
-        self.bar = Bar()
-        self.track = VolumeTrack()
-        
-        self.add_children([self.scroll_left_button, \
-                           self.scroll_right_button, \
-                           self.track, \
-                           self.bar])
-    
-    def set_layout_data(self, position, width, bar_width):
-        wotsui.UIObjectBase.set_layout_data(self, position, SCROLL_BUTTON_HEIGHT, width)
-        
-        track_height = SCROLL_BUTTON_HEIGHT
-        track_width = width - (2 * SCROLL_BUTTON_HEIGHT)
-        track_position = (position[0] + SCROLL_BUTTON_WIDTH, position[1])
-        self.track.set_layout_data(track_position, track_height, track_width)
-        
-        self.scroll_left_button.set_layout_data(position)
-        
-        scroll_right_button_position = (position[0] + width - SCROLL_BUTTON_WIDTH, \
-                                        position[1])
-        self.scroll_right_button.set_layout_data(scroll_right_button_position)
-        
-        bar_position = (position[0] + SCROLL_BUTTON_WIDTH, position[1] - int(SCROLL_BUTTON_HEIGHT / 2) - 5)
-        self.bar.set_layout_data(bar_position, SliderBar.HEIGHT, SliderBar.WIDTH)
+sound_label = None
+sound_control = None
+music_label = None
+music_control = None
 
-class VolumeTrack(Track):
-    
-    def draw(self, surface):
-        tip_point = (self.position[0] + 7, \
-                     self.center()[1])
-        top_right = (self.top_right()[0] - 7, self.top_right()[1])
-        bottom_right =  (self.bottom_right()[0] - 7, self.bottom_right()[1])
-        
-        pygame.draw.polygon(
-            surface,
-            self.color,
-            [tip_point,
-            top_right,
-            bottom_right])
-        
-        pygame.draw.aalines(
-            surface,
-            self.color,
-            True,
-            [tip_point,
-            top_right,
-            bottom_right])
-    
-    def draw_relative(self, surface, position):
-        tip_point = (self.get_relative_position(position)[0] + 7, \
-                     self.center_relative(position)[1])
-        top_right = (
-            self.top_right_relative(position)[0] - 7,
-            self.top_right_relative(position)[1]
-        )
-        bottom_right =  (
-            self.bottom_right_relative(position)[0] - 7,
-            self.bottom_right_relative(position)()[1]
-        )
-        
-        pygame.draw.polygon(
-            surface,
-            self.color,
-            [tip_point,
-            top_right,
-            bottom_right])
-        
-        pygame.draw.aalines(
-            surface,
-            self.color,
-            True
-            [tip_point,
-            top_right,
-            bottom_right])
+exit_button = None
+exit_indicator = False
+loaded = False
 
-class VolumeButton(ScrollButton):
+def load():
+    global exit_button
+    global exit_indicator
+    global loaded
+    global sound_label
+    global sound_control
+    global music_label
+    global music_control
     
-    def __init__(self, direction):
-        ScrollButton.__init__(self, direction)
-        
-        if self.direction == SCROLL_LEFT:
-            self.image = Label(self.position, '-', self.color)
-        else:
-            self.image = Label(self.position, '+', self.color)
-        
-        self.add_child(self.image)
+    exit_button = ExitButton()
+    exit_indicator = False
+    loaded = True
     
-    def set_layout_data(self, position):
-        ScrollButton.set_layout_data(self, position)
-        self.layout_image()
+    #Create control labels and controls
+    sound_label_position = (20,20)
+    sound_label = Label(
+        sound_label_position,
+        'Effects Volume',
+        (255,255,255),
+        40
+    )
+    sound_control = VolumeControl()
+    sound_control_position = (
+        sound_label_position[0],
+        sound_label_position[1] + sound_label.height + 20
+    )
+    sound_control.create_children()
+    sound_control.set_layout_data(sound_control_position, 300)
     
-    def layout_image(self):
-        
-        position_delta = (self.center()[0] - self.image.center()[0], self.center()[1] - self.image.center()[1])
-        
-        self.image.shift(position_delta[0], position_delta[1])
-    
-    def handle_selected(self):
-        ScrollButton.handle_selected(self)
-        self.image.text_color = self.color
-    
-    def handle_deselected(self):
-        ScrollButton.handle_deselected(self)
-        self.image.text_color = self.color
-    
-    def _draw_left_button(self, surface):
-        self.image.draw(surface)
-    
-    def _draw_left_button_relative(self, surface, position):
-        self.image.draw_relative(surface, position)
-        
-    def _draw_right_button(self, surface):
-        self.image.draw(surface)
-    
-    def _draw_right_button_relative(self, surface, position):
-        self.image.draw(surface, position)
+    music_label_position = sound_control_position = (
+        sound_control.position[0],
+        sound_control.position[1] + sound_control.height + 40
+    )
+    music_label = Label(
+        music_label_position, 
+        'Music Volume',
+        (255,255,255),
+        40
+    )
+    music_control = VolumeControl()
+    music_control.create_children()
+    music_control_position = (
+        music_label_position[0],
+        music_label_position[1] + music_label.height + 20
+    )
+    music_control.set_layout_data(music_control_position, 300)
 
-class SliderBar(Bar):
-    HEIGHT = 40
-    WIDTH = 15
+def unload():
+    global exit_button
+    global exit_indicator
+    global loaded
+    global sound_label
+    global sound_control
+    global music_label
+    global music_control
     
-    def __init__(self):
-        wotsui.SelectableObjectBase.__init__(self)
+    exit_button = None
+    exit_indicator = False
+    loaded = False
+    sound_label = None
+    sound_control = None
+    music_label = None
+    music_control = None
 
-if __name__ == '__main__':
-    pygame.init()
-    pygame.init()
-    pygame.font.init()
-
-    screen = pygame.display.set_mode((800, 600))
-    clock = pygame.time.Clock()
-    slider = Slider()
-    slider.create_children()
-    slider.set_layout_data((300, 100), 300, 20)
-    scroll_percent = Label((10,10),'',(0,0,255))
+def handle_events():
+    global exit_button
+    global exit_indicator
+    global sound_label
+    global sound_control
+    global music_label
+    global music_control
     
-    while True:
-        wotsuievents.get_events()
+    if not loaded:
+        load()
     
-        events = wotsuievents.events
-        event_types = wotsuievents.event_types
-        mousePos = wotsuievents.mouse_pos
-        mouseButtonsPressed = wotsuievents.mouse_buttons_pressed
+    sound_control.handle_events()
+    music_control.handle_events()
+    
+    if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+        if exit_button.contains(wotsuievents.mouse_pos):
+            exit_indicator = True
+            exit_button.handle_selected()
+    elif pygame.MOUSEBUTTONUP in wotsuievents.event_types:
+        if exit_indicator == True:
+            exit_indicator = False
+            exit_button.handle_deselected()
+            
+            if exit_button.contains(wotsuievents.mouse_pos):
+                unload()
+                gamestate.mode = gamestate.Modes.MAINMENU
         
-        if pygame.QUIT in event_types:
-            sys.exit()
-        
-        slider.handle_events()
-        scroll_percent.set_text(str(slider.get_scroll_percent()))
-        
-        screen.fill((0,0,0))
-        slider.draw(screen)
-        scroll_percent.draw(screen)
-        
-        pygame.display.update()
-        
-        clock.tick(20)
+        if gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT:
+            if host_match_button.contains(wotsuievents.mouse_pos):
+                gamestate.hosting = True
+            elif join_match_button.contains(wotsuievents.mouse_pos):
+                versusclient.load()
+    
+    if loaded:
+        exit_button.draw(gamestate.screen)
+        sound_label.draw(gamestate.screen)
+        sound_control.draw(gamestate.screen)
+        music_label.draw(gamestate.screen)
+        music_control.draw(gamestate.screen)

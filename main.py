@@ -29,6 +29,7 @@ import onlinematchloader
 import controlspage
 import chat
 import splash
+import volume
 
 import gamestate
 
@@ -67,7 +68,7 @@ while 1:
             
         versusmode.handle_events()
     elif gamestate.mode == gamestate.Modes.SETTINGSMODE:
-        actionwizard.handle_events()
+        volume.handle_events()
     elif gamestate.mode == gamestate.Modes.MOVEBUILDER:
         movebuilder.handle_events()
     elif gamestate.mode == gamestate.Modes.MOVESETBUILDER:
