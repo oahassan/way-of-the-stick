@@ -171,7 +171,8 @@ class Line:
         self.color = color
         
         if name==None:
-            self.name = ''
+            name = ''
+        self.name = name
     
     def _pack(self):
         return (self.endPoint1, self.endPoint2, self.thickness, self.id, self.color, self.name)
