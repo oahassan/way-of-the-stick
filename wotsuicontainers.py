@@ -473,7 +473,9 @@ class VerticalScrollBar(wotsui.UIObjectBase):
         bar = self.bar
         
         if scroll_down_button.contains(wotsuievents.mouse_pos):
-            if wotsuievents.mousebutton_pressed():
+            if (wotsuievents.mousebutton_pressed() and
+            not bar.selected and
+            not scroll_up_button.selected):
                 if not scroll_down_button.selected:
                     scroll_down_button.handle_selected()
                 
@@ -481,7 +483,9 @@ class VerticalScrollBar(wotsui.UIObjectBase):
                 self.scroll_increment = max(self.max_scroll_increment, self.scroll_increment + 1)
         
         if scroll_up_button.contains(wotsuievents.mouse_pos):
-            if wotsuievents.mousebutton_pressed():
+            if (wotsuievents.mousebutton_pressed() and
+            not bar.selected and
+            not scroll_down_button.selected):
                 if not scroll_up_button.selected:
                     scroll_up_button.handle_selected()
                 
@@ -489,15 +493,17 @@ class VerticalScrollBar(wotsui.UIObjectBase):
                 self.scroll_increment = max(self.max_scroll_increment, self.scroll_increment + 1)
         
         if bar.contains(wotsuievents.mouse_pos):
-            if wotsuievents.mousebutton_pressed():
+            if (wotsuievents.mousebutton_pressed() and
+            not scroll_down_button.selected and
+            not scroll_up_button.selected):
                 if not bar.selected:
                     bar.handle_selected()
                 
-                self.scroll(wotsuievents.mouse_delta[1])
+                self.scroll(2*wotsuievents.mouse_delta[1])
         
         if pygame.MOUSEMOTION in wotsuievents.event_types:
             if bar.selected:
-                self.scroll(wotsuievents.mouse_delta[1])
+                self.scroll(2*wotsuievents.mouse_delta[1])
         
         if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
             if bar.selected:
@@ -575,7 +581,9 @@ class HorizontalScrollBar(wotsui.UIObjectBase):
         bar = self.bar
         
         if scroll_right_button.contains(wotsuievents.mouse_pos):
-            if wotsuievents.mousebutton_pressed():
+            if (wotsuievents.mousebutton_pressed() and
+            not scroll_left_button.selected and
+            not bar.selected):
                 if not scroll_right_button.selected:
                     scroll_right_button.handle_selected()
                 # print("scroll right")
@@ -584,7 +592,9 @@ class HorizontalScrollBar(wotsui.UIObjectBase):
                 self.scroll_increment = max(self.max_scroll_increment, self.scroll_increment + 1)
         
         if scroll_left_button.contains(wotsuievents.mouse_pos):
-            if wotsuievents.mousebutton_pressed():
+            if (wotsuievents.mousebutton_pressed() and
+            not scroll_right_button.selected and
+            not bar.selected):
                 if not scroll_left_button.selected:
                     scroll_left_button.handle_selected()
                 # print("scroll left")
@@ -593,15 +603,17 @@ class HorizontalScrollBar(wotsui.UIObjectBase):
                 self.scroll_increment = max(self.max_scroll_increment, self.scroll_increment + 1)
         
         if bar.contains(wotsuievents.mouse_pos):
-            if wotsuievents.mousebutton_pressed():
+            if (wotsuievents.mousebutton_pressed() and
+            not scroll_left_button.selected and
+            not scroll_right_button.selected):
                 if not bar.selected:
                     bar.handle_selected()
                 
-                self.scroll(wotsuievents.mouse_delta[0])
+                self.scroll(int(2 * wotsuievents.mouse_delta[0]))
         
         if pygame.MOUSEMOTION in wotsuievents.event_types:
             if bar.selected:
-                self.scroll(wotsuievents.mouse_delta[0])
+                self.scroll(int(2 * wotsuievents.mouse_delta[0]))
         
         if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
             if bar.selected:
