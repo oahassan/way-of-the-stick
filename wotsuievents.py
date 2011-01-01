@@ -25,6 +25,9 @@ def key_released(key):
     
     return released_indicator
 
+def mousebutton_pressed():
+    return mouse_buttons_pressed[0] or mouse_buttons_pressed[1] or mouse_buttons_pressed[2]
+
 def get_events():
     global events
     global event_types

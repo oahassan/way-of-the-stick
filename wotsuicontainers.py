@@ -408,6 +408,8 @@ class VerticalScrollBar(wotsui.UIObjectBase):
         self.bar = None
         self.track = None
         self.scroll_increment = 1
+        self.min_scroll_increment = 1
+        self.max_scroll_increment = 5
     
     def create_children(self):
         self.scroll_up_button = ScrollButton(SCROLL_UP)
@@ -466,21 +468,23 @@ class VerticalScrollBar(wotsui.UIObjectBase):
         bar = self.bar
         
         if scroll_down_button.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+            if wotsuievents.mousebutton_pressed():
                 if not scroll_down_button.selected:
                     scroll_down_button.handle_selected()
                 
                 self.scroll(self.scroll_increment)
+                self.scroll_increment = max(self.max_scroll_increment, self.scroll_increment + 1)
         
         if scroll_up_button.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+            if wotsuievents.mousebutton_pressed():
                 if not scroll_up_button.selected:
                     scroll_up_button.handle_selected()
                 
                 self.scroll(-1 * self.scroll_increment)
+                self.scroll_increment = max(self.max_scroll_increment, self.scroll_increment + 1)
         
         if bar.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+            if wotsuievents.mousebutton_pressed():
                 if not bar.selected:
                     bar.handle_selected()
                 
@@ -497,6 +501,8 @@ class VerticalScrollBar(wotsui.UIObjectBase):
                 scroll_up_button.handle_deselected()
             if scroll_down_button.selected:
                 scroll_down_button.handle_deselected()
+            
+            self.scroll_increment = self.min_scroll_increment
 
 class HorizontalScrollBar(wotsui.UIObjectBase):
     def __init__(self):
@@ -506,6 +512,8 @@ class HorizontalScrollBar(wotsui.UIObjectBase):
         self.bar = None
         self.track = None
         self.scroll_increment = 1
+        self.min_scroll_increment = 1
+        self.max_scroll_increment = 5
     
     def create_children(self):
         self.scroll_left_button = ScrollButton(SCROLL_LEFT)
@@ -562,23 +570,25 @@ class HorizontalScrollBar(wotsui.UIObjectBase):
         bar = self.bar
         
         if scroll_right_button.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+            if wotsuievents.mousebutton_pressed():
                 if not scroll_right_button.selected:
                     scroll_right_button.handle_selected()
                 # print("scroll right")
                 # print(self.scrolled_distance())
                 self.scroll(self.scroll_increment)
+                self.scroll_increment = max(self.max_scroll_increment, self.scroll_increment + 1)
         
         if scroll_left_button.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+            if wotsuievents.mousebutton_pressed():
                 if not scroll_left_button.selected:
                     scroll_left_button.handle_selected()
                 # print("scroll left")
                 # print(self.scrolled_distance())
                 self.scroll(-1 * self.scroll_increment)
+                self.scroll_increment = max(self.max_scroll_increment, self.scroll_increment + 1)
         
         if bar.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+            if wotsuievents.mousebutton_pressed():
                 if not bar.selected:
                     bar.handle_selected()
                 
@@ -595,6 +605,8 @@ class HorizontalScrollBar(wotsui.UIObjectBase):
                 scroll_right_button.handle_deselected()
             if scroll_left_button.selected:
                 scroll_left_button.handle_deselected()
+            
+            self.scroll_increment = self.min_scroll_increment
 
 class ButtonContainer(ScrollableContainer):
     def __init__(self, position, height, width, title_text, button_class, button_args=None):
