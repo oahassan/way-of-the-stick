@@ -418,11 +418,90 @@ class Player():
                 mathfuncs.distance(
                     current_relative_position,
                     previous_relative_position
+                ) + self.get_extension_damage(
+                    point_name,
+                    current_point_positions_dictionary
                 )
             
             #use multiplier to adjust damage given the attack type
             self.point_name_to_point_damage[point_name] += \
                 additional_damage * self.action.get_damage_multiplier()
+    
+    def get_extension_damage(self, point_name, current_point_positions):
+        if point_name == stick.PointNames.RIGHT_HAND:
+            return self.get_line_length_change(
+                point_name,
+                stick.PointNames.RIGHT_ELBOW,
+                current_point_positions
+            )
+        elif point_name == stick.PointNames.RIGHT_ELBOW:
+            return self.get_line_length_change(
+                point_name,
+                stick.PointNames.TORSO_TOP,
+                current_point_positions
+            )
+        elif point_name == stick.PointNames.LEFT_HAND:
+            return self.get_line_length_change(
+                point_name,
+                stick.PointNames.LEFT_ELBOW,
+                current_point_positions
+            )
+        elif point_name == stick.PointNames.LEFT_ELBOW:
+            return self.get_line_length_change(
+                point_name,
+                stick.PointNames.TORSO_TOP,
+                current_point_positions
+            )
+        elif point_name == stick.PointNames.RIGHT_FOOT:
+            return self.get_line_length_change(
+                point_name,
+                stick.PointNames.RIGHT_KNEE,
+                current_point_positions
+            )
+        elif point_name == stick.PointNames.RIGHT_KNEE:
+            return self.get_line_length_change(
+                point_name,
+                stick.PointNames.TORSO_BOTTOM,
+                current_point_positions
+            )
+        elif point_name == stick.PointNames.LEFT_FOOT:
+            return self.get_line_length_change(
+                point_name,
+                stick.PointNames.LEFT_KNEE,
+                current_point_positions
+            )
+        elif point_name == stick.PointNames.LEFT_KNEE:
+            return self.get_line_length_change(
+                point_name,
+                stick.PointNames.TORSO_BOTTOM,
+                current_point_positions
+            )
+        else:
+            return 0
+    
+    def get_line_length_change(
+        self,
+        point1_name,
+        point2_name,
+        current_point_positions
+    ):
+        point1_prev_position = self.previous_point_positions[point1_name]
+        point2_prev_position = self.previous_point_positions[point2_name]
+        
+        prev_line_length = mathfuncs.distance(
+            point1_prev_position,
+            point2_prev_position
+        )
+        
+        point1_position = current_point_positions[point1_name]
+        point2_position = current_point_positions[point2_name]
+        
+        current_line_length = mathfuncs.distance(
+            point1_position,
+            point2_position
+        )
+        
+        return abs(current_line_length - prev_line_length)
     
     def get_point_relative_position(self, point_name, point_position_dictionary):
         """determines the relative position of point based on the positions in the 
