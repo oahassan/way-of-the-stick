@@ -357,8 +357,6 @@ def handle_unblocked_attack_collision(
     attacker_hitboxes,
     receiver_hitboxes
 ):
-    global stun_channel
-    global point_effects
     
     colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
     
@@ -366,12 +364,51 @@ def handle_unblocked_attack_collision(
                        receiver.model.lines[colliding_line_names[1]])
     
     interaction_points = get_interaction_points(receiver, colliding_lines)
-    damage = attacker.get_point_damage(interaction_points[0].name)
     
     attack_knockback_vector = attacker.get_point_position_change(interaction_points[0].name)
+    
+    if receiver.get_player_state() == player.PlayerStates.STUNNED:
+        
+        stun_knockback_vector = receiver.knockback_vector
+        
+        if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
+            pass
+        else:
+            apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
+            apply_unblocked_collision(
+                attacker,
+                receiver,
+                interaction_points,
+                attack_knockback_vector
+            )
+            
+            if not attacker.hit_sound_is_playing():
+                attacker.play_hit_sound()
+            
+    else:
+        apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
+        receiver.set_player_state(player.PlayerStates.STUNNED)
+        apply_unblocked_collision(
+            attacker,
+            receiver,
+            interaction_points,
+            attack_knockback_vector
+        )
+        
+        attacker.play_hit_sound()
+
+def apply_unblocked_collision(
+    attacker,
+    receiver,
+    interaction_points,
+    attack_knockback_vector
+):
+    global point_effects
+    
+    damage = attacker.get_point_damage(interaction_points[0].name)
     effect_height = max(50, damage)
     effect_width = max(50, .2 * damage)
-    fade_rate =  1 / (effect_height / effect_width)
+    fade_rate = .2
     
     angle_in_degrees = 0
     
@@ -394,47 +431,23 @@ def handle_unblocked_attack_collision(
             ))
         )
     
-    if receiver.get_player_state() == player.PlayerStates.STUNNED:
-        
-        stun_knockback_vector = receiver.knockback_vector
-        
-        if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector) and receiver.health_meter > 0:
-            pass
-        else:
-            apply_collision_physics(
-                attacker,
-                receiver,
-                attacker_hitboxes,
-                receiver_hitboxes
-            )
-            receiver.health_meter = max(0, receiver.health_meter - damage)
-            receiver.set_stun_timeout(attacker.get_stun_timeout())
-            
-            if receiver.health_meter == 0:
-                receiver.set_stun_timeout(9000)
-            
-            if not attacker.hit_sound_is_playing():
-                attacker.play_hit_sound()
-            
-            #if not interaction_points[0].id in point_effects:
-            #    point_effects[interaction_points[0].id] = Effect(interaction_points[0].pos, angle_in_degrees, effect_width, effect_height, .7, fade_rate, .6)
-            
-    else:
-        apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
-        receiver.set_player_state(player.PlayerStates.STUNNED)
-        receiver.set_stun_timeout(attacker.get_stun_timeout())
+    if receiver.health_meter > 0:
         receiver.health_meter = max(0, receiver.health_meter - damage)
+        receiver.set_stun_timeout(attacker.get_stun_timeout())
         
         if receiver.health_meter == 0:
             receiver.set_stun_timeout(9000)
-        
-        #if (stun_channel == None or
-        #stun_channel.get_busy() == False):
-        attacker.play_hit_sound()
-        
+    
     if not interaction_points[0].id in point_effects:
-        point_effects[interaction_points[0].id] = Effect(interaction_points[0].pos, angle_in_degrees, effect_width, effect_height, .7, fade_rate, .6)
-        
+        point_effects[interaction_points[0].id] = Effect(
+            interaction_points[0].pos,
+            angle_in_degrees,
+            effect_width,
+            effect_height,
+            .7,
+            fade_rate,
+            .6
+        )
 
 def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
     attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])
