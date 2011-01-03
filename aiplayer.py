@@ -3,6 +3,7 @@ import copy
 import physics
 import animationexplorer
 import player
+import enumerations
 from controlsdata import InputActionTypes
 
 class Bot(player.Player):
@@ -84,13 +85,21 @@ class Bot(player.Player):
         self.set_action(enemy)
         player.Player.handle_events(self)
     
+    def set_direction(self, enemy):
+        if (self.get_player_state() == enumerations.PlayerStates.WALKING or
+        self.get_player_state() == enumerations.PlayerStates.RUNNING or
+        self.get_player_state() == enumerations.PlayerStates.STANDING):
+            direction = player.PlayerStates.FACING_LEFT
+        
+            if enemy.model.position[0] > self.model.position[0]:
+                direction = player.PlayerStates.FACING_RIGHT
+            
+            self.direction = direction
+    
     def set_action(self, enemy):
-        direction = player.PlayerStates.FACING_LEFT
         
-        if enemy.model.position[0] > self.model.position[0]:
-            direction = player.PlayerStates.FACING_RIGHT
+        self.set_direction(enemy)
         
-        self.direction = direction
         attack = self.get_in_range_attack(enemy)
         next_action = None
         
