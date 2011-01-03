@@ -357,6 +357,7 @@ def handle_unblocked_attack_collision(
     attacker_hitboxes,
     receiver_hitboxes
 ):
+    global match_state
     
     colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
     
@@ -371,11 +372,11 @@ def handle_unblocked_attack_collision(
         
         stun_knockback_vector = receiver.knockback_vector
         
-        if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
+        if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector) and match_state != MatchStates.END:
             pass
         else:
             apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
-            apply_unblocked_collision(
+            apply_unblocked_collision_effects(
                 attacker,
                 receiver,
                 interaction_points,
@@ -388,7 +389,7 @@ def handle_unblocked_attack_collision(
     else:
         apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
         receiver.set_player_state(player.PlayerStates.STUNNED)
-        apply_unblocked_collision(
+        apply_unblocked_collision_effects(
             attacker,
             receiver,
             interaction_points,
@@ -397,7 +398,7 @@ def handle_unblocked_attack_collision(
         
         attacker.play_hit_sound()
 
-def apply_unblocked_collision(
+def apply_unblocked_collision_effects(
     attacker,
     receiver,
     interaction_points,
