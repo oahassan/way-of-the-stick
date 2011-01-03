@@ -10,6 +10,7 @@ import stage
 import stick
 import mathfuncs
 import math
+import settingsdata
 
 class PlayerTypes:
     HUMAN = 'HUMAN'
@@ -44,8 +45,8 @@ bot_type = None
 point_effects = {}
 
 stun_channel = None
-hit_sound = pygame.mixer.Sound("./sounds/hit-sound.ogg")
 clash_sound = pygame.mixer.Sound("./sounds/clash-sound.ogg")
+clash_sound.set_volume(settingsdata.get_sound_volume())
 
 def init():
     global initialized
