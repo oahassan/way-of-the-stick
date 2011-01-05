@@ -193,8 +193,8 @@ class Line:
         if line_thickness == -1:
             line_thickness = self.thickness
         
-        point1 = self.endPoint1.pos
-        point2 = self.endPoint2.pos
+        point1 = self.endPoint1.pixel_pos()
+        point2 = self.endPoint2.pixel_pos()
         
         if frame_image_reference_pos != None:
             point1 = scale_image_point(self.endPoint1.pos, frame_image_reference_pos, scale)

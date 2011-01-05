@@ -218,6 +218,16 @@ class Frame:
             new_y = reference_position[1] + \
                     (scale * pos_delta_dictionary[point.id][1])
             point.pos = (new_x, new_y)
+            
+            for line in self.lines():
+                for end_point in line.points:
+                    if point.id == end_point.id:
+                        end_point.pos = point.pos
+            
+            for circle in self.circles():
+                for end_point in circle.points:
+                    if point.id == end_point.id:
+                        end_point.pos = point.pos
     
     def get_enclosing_rect(self, point_radius = None, line_thickness = None, circle_radius = None):   
         

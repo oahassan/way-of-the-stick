@@ -365,8 +365,10 @@ class AnimationThumbnail(button.Button):
     
     def draw_relative(self, surface, position):
         if self.contains(wotsuievents.mouse_pos):
-            partial_draw_relative = functools.partial(self.draw_current_frame_relative, \
-                                                      reference_position=position)
+            partial_draw_relative = functools.partial(
+                self.draw_current_frame_relative,
+                reference_position=position
+            )
             self.play_animation(surface, partial_draw_relative)
         else:
             self.draw_current_frame_relative(surface, position)
