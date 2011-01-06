@@ -509,7 +509,7 @@ class VerticalScrollBar(wotsui.UIObjectBase):
                 if not bar.selected:
                     bar.handle_selected()
                 
-                self.scroll(2*wotsuievents.mouse_delta[1])
+                #self.scroll(2*wotsuievents.mouse_delta[1])
         
         if pygame.MOUSEMOTION in wotsuievents.event_types:
             if bar.selected:
@@ -629,7 +629,7 @@ class HorizontalScrollBar(wotsui.UIObjectBase):
                 if not bar.selected:
                     bar.handle_selected()
                 
-                self.scroll(int(2 * wotsuievents.mouse_delta[0]))
+                #self.scroll(int(2 * wotsuievents.mouse_delta[0]))
         
         if pygame.MOUSEMOTION in wotsuievents.event_types:
             if bar.selected:
