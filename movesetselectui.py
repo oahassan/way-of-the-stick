@@ -48,12 +48,14 @@ class MovesetSelectContainer(wotsuicontainers.ScrollableContainer):
                                max(self.height, moveset_container_height - wotsuicontainers.SCROLL_BUTTON_HEIGHT), \
                                max(self.width, moveset_container_width - wotsuicontainers.SCROLL_BUTTON_WIDTH))
         
+        self.thumbnails = []
         self.load_movesets(movesets)
         
         self.init_vertical_scrollbar()
         self.init_horizontal_scrollbar()
     
     def load_movesets(self, movesets):
+        self.remove_children(self.thumbnails, True)
         self.thumbnails = []
         
         if len(movesets) > 0:
