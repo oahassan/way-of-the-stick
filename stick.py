@@ -292,12 +292,15 @@ class Line:
         x_delta = slctd_point.pos[0] - pulled_point.pos[0]
         y_delta = slctd_point.pos[1] - pulled_point.pos[1]
         
-        pulled_point.pos = (pulled_point.pos[0] \
-                            + x_delta - \
-                            ((x_delta / new_length) * self.length), \
-                            pulled_point.pos[1] + \
-                            y_delta - \
-                            ((y_delta / new_length) * self.length))
+        if new_length > 0:
+            pulled_point.pos = (pulled_point.pos[0] \
+                                + x_delta - \
+                                ((x_delta / new_length) * self.length), \
+                                pulled_point.pos[1] + \
+                                y_delta - \
+                                ((y_delta / new_length) * self.length))
+        else:
+            pulled_point.pos = (slctd_point.pos[0], slctd_point.pos[1])
     
     def get_top_left_and_bottom_right(self):
         end_point_1_corners = self.endPoint1.get_top_left_and_bottom_right()
