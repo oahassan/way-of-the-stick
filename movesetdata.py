@@ -26,7 +26,7 @@ def import_movesets():
             moveset = None
             shared_path = os.path.join(_SHARED_MOVESETS_DIR, mvs)
             
-            with open(shared_path) as mvs_file:
+            with open(shared_path, 'rb') as mvs_file:
                 moveset = loads(mvs_file.read())
             
             save_imported_animations(moveset)
@@ -90,7 +90,7 @@ def export_moveset(moveset):
     moveset_data = dumps(moveset)
     file_name =  removeDisallowedFilenameChars(moveset.name) + _MOVESET_SUFFIX
     
-    with open(os.path.join(_EXPORTED_MOVESETS_DIR, file_name),'w') as f:
+    with open(os.path.join(_EXPORTED_MOVESETS_DIR, file_name),'wb') as f:
         f.write(moveset_data)
 
 def removeDisallowedFilenameChars(filename):
