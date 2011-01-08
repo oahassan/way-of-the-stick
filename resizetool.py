@@ -18,7 +18,11 @@ class ResizeTool(EditorTools.Tool):
     
     def __init__(self):
         """creates a new resize tool"""
-        EditorTools.Tool.__init__(self,'Resize')
+        EditorTools.Tool.__init__(
+            self,
+            'resize',
+            'Left click and drag points to resize lines.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = ResizeTool.draw_symbol
         self.symbol.color = (255, 255, 255)

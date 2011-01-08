@@ -11,7 +11,11 @@ class PathTool(EditorTools.Tool):
     
     def __init__(self):
         """creates a new path tool"""
-        EditorTools.Tool.__init__(self,'fill')
+        EditorTools.Tool.__init__(
+            self,
+            'fill',
+            'Add filler frames between the current frame and the next frame.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = PathTool.draw_symbol
         

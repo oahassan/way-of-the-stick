@@ -7,7 +7,11 @@ class RemoveFrameTool(EditorTools.Tool):
 
     def __init__(self):
         """creates a new remove frame tool"""
-        EditorTools.Tool.__init__(self,'delete frame')
+        EditorTools.Tool.__init__(
+            self,
+            'delete frame',
+            'Delete the current frame.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = RemoveFrameTool.draw_symbol
         self.frame_count = 0

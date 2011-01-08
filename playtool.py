@@ -12,7 +12,11 @@ class PlayTool(EditorTools.Tool):
     
     def __init__(self):
         """creates a new play tool"""
-        EditorTools.Tool.__init__(self,'play')
+        EditorTools.Tool.__init__(
+            self,
+            'play',
+            'Play the animation.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = PlayTool.draw_symbol
         self.animation_type = None

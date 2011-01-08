@@ -7,7 +7,11 @@ class AddFrameTool(EditorTools.Tool):
 
     def __init__(self):
         """creates a new add frame tool"""
-        EditorTools.Tool.__init__(self,'add frame')
+        EditorTools.Tool.__init__(
+            self,
+            'add frame',
+            'Add a copy of the current frame.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = AddFrameTool.draw_symbol
         self.frame_count = 0

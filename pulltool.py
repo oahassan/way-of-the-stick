@@ -12,7 +12,11 @@ class PullTool(EditorTools.Tool):
     
     def __init__(self):
         """creates a new point tool"""
-        EditorTools.Tool.__init__(self,"Move")
+        EditorTools.Tool.__init__(
+            self,
+            "pull",
+            "Left click and drag to move a point.  Right click to anchor a point."
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.color = (255, 255, 255)
         self.symbol.draw = PullTool.draw_symbol

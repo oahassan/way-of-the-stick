@@ -9,7 +9,11 @@ class MoveFrameLeftTool(EditorTools.Tool):
     
     def __init__(self):
         """Creates a new move frame left tool"""
-        EditorTools.Tool.__init__(self,'move frame')
+        EditorTools.Tool.__init__(
+            self,
+            'move frame',
+            'Move the current frame before the previous frame.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = MoveFrameLeftTool.draw_symbol
     
@@ -77,7 +81,11 @@ class MoveFrameRightTool(EditorTools.Tool):
     
     def __init__(self):
         """Creates a new move frame right tool"""
-        EditorTools.Tool.__init__(self,'move frame')
+        EditorTools.Tool.__init__(
+            self,
+            'move frame',
+            'Move the current frame after the next frame.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = MoveFrameRightTool.draw_symbol
     
@@ -145,7 +153,11 @@ class PrevFrameTool(EditorTools.Tool):
     
     def __init__(self):
         """Creates a new previous frame tool"""
-        EditorTools.Tool.__init__(self,'prev. frame')
+        EditorTools.Tool.__init__(
+            self,
+            'prev. frame',
+            'Edit the previous frame.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = PrevFrameTool.draw_symbol
     
@@ -205,7 +217,11 @@ class NextFrameTool(EditorTools.Tool):
     
     def __init__(self):
         """Creates a new next frame tool"""
-        EditorTools.Tool.__init__(self,'next frame')
+        EditorTools.Tool.__init__(
+            self,
+            'next frame',
+            'Edit the next frame.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = NextFrameTool.draw_symbol
     

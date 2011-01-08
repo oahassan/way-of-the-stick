@@ -13,7 +13,11 @@ class SaveTool(EditorTools.Tool):
     
     def __init__(self):
         """creates a new add frame tool"""
-        EditorTools.Tool.__init__(self,'save')
+        EditorTools.Tool.__init__(
+            self,
+            'save',
+            'Name and save the animation.'
+        )
         self.symbol = EditorTools.Symbol()
         self.symbol.draw = SaveTool.draw_symbol
         self.symbol.line_thickness = SaveTool._SYMBOL_LINE_THICKNESS

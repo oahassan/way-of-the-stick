@@ -24,7 +24,7 @@ class Tool(button.Button):
     _InactiveColor = (255,255,255)
     _ButtonLineThickness = 2
     
-    def __init__(self, label_text = None):
+    def __init__(self, label_text = None, help_text = None):
         """creates a new Tool"""
         button.Button.__init__(self)
         
@@ -38,12 +38,6 @@ class Tool(button.Button):
         self.color = Tool._InactiveColor
         self.fixed_dimensions = True
         self.fixed_position = True
-        
-        #Variables for managing state while using a point tool
-        self.frame = None
-        self.point_clicked = False
-        self.slctd_point = None
-        self.animation = None
         self.label = None
         
         if label_text != None:
@@ -59,6 +53,26 @@ class Tool(button.Button):
             self.height += self.label.height
             self.width = max(self.width,self.label.width)
             self.add_child(self.label)
+        
+        #Variables for managing state while using a point tool
+        self.frame = None
+        self.point_clicked = False
+        self.slctd_point = None
+        self.animation = None
+        
+        #Help text
+        self.help_text = None
+        
+        if help_text != None:
+            self.help_text = \
+                TextBox(
+                    help_text,
+                    400,
+                    (200, 20),
+                    (255,255,255),
+                    20
+                )
+        
     
     def init_state(self, animation):
         """initalizes the state variables
@@ -80,6 +94,9 @@ class Tool(button.Button):
         self.slctd_point = None
         self.color = Tool._InactiveColor
         self.symbol.color = Tool._InactiveColor
+    
+    def has_help_text(self):
+        return self.help_text != None
     
     def handle_events(self, \
                      surface, \

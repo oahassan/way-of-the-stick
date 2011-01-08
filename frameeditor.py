@@ -205,9 +205,14 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
     global exit_ind
     global loaded
     
+    mouseover_tool = get_mouseover_tool(mousePos)
+    
+    if mouseover_tool != None and mouseover_tool.has_help_text():
+        mouseover_tool.help_text.draw(gamestate.screen)
+    
     for event in events:
         if event.type == pygame.MOUSEBUTTONDOWN: 
-            slctd_tool = get_slctd_tool(mousePos)
+            slctd_tool = mouseover_tool
             
             if slctd_tool != None:
                 slctd_tool.color = EditorTools.Tool._SlctdColor
@@ -265,7 +270,7 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
         
         animation.draw_frames(surface, (20, 540))
     
-def get_slctd_tool(mousePos):
+def get_mouseover_tool(mousePos):
     """Returns the tool that was clicked.  If no tool was clicked
     None is returned.
     
