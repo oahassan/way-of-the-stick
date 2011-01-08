@@ -479,7 +479,7 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
             
             animations = actionwizard.get_attack_animations(self.animation_type)
         
-        return animations
+        return sorted(animations, key=lambda animation: animation.name)
     
     def layout_thumbnails(self):
         current_position = (self.scrollable_area.position[0] + 10, \

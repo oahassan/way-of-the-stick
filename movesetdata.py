@@ -114,7 +114,7 @@ def get_movesets():
     
     movesets.close()
     
-    return return_movesets
+    return sorted(return_movesets, key=lambda moveset: moveset.name)
 
 def get_moveset(moveset_name):
     movesets = shelve.open(_MOVESET_DB_FILE_NM, "c")
