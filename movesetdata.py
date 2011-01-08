@@ -1,6 +1,7 @@
 import os
 import shutil
 import shelve
+from glob import glob
 import enumerations
 from wotsprot.rencode import dumps, loads, serializable
 import string
@@ -17,14 +18,14 @@ _EXPORTED_MOVESETS_DIR = os.path.join("sharing", "exported movesets")
 _IMPORTED_MOVESETS_DIR = os.path.join("sharing", "imported movesets")
 _SHARED_MOVESETS_DIR = os.path.join("sharing", "shared movesets")
 _MOVESET_SUFFIX = "-mov.mvs"
+_SHARED_MOVESETS_GLOB_PATH = os.path.join(_SHARED_MOVESETS_DIR, "*" + _MOVESET_SUFFIX)
 
 def import_movesets():
     
-    for mvs in os.listdir(_SHARED_MOVESETS_DIR):
+    for shared_path in glob(_SHARED_MOVESETS_GLOB_PATH):
         
-        if mvs.endswith(_MOVESET_SUFFIX):
+        if os.path.isfile(shared_path):
             moveset = None
-            shared_path = os.path.join(_SHARED_MOVESETS_DIR, mvs)
             
             with open(shared_path, 'rb') as mvs_file:
                 moveset = loads(mvs_file.read())
@@ -50,7 +51,13 @@ def import_movesets():
                 save_moveset(moveset)
             
             #move the imported moveset to the imported folder to show that it has been completed
-            shutil.move(shared_path, os.path.join(_IMPORTED_MOVESETS_DIR, mvs))
+            shutil.move(
+                shared_path,
+                os.path.join(
+                    _IMPORTED_MOVESETS_DIR,
+                    os.path.split(shared_path)[1]
+                )
+            )
 
 def save_imported_animations(moveset):
     for animation_type, animation in moveset.movement_animations.iteritems():
