@@ -43,11 +43,14 @@ class Tool(button.Button):
         if label_text != None:
             self.label = \
                 TextBox(
-                    label_text,
-                    Tool._BUTTON_WIDTH,
-                    (self.position[0], self.position[1] + Tool._BUTTON_HEIGHT + Tool._ButtonLineThickness),
-                    (255,255,255),
-                    15
+                    text = label_text,
+                    width = Tool._BUTTON_WIDTH,
+                    position = (
+                        self.position[0],
+                        self.position[1] + Tool._BUTTON_HEIGHT + Tool._ButtonLineThickness
+                    ),
+                    text_color = (255,255,255),
+                    font_size = 15
                 )
             
             self.height += self.label.height
