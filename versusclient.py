@@ -159,6 +159,9 @@ class ClientConnectionListener(EndPoint):
     #Network methods
     
     def Network(self, data):
+        if self.connection_status != ConnectionStatus.CONNECTED:
+            self.connection_status = ConnectionStatus.CONNECTED
+        
         self.actions_received.append(data)
         
         #print("local client")
