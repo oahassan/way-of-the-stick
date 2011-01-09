@@ -21,13 +21,13 @@ class ImportAlertBox(wotsuicontainers.AlertBox):
             text = 'Importing Movesets...',
             width = 300,
             position = (0,0),
-            text_color = (255,255,255),
-            background_color = (0,0,0),
+            text_color = (0,0,0),
+            background_color = (255,255,255),
             font_size = 50
         )
         position = (
-            400 - self.width,
-            300 - self.height
+            400 - int(.5 * self.width),
+            300 - int(.5 * self.height)
         )
         self.set_position(position)
 

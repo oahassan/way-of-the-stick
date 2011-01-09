@@ -10,7 +10,7 @@ import versusserver
 import versusclient
 
 import button
-from onlineversusmovesetselectui import LocalPlayerSetupContainer, RemotePlayerStateLabel
+from onlineversusmovesetselectui import LocalPlayerSetupContainer, RemotePlayerStateLabel, ConnectingAlertBox
 import movesetselectui
 import wotsuicontainers
 
@@ -41,6 +41,8 @@ player_status_ui_dictionary = \
         versusserver.PlayerPositions.PLAYER2 : None
     }
 
+connecting_alert_box = None
+
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
     playable_movesets = [moveset for moveset in movesets if moveset.is_complete()]
@@ -58,7 +60,9 @@ def load():
     global join_match_button
     global assigned_positions
     global spectate_button
+    global connecting_alert_box
     
+    connecting_alert_box = ConnectingAlertBox()
     exit_button = button.ExitButton()
     loaded = True
     start_match_label = movesetselectui.MovesetActionLabel((10, 520), "Start Match!")
@@ -112,7 +116,9 @@ def unload():
     global spectate_button
     global local_player_position
     global local_player_container_created
+    global connecting_alert_box
     
+    connecting_alert_box = None
     exit_button = None
     loaded = False
     start_match_label = None
@@ -158,6 +164,7 @@ def handle_events():
     global join_match_button
     global local_player_container_created
     global local_player_position
+    global connecting_alert_box
     
     if loaded == False:
         load()
@@ -310,6 +317,9 @@ def handle_events():
                 
                 if start_match_label.active:
                     start_match_label.inactivate()
+            elif versusclient.listener.connection_status == \
+            versusclient.ConnectionStatus.CONNECTING:
+                connecting_alert_box.draw(gamestate.screen)
             
             if not versusclient.client_was_connected():
                 
