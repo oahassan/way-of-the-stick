@@ -792,6 +792,7 @@ class TextBox(wotsui.UIObjectBase):
         width = 0,
         position = (0, 0),
         text_color = (255, 255, 255),
+        background_color = None,
         font_size = 30
     ):
         wotsui.UIObjectBase.__init__(self)
@@ -801,6 +802,7 @@ class TextBox(wotsui.UIObjectBase):
         self.text = text
         self.width = width
         self.text_color = text_color
+        self.background_color = background_color
         self.font_size = font_size
         self.text_lines = []
         self.fixed_dimensions = True
@@ -811,10 +813,12 @@ class TextBox(wotsui.UIObjectBase):
         self.layout_text()
     
     def draw(self, surface):
-        """draws the text box on the screen over any other renderings drawn before it"""
         
         if self.visible:
             message_surface = pygame.Surface((self.width, self.height))
+            
+            if self.background_color != None:
+                message_surface.fill(self.background_color)
             
             wotsui.UIObjectBase.draw_relative(self, message_surface, self.position)
             
@@ -867,3 +871,37 @@ class TextBox(wotsui.UIObjectBase):
             line.set_position((x_position, y_position))
             
             y_position += line.height
+
+class AlertBox(TextBox):
+
+    def __init__(
+        self,
+        border_color=(255,255,255),
+        border_padding = 0,
+        border_thickness = 1,
+        *args,
+        **kwargs
+    ):
+        TextBox.__init__(self, *args, **kwargs)
+        
+        self.border_color = border_color
+        self.border_padding = border_padding
+        self.border_thickness = border_thickness
+    
+    def draw(self, surface):
+        
+        border_position = (
+            self.position[0] - self.border_padding,
+            self.position[1] - self.border_padding
+        )
+        border_width = self.width + (2 * self.border_padding)
+        border_height = self.height + (2 * self.border_padding)
+        
+        pygame.draw.rect(
+            surface,
+            self.border_color,
+            (border_position, (border_width, border_height)),
+            self.border_thickness
+        )
+        
+        TextBox.draw(self, surface)

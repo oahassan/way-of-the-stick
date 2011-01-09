@@ -1,3 +1,4 @@
+from threading import Thread
 import pygame
 
 import wotsui
@@ -16,6 +17,8 @@ delete_moveset_label = None
 moveset_select_container = None
 export_moveset_label = None
 import_movesets_label = None
+import_movesets_thread = None
+import_alert_box = None
 
 def load():
     global loaded
@@ -26,6 +29,9 @@ def load():
     global exit_button
     global export_moveset_label
     global import_movesets_label
+    global import_alert_box
+    
+    import_alert_box = movesetselectui.ImportAlertBox()
     
     exit_button = button.ExitButton()
     create_new_moveset_label = button.TextButton('Create New Moveset', 25)
@@ -89,76 +95,89 @@ def handle_events():
     global moveset_select_container
     global export_moveset_label
     global import_movesets_label
+    global import_movesets_thread
+    global import_alert_box
     
     if loaded == False:
         load()
     
-    if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
-        if exit_button.contains(wotsuievents.mouse_pos):
-            exit_button.handle_selected()
-        
-        if create_new_moveset_label.contains(wotsuievents.mouse_pos):
-            create_new_moveset_label.handle_selected()
-        
-        if import_movesets_label.contains(wotsuievents.mouse_pos):
-            import_movesets_label.handle_selected()
-        
-        if edit_moveset_label.contains(wotsuievents.mouse_pos) and edit_moveset_label.active:
-            edit_moveset_label.handle_selected()
-        
-        if delete_moveset_label.contains(wotsuievents.mouse_pos) and delete_moveset_label.active:
-            delete_moveset_label.handle_selected()
-        
-        if export_moveset_label.contains(wotsuievents.mouse_pos) and export_moveset_label.active:
-            export_moveset_label.handle_selected()
-    if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
-        if exit_button.selected:
-            exit_button.handle_deselected()
-            
+    if import_movesets_thread == None:
+        if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
             if exit_button.contains(wotsuievents.mouse_pos):
-                gamestate.mode = gamestate.Modes.MAINMENU
-                unload()
-        
-        elif create_new_moveset_label.selected:
-            create_new_moveset_label.handle_deselected()
+                exit_button.handle_selected()
             
             if create_new_moveset_label.contains(wotsuievents.mouse_pos):
-                movesetbuilder.load(movesetdata.Moveset())
-                gamestate.mode = gamestate.Modes.MOVESETBUILDER
-                unload()
-        
-        elif import_movesets_label.selected:
-            import_movesets_label.handle_deselected()
+                create_new_moveset_label.handle_selected()
             
             if import_movesets_label.contains(wotsuievents.mouse_pos):
-                movesetdata.import_movesets()
-                moveset_select_container.selected_moveset = None
-                moveset_select_container.load_movesets(movesetdata.get_movesets())
-        
-        elif edit_moveset_label.selected:
-            edit_moveset_label.handle_deselected()
+                import_movesets_label.handle_selected()
             
-            if edit_moveset_label.contains(wotsuievents.mouse_pos):
-                movesetbuilder.load(moveset_select_container.selected_moveset)
-                gamestate.mode = gamestate.Modes.MOVESETBUILDER
-                unload()
-        
-        elif delete_moveset_label.selected:
-            delete_moveset_label.handle_deselected()
+            if (edit_moveset_label.contains(wotsuievents.mouse_pos) and
+            edit_moveset_label.active):
+                edit_moveset_label.handle_selected()
             
-            if delete_moveset_label.contains(wotsuievents.mouse_pos):
-                movesetdata.delete_moveset(moveset_select_container.selected_moveset)
-                moveset_select_container.selected_moveset = None
-                moveset_select_container.load_movesets(movesetdata.get_movesets())
-        elif export_moveset_label.selected:
-            export_moveset_label.handle_deselected()
+            if (delete_moveset_label.contains(wotsuievents.mouse_pos) and
+            delete_moveset_label.active):
+                delete_moveset_label.handle_selected()
             
-            if export_moveset_label.contains(wotsuievents.mouse_pos):
-                movesetdata.export_moveset(moveset_select_container.selected_moveset)
+            if (export_moveset_label.contains(wotsuievents.mouse_pos) and
+            export_moveset_label.active):
+                export_moveset_label.handle_selected()
+        if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
+            if exit_button.selected:
+                exit_button.handle_deselected()
+                
+                if exit_button.contains(wotsuievents.mouse_pos):
+                    gamestate.mode = gamestate.Modes.MAINMENU
+                    unload()
+            
+            elif create_new_moveset_label.selected:
+                create_new_moveset_label.handle_deselected()
+                
+                if create_new_moveset_label.contains(wotsuievents.mouse_pos):
+                    movesetbuilder.load(movesetdata.Moveset())
+                    gamestate.mode = gamestate.Modes.MOVESETBUILDER
+                    unload()
+            
+            elif import_movesets_label.selected:
+                import_movesets_label.handle_deselected()
+                
+                if import_movesets_label.contains(wotsuievents.mouse_pos):
+                    import_movesets_thread = Thread(
+                        target=movesetdata.import_movesets
+                    )
+                    import_movesets_thread.start()
+            
+            elif edit_moveset_label.selected:
+                edit_moveset_label.handle_deselected()
+                
+                if edit_moveset_label.contains(wotsuievents.mouse_pos):
+                    movesetbuilder.load(
+                        moveset_select_container.selected_moveset
+                    )
+                    gamestate.mode = gamestate.Modes.MOVESETBUILDER
+                    unload()
+            
+            elif delete_moveset_label.selected:
+                delete_moveset_label.handle_deselected()
+                
+                if delete_moveset_label.contains(wotsuievents.mouse_pos):
+                    movesetdata.delete_moveset(
+                        moveset_select_container.selected_moveset
+                    )
+                    moveset_select_container.selected_moveset = None
+                    moveset_select_container.load_movesets(
+                        movesetdata.get_movesets()
+                    )
+            elif export_moveset_label.selected:
+                export_moveset_label.handle_deselected()
+                
+                if export_moveset_label.contains(wotsuievents.mouse_pos):
+                    movesetdata.export_moveset(
+                        moveset_select_container.selected_moveset
+                    )
     
     if loaded:
-        moveset_select_container.handle_events()
-        
         exit_button.draw(gamestate.screen)
         edit_moveset_label.draw(gamestate.screen)
         create_new_moveset_label.draw(gamestate.screen)
@@ -166,6 +185,19 @@ def handle_events():
         export_moveset_label.draw(gamestate.screen)
         import_movesets_label.draw(gamestate.screen)
         moveset_select_container.draw(gamestate.screen)
+        
+        if import_movesets_thread == None:
+            moveset_select_container.handle_events()
+            
+        elif import_movesets_thread.is_alive() == True:
+            import_alert_box.draw(gamestate.screen)
+            
+        elif import_movesets_thread.is_alive() == False:
+            moveset_select_container.selected_moveset = None
+            moveset_select_container.load_movesets(
+                movesetdata.get_movesets()
+            )
+            import_movesets_thread = None
         
         if moveset_select_container.selected_moveset != None:
             if not edit_moveset_label.active:

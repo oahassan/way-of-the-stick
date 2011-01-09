@@ -10,6 +10,27 @@ import button
 import movesetdata
 import player
 
+class ImportAlertBox(wotsuicontainers.AlertBox):
+    
+    def __init__(self):
+        wotsuicontainers.AlertBox.__init__(
+            self,
+            border_color = (255,255,255),
+            border_padding = 10,
+            border_thickness = 5,
+            text = 'Importing Movesets...',
+            width = 300,
+            position = (0,0),
+            text_color = (255,255,255),
+            background_color = (0,0,0),
+            font_size = 50
+        )
+        position = (
+            400 - self.width,
+            300 - self.height
+        )
+        self.set_position(position)
+
 class MovesetActionLabel(button.Label, wotsui.SelectableObjectBase):
     def __init__(self, position, text):
         wotsui.SelectableObjectBase.__init__(self)
