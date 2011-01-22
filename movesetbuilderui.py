@@ -83,8 +83,8 @@ class MovementBuilderContainer(BuilderContainer):
         self.draw_tab = False
         
         movement_select_title_text = "Select Movement Animations"
-        animation_types = dict(zip(player.PlayerStates.MOVEMENTS, \
-                                   player.PlayerStates.MOVEMENTS))
+        animation_types = zip(player.PlayerStates.MOVEMENTS, \
+                               player.PlayerStates.MOVEMENTS)
         self.animation_select_container = MovementAnimationSelectContainer((20,self.position[1] + self.title.height + 15), \
                                                                            movement_select_title_text, \
                                                                            animation_types)
@@ -129,14 +129,14 @@ class AttackBuilderContainer(BuilderContainer):
         
         movement_select_title_text = "Select Attack Animations"
         animation_types = \
-            {
-                InputActionTypes.WEAK_PUNCH : 'Weak Punch',
-                InputActionTypes.MEDIUM_PUNCH : 'Medium Punch',
-                InputActionTypes.STRONG_PUNCH : 'Strong Punch',
-                InputActionTypes.WEAK_KICK : 'Weak Kick',
-                InputActionTypes.MEDIUM_KICK : 'Medium Kick',
-                InputActionTypes.STRONG_KICK : 'Strong Kick'
-            }
+            [
+                (InputActionTypes.WEAK_PUNCH, 'Weak Punch'),
+                (InputActionTypes.MEDIUM_PUNCH, 'Medium Punch'),
+                (InputActionTypes.STRONG_PUNCH, 'Strong Punch'),
+                (InputActionTypes.WEAK_KICK, 'Weak Kick'),
+                (InputActionTypes.MEDIUM_KICK, 'Medium Kick'),
+                (InputActionTypes.STRONG_KICK, 'Strong Kick')
+            ]
         self.animation_select_container = AttackAnimationSelectContainer((20,self.position[1] + self.title.height + 15), \
                                                                           movement_select_title_text, \
                                                                           animation_types)
@@ -192,8 +192,8 @@ class AnimationSelectContainer(BuilderContainer):
         
         button_list = []
         
-        for type, type_text in animation_types.iteritems():
-            button_list.append(MoveTypeButton(type, type_text, 13))
+        for type_tuple in animation_types:
+            button_list.append(MoveTypeButton(type_tuple[0], type_tuple[1], 13))
         
         self.buttons = button_list
         self.layout_buttons()
