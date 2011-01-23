@@ -1134,6 +1134,20 @@ class AttackTypes():
     ATTACK_TYPES = [PUNCH, KICK]
 
 class Attack(Action):
+    PUNCH_LINE_NAMES = [
+        stick.LineNames.LEFT_UPPER_ARM,
+        stick.LineNames.LEFT_FOREARM,
+        stick.LineNames.RIGHT_UPPER_ARM,
+        stick.LineNames.RIGHT_FOREARM
+    ]
+    
+    KICK_LINE_NAMES = [
+        stick.LineNames.LEFT_UPPER_LEG,
+        stick.LineNames.LEFT_LOWER_LEG,
+        stick.LineNames.RIGHT_UPPER_LEG,
+        stick.LineNames.RIGHT_LOWER_LEG
+    ]
+    
     def __init__(self, attack_type):
         Action.__init__(self, PlayerStates.ATTACKING)
         self.attack_type = attack_type

@@ -1,9 +1,12 @@
 from random import choice
 import copy
+import pygame
+import gamestate
 import physics
 import animationexplorer
 import player
 import enumerations
+from stick import LineNames
 from controlsdata import InputActionTypes
 
 class Bot(player.Player):
@@ -13,7 +16,11 @@ class Bot(player.Player):
         player.Player.__init__(self, position)
         self.actions = {}
         self.player_type = player.PlayerTypes.BOT
-    
+        
+        #a dictionary mapping attacks to a list of rects for each frame
+        self.attack_rects = {}
+        self.attack_rect_deltas = {}
+        
     def load_moveset(self, moveset):
         self.moveset = moveset
         
@@ -80,6 +87,61 @@ class Bot(player.Player):
                 self.actions[player.PlayerStates.ATTACKING].append(attack_action)
         
         self.actions[player.PlayerStates.STANDING].set_player_state(self)
+        self.set_attack_rect_data()
+    
+    def set_attack_rect_data(self):
+        """build a list of rects bounding the attack lines in each frame of an
+        attack animation.  Each rect's position is relative the first rect and
+        the first rect's position is (0,0)"""
+        
+        for attack in self.actions[player.PlayerStates.ATTACKING]:
+            attack_rects = self.get_attack_rects(
+                attack.right_animation,
+                attack.attack_type
+            )
+            self.attack_rects[attack.right_animation.name] = attack_rects
+            
+            initial_position = attack_rects[0].topleft
+            self.attack_rect_deltas[attack.right_animation.name] = \
+                [(rect.left - initial_position[0], rect.top - initial_position[1]) for rect in attack_rects]
+    
+    def get_attack_rects(self, attack_animation, attack_type):
+        """creates a rect surrounding the attack lines for each frame in
+        the given animation"""
+        
+        return_rects = []
+        
+        for frame in attack_animation.frames:
+            return_rects.append(self.get_attack_rect(frame, attack_type))
+        
+        initial_position = return_rects[0].topleft
+        
+        for frame_rect in return_rects:
+            frame_rect.move(-initial_position[0], -initial_position[1])
+        
+        return return_rects
+    
+    def get_attack_rect(self, frame, attack_type):
+        attack_line_names = None
+        
+        if attack_type in enumerations.InputActionTypes.PUNCHES:
+            attack_line_names = player.Attack.PUNCH_LINE_NAMES
+        elif attack_type in enumerations.InputActionTypes.KICKS:
+            attack_line_names = player.Attack.KICK_LINE_NAMES
+        
+        if attack_line_names == None:
+            import pdb;pdb.set_trace()
+        
+        frame_rect = None
+        
+        for line in frame.lines():
+            if line.name in attack_line_names:
+                if frame_rect == None:
+                    frame_rect = pygame.Rect(line.get_enclosing_rect())
+                else:
+                    frame_rect.union_ip(pygame.Rect(line.get_enclosing_rect()))
+        
+        return frame_rect
     
     def handle_events(self, enemy):
         self.set_action(enemy)
@@ -100,7 +162,11 @@ class Bot(player.Player):
         
         self.set_direction(enemy)
         
-        attack = self.get_in_range_attack(enemy)
+        attack = None
+        
+        if self.action.action_state != player.PlayerStates.ATTACKING:
+            attack = self.get_in_range_attack(enemy)
+        
         next_action = None
         
         if attack != None:
@@ -156,3 +222,87 @@ class Bot(player.Player):
             return choice(in_range_attacks)
         else:
             return None
+    
+    def attack_in_range(self, attack, enemy):
+        bottom_right_top_left = self.model.get_top_left_and_bottom_right()
+        bottom_right = bottom_right_top_left[1]
+        top_left = bottom_right_top_left[0]
+        
+        attack_rect_deltas = self.attack_rect_deltas[attack.right_animation.name]
+        attack_rects = self.set_rect_positions(
+            self.get_initial_attack_rect(attack),
+            self.attack_rects[attack.right_animation.name],
+            attack_rect_deltas
+        )
+        
+        enemy_rect = pygame.Rect(enemy.model.position, (enemy.model.width, enemy.model.height))
+        
+        in_range = enemy_rect.collidelist(attack_rects)
+        
+        return in_range > -1
+    
+    def set_rect_positions(
+        self,
+        initial_rect,
+        attack_rects,
+        attack_rect_deltas
+    ): 
+        new_rects = []
+        
+        for i in range(len(attack_rects)):
+            rect = attack_rects[i]
+            delta = None
+            
+            if self.model.orientation == physics.Orientations.FACING_RIGHT:
+                delta = (
+                    initial_rect.left - rect.left + attack_rect_deltas[i][0],
+                    initial_rect.top - rect.top + attack_rect_deltas[i][1]
+                )
+            else:
+                 delta = (
+                    initial_rect.left - rect.left - attack_rect_deltas[i][0],
+                    initial_rect.top - rect.top + attack_rect_deltas[i][1]
+                )   
+            
+            rect = rect.move(*delta)
+            new_rects.append(rect)
+            
+            #pygame.draw.rect(gamestate.screen, (255,0,0), rect, 1)
+            #gamestate.new_dirty_rects.append(rect)
+        
+        return new_rects
+    
+    def get_initial_attack_rect(self, attack):
+        animation = attack.right_animation
+        attack_rect = self.get_attack_rect(
+            animation.frames[0],
+            attack.attack_type
+        )
+        
+        current_position = self.model.position
+        
+        if self.is_aerial() == False:
+            rect = self.get_enclosing_rect()
+            
+            current_position = (
+                current_position[0],
+                rect.bottom + animation.frames[0].image_height()
+            )
+        
+        animation_position = animation.frames[0].get_reference_position()
+        
+        if self.model.orientation == physics.Orientations.FACING_LEFT:
+            animation_position = (
+                animation_position[0] + animation.frames[0].image_width(),
+                animation_position[1]
+            )
+        
+        attack_rect = attack_rect.move(
+            current_position[0] - animation_position[0],
+            current_position[1] - animation_position[1]
+        )
+        
+        #pygame.draw.rect(gamestate.screen, (0,0,255), attack_rect)
+        #gamestate.new_dirty_rects.append(attack_rect)
+        
+        return attack_rect
