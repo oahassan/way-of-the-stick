@@ -21,6 +21,11 @@ class MatchStates:
     FIGHT = 'fight'
     END = 'end'
 
+class ClashResults:
+    WIN = 'win'
+    LOSS = 'loss'
+    TIE = 'tie'
+
 gamestate.stage = stage.ScrollableStage(447, 0, gamestate._WIDTH)
 
 initialized = False
@@ -296,8 +301,34 @@ def handle_attacks(attacker, receiver):
             if colliding_line_names:
                 # draw_attacker_hitboxes(attacker_attack_hitboxes)
                 # draw_attacker_hitboxes(receiver_attack_hitboxes)
+                clash_result = get_clash_result(
+                    attacker,
+                    receiver,
+                    colliding_line_names
+                )
+                attacker_hitboxes = get_hitbox_dictionary(attacker.model.lines)
                 
-                handle_blocked_attack_collision(attacker, receiver,attacker_attack_hitboxes, receiver_attack_hitboxes)
+                if clash_result == ClashResults.TIE:
+                    handle_blocked_attack_collision(
+                        attacker,
+                        receiver,
+                        attacker_attack_hitboxes,
+                        receiver_attack_hitboxes
+                    )
+                elif clash_result == ClashResults.WIN:
+                    handle_unblocked_attack_collision(
+                        attacker,
+                        receiver,
+                        attacker_hitboxes,
+                        receiver_attack_hitboxes
+                    )
+                else:
+                    handle_unblocked_attack_collision(
+                        receiver,
+                        attacker,
+                        receiver_attack_hitboxes,
+                        attacker_hitboxes
+                    )
             else:
                 attacker_hitboxes = get_hitbox_dictionary(attacker.model.lines)
                 colliding_line_names = test_attack_collision(receiver_attack_hitboxes, attacker_hitboxes)
@@ -341,6 +372,23 @@ def handle_attacks(attacker, receiver):
                 
                 handle_unblocked_attack_collision(attacker, receiver, attacker_attack_hitboxes, receiver_hitboxes)
 
+def get_clash_result(attacker, receiver, colliding_line_names):
+    colliding_lines = (
+        receiver.model.lines[colliding_line_names[0]],
+        attacker.model.lines[colliding_line_names[1]]
+    )
+    
+    interaction_points = get_interaction_points(receiver, colliding_lines)
+    attack_damage = attacker.get_point_damage(interaction_points[0].name)
+    block_damage = receiver.get_point_damage(interaction_points[1].name)
+    
+    if 5 > abs(attack_damage - block_damage):
+        return ClashResults.TIE
+    elif attack_damage > block_damage:
+        return ClashResults.WIN
+    else:
+        return ClashResults.LOSS
+    
 def draw_attacker_hitboxes(hitbox_dictionary):
     for name, hitboxes in hitbox_dictionary.iteritems():
         for hitbox in hitboxes:
