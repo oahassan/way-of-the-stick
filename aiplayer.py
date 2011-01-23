@@ -214,19 +214,35 @@ class Bot(player.Player):
     def get_in_range_attack(self, enemy):
         in_range_attacks = []
         
-        for attack in self.actions[player.PlayerStates.ATTACKING]:
-            if self.attack_in_range(attack, enemy):
-                in_range_attacks.append(attack)
+        if self.is_aerial():
+            in_range_attacks = [attack for attack in self.actions[player.PlayerStates.ATTACKING] if self.aerial_attack_in_range(attack, enemy)]
+        else:
+            in_range_attacks = [attack for attack in self.actions[player.PlayerStates.ATTACKING] if self.attack_in_range(attack, enemy)]
         
         if len(in_range_attacks) > 0:
             return choice(in_range_attacks)
         else:
             return None
     
-    def attack_in_range(self, attack, enemy):
+    def aerial_attack_in_range(self, attack, enemy):
         bottom_right_top_left = self.model.get_top_left_and_bottom_right()
         bottom_right = bottom_right_top_left[1]
         top_left = bottom_right_top_left[0]
+        
+        attack_range_point = top_left
+        
+        if self.direction == player.PlayerStates.FACING_LEFT:
+            attack_range_point = (bottom_right[0] - attack.range[0], \
+                                  top_left[1])
+        
+        attack_rect = pygame.Rect(attack_range_point, (attack.range[0], attack.range[1]))
+        enemy_rect = pygame.Rect(enemy.model.position, (enemy.model.width, enemy.model.height))
+        
+        in_range = attack_rect.colliderect(enemy_rect)
+        
+        return in_range
+    
+    def attack_in_range(self, attack, enemy):
         
         attack_rect_deltas = self.attack_rect_deltas[attack.right_animation.name]
         attack_rects = self.set_rect_positions(
@@ -264,11 +280,11 @@ class Bot(player.Player):
                     initial_rect.top - rect.top + attack_rect_deltas[i][1]
                 )   
             
-            rect = rect.move(*delta)
-            new_rects.append(rect)
+            new_rect = rect.move(*delta)
+            new_rects.append(new_rect)
             
-            #pygame.draw.rect(gamestate.screen, (255,0,0), rect, 1)
-            #gamestate.new_dirty_rects.append(rect)
+            #pygame.draw.rect(gamestate.screen, (255,0,0), new_rect, 1)
+            #gamestate.new_dirty_rects.append(new_rect)
         
         return new_rects
     
@@ -286,7 +302,7 @@ class Bot(player.Player):
             
             current_position = (
                 current_position[0],
-                rect.bottom + animation.frames[0].image_height()
+                rect.bottom - animation.frames[0].image_height()
             )
         
         animation_position = animation.frames[0].get_reference_position()
