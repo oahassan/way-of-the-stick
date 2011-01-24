@@ -170,20 +170,26 @@ class Label(wotsui.UIObjectBase):
     
     def draw(self, surface):
         """draw text of label on a surface"""
-        wotsui.UIObjectBase.draw(self, surface)
-        
-        text_surface = self.font.render(self.text, 1, self.text_color)
-        
-        surface.blit(text_surface, self.position)
+        if self.visible:
+            wotsui.UIObjectBase.draw(self, surface)
+            
+            text_surface = self.font.render(self.text, 1, self.text_color)
+            
+            surface.blit(text_surface, self.position)
     
     def draw_relative(self, surface, reference_position):
         """draw text of label on a surface relative positioned relative to a given 
         position"""
-        wotsui.UIObjectBase.draw_relative(self, surface, reference_position)
-        
-        text_surface = self.font.render(self.text, 1, self.text_color)
-        
-        surface.blit(text_surface, self.get_relative_position(reference_position))
+        if self.visible:
+            wotsui.UIObjectBase.draw_relative(
+                self,
+                surface,
+                reference_position
+            )
+            
+            text_surface = self.font.render(self.text, 1, self.text_color)
+            
+            surface.blit(text_surface, self.get_relative_position(reference_position))
 
 class DeleteButton(Button):
     

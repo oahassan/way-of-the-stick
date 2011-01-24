@@ -34,6 +34,10 @@ class BuilderContainer(wotsui.UIObjectBase):
             if child != self.title:
                 child.show()
         
+        if self.animation_select_container != None:
+            self.animation_select_container.animation_navigator.edit_animation_help_text.hide()
+            self.animation_select_container.animation_navigator.delete_animation_help_text.hide()
+        
         self.expanded = True
     
     def collapse(self):
@@ -85,9 +89,11 @@ class MovementBuilderContainer(BuilderContainer):
         movement_select_title_text = "Select Movement Animations"
         animation_types = zip(player.PlayerStates.MOVEMENTS, \
                                player.PlayerStates.MOVEMENTS)
-        self.animation_select_container = MovementAnimationSelectContainer((20,self.position[1] + self.title.height + 15), \
-                                                                           movement_select_title_text, \
-                                                                           animation_types)
+        self.animation_select_container = MovementAnimationSelectContainer(
+            (20,self.position[1] + self.title.height + 15),
+            movement_select_title_text,
+            animation_types
+        )
         self.add_children([self.title, self.animation_select_container])
         
     def set_moveset(self, moveset):
@@ -137,9 +143,11 @@ class AttackBuilderContainer(BuilderContainer):
                 (InputActionTypes.MEDIUM_KICK, 'Medium Kick'),
                 (InputActionTypes.STRONG_KICK, 'Strong Kick')
             ]
-        self.animation_select_container = AttackAnimationSelectContainer((20,self.position[1] + self.title.height + 15), \
-                                                                          movement_select_title_text, \
-                                                                          animation_types)
+        self.animation_select_container = AttackAnimationSelectContainer(
+            (20,self.position[1] + self.title.height + 15),
+            movement_select_title_text,
+            animation_types
+        )
         self.add_children([self.title, self.animation_select_container])
     
     def save(self):
@@ -423,8 +431,19 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
         self.edit_animation_button = button.TextButton("Edit Animation", 15)
         self.add_child(self.edit_animation_button)
         
-        self.delete_animation_button = button.TextButton("Delete Animation", 15)
+        self.edit_animation_help_text = button.Label((0,0), "Select an animation to edit", (255,255,255), 14)
+        self.add_child(self.edit_animation_help_text)
+        self.edit_animation_help_text.hide()
+        
+        self.delete_animation_button = button.TextButton(
+            "Delete Animation",
+            15
+        )
         self.add_child(self.delete_animation_button)
+        
+        self.delete_animation_help_text = button.Label((0,0), "Select an animation to delete", (255,255,255), 14)
+        self.delete_animation_help_text.hide()
+        self.add_child(self.delete_animation_help_text)
         
         self.gamestate_mode = gamestate.Modes.MOVESETBUILDER
         self.allow_multiple_select = False
@@ -442,13 +461,33 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
                                          position[1] + AnimationNavigator.HEIGHT + 5)
         self.new_animation_button.set_position(new_animation_button_position)
         
-        edit_animation_button_position = (new_animation_button_position[0] + self.new_animation_button.width + 20, \
-                                          new_animation_button_position[1])
+        edit_animation_button_position = (
+            new_animation_button_position[0] + self.new_animation_button.width + 20, 
+            new_animation_button_position[1]
+        )
         self.edit_animation_button.set_position(edit_animation_button_position)
         
-        delete_animation_button_position = (edit_animation_button_position[0] + self.edit_animation_button.width + 20, \
-                                            edit_animation_button_position[1])
+        edit_animation_help_text_position = (
+            edit_animation_button_position[0],
+            edit_animation_button_position[1] + self.edit_animation_button.height + 10
+        )
+        self.edit_animation_help_text.set_position(
+            edit_animation_help_text_position
+        )
+        
+        delete_animation_button_position = (
+            edit_animation_button_position[0] + self.edit_animation_button.width + 20,
+            edit_animation_button_position[1]
+        )
         self.delete_animation_button.set_position(delete_animation_button_position)
+        
+        delete_animation_help_text_position = (
+            delete_animation_button_position[0],
+            delete_animation_button_position[1] + self.delete_animation_button.height + 10
+        )
+        self.delete_animation_help_text.set_position(
+            delete_animation_help_text_position
+        )
         
         self.load_animation_thumbnails()
     
@@ -499,7 +538,7 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
         self.new_animation_button.draw_relative(surface, position)
         self.edit_animation_button.draw_relative(surface, position)
         self.delete_animation_button.draw_relative(surface, position)
-    
+        
     def handle_events(self):
         wotsuicontainers.ScrollableContainer.handle_events(self)
         
@@ -550,14 +589,18 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
             if self.edit_animation_button.contains(wotsuievents.mouse_pos):
                 if self.edit_animation_button.selected:
                     self.edit_animation_button.handle_deselected()
+                    self.edit_animation_help_text.hide()
                 else:
                     self.edit_animation_button.handle_selected()
+                    self.edit_animation_help_text.show()
             
             if self.delete_animation_button.contains(wotsuievents.mouse_pos):
                 if self.delete_animation_button.selected:
                     self.delete_animation_button.handle_deselected()
+                    self.delete_animation_help_text.hide()
                 else:
                     self.delete_animation_button.handle_selected()
+                    self.delete_animation_help_text.show()
         elif pygame.MOUSEBUTTONUP in wotsuievents.event_types:
             if ((self.selected_animation != None) and
                 (self.new_animation_button.contains(wotsuievents.mouse_pos))):
