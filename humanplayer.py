@@ -1,7 +1,7 @@
 import copy
 from random import choice
 import pygame
-import animationexplorer
+import inputtree
 import player
 import wotsuievents
 import gamestate
