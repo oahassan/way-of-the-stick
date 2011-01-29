@@ -33,23 +33,13 @@ class Bot(player.Player):
         
         #load walk animation
         walk_animation = moveset.movement_animations[player.PlayerStates.WALKING]
-        walk_right_action = factory.create_walk(player.PlayerStates.FACING_RIGHT, \
-                                                walk_animation)
-        self.actions[player.PlayerStates.WALKING] = [walk_right_action]
-        
-        walk_left_action = factory.create_walk(player.PlayerStates.FACING_LEFT, \
-                                               walk_animation)
-        self.actions[player.PlayerStates.WALKING].append(walk_left_action)
+        walk_action = factory.create_walk(walk_animation)
+        self.actions[player.PlayerStates.WALKING] = walk_action
         
         #load run animation
         run_animation = moveset.movement_animations[player.PlayerStates.RUNNING]
-        run_right_action = factory.create_run(player.PlayerStates.FACING_RIGHT, \
-                                             run_animation)
-        self.actions[player.PlayerStates.RUNNING] = [run_right_action]
-        
-        run_left_action = factory.create_run(player.PlayerStates.FACING_LEFT, \
-                                            run_animation)
-        self.actions[player.PlayerStates.RUNNING].append(run_left_action)
+        run_action = factory.create_run(run_animation)
+        self.actions[player.PlayerStates.RUNNING] = run_action
         
         #load jump animation
         jump_animation = moveset.movement_animations[player.PlayerStates.JUMPING]
@@ -78,13 +68,15 @@ class Bot(player.Player):
         self.actions[player.PlayerStates.ATTACKING] = []
         
         #load attack actions
-        for attack_type, attack_animation in moveset.attack_animations.iteritems():
+        for attack_name in moveset.get_attacks():
             
-            if attack_type in InputActionTypes.ATTACKS:
+            attack_action = factory.create_attack(
+                moveset.get_attack_type(attack_name),
+                moveset.attack_animations[attack_name],
+                self.model
+            )
                 
-                attack_action = factory.create_attack(attack_type, attack_animation, self.model)
-                
-                self.actions[player.PlayerStates.ATTACKING].append(attack_action)
+            self.actions[player.PlayerStates.ATTACKING].append(attack_action)
         
         self.actions[player.PlayerStates.STANDING].set_player_state(self)
         self.set_attack_rect_data()
@@ -124,13 +116,12 @@ class Bot(player.Player):
     def get_attack_rect(self, frame, attack_type):
         attack_line_names = None
         
-        if attack_type in enumerations.InputActionTypes.PUNCHES:
+        if (attack_type in enumerations.InputActionTypes.PUNCHES or
+        attack_type == enumerations.AttackTypes.PUNCH):
             attack_line_names = player.Attack.PUNCH_LINE_NAMES
-        elif attack_type in enumerations.InputActionTypes.KICKS:
+        elif (attack_type in enumerations.InputActionTypes.KICKS or
+        attack_type == enumerations.AttackTypes.KICK):
             attack_line_names = player.Attack.KICK_LINE_NAMES
-        
-        if attack_line_names == None:
-            import pdb;pdb.set_trace()
         
         frame_rect = None
         
@@ -147,20 +138,15 @@ class Bot(player.Player):
         self.set_action(enemy)
         player.Player.handle_events(self)
     
-    def set_direction(self, enemy):
-        if (self.get_player_state() == enumerations.PlayerStates.WALKING or
-        self.get_player_state() == enumerations.PlayerStates.RUNNING or
-        self.get_player_state() == enumerations.PlayerStates.STANDING):
-            direction = player.PlayerStates.FACING_LEFT
+    def get_direction(self, enemy):
+        direction = player.PlayerStates.FACING_LEFT
         
-            if enemy.model.position[0] > self.model.position[0]:
-                direction = player.PlayerStates.FACING_RIGHT
-            
-            self.direction = direction
+        if enemy.model.position[0] > self.model.position[0]:
+            direction = player.PlayerStates.FACING_RIGHT
+        
+        return direction
     
     def set_action(self, enemy):
-        
-        self.set_direction(enemy)
         
         attack = None
         
@@ -175,6 +161,9 @@ class Bot(player.Player):
         else:
             next_action = self.move_towards_enemy(enemy)
         
+        if next_action != None:
+            next_action.direction = self.get_direction(enemy)
+        
         if (next_action != None
         and next_action != self.action
         and self.get_player_state() != player.PlayerStates.TRANSITION):
@@ -187,22 +176,23 @@ class Bot(player.Player):
         movement = None
         
         if x_distance > 150:
-            for action in self.actions[player.PlayerStates.RUNNING]:
-                if ((action.direction == self.direction) and
-                    (self.action != action)):
-                    movement = action
-                    self.dash_timer = 0
-                    break
-        elif x_distance <= 150:
-            for action in self.actions[player.PlayerStates.WALKING]:
-                if ((action.direction == self.direction) and
-                    (self.action != action)):
-                    movement = action
-                    break
+            action = self.actions[player.PlayerStates.RUNNING]
+            
+            if self.action != action:
+                movement = action
+                self.dash_timer = 0
         
-        if (((self.action.action_state == player.PlayerStates.WALKING) or
+        elif x_distance <= 150:
+            action = self.actions[player.PlayerStates.WALKING]
+            
+            if self.action != action:
+                movement = action
+        
+        if (((self.action.action_state == player.PlayerStates.STANDING) or
+            (self.action.action_state == player.PlayerStates.WALKING) or
             (self.action.action_state == player.PlayerStates.RUNNING)) and
-            (y_distance < -20)):
+            (y_distance < -20) and
+            (self.model.velocity[0] > 0)):
             movement = self.actions[player.PlayerStates.JUMPING]
         
         if ((movement != None) and
@@ -283,6 +273,7 @@ class Bot(player.Player):
             new_rect = rect.move(*delta)
             new_rects.append(new_rect)
             
+            #debugging code
             #pygame.draw.rect(gamestate.screen, (255,0,0), new_rect, 1)
             #gamestate.new_dirty_rects.append(new_rect)
         
@@ -318,6 +309,7 @@ class Bot(player.Player):
             current_position[1] - animation_position[1]
         )
         
+        #debugging code
         #pygame.draw.rect(gamestate.screen, (0,0,255), attack_rect)
         #gamestate.new_dirty_rects.append(attack_rect)
         

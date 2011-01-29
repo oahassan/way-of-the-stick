@@ -77,6 +77,15 @@ class ScrollableStage():
                 3
             )
         
+        #debugging code
+        #pygame.draw.line(
+        #    background_surface,
+        #    (255, 0, 0),
+        #    (self.left_wall.position[0], self.floor_height),
+        #    (self.right_wall.position[0], self.floor_height),
+        #    1
+        #)
+        
         return background_surface
     
     def scroll_background(self, player_models):

@@ -672,7 +672,7 @@ class ButtonContainer(ScrollableContainer):
     
     def layout_buttons(self):
         title = self.title
-        current_position = (title.position[0] + 10, \
+        current_position = (title.position[0] + 10,
                             title.position[1] + title.height + 10)
         buttons = self.buttons
         

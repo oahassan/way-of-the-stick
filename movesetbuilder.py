@@ -6,6 +6,7 @@ import button
 import gamestate
 import movesetdata
 import movesetbuilderui
+import attackbuilderui
 
 exit_button = button.ExitButton()
 loaded = False
@@ -28,7 +29,7 @@ def load(edit_moveset):
     movement_builder = movesetbuilderui.MovementBuilderContainer()
     movement_builder.set_moveset(moveset)
     movement_builder.expand()
-    attack_builder = movesetbuilderui.AttackBuilderContainer()
+    attack_builder = attackbuilderui.AttackBuilderContainer()
     attack_builder.set_moveset(moveset)
     attack_builder.collapse()
 

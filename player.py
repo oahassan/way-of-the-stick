@@ -273,7 +273,7 @@ class Player():
         
         position = (
             self.model.position[0], 
-            gamestate.stage.ground.position[1] - self.model.height
+            int(math.ceil(gamestate.stage.ground.position[1] - self.model.height))
         )
         
         self.model.move_model(position)
@@ -341,8 +341,9 @@ class Player():
             self.action.set_player_state(self)
     
     def transition(self, next_state):
-        self.actions[PlayerStates.TRANSITION].init_transition(self, next_state)
-        self.actions[PlayerStates.TRANSITION].set_player_state(self)
+        transition = Transition()
+        transition.init_transition(self, next_state)
+        transition.set_player_state(self)
     
     def set_neutral_state(self):
         self.get_neutral_state().set_player_state(self)
@@ -640,6 +641,7 @@ class Action():
         self.right_animation = None
         self.left_animation = None
         self.animation = None
+        self.direction = PlayerStates.FACING_RIGHT
         self.last_frame_index = 0
         self.current_sound_channel = None
     
@@ -703,9 +705,10 @@ class Action():
         #changing to the new animation.
         if player.is_aerial():
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+            
         else:
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
-            player.model.shift((0, (gamestate.stage.ground.position[1] - player.model.height) - player.model.position[1]))
+            player.move_to_ground()
         
         # if current_x_position != player.model.position[0]:
             # print("start position")
@@ -820,6 +823,7 @@ class Transition(Action):
         else:
             Action.set_player_state(self, player, player.direction)
         
+        #set friction so that stun friction doesn't remain
         player.model.friction = physics.FRICTION
     
 class InputAction():
@@ -856,13 +860,13 @@ class GroundMovement():
                 self.point_on_ground[point_name] = False
 
 class Walk(Action, GroundMovement):
-    def __init__(self, direction):
+    def __init__(self):
         Action.__init__(self, PlayerStates.WALKING)
         GroundMovement.__init__(self)
-        self.direction = direction
     
     def move_player(self, player):
         Action.move_player(self, player)
+        player.move_to_ground()
         
         self.play_sounds(player)
     
@@ -888,14 +892,13 @@ class Walk(Action, GroundMovement):
         self.init_points_on_ground(player)
 
 class Run(Action, GroundMovement):
-    def __init__(self, direction):
+    def __init__(self):
         Action.__init__(self, PlayerStates.RUNNING)
         GroundMovement.__init__(self)
-        
-        self.direction = direction
     
     def move_player(self, player):
         Action.move_player(self, player)
+        player.move_to_ground()
         
         self.play_sounds(player)
     
@@ -925,6 +928,10 @@ class Run(Action, GroundMovement):
 class Crouch(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.CROUCHING)
+    
+    def move_player(self, player):
+        Action.move_player(self, player)
+        player.move_to_ground()
     
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
@@ -967,12 +974,20 @@ class Stand(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.STANDING)
     
+    def move_player(self, player):
+        Action.move_player(self, player)
+        player.move_to_ground()
+    
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
 
 class Land(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.LANDING)
+    
+    def move_player(self, player):
+        Action.move_player(self, player)
+        player.move_to_ground()
     
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
@@ -1133,6 +1148,10 @@ class AttackTypes():
     
     ATTACK_TYPES = [PUNCH, KICK]
 
+class Elevations():
+    GROUNDED = "GROUNDED"
+    AERIAL = "AERIAL"
+
 class Attack(Action):
     PUNCH_LINE_NAMES = [
         stick.LineNames.LEFT_UPPER_ARM,
@@ -1160,6 +1179,8 @@ class Attack(Action):
         self.current_sound_channel = None
         self.hit_sound = None
         self.hit_sound_channel = None
+        self.elevation = Elevations.GROUNDED
+        self.overriden = False
     
     def set_frame_sounds(self):
         """Defines sounds for each frame index of the attack"""
@@ -1262,10 +1283,10 @@ class Attack(Action):
             player.handle_animation_end()
     
     def set_player_state(self, player):
-        previous_state = player.get_player_state()
+        previous_action = player.action
         
-        if previous_state == PlayerStates.TRANSITION:
-            previous_state = player.action.last_action.action_state
+        if previous_action.action_state == PlayerStates.TRANSITION:
+            previous_action = self.get_previous_action(player.action)
         
         player.action = self
         player.model.animation_run_time = 0     
@@ -1281,26 +1302,41 @@ class Attack(Action):
             self.animation = self.right_animation
             player.model.orientation = physics.Orientations.FACING_RIGHT
         
+        player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+        
         #set the point positions affects whether the player is grounded, so there are extra case statements here
         #if the player was in a grounded state shift back to the ground after setting the initial point positions
-        if previous_state in [PlayerStates.WALKING, PlayerStates.STANDING, PlayerStates.CROUCHING, PlayerStates.RUNNING, PlayerStates.LANDING]:
-            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+        if previous_action.action_state in [PlayerStates.WALKING, PlayerStates.STANDING, PlayerStates.CROUCHING, PlayerStates.RUNNING, PlayerStates.LANDING]:
             player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
             self.use_animation_physics = True
-            
+            self.elevation = Elevations.GROUNDED
+        
+        elif (previous_action.action_state == PlayerStates.ATTACKING and
+        previous_action.overriden == True and
+        previous_action.elevation == Elevations.GROUNDED):
+            self.use_animation_physics = True
+            self.elevation = Elevations.GROUNDED
+        
         elif not player.is_aerial():
-            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
             self.use_animation_physics = True
+            self.elevation = Elevations.GROUNDED
             
         else:
-            player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             self.use_animation_physics = False
+            self.elevation = Elevations.AERIAL
         
         player.reset_point_damage()
         
         if player.model.time_passed > 0:
             self.move_player(player)
+    
+    def get_previous_action(self, action):
+        
+        if action.action_state == PlayerStates.TRANSITION:
+            return self.get_previous_action(action.last_action)
+        else:
+            return action
     
     def get_attack_lines(self, model):
         """get the lines that used to attack in the animation"""
@@ -1394,32 +1430,18 @@ class ActionFactory():
         
         return return_float
     
-    def create_walk(self, direction, animation):
+    def create_walk(self, animation):
         """create a movement model for the given movement state"""
-        return_walk = Walk(direction)
+        return_walk = Walk()
         
         self._set_action_animations(return_walk, animation)
         
-        #if direction == PlayerStates.FACING_RIGHT:
-        #    return_walk.right_animation = self.crte_player_animation(animation)
-        #    return_walk.right_animation.set_animation_point_path_data(Player.ACCELERATION)
-        #if direction == PlayerStates.FACING_LEFT:
-        #    return_walk.left_animation = self.crte_player_animation(animation.flip())
-        #    return_walk.left_animation.set_animation_point_path_data(Player.ACCELERATION)
-        
         return return_walk
     
-    def create_run(self, direction, animation):
-        return_run = Run(direction)
+    def create_run(self, animation):
+        return_run = Run()
         
         self._set_action_animations(return_run, animation)
-        
-        #if direction == PlayerStates.FACING_RIGHT:
-        #    return_run.right_animation = self.crte_player_animation(animation)
-        #    return_run.right_animation.set_animation_point_path_data(Player.ACCELERATION)
-        #if direction == PlayerStates.FACING_LEFT:
-        #    return_run.left_animation = self.crte_player_animation(animation.flip())
-        #    return_run.left_animation.set_animation_point_path_data(Player.ACCELERATION)
         
         return return_run
     

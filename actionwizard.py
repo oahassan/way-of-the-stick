@@ -1,14 +1,6 @@
 import shelve
 import copy
-import math
 
-import pygame
-import eztext
-
-import wotsuievents
-import button
-import menupage
-import gamestate
 import enumerations
 
 class ActionDictionaries():
@@ -36,20 +28,6 @@ ACTION_DB_FILE_NM = "actions_wots.dat"
 movements = None
 actions = None
 attacks = None
-
-exit_button = button.ExitButton()
-exit_indicator = False
-
-menu_buttons = []
-
-create_attack_button = menupage.MenuButton('Create Moves', gamestate.Modes.MOVEBUILDER)
-menu_buttons.append(create_attack_button)
-
-key_binding_button = menupage.MenuButton('Bind Keys', gamestate.Modes.KEYBINDING)
-menu_buttons.append(key_binding_button)
-
-menu = menupage.Menu()
-menu.load(menu_buttons)
 
 def open_actions_shelf():
     actions = shelve.open(ACTION_DB_FILE_NM, "c")
@@ -88,7 +66,7 @@ def get_attack_animations(attack_type):
     elif attack_type == enumerations.AttackTypes.PUNCH:
         pass
     else:
-        raise Exception
+        raise Exception("Invalid Attack Type")
     
     if attack_type in attacks:
         return_attacks = attacks[attack_type].values()
@@ -150,8 +128,12 @@ def save_attack(attack_type, animation):
         attack_type = enumerations.AttackTypes.KICK
     elif attack_type in enumerations.InputActionTypes.PUNCHES:
         attack_type = enumerations.AttackTypes.PUNCH
+    elif (attack_type == enumerations.AttackTypes.KICK or
+    attack_type == enumerations.AttackTypes.PUNCH):
+        pass
     else:
-        raise Exception
+        print(attack_type)
+        raise Exception("Invalid Attack Type")
     
     if attack_type in attacks:
         attack_type_dictionary = attacks[attack_type]
@@ -234,8 +216,11 @@ def delete_attack(attack_type, animation):
         attack_type = enumerations.AttackTypes.KICK
     elif attack_type in enumerations.InputActionTypes.PUNCHES:
         attack_type = enumerations.AttackTypes.PUNCH
+    elif (attack_type == enumerations.AttackTypes.KICK or
+    attack_type == enumerations.AttackTypes.PUNCH):
+        pass
     else:
-        raise Exception
+        raise Exception("Invalid Attack Type")
     
     if attack_type in attacks:
         attack_type_dictionary = attacks[attack_type]
@@ -260,24 +245,3 @@ def delete_movement(movement_type, animation):
     movements[movement_type] = movement_type_dictionary
     
     movements.close()
-
-def handle_events():
-    global exit_indicator
-    
-    if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
-        if exit_button.contains(wotsuievents.mouse_pos):
-            exit_indicator = True
-            exit_button.color = button.Button._SlctdColor
-            exit_button.symbol.color = button.Button._SlctdColor
-    elif pygame.MOUSEBUTTONUP in wotsuievents.event_types:
-        if exit_indicator == True:
-            exit_indicator = False
-            exit_button.color = button.Button._InactiveColor
-            exit_button.symbol.color = button.Button._InactiveColor
-            
-            if exit_button.contains(wotsuievents.mouse_pos):
-                gamestate.mode = gamestate.Modes.MAINMENU
-    
-    menu.handle_events()
-    menu.draw(gamestate.screen)
-    exit_button.draw(gamestate.screen)

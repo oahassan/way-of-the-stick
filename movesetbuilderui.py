@@ -35,8 +35,26 @@ class BuilderContainer(wotsui.UIObjectBase):
                 child.show()
         
         if self.animation_select_container != None:
-            self.animation_select_container.animation_navigator.edit_animation_help_text.hide()
-            self.animation_select_container.animation_navigator.delete_animation_help_text.hide()
+            if hasattr(
+                self.animation_select_container.animation_navigator,
+                "edit_animation_help_text"
+            ):
+                animation_select_container = self.animation_select_container
+                animation_navigator = animation_select_container.animation_navigator
+                animation_navigator.edit_animation_help_text.hide()
+            
+            if hasattr(
+                self.animation_select_container.animation_navigator,
+                "delete_animation_help_text"
+            ):
+                animation_select_container = self.animation_select_container
+                animation_navigator = animation_select_container.animation_navigator
+                animation_navigator.delete_animation_help_text.hide()
+            
+            if (hasattr(self, "key_select_container") and 
+            hasattr(self.key_select_container, "command_in_use_label")):
+                key_select_container = self.key_select_container
+                key_select_container.command_in_use_label.hide()
         
         self.expanded = True
     
@@ -328,25 +346,33 @@ class AnimationThumbnail(button.Button):
         self.animation = animation
         
         thumbnail_animation = copy.deepcopy(animation)
-        thumbnail_animation.set_animation_height(AnimationThumbnail._THUMBNAIL_HEIGHT, 170)
+        thumbnail_animation.set_animation_height(
+            AnimationThumbnail._THUMBNAIL_HEIGHT,
+            170
+        )
         self.thumbnail_animation = thumbnail_animation
         
         self.frame = self.thumbnail_animation.get_middle_frame()
         
-        text_pos = (position[0], \
-                    position[1] + AnimationThumbnail._THUMBNAIL_HEIGHT + 5)
+        text_pos = (
+            position[0],
+            position[1] + AnimationThumbnail._THUMBNAIL_HEIGHT + 5
+        )
         name_label = button.Label(text_pos, animation.name, self.color, 15)
         self.name_label = name_label
         self.add_child(name_label)
         self.height = AnimationThumbnail._THUMBNAIL_HEIGHT + 5 + name_label.height
-        self.width = max(thumbnail_animation.get_widest_frame().image_width(), self.name_label.width)
+        self.width = max(
+            thumbnail_animation.get_widest_frame().image_width(),
+            self.name_label.width
+        )
         self.position = position
         
         self.fixed_dimensions = True
     
     def draw(self, surface):
         if self.contains(wotsuievents.mouse_pos):
-            self.play_animation(self, surface, self.draw_current_frame)
+            self.play_animation(surface, self.draw_current_frame)
         else:
             self.draw_current_frame(surface)
     

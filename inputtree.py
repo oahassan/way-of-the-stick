@@ -42,7 +42,7 @@ class InputNode:
             if key in self.branches:
                 node = self.branches[key]
             
-                new_sequence = [key_sequence[j] for j in range(len(key_sequence)) if j != i]
+            new_sequence = [key_sequence[j] for j in range(len(key_sequence)) if j != i]
             
             if len(new_sequence) == 0:
                 node.value = None
@@ -69,8 +69,12 @@ class InputNode:
                 return None
     
     def get_value(self, key_sequence):
+        node = self.get_node(key_sequence)
         
-        return self.get_node(key_sequence).value
+        if node == None:
+            return None
+        else:
+            return node.value
 
 class InputTree(InputNode):
     
@@ -111,20 +115,35 @@ class InputTree(InputNode):
 
 if __name__ == "__main__":
     tree = InputTree()
-
+    
+    print("adding ((1,2,3), booyah)")
     tree.add_branches((1,2,3), "booyah")
+    print("adding ((2,3), two)")
     tree.add_branches((2,3), "two")
+    print("adding ((0,), null)")
+    tree.add_branches((0,), "null")
     
     print(tree)
+    print("retrieving node (2,3)")
     print(tree.get_node((2,3)))
+    print("retrieving node (3,2)")
     print(tree.get_node((3,2)))
+    print("retrieving value (3,1,2)")
     print(tree.get_value((3,1,2)))
+    print("retrieving value (3,2,1)")
+    print(tree.get_value((3,2,1)))
+    print("retrieving value (2,1)")
     print(tree.get_value((2,1)))
     
+    print("deleteing (2,3)")
     tree.delete_value((2,3))
+    
+    print("retrieving value (2,3)")
     print(tree.get_value((2,3)))
+    print("retrieving value (3,2)")
     print(tree.get_value((3,2)))
     
+    print("deleting (1,2)")
     tree.delete_branches((1,2))
     print(tree)
 

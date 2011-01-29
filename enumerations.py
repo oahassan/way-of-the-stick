@@ -10,6 +10,7 @@ class InputActionTypes():
     WEAK_KICK = 'weakkick'
     MEDIUM_KICK = 'mediumkick'
     STRONG_KICK = 'strongkick'
+    FORWARD = "forward"
     
     AERIAL_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN]
     STUN_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP]

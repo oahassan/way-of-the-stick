@@ -151,7 +151,7 @@ class MovementTypes():
     AERIAL_MOVEMENT_TYPES = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN]
 
 class Moveset():
-    def __init__(self, movement_animations=None, attack_animations=None, image=None, name=None):
+    def __init__(self, attack_types=None, attack_key_combinations=None, movement_animations=None, attack_animations=None, image=None, name=None):
         
         if movement_animations==None:
             movement_animations = {}
@@ -161,6 +161,14 @@ class Moveset():
             attack_animations = {}
         self.attack_animations = attack_animations
         
+        if attack_key_combinations==None:
+            attack_key_combinations = {}
+        self.attack_key_combinations = attack_key_combinations
+        
+        if attack_types == None:
+            attack_types = {}
+        self.attack_types = attack_types
+        
         self.image = image
         
         if name == None:
@@ -168,7 +176,14 @@ class Moveset():
         self.name = name
     
     def _pack(self):
-        return (self.movement_animations, self.attack_animations, self.image, self.name)
+        return (
+            self.attack_types,
+            self.attack_key_combinations,
+            self.movement_animations,
+            self.attack_animations,
+            self.image,
+            self.name
+        )
     
     def has_movement_animation(self, movement_type):
         return_indicator = False
@@ -188,13 +203,79 @@ class Moveset():
         
         return return_indicator
     
+    def get_attacks(self):
+        """returns a list of all attacks with complete attack data"""
+        return_attacks = []
+        
+        for attack_name in self.attack_key_combinations.keys():
+            if (attack_name in self.attack_types and
+            attack_name in self.attack_animations):
+                return_attacks.append(attack_name)
+        
+        return return_attacks
+    
+    def get_attack_type(self, attack_name):
+        
+        attack_type = self.attack_types[attack_name]
+        
+        if attack_type == enumerations.AttackTypes.PUNCH:
+            key_combination = self.attack_key_combinations[attack_name]
+            
+            if (enumerations.InputActionTypes.STRONG_PUNCH in key_combination or
+            enumerations.InputActionTypes.STRONG_KICK in key_combination):
+                return enumerations.InputActionTypes.STRONG_PUNCH
+            
+            elif (enumerations.InputActionTypes.MEDIUM_PUNCH in key_combination or
+            enumerations.InputActionTypes.MEDIUM_KICK in key_combination):
+                return enumerations.InputActionTypes.MEDIUM_PUNCH
+            
+            elif (enumerations.InputActionTypes.WEAK_PUNCH in key_combination or
+            enumerations.InputActionTypes.WEAK_KICK in key_combination):
+                return enumerations.InputActionTypes.WEAK_PUNCH
+        
+        elif attack_type == enumerations.AttackTypes.KICK:
+            key_combination = self.attack_key_combinations[attack_name]
+            
+            if (enumerations.InputActionTypes.STRONG_PUNCH in key_combination or
+            enumerations.InputActionTypes.STRONG_KICK in key_combination):
+                return enumerations.InputActionTypes.STRONG_KICK
+            
+            elif (enumerations.InputActionTypes.MEDIUM_PUNCH in key_combination or
+            enumerations.InputActionTypes.MEDIUM_KICK in key_combination):
+                return enumerations.InputActionTypes.MEDIUM_KICK
+            
+            elif (enumerations.InputActionTypes.WEAK_PUNCH in key_combination or
+            enumerations.InputActionTypes.WEAK_KICK in key_combination):
+                return enumerations.InputActionTypes.WEAK_KICK
+        else:
+            raise Exception("attack type is not valid: " + attack_name)
+    
+    def delete_attack(self, attack_name):
+        """deletes all attack data for the given attack from a moveset"""
+        if attack_name in self.attack_animations:
+            del self.attack_animations[attack_name]
+        
+        if attack_name in self.attack_key_combinations:
+            del self.attack_key_combinations[attack_name]
+        
+        if attack_name in self.attack_types:
+            del self.attack_types[attack_name]
+    
     def save_movement_animation(self, player_state, animation):
         """saves movements animations"""
         self.movement_animations[player_state] = animation
     
-    def save_attack_animation(self, attack_type, animation):
+    def save_attack_animation(self, animation):
         """saves animation of an attack"""
-        self.attack_animations[attack_type] = animation
+        self.attack_animations[animation.name] = animation
+    
+    def save_attack_key_combination(self, attack_name, key_combination):
+        """saves a key combination for an attack"""
+        self.attack_key_combinations[attack_name] = key_combination
+    
+    def save_attack_type(self, attack_name, attack_type):
+        """saves the attack type of an attack"""
+        self.attack_types[attack_name] = attack_type
     
     def is_complete(self):
         """indicates if a moveset has all the data required for it to be used"""
