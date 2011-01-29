@@ -35,7 +35,7 @@ class AttackBuilderContainer(BuilderContainer):
         )
         self.key_select_container = KeySetContainer(
             (300, self.position[1] + self.title.height + 15),
-            "Enter Key Combination"
+            "Select Attack Commands"
         )
         self.key_select_container.inactivate()
         self.add_children([
@@ -212,6 +212,55 @@ class KeyButtonContainer(wotsuicontainers.ButtonContainer):
             
             buttons[i].set_position(current_position)
 
+class KeyReferenceContainer(wotsui.UIObjectBase):
+    
+    def __init__(self, position):
+        wotsui.UIObjectBase.__init__(self)
+        
+        title = button.Label(position, "Command Key", (255,255,255), 20)
+        self.add_child(title)
+        
+        label_list = []
+        forward_label = button.Label((0,0), "FW - Move Forward", (255,255,255), 15)
+        label_list.append(forward_label)
+        up_label = button.Label((0,0), "UP - Move Up", (255,255,255), 15)
+        label_list.append(up_label)
+        down_label = button.Label((0,0), "DN - Move Down", (255,255,255), 15)
+        label_list.append(down_label)
+        wk_label = button.Label((0,0), "WK - Weak Kick", (255,255,255), 15)
+        label_list.append(wk_label)
+        mk_label = button.Label((0,0), "MK - Medium Kick", (255,255,255), 15)
+        label_list.append(mk_label)
+        sk_label = button.Label((0,0), "SK - Strong Kick", (255,255,255), 15)
+        label_list.append(sk_label)
+        wp_label = button.Label((0,0), "WP - Weak Punch", (255,255,255), 15)
+        label_list.append(wp_label)
+        mp_label = button.Label((0,0), "MP - Medium Punch", (255,255,255), 15)
+        label_list.append(mp_label)
+        sp_label = button.Label((0,0), "SP - Strong Punch", (255,255,255), 15)
+        label_list.append(sp_label)
+        
+        self.layout_labels(
+            label_list,
+            (position[0] + 10, position[1] + title.height + 10)
+        )
+        self.add_children(label_list)
+    
+    def layout_labels(self, labels, start_position):
+        bottom_padding = 5
+        
+        current_position = (start_position[0], start_position[1])
+        labels[0].set_position(start_position)
+        
+        for label_index in range(1, len(labels)):
+            label = labels[label_index]
+            current_position = (
+                current_position[0],
+                current_position[1] + label.height
+            )
+            
+            label.set_position(current_position)
+
 class KeySetContainer(BuilderContainer):
     def __init__(self, position, title_text):
         BuilderContainer.__init__(self)
@@ -243,7 +292,14 @@ class KeySetContainer(BuilderContainer):
         )
         self.add_child(self.key_buttons)
         
-        command_in_use_position = (position[0], position[1] + self.height + 10)
+        command_key_position = (
+            position[0] + self.key_buttons.width,
+            key_container_position[1] + 10
+        )
+        self.command_key = KeyReferenceContainer(command_key_position)
+        self.add_child(self.command_key)
+        
+        command_in_use_position = (position[0], position[1] + self.height - 10)
         self.command_in_use_label = button.Label(
             command_in_use_position,
             "this command is already in use",
