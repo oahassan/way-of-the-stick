@@ -256,7 +256,7 @@ class KeyReferenceContainer(wotsui.UIObjectBase):
             label = labels[label_index]
             current_position = (
                 current_position[0],
-                current_position[1] + label.height
+                current_position[1] + label.height + bottom_padding
             )
             
             label.set_position(current_position)
