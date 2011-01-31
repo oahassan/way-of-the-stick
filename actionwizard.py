@@ -132,7 +132,6 @@ def save_attack(attack_type, animation):
     attack_type == enumerations.AttackTypes.PUNCH):
         pass
     else:
-        print(attack_type)
         raise Exception("Invalid Attack Type")
     
     if attack_type in attacks:
@@ -174,8 +173,11 @@ def get_attack(attack_type, name):
         attack_type = enumerations.AttackTypes.KICK
     elif attack_type in enumerations.InputActionTypes.PUNCHES:
         attack_type = enumerations.AttackTypes.PUNCH
+    elif (attack_type == enumerations.AttackTypes.KICK or
+    attack_type == enumerations.AttackTypes.PUNCH):
+        pass
     else:
-        raise Exception
+        raise Exception("Invalid Attack Type")
     
     attack_type_dictionary = attacks[attack_type]
     

@@ -63,13 +63,10 @@ def save_imported_animations(moveset):
     for animation_type, animation in moveset.movement_animations.iteritems():
         save_animation_without_overwrite(animation_type, animation)
     
-    for animation_type, animation in moveset.attack_animations.iteritems():
-        if animation_type in []:
-            save_animation_without_overwrite(animation_type, animation)
-        elif animation_type in []:
-            save_animation_without_overwrite(animation_type, animation)
-        else:
-            save_animation_without_overwrite(animation_type, animation)
+    for animation_name, animation in moveset.attack_animations.iteritems():
+        animation_type = moveset.attack_types[animation_name]
+        
+        save_animation_without_overwrite(animation_type, animation)
 
 def save_animation_without_overwrite(animation_type, animation):
     #save the moveset if a moveset with its name doesn't already exist.  If it does exist find a name that has yet to be saved by appending '(#)' where # is a number.
