@@ -448,6 +448,7 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
     def __init__(self):
         wotsuicontainers.ScrollableContainer.__init__(self)
         
+        self.reload_indicator = False
         self.animation_thumbnails = []
         self.animation_type = None
         self.selected_animation = None
@@ -568,6 +569,10 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
     def handle_events(self):
         wotsuicontainers.ScrollableContainer.handle_events(self)
         
+        if self.reload_indicator:
+            self.load_animation_thumbnails()
+            self.reload_indicator = False
+        
         if self.viewable_area.contains(wotsuievents.mouse_pos):
             if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
                 if self.edit_animation_button.selected:
@@ -596,10 +601,23 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
                     if thumbnail.contains(wotsuievents.mouse_pos):
                         if self.edit_animation_button.selected:
                             self.edit_animation_button.handle_deselected()
-                            frameeditor.load(self.animation_type, copy.deepcopy(thumbnail.animation), self.gamestate_mode)
+                            frameeditor.load(
+                                self.animation_type,
+                                copy.deepcopy(thumbnail.animation),
+                                self.gamestate_mode
+                            )
+                            self.edit_animation_button.handle_deselected()
+                            self.edit_animation_help_text.hide()
                             gamestate.mode = gamestate.Modes.FRAMEEDITOR
+                            self.reload_indicator = True
+                            
                         elif self.delete_animation_button.selected:
-                            actionwizard.delete_animation(self.animation_type, thumbnail.animation)
+                            actionwizard.delete_animation(
+                                self.animation_type,
+                                thumbnail.animation
+                            )
+                            self.delete_animation_button.handle_deselected()
+                            self.delete_animation_help_text.hide()
                             self.load_animation_thumbnails()
                         else:
                             self.selected_animation = thumbnail.animation
@@ -635,7 +653,8 @@ class AnimationNavigator(wotsuicontainers.ScrollableContainer):
                 
                 frameeditor.load(self.animation_type, new_animation, self.gamestate_mode)
                 gamestate.mode = gamestate.Modes.FRAMEEDITOR
-            
+                self.reload_indicator = True
+                
             if self.new_animation_button.selected:
                 self.new_animation_button.handle_deselected()
 
