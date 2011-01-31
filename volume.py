@@ -97,7 +97,7 @@ def handle_events():
         load()
     
     sound_control.handle_events()
-    music_control.handle_events()
+    #music_control.handle_events()
     
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
@@ -122,5 +122,5 @@ def handle_events():
         exit_button.draw(gamestate.screen)
         sound_label.draw(gamestate.screen)
         sound_control.draw(gamestate.screen)
-        music_label.draw(gamestate.screen)
-        music_control.draw(gamestate.screen)
+        #music_label.draw(gamestate.screen)
+        #music_control.draw(gamestate.screen)
