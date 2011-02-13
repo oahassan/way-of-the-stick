@@ -146,13 +146,3 @@ if __name__ == "__main__":
     print("deleting (1,2)")
     tree.delete_branches((1,2))
     print(tree)
-
-
-
-
-
-
-
-
-
-

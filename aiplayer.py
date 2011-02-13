@@ -4,18 +4,18 @@ import pygame
 import gamestate
 import physics
 import animationexplorer
-import player
-import enumerations
+from player import Player, PlayerTypes
 from stick import LineNames
-from controlsdata import InputActionTypes
+from enumerations import PlayerStates, CommandDurations, InputActionTypes, AttackTypes
+from playerutils import ActionFactory, Transition, Action, Attack
 
-class Bot(player.Player):
+class Bot(Player):
     """an algorithm controlled player"""
     
     def __init__(self, position):
-        player.Player.__init__(self, position)
+        Player.__init__(self, position)
         self.actions = {}
-        self.player_type = player.PlayerTypes.BOT
+        self.player_type = PlayerTypes.BOT
         
         #a dictionary mapping attacks to a list of rects for each frame
         self.attack_rects = {}
@@ -24,48 +24,48 @@ class Bot(player.Player):
     def load_moveset(self, moveset):
         self.moveset = moveset
         
-        factory = player.ActionFactory()
+        factory = ActionFactory()
         
         #load rest animation
-        stand_animation = moveset.movement_animations[player.PlayerStates.STANDING]
+        stand_animation = moveset.movement_animations[PlayerStates.STANDING]
         stand_action = factory.create_stand(stand_animation)
-        self.actions[player.PlayerStates.STANDING] = stand_action
+        self.actions[PlayerStates.STANDING] = stand_action
         
         #load walk animation
-        walk_animation = moveset.movement_animations[player.PlayerStates.WALKING]
+        walk_animation = moveset.movement_animations[PlayerStates.WALKING]
         walk_action = factory.create_walk(walk_animation)
-        self.actions[player.PlayerStates.WALKING] = walk_action
+        self.actions[PlayerStates.WALKING] = walk_action
         
         #load run animation
-        run_animation = moveset.movement_animations[player.PlayerStates.RUNNING]
+        run_animation = moveset.movement_animations[PlayerStates.RUNNING]
         run_action = factory.create_run(run_animation)
-        self.actions[player.PlayerStates.RUNNING] = run_action
+        self.actions[PlayerStates.RUNNING] = run_action
         
         #load jump animation
-        jump_animation = moveset.movement_animations[player.PlayerStates.JUMPING]
+        jump_animation = moveset.movement_animations[PlayerStates.JUMPING]
         jump_action = factory.create_jump(jump_animation)
-        self.actions[player.PlayerStates.JUMPING] = jump_action
+        self.actions[PlayerStates.JUMPING] = jump_action
         
         #load land animation
-        land_animation = moveset.movement_animations[player.PlayerStates.LANDING]
-        self.actions[player.PlayerStates.LANDING] = factory.create_land(land_animation)
+        land_animation = moveset.movement_animations[PlayerStates.LANDING]
+        self.actions[PlayerStates.LANDING] = factory.create_land(land_animation)
         
         #load float animation
-        float_animation = moveset.movement_animations[player.PlayerStates.FLOATING]
-        self.actions[player.PlayerStates.FLOATING] = factory.create_float(float_animation)
+        float_animation = moveset.movement_animations[PlayerStates.FLOATING]
+        self.actions[PlayerStates.FLOATING] = factory.create_float(float_animation)
         
         #load stunned action
-        self.actions[player.PlayerStates.STUNNED] = factory.create_stun()
+        self.actions[PlayerStates.STUNNED] = factory.create_stun()
         
         #load transition action
-        self.actions[player.PlayerStates.TRANSITION] = player.Transition()
+        self.actions[PlayerStates.TRANSITION] = Transition()
                 
         #load crouch animation
-        crouch_animation = moveset.movement_animations[player.PlayerStates.CROUCHING]
+        crouch_animation = moveset.movement_animations[PlayerStates.CROUCHING]
         crouch_action = factory.create_crouch(crouch_animation)
-        self.actions[player.PlayerStates.CROUCHING] = crouch_action
+        self.actions[PlayerStates.CROUCHING] = crouch_action
         
-        self.actions[player.PlayerStates.ATTACKING] = []
+        self.actions[PlayerStates.ATTACKING] = []
         
         #load attack actions
         for attack_name in moveset.get_attacks():
@@ -76,9 +76,9 @@ class Bot(player.Player):
                 self.model
             )
                 
-            self.actions[player.PlayerStates.ATTACKING].append(attack_action)
+            self.actions[PlayerStates.ATTACKING].append(attack_action)
         
-        self.actions[player.PlayerStates.STANDING].set_player_state(self)
+        self.actions[PlayerStates.STANDING].set_player_state(self)
         self.set_attack_rect_data()
     
     def set_attack_rect_data(self):
@@ -86,7 +86,7 @@ class Bot(player.Player):
         attack animation.  Each rect's position is relative the first rect and
         the first rect's position is (0,0)"""
         
-        for attack in self.actions[player.PlayerStates.ATTACKING]:
+        for attack in self.actions[PlayerStates.ATTACKING]:
             attack_rects = self.get_attack_rects(
                 attack.right_animation,
                 attack.attack_type
@@ -116,12 +116,12 @@ class Bot(player.Player):
     def get_attack_rect(self, frame, attack_type):
         attack_line_names = None
         
-        if (attack_type in enumerations.InputActionTypes.PUNCHES or
-        attack_type == enumerations.AttackTypes.PUNCH):
-            attack_line_names = player.Attack.PUNCH_LINE_NAMES
-        elif (attack_type in enumerations.InputActionTypes.KICKS or
-        attack_type == enumerations.AttackTypes.KICK):
-            attack_line_names = player.Attack.KICK_LINE_NAMES
+        if (attack_type in InputActionTypes.PUNCHES or
+        attack_type == AttackTypes.PUNCH):
+            attack_line_names = Attack.PUNCH_LINE_NAMES
+        elif (attack_type in InputActionTypes.KICKS or
+        attack_type == AttackTypes.KICK):
+            attack_line_names = Attack.KICK_LINE_NAMES
         
         frame_rect = None
         
@@ -136,13 +136,13 @@ class Bot(player.Player):
     
     def handle_events(self, enemy):
         self.set_action(enemy)
-        player.Player.handle_events(self)
+        Player.handle_events(self)
     
     def get_direction(self, enemy):
-        direction = player.PlayerStates.FACING_LEFT
+        direction = PlayerStates.FACING_LEFT
         
         if enemy.model.position[0] > self.model.position[0]:
-            direction = player.PlayerStates.FACING_RIGHT
+            direction = PlayerStates.FACING_RIGHT
         
         return direction
     
@@ -150,7 +150,7 @@ class Bot(player.Player):
         
         attack = None
         
-        if self.action.action_state != player.PlayerStates.ATTACKING:
+        if self.action.action_state != PlayerStates.ATTACKING:
             attack = self.get_in_range_attack(enemy)
         
         next_action = None
@@ -166,7 +166,7 @@ class Bot(player.Player):
         
         if (next_action != None
         and next_action != self.action
-        and self.get_player_state() != player.PlayerStates.TRANSITION):
+        and self.get_player_state() != PlayerStates.TRANSITION):
             self.transition(next_action)
     
     def move_towards_enemy(self, enemy):
@@ -176,24 +176,24 @@ class Bot(player.Player):
         movement = None
         
         if x_distance > 150:
-            action = self.actions[player.PlayerStates.RUNNING]
+            action = self.actions[PlayerStates.RUNNING]
             
             if self.action != action:
                 movement = action
                 self.dash_timer = 0
         
         elif x_distance <= 150:
-            action = self.actions[player.PlayerStates.WALKING]
+            action = self.actions[PlayerStates.WALKING]
             
             if self.action != action:
                 movement = action
         
-        if (((self.action.action_state == player.PlayerStates.STANDING) or
-            (self.action.action_state == player.PlayerStates.WALKING) or
-            (self.action.action_state == player.PlayerStates.RUNNING)) and
+        if (((self.action.action_state == PlayerStates.STANDING) or
+            (self.action.action_state == PlayerStates.WALKING) or
+            (self.action.action_state == PlayerStates.RUNNING)) and
             (y_distance < -20) and
             (self.model.velocity[0] > 0)):
-            movement = self.actions[player.PlayerStates.JUMPING]
+            movement = self.actions[PlayerStates.JUMPING]
         
         if ((movement != None) and
             (movement.test_state_change(self))):
@@ -205,9 +205,9 @@ class Bot(player.Player):
         in_range_attacks = []
         
         if self.is_aerial():
-            in_range_attacks = [attack for attack in self.actions[player.PlayerStates.ATTACKING] if self.aerial_attack_in_range(attack, enemy)]
+            in_range_attacks = [attack for attack in self.actions[PlayerStates.ATTACKING] if self.aerial_attack_in_range(attack, enemy)]
         else:
-            in_range_attacks = [attack for attack in self.actions[player.PlayerStates.ATTACKING] if self.attack_in_range(attack, enemy)]
+            in_range_attacks = [attack for attack in self.actions[PlayerStates.ATTACKING] if self.attack_in_range(attack, enemy)]
         
         if len(in_range_attacks) > 0:
             return choice(in_range_attacks)
@@ -221,7 +221,7 @@ class Bot(player.Player):
         
         attack_range_point = top_left
         
-        if self.direction == player.PlayerStates.FACING_LEFT:
+        if self.direction == PlayerStates.FACING_LEFT:
             attack_range_point = (bottom_right[0] - attack.range[0], \
                                   top_left[1])
         

@@ -1,4 +1,22 @@
+class CommandHandlerTypes:
+    GROUND_MOVEMENT = "ground movement"
+    AERIAL_MOVEMENT = "aerial movement"
+    STUN_MOVEMENT = "stun movement"
+    ATTACK = "attack"    
+    
+    COMMAND_HANDLER_TYPES = [
+        GROUND_MOVEMENT,
+        AERIAL_MOVEMENT,
+        STUN_MOVEMENT,
+        ATTACK
+    ]
+
+class CommandDurations:
+    TAP = "tap"
+    HOLD = "hold"
+
 class InputActionTypes():
+    NO_MOVEMENT = 'nomovement'
     MOVE_RIGHT = 'moveright'
     MOVE_LEFT = 'moveleft'
     MOVE_UP = 'moveup'
@@ -12,12 +30,22 @@ class InputActionTypes():
     STRONG_KICK = 'strongkick'
     FORWARD = "forward"
     
-    AERIAL_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN]
+    INPUT_ACTION_TYPES = [
+        NO_MOVEMENT, MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP, FORWARD,
+        WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH,
+        WEAK_KICK, MEDIUM_KICK, STRONG_KICK
+    ]
+    
+    GROUND_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP]
+    AERIAL_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP]
     STUN_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP]
     
     ATTACKS = [
         WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH,
         WEAK_KICK, MEDIUM_KICK, STRONG_KICK
+    ]
+    MOVEMENTS = [
+        MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP
     ]
     
     PUNCHES = [WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH]
@@ -56,16 +84,16 @@ class PlayerStates():
     
     PRESSED_KEY_STATE_TRANSITIONS = {
         STANDING : [WALKING,RUNNING,JUMPING,CROUCHING,ATTACKING],
-        WALKING : [WALKING,STANDING,JUMPING,CROUCHING,ATTACKING],
-        RUNNING : [RUNNING,STANDING,JUMPING,CROUCHING,ATTACKING],
+        WALKING : [STANDING,JUMPING,CROUCHING,ATTACKING],
+        RUNNING : [STANDING,JUMPING,CROUCHING,ATTACKING],
         CROUCHING : [STANDING,ATTACKING],
         JUMPING : [FLOATING,LANDING,ATTACKING],
         LANDING : [STANDING,CROUCHING,ATTACKING,JUMPING,WALKING],
         FLOATING : [LANDING,ATTACKING],
-        ATTACKING : [STANDING, FLOATING],
-        STUNNED : [FLOATING,LANDING,STANDING],
+        ATTACKING : [],
+        STUNNED : [],
         BLOCKING : [STANDING,CROUCHING],
-        TRANSITION : [RUNNING]
+        TRANSITION : []
     }
 
 class AttackTypes():
@@ -73,3 +101,7 @@ class AttackTypes():
     KICK = "KICK"
     
     ATTACK_TYPES = [PUNCH, KICK]
+
+class Elevations():
+    GROUNDED = "GROUNDED"
+    AERIAL = "AERIAL"

@@ -1,18 +1,20 @@
 import pygame
-import player
+from player import Player, draw_model
+from playerutils import ActionFactory
+from enumerations import PlayerStates, AttackTypes
 import gamestate
 import math
 
 from controlsdata import InputActionTypes
 
-class TestPlayer(player.Player):
+class TestPlayer(Player):
     def __init__(self):
-        player.Player.__init__(self, (0,0))
+        Player.__init__(self, (0,0))
         
         self.action = None
         
     def load_action(self, action_type, animation):
-        factory = player.ActionFactory()
+        factory = ActionFactory()
         
         self.action = self.create_action(action_type, animation)
         self.action.animation = self.action.right_animation
@@ -33,33 +35,34 @@ class TestPlayer(player.Player):
         
         self.action.move_player(self)
         
-        player.draw_model(self, gamestate.screen)
+        draw_model(self, gamestate.screen)
     
-    def create_action(self, action_type, animation = None, direction = player.PlayerStates.FACING_RIGHT, key = pygame.K_UP):
+    def create_action(self, action_type, animation = None, direction = PlayerStates.FACING_RIGHT, key = pygame.K_UP):
         return_action = None
-        factory = player.ActionFactory()
+        factory = ActionFactory()
         
-        if action_type == player.PlayerStates.STANDING:
+        if action_type == PlayerStates.STANDING:
             return_action = factory.create_stand(animation)
-        elif action_type == player.PlayerStates.LANDING:
+        elif action_type == PlayerStates.LANDING:
             return_action = factory.create_land(animation)
-        elif action_type == player.PlayerStates.FLOATING:
+        elif action_type == PlayerStates.FLOATING:
             return_action = factory.create_float(animation)
-        elif action_type == player.PlayerStates.STUNNED:
+        elif action_type == PlayerStates.STUNNED:
             return_action = factory.create_stun()
-        elif action_type == player.PlayerStates.JUMPING:
+        elif action_type == PlayerStates.JUMPING:
             return_action = factory.create_jump(animation)
             
-        elif action_type == player.PlayerStates.CROUCHING:
+        elif action_type == PlayerStates.CROUCHING:
             return_action = factory.create_crouch(animation)
             
-        elif action_type == player.PlayerStates.WALKING:
+        elif action_type == PlayerStates.WALKING:
             return_action = factory.create_walk(direction, animation)
             
-        elif action_type == player.PlayerStates.RUNNING:
+        elif action_type == PlayerStates.RUNNING:
             return_action = factory.create_run(direction, animation)
         
-        elif action_type in InputActionTypes.ATTACKS:
+        elif (action_type in InputActionTypes.ATTACKS or
+        action_type in AttackTypes.ATTACK_TYPES):
             return_action = factory.create_attack(action_type, animation, self.model)
                     
         return return_action
