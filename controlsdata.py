@@ -1,27 +1,7 @@
 import shelve
 import copy
 import pygame
-
-class InputActionTypes():
-    MOVE_RIGHT = 'moveright'
-    MOVE_LEFT = 'moveleft'
-    MOVE_UP = 'moveup'
-    MOVE_DOWN = 'movedown'
-    BLOCK = 'block'
-    WEAK_PUNCH = 'weakpunch'
-    MEDIUM_PUNCH = 'mediumpunch'
-    STRONG_PUNCH = 'strongpunch'
-    WEAK_KICK = 'weakkick'
-    MEDIUM_KICK = 'mediumkick'
-    STRONG_KICK = 'strongkick'
-    
-    AERIAL_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN]
-    STUN_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP]
-    
-    ATTACKS = [
-        WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH,
-        WEAK_KICK, MEDIUM_KICK, STRONG_KICK
-    ]
+from enumerations import InputActionTypes
 
 CONTROlS_DB_FILE_NM = 'controls_wots.dat'
 
@@ -42,6 +22,7 @@ def open_controls_shelf():
         controls[InputActionTypes.WEAK_KICK] = pygame.K_a
         controls[InputActionTypes.MEDIUM_KICK] = pygame.K_s
         controls[InputActionTypes.STRONG_KICK] = pygame.K_d
+        controls[InputActionTypes.JUMP] = pygame.K_SPACE
     
     return controls
 

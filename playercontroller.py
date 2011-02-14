@@ -11,6 +11,7 @@ class Controller():
         movement_key_to_command_type, 
         attack_key_to_command_type,
         aerial_movement_command_handler,
+        aerial_action_command_handler,
         stun_movement_command_handler,
         ground_movement_command_handler,
         attack_command_handler
@@ -23,6 +24,9 @@ class Controller():
         #command handler that has PhysicsModifiers for aerial movement as 
         #values
         self.aerial_movement_command_handler = aerial_movement_command_handler
+        
+        #command handler that has aerial Actions as values
+        self.aerial_action_command_handler = aerial_action_command_handler
         
         #command handler that has PhysicsModifiers for stun movement as values
         self.stun_movement_command_handler = stun_movement_command_handler
@@ -37,9 +41,13 @@ class Controller():
         """Updates each of the command handlers with given keys pressed."""
         
         self._update_aerial_movement(keys_pressed)
+        self._update_aerial_action(keys_pressed)
         self._update_ground_movement(keys_pressed)
         self._update_stun_movement(keys_pressed)
         self._update_attack(keys_pressed)
+    
+    def get_current_aerial_action(self):
+        return self.aerial_action_command_handler.get_current_command_sequence_value()
     
     def get_current_aerial_movement(self):
         return self.aerial_movement_command_handler.get_current_command_sequence_value()
@@ -198,7 +206,7 @@ class Controller():
                     if key_command_type == InputActionTypes.MOVE_DOWN:
                         return_command_type = key_command_type
                     
-                    elif (key_command_type == InputActionTypes.MOVE_UP and
+                    elif (key_command_type == InputActionTypes.JUMP and
                     return_command_type != InputActionTypes.MOVE_DOWN):
                         return_command_type = key_command_type
                     
@@ -219,6 +227,61 @@ class Controller():
                         
                         elif return_command_type == InputActionTypes.MOVE_LEFT:
                             return_command_type = InputActionTypes.NO_MOVEMENT
+                    
+                else:
+                    #it is not a valid ground movement so add nothing for this 
+                    #key
+                    pass
+            else:
+                #it is not a valid ground movement so add nothing for this 
+                #key
+                pass
+        
+        return return_command_type
+    
+    def _update_aerial_action(self, keys_pressed):
+        """Returns an Action for the movement key with the highest precdence in
+        the list keys_pressed.  If none of the keys pressed are in the 
+        aerial_action_command_handler then None is returned."""
+        
+        command_state = self._create_aerial_action_command_states(
+            keys_pressed
+        )
+        
+        self.aerial_action_command_handler.update_current_commands(
+            command_state
+        )
+    
+    def _create_aerial_action_command_states(self, keys_pressed):
+        """Creates a CommandState object from a list of keys_pressed for the
+        aerial action command handler."""
+        
+        command_states = self.aerial_action_command_handler.get_command_state()
+        
+        command_type = self._get_aerial_action_command_type(keys_pressed)
+        command_states.set_command_state(command_type, True)
+        
+        return command_states
+    
+    def _get_aerial_action_command_type(self, keys_pressed):
+        """Returns the command with highest precedence out of the pressed keys. 
+        Only one movement command is allowed at a time for ground movements. If
+        none of the keys in keys_pressed are bound to a ground movement command
+        type then NO_MOVMENT is the active command type."""
+        
+        return_command_type = InputActionTypes.NO_MOVEMENT
+        
+        for key in keys_pressed:
+            if key in self.movement_key_to_command_type:
+            
+                key_command_type = self.movement_key_to_command_type[key]
+                if key_command_type in InputActionTypes.AERIAL_ACTIONS:
+                    
+                    if key_command_type == InputActionTypes.JUMP:
+                        return_command_type = key_command_type
+                    else:
+                        #the key command is no movment
+                        pass
                     
                 else:
                     #it is not a valid ground movement so add nothing for this 

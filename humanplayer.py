@@ -82,7 +82,7 @@ class HumanPlayer(player.Player):
         
         if action == None:
             if self.is_aerial():
-                action = self.controller.get_current_aerial_movement()
+                action = self.controller.get_current_aerial_action()
             
             else:
                 action = self.controller.get_current_ground_movement()
@@ -117,6 +117,11 @@ class ControllerFactory():
         aerial_movement_command_types.append(InputActionTypes.NO_MOVEMENT)
         aerial_movement_command_handler = CommandHandler(
             aerial_movement_command_types
+        )
+        
+        aerial_action_command_types = [command_type for command_type in InputActionTypes.AERIAL_ACTIONS]
+        aerial_action_command_handler = CommandHandler(
+            aerial_action_command_types
         )
         
         stun_movement_command_handler = CommandHandler(
@@ -178,35 +183,31 @@ class ControllerFactory():
         )
         ground_movement_command_handler.add_command([hold_no_movement], stand_action)
         
-        #Set move up actions
+        #Set jump actions
         jump_action = self.create_action(
             player.PlayerStates.JUMPING,
             moveset.movement_animations[player.PlayerStates.JUMPING],
             None
         )
-        tap_up_command = Command(
-            InputActionTypes.MOVE_UP, 
+        tap_jump_command = Command(
+            InputActionTypes.JUMP, 
             CommandDurations.TAP
         )
-        hold_up_command = Command(
-            InputActionTypes.MOVE_UP, 
+        hold_jump_command = Command(
+            InputActionTypes.JUMP, 
             CommandDurations.HOLD
         )
         
         ground_movement_command_handler.add_command(
-            [tap_up_command, tap_up_command],
+            [tap_jump_command],
             jump_action
         )
-        aerial_movement_command_handler.add_command(
-            [tap_up_command, tap_up_command],
+        aerial_action_command_handler.add_command(
+            [tap_jump_command],
             jump_action
         )
-        aerial_movement_command_handler.add_command(
-            [tap_up_command, hold_up_command],
-            jump_action
-        )
-        aerial_movement_command_handler.add_command(
-            [hold_up_command],
+        aerial_action_command_handler.add_command(
+            [hold_jump_command],
             jump_action
         )
         
@@ -332,6 +333,7 @@ class ControllerFactory():
             movement_key_to_command_type, 
             attack_key_to_command_type,
             aerial_movement_command_handler,
+            aerial_action_command_handler,
             stun_movement_command_handler,
             ground_movement_command_handler,
             attack_command_handler

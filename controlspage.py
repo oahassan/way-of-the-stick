@@ -37,25 +37,54 @@ def load():
             (255, 0, 0),
             22
         )
-    set_movement_keys_label = Label((20, 60), "Set Movement Keys", (255, 255, 255))
-    set_attack_keys_label = Label((20, 280), "Set Attack Keys", (255, 255, 255))
+    set_movement_keys_label = Label(
+        (20, 60), 
+        "Set Movement Keys", 
+        (255, 255, 255)
+    )
+    set_attack_keys_label = Label(
+        (20, 320), 
+        "Set Attack Keys", 
+        (255, 255, 255)
+    )
     
     movement_buttons = []
+    font_size = 28
     
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.MOVE_LEFT, "Move Left"),
+        BindButton(
+            controlsdata.InputActionTypes.MOVE_LEFT, 
+            "Move Left", 
+            font_size
+        ),
         movement_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.MOVE_UP, "Move Up"),
+        BindButton(
+            controlsdata.InputActionTypes.MOVE_UP, 
+            "Move Up", 
+            font_size
+        ),
         movement_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.MOVE_RIGHT, "Move Right"),
+        BindButton(
+            controlsdata.InputActionTypes.MOVE_RIGHT, 
+            "Move Right", 
+            font_size
+        ),
         movement_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.MOVE_DOWN, "Move Down"),
+        BindButton(
+            controlsdata.InputActionTypes.MOVE_DOWN, 
+            "Move Down", 
+            font_size
+        ),
+        movement_buttons
+    )
+    add_bind_button_to_button_list(
+        BindButton(controlsdata.InputActionTypes.JUMP, "Jump", font_size),
         movement_buttons
     )
     
@@ -67,27 +96,51 @@ def load():
     attack_buttons = []
     
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.WEAK_PUNCH, "Weak Punch"),
+        BindButton(
+            controlsdata.InputActionTypes.WEAK_PUNCH, 
+            "Weak Punch", 
+            font_size
+        ),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.WEAK_KICK, "Weak Kick"),
+        BindButton(
+            controlsdata.InputActionTypes.WEAK_KICK, 
+            "Weak Kick", 
+            font_size
+        ),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.MEDIUM_PUNCH, "Medium Punch"),
+        BindButton(
+            controlsdata.InputActionTypes.MEDIUM_PUNCH, 
+            "Medium Punch", 
+            font_size
+        ),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.MEDIUM_KICK, "Medium Kick"),
+        BindButton(
+            controlsdata.InputActionTypes.MEDIUM_KICK, 
+            "Medium Kick", 
+            font_size
+        ),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.STRONG_PUNCH, "Strong Punch"),
+        BindButton(
+            controlsdata.InputActionTypes.STRONG_PUNCH, 
+            "Strong Punch", 
+            font_size
+        ),
         attack_buttons
     )
     add_bind_button_to_button_list(
-        BindButton(controlsdata.InputActionTypes.STRONG_KICK, "Strong Kick"),
+        BindButton(
+            controlsdata.InputActionTypes.STRONG_KICK, 
+            "Strong Kick", 
+            font_size
+        ),
         attack_buttons
     )
     
