@@ -146,7 +146,7 @@ class ControllerFactory():
         attack_keys = [command_type for command_type in InputActionTypes.ATTACKS]
         attack_keys.extend(InputActionTypes.MOVEMENTS)
         attack_key_to_command_type = dict(
-            [(get_control_key(action_type), action_type) for action_type in InputActionTypes.ATTACKS]
+            [(get_control_key(action_type), action_type) for action_type in attack_keys]
         )
         
         #Set aerial no movement actions

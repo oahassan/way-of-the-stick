@@ -295,7 +295,7 @@ class Controller():
         return return_command_type
     
     def _update_attack(self, keys_pressed):
-        """Retruns an attack Action that matches the list of keys in 
+        """Returns an attack Action that matches the list of keys in 
         keys_pressed.  If the attack_command_handler does not have a matching
         attack then None is returned."""
         

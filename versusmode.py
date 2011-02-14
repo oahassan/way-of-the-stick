@@ -45,6 +45,7 @@ fight_end_timer = None
 versus_mode_start_timer = None
 fight_start_timer = None
 fps_label = None
+command_label = None
 player_type = None
 bot_type = None
 point_effects = {}
@@ -70,9 +71,11 @@ def init():
     global player_type
     global bot_type
     global point_effects
+    global command_label
     
     point_effects = {}
     fps_label = button.Label((20,20), str(gamestate.clock.get_fps()),(0,0,255),30)
+    command_label = button.Label((20,50), "",(0,0,255),18)
     match_state = MatchStates.READY
     fight_end_timer = 0
     versus_mode_start_timer = 0
@@ -143,8 +146,11 @@ def exit():
     global fight_start_timer
     global fight_end_timer
     global point_effects
+    global command_label
     
     point_effects = {}
+    fps_label = None
+    command_label = None
     ready_label = None
     fight_label = None
     human_wins_label = None
@@ -173,6 +179,7 @@ def handle_events():
     global fight_start_timer
     global fight_end_timer
     global fps_label
+    global comamnd_label
     global effects
     
     exit_button.draw(gamestate.screen)
@@ -225,6 +232,19 @@ def handle_events():
     ((match_state == MatchStates.FIGHT) or (match_state == MatchStates.END))):
         if player_type == PlayerTypes.HUMAN:
             human.handle_events()
+            
+            command_label.set_text(
+                    str(
+                        [commands for commands in human.controller.attack_command_handler.command_buffer if len(commands) > 0]
+                    )
+                )
+            command_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(
+                pygame.Rect(
+                    command_label.position,
+                    (command_label.width,command_label.height)
+                )
+            )
         else:
             human.handle_events(bot)
         
