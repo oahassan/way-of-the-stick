@@ -11,6 +11,7 @@ import stick
 import mathfuncs
 import math
 import settingsdata
+from attackbuilderui import AttackLabel
 
 class PlayerTypes:
     HUMAN = 'HUMAN'
@@ -75,7 +76,9 @@ def init():
     
     point_effects = {}
     fps_label = button.Label((20,20), str(gamestate.clock.get_fps()),(0,0,255),30)
-    command_label = button.Label((20,50), "",(0,0,255),18)
+    command_label = AttackLabel("", [])
+    command_label.key_combination_label.set_position((20,50))
+    
     match_state = MatchStates.READY
     fight_end_timer = 0
     versus_mode_start_timer = 0
@@ -233,16 +236,17 @@ def handle_events():
         if player_type == PlayerTypes.HUMAN:
             human.handle_events()
             
-            command_label.set_text(
-                    str(
-                        [commands for commands in human.controller.attack_command_handler.command_buffer if len(commands) > 0]
-                    )
-                )
-            command_label.draw(gamestate.screen)
+            current_command_types = [command.command_type for command in human.controller.attack_command_handler.current_commands]
+            
+            command_label.set_key_combination(
+                current_command_types
+            )
+            command_label.key_combination_label.draw(gamestate.screen)
             gamestate.new_dirty_rects.append(
                 pygame.Rect(
-                    command_label.position,
-                    (command_label.width,command_label.height)
+                    command_label.key_combination_label.position,
+                    (command_label.key_combination_label.width,
+                    command_label.key_combination_label.height)
                 )
             )
         else:

@@ -688,6 +688,9 @@ class AttackLabel(wotsui.SelectableObjectBase):
         
         elif action_type == InputActionTypes.STRONG_PUNCH:
             return "SP"
+        
+        elif action_type == InputActionTypes.JUMP:
+            return "JP"
 
 class AttackNavigator(wotsuicontainers.ScrollableContainer):
 
