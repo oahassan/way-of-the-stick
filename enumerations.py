@@ -32,15 +32,11 @@ class InputActionTypes():
     JUMP = "jump"
     
     INPUT_ACTION_TYPES = [
-        NO_MOVEMENT, MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP, FORWARD,
+        NO_MOVEMENT, MOVE_RIGHT, MOVE_LEFT,
+        MOVE_DOWN, MOVE_UP, FORWARD, JUMP,
         WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH,
         WEAK_KICK, MEDIUM_KICK, STRONG_KICK
     ]
-    
-    GROUND_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP, JUMP]
-    AERIAL_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP, JUMP]
-    AERIAL_ACTIONS = [JUMP, NO_MOVEMENT]
-    STUN_MOVEMENTS = [MOVE_RIGHT, MOVE_LEFT, MOVE_DOWN, MOVE_UP]
     
     ATTACKS = [
         WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH,
@@ -52,6 +48,31 @@ class InputActionTypes():
     
     PUNCHES = [WEAK_PUNCH, MEDIUM_PUNCH, STRONG_PUNCH]
     KICKS = [WEAK_KICK, MEDIUM_KICK, STRONG_KICK]
+
+class CommandCollections():
+    GROUND_MOVEMENTS = [
+        InputActionTypes.MOVE_RIGHT, InputActionTypes.MOVE_LEFT, 
+        InputActionTypes.MOVE_DOWN, InputActionTypes.MOVE_UP, InputActionTypes.JUMP,
+        InputActionTypes.NO_MOVEMENT
+    ]
+    AERIAL_MOVEMENTS = [
+        InputActionTypes.MOVE_RIGHT, InputActionTypes.MOVE_LEFT, 
+        InputActionTypes.MOVE_DOWN, InputActionTypes.MOVE_UP,
+        InputActionTypes.NO_MOVEMENT
+    ]
+    AERIAL_ACTIONS = [InputActionTypes.JUMP, InputActionTypes.NO_MOVEMENT]
+    STUN_MOVEMENTS = [
+        InputActionTypes.MOVE_RIGHT, InputActionTypes.MOVE_LEFT, 
+        InputActionTypes.MOVE_DOWN, InputActionTypes.MOVE_UP
+    ]
+    ATTACK_ACTIONS = [
+        InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, 
+        InputActionTypes.STRONG_PUNCH, InputActionTypes.WEAK_KICK, 
+        InputActionTypes.MEDIUM_KICK, InputActionTypes.STRONG_KICK,
+        InputActionTypes.MOVE_RIGHT, InputActionTypes.MOVE_LEFT, 
+        InputActionTypes.FORWARD, InputActionTypes.MOVE_DOWN,
+        InputActionTypes.MOVE_UP
+    ]
 
 class PlayerTypes:
     HUMAN = 'Human'

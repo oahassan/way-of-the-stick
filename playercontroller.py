@@ -2,7 +2,7 @@
 The player controller module translates game events into player actions.
 """
 
-from enumerations import InputActionTypes
+from enumerations import InputActionTypes, CommandCollections
 
 class Controller():
     
@@ -97,7 +97,7 @@ class Controller():
             if key in self.movement_key_to_command_type:
             
                 key_command_type = self.movement_key_to_command_type[key]
-                if key_command_type in InputActionTypes.AERIAL_MOVEMENTS:
+                if key_command_type in CommandCollections.AERIAL_MOVEMENTS:
                     
                     return_command_types.append(key_command_type)
                     
@@ -150,7 +150,7 @@ class Controller():
             if key in self.movement_key_to_command_type:
             
                 key_command_type = self.movement_key_to_command_type[key]
-                if key_command_type in InputActionTypes.STUN_MOVEMENTS:
+                if key_command_type in CommandCollections.STUN_MOVEMENTS:
                     
                     return_command_types.append(key_command_type)
                     
@@ -201,7 +201,7 @@ class Controller():
             if key in self.movement_key_to_command_type:
             
                 key_command_type = self.movement_key_to_command_type[key]
-                if key_command_type in InputActionTypes.GROUND_MOVEMENTS:
+                if key_command_type in CommandCollections.GROUND_MOVEMENTS:
                     
                     if key_command_type == InputActionTypes.MOVE_DOWN:
                         return_command_type = key_command_type
@@ -275,7 +275,7 @@ class Controller():
             if key in self.movement_key_to_command_type:
             
                 key_command_type = self.movement_key_to_command_type[key]
-                if key_command_type in InputActionTypes.AERIAL_ACTIONS:
+                if key_command_type in CommandCollections.AERIAL_ACTIONS:
                     
                     if key_command_type == InputActionTypes.JUMP:
                         return_command_type = key_command_type
@@ -330,8 +330,7 @@ class Controller():
             if key in self.attack_key_to_command_type:
             
                 command_type = self.attack_key_to_command_type[key]
-                if (command_type in InputActionTypes.ATTACKS or
-                command_type in InputActionTypes.MOVEMENTS):
+                if (command_type in CommandCollections.ATTACK_ACTIONS):
                     
                     if (command_type == InputActionTypes.MOVE_RIGHT or
                     command_type == InputActionTypes.MOVE_LEFT):

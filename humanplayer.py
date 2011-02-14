@@ -9,7 +9,7 @@ import gamestate
 import movesetdata
 import actionwizard
 from controlsdata import get_control_key, get_controls
-from enumerations import PlayerStates, CommandDurations, InputActionTypes
+from enumerations import PlayerStates, CommandDurations, InputActionTypes, CommandCollections
 from playercontroller import Controller
 from playerutils import ActionFactory, Transition, Action, Attack
 from command import Command, CommandHandler
@@ -113,29 +113,27 @@ class ControllerFactory():
         """Creates a controller object from a moveset"""
         
         #Create the command handlers for the controller
-        aerial_movement_command_types = [command_type for command_type in InputActionTypes.AERIAL_MOVEMENTS]
-        aerial_movement_command_types.append(InputActionTypes.NO_MOVEMENT)
+        aerial_movement_command_types = [command_type for command_type in CommandCollections.AERIAL_MOVEMENTS]
         aerial_movement_command_handler = CommandHandler(
             aerial_movement_command_types
         )
         
-        aerial_action_command_types = [command_type for command_type in InputActionTypes.AERIAL_ACTIONS]
+        aerial_action_command_types = [command_type for command_type in CommandCollections.AERIAL_ACTIONS]
         aerial_action_command_handler = CommandHandler(
             aerial_action_command_types
         )
         
         stun_movement_command_handler = CommandHandler(
-            [command_type for command_type in InputActionTypes.STUN_MOVEMENTS]
+            [command_type for command_type in CommandCollections.STUN_MOVEMENTS]
         )
         
-        ground_movement_command_types = [command_type for command_type in InputActionTypes.GROUND_MOVEMENTS]
-        ground_movement_command_types.append(InputActionTypes.NO_MOVEMENT)
+        ground_movement_command_types = [command_type for command_type in CommandCollections.GROUND_MOVEMENTS]
         ground_movement_command_handler = CommandHandler(
             ground_movement_command_types
         )
         
         attack_command_handler = CommandHandler(
-            [command_type for command_type in InputActionTypes.INPUT_ACTION_TYPES]
+            [command_type for command_type in CommandCollections.ATTACK_ACTIONS]
         )
         
         #create the key to command mappings for the controller
@@ -143,10 +141,8 @@ class ControllerFactory():
             [(get_control_key(action_type), action_type) for action_type in InputActionTypes.MOVEMENTS]
         )
         
-        attack_keys = [command_type for command_type in InputActionTypes.ATTACKS]
-        attack_keys.extend(InputActionTypes.MOVEMENTS)
         attack_key_to_command_type = dict(
-            [(get_control_key(action_type), action_type) for action_type in attack_keys]
+            [(get_control_key(action_type), action_type) for action_type in CommandCollections.ATTACK_ACTIONS if action_type != InputActionTypes.FORWARD]
         )
         
         #Set aerial no movement actions
