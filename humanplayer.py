@@ -12,6 +12,7 @@ from controlsdata import get_control_key, get_controls
 from enumerations import PlayerStates, CommandDurations, InputActionTypes, CommandCollections
 from playercontroller import Controller
 from playerutils import ActionFactory, Transition, Action, Attack
+from motion import AerialMotion
 from command import Command, CommandHandler
 
 class HumanPlayer(player.Player):
@@ -71,9 +72,21 @@ class HumanPlayer(player.Player):
             else:
                 self.transition(action)
     
+    def set_motion(self):
+        """Apply the current motion based on what keys are pressed."""
+        
+        motions = self.get_current_motions(wotsuievents.keys_pressed)
+        
+        if (motions != None):
+            for motion in motions:
+                if motion != None:
+                    motion.move_object(self.model)
+    
     def get_current_action(self, keys_pressed):
         """Determine the current action state based on the keys pressed. If the
         keys pressed don't map to a valid action then None is returned."""
+        
+        action = None
         
         if self.action.action_state == PlayerStates.STUNNED:
             action = self.controller.get_current_stun_movement()
@@ -87,20 +100,25 @@ class HumanPlayer(player.Player):
             else:
                 action = self.controller.get_current_ground_movement()
         
-        #if action == None:
-        #    pass
-        #elif action.action_state == PlayerStates.STANDING:
-        #    pass
-        #elif action.action_state == PlayerStates.ATTACKING:
-        #    print action.action_state
-        
         return action
+    
+    def get_current_motions(self, keys_pressed):
+        """Determine the motion to apply to a player if its in the air of 
+        stunned."""
+        
+        motions = []
+        
+        if self.is_aerial():
+            motions = self.controller.get_current_aerial_movements()
+        
+        return motions
     
     def handle_events(self):
         self.controller.update(wotsuievents.keys_pressed)
         
         if self.handle_input_events:
             self.set_action()
+            self.set_motion()
         
         player.Player.handle_events(self)
 
@@ -154,13 +172,13 @@ class ControllerFactory():
             InputActionTypes.NO_MOVEMENT,
             CommandDurations.TAP
         )
-        aerial_movement_command_handler.add_command([tap_no_movement], float_action)
+        aerial_action_command_handler.add_command([tap_no_movement], float_action)
         
         hold_no_movement = Command(
             InputActionTypes.NO_MOVEMENT,
             CommandDurations.HOLD
         )
-        aerial_movement_command_handler.add_command([hold_no_movement], float_action)
+        aerial_action_command_handler.add_command([hold_no_movement], float_action)
         
         #Set ground no movement actions
         stand_action = self.create_action(
@@ -231,6 +249,21 @@ class ControllerFactory():
             crouch_action
         )
         
+        aerial_movement_command_handler.add_command(
+            [tap_down_command],
+            AerialMotion(
+                (0, input_player.aerial_acceleration),
+                (0, input_player.max_aerial_velocity)
+            )
+        )
+        aerial_movement_command_handler.add_command(
+            [hold_down_command],
+            AerialMotion(
+                (0, input_player.aerial_acceleration),
+                (0, input_player.max_aerial_velocity)
+            )
+        )
+        
         #Set move right actions
         tap_right_command = Command(
             InputActionTypes.MOVE_RIGHT,
@@ -265,6 +298,21 @@ class ControllerFactory():
             Continue()
         )
         
+        aerial_movement_command_handler.add_command(
+            [tap_right_command],
+            AerialMotion(
+                (input_player.aerial_acceleration, 0),
+                (input_player.max_aerial_velocity, 0)
+            )
+        )
+        aerial_movement_command_handler.add_command(
+            [hold_right_command],
+            AerialMotion(
+                (input_player.aerial_acceleration, 0),
+                (input_player.max_aerial_velocity, 0)
+            )
+        )
+        
         #Set move left actions
         tap_left_command = Command(
             InputActionTypes.MOVE_LEFT,
@@ -297,6 +345,21 @@ class ControllerFactory():
         ground_movement_command_handler.add_command(
             [hold_left_command],
             Continue()
+        )
+        
+        aerial_movement_command_handler.add_command(
+            [tap_left_command],
+            AerialMotion(
+                (-1 * input_player.aerial_acceleration, 0),
+                (-1 * input_player.max_aerial_velocity, 0)
+            )
+        )
+        aerial_movement_command_handler.add_command(
+            [hold_left_command],
+            AerialMotion(
+                (-1 * input_player.aerial_acceleration, 0),
+                (-1 * input_player.max_aerial_velocity, 0)
+            )
         )
         
         #Set attack actions

@@ -49,8 +49,19 @@ class Controller():
     def get_current_aerial_action(self):
         return self.aerial_action_command_handler.get_current_command_sequence_value()
     
-    def get_current_aerial_movement(self):
-        return self.aerial_movement_command_handler.get_current_command_sequence_value()
+    def get_current_aerial_movements(self):
+        """Return the values that corresponds to each current aerial movement
+        command."""
+        
+        current_aerial_movements = []
+        
+        for command in self.aerial_movement_command_handler.current_commands:
+            if command.command_type in CommandCollections.AERIAL_MOVEMENTS:
+                current_aerial_movements.append(
+                    self.aerial_movement_command_handler.get_command([command])
+                )
+        
+        return current_aerial_movements
     
     def get_current_stun_movement(self):
         return self.stun_movement_command_handler.get_current_command_sequence_value()

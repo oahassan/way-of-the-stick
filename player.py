@@ -78,14 +78,13 @@ class Player():
         self.high_jump_timeout = 300
         self.short_jump_timeout = 200
         self.jump_timer = self.high_jump_timeout
-        self.aerial_acceleration_timer = 0
-        self.drift_velocity_component = 0
         self.model = physics.Model(position)
         self.walk_speed = .4
         self.run_speed = .75
         self.jump_speed = -.5
         self.high_jump_speed = -.75
-        self.aerial_acceleration = .005
+        self.aerial_acceleration = .01
+        self.max_aerial_velocity = .75
         self.actions = {}
         self.knockback_vector = (0,0)
         self.interaction_vector = (0,0)
@@ -247,22 +246,6 @@ class Player():
                 self.outline_color = (255, 0, 0)
         else:
             self.outline_color = self.color
-    
-    def get_aerial_acceleration(self, direction):
-        """returns the acceleration when a player is moving while floating.
-        
-        direction should -1, 0 or 1 for the direction the acceleration is going in."""
-        new_component = self.drift_velocity_component + (direction * Player.AERIAL_ACCELERATION)
-        
-        if abs(new_component) <= Player.MAX_DRIFT_VELOCITY_COMPONENT:
-            
-            self.drift_velocity_component = new_component
-            
-            return direction * Player.AERIAL_ACCELERATION
-        
-        else:
-            
-            return 0
     
     def move_to_ground(self):
         

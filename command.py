@@ -197,9 +197,14 @@ class CommandHandler:
         command tree"""
         
         self._validate_command_sequence(command_sequence)
-        command_tree = None
-        
         self.command_tree.add_branches(command_sequence, value)
+    
+    def get_command(self, command_sequence):
+        """Retrieve the value matching the given command sequence if it exists
+        in the command tree."""
+        
+        self._validate_command_sequence(command_sequence)
+        return self.command_tree.get_value(command_sequence)
     
     def get_current_command_sequence_value(self):
         """returns the value for the current command sequence in the inputtree.
