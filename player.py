@@ -85,6 +85,9 @@ class Player():
         self.high_jump_speed = -.75
         self.aerial_acceleration = .01
         self.max_aerial_velocity = .75
+        self.tap_stun_acceleration = .05
+        self.hold_stun_acceleration = .01
+        self.max_stun_velocity = 1
         self.actions = {}
         self.knockback_vector = (0,0)
         self.interaction_vector = (0,0)

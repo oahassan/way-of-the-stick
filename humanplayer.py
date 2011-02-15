@@ -12,7 +12,7 @@ from controlsdata import get_control_key, get_controls
 from enumerations import PlayerStates, CommandDurations, InputActionTypes, CommandCollections
 from playercontroller import Controller
 from playerutils import ActionFactory, Transition, Action, Attack
-from motion import AerialMotion
+from motion import AerialMotion, StunMotion
 from command import Command, CommandHandler
 
 class HumanPlayer(player.Player):
@@ -86,12 +86,7 @@ class HumanPlayer(player.Player):
         """Determine the current action state based on the keys pressed. If the
         keys pressed don't map to a valid action then None is returned."""
         
-        action = None
-        
-        if self.action.action_state == PlayerStates.STUNNED:
-            action = self.controller.get_current_stun_movement()
-        else:
-            action = self.controller.get_current_attack()
+        action = self.controller.get_current_attack()
         
         if action == None:
             if self.is_aerial():
@@ -108,7 +103,10 @@ class HumanPlayer(player.Player):
         
         motions = []
         
-        if self.is_aerial():
+        if self.get_player_state() == PlayerStates.STUNNED:
+            motions = self.controller.get_current_stun_movements()
+            
+        elif self.is_aerial():
             motions = self.controller.get_current_aerial_movements()
         
         return motions
@@ -225,6 +223,31 @@ class ControllerFactory():
             jump_action
         )
         
+        #Set move up actions
+        tap_up_command = Command(
+            InputActionTypes.MOVE_UP, 
+            CommandDurations.TAP
+        )
+        hold_up_command = Command(
+            InputActionTypes.MOVE_UP, 
+            CommandDurations.HOLD
+        )
+        
+        stun_movement_command_handler.add_command(
+            [tap_up_command],
+            StunMotion(
+                (0, -1 * input_player.tap_stun_acceleration),
+                (0, -1 * input_player.max_stun_velocity)
+            )
+        )
+        stun_movement_command_handler.add_command(
+            [hold_up_command],
+            StunMotion(
+                (0, -1 * input_player.hold_stun_acceleration),
+                (0, -1 * input_player.max_stun_velocity)
+            )
+        )
+        
         #Set move down actions
         crouch_action = self.create_action(
             player.PlayerStates.CROUCHING,
@@ -261,6 +284,21 @@ class ControllerFactory():
             AerialMotion(
                 (0, input_player.aerial_acceleration),
                 (0, input_player.max_aerial_velocity)
+            )
+        )
+        
+        stun_movement_command_handler.add_command(
+            [tap_down_command],
+            StunMotion(
+                (0, input_player.tap_stun_acceleration),
+                (0, input_player.max_stun_velocity)
+            )
+        )
+        stun_movement_command_handler.add_command(
+            [hold_down_command],
+            StunMotion(
+                (0, input_player.hold_stun_acceleration),
+                (0, input_player.max_stun_velocity)
             )
         )
         
@@ -313,6 +351,21 @@ class ControllerFactory():
             )
         )
         
+        stun_movement_command_handler.add_command(
+            [tap_right_command],
+            StunMotion(
+                (input_player.tap_stun_acceleration, 0),
+                (input_player.max_stun_velocity, 0)
+            )
+        )
+        stun_movement_command_handler.add_command(
+            [hold_right_command],
+            StunMotion(
+                (input_player.hold_stun_acceleration, 0),
+                (input_player.max_stun_velocity, 0)
+            )
+        )
+        
         #Set move left actions
         tap_left_command = Command(
             InputActionTypes.MOVE_LEFT,
@@ -359,6 +412,21 @@ class ControllerFactory():
             AerialMotion(
                 (-1 * input_player.aerial_acceleration, 0),
                 (-1 * input_player.max_aerial_velocity, 0)
+            )
+        )
+        
+        stun_movement_command_handler.add_command(
+            [tap_left_command],
+            StunMotion(
+                (-1 * input_player.tap_stun_acceleration, 0),
+                (-1 * input_player.max_stun_velocity, 0)
+            )
+        )
+        stun_movement_command_handler.add_command(
+            [hold_left_command],
+            StunMotion(
+                (-1 * input_player.hold_stun_acceleration, 0),
+                (-1 * input_player.max_stun_velocity, 0)
             )
         )
         
