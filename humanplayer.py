@@ -446,13 +446,23 @@ class ControllerFactory():
             attack_action.set_attack_data(input_player.model)
             attack_action.set_frame_sounds()
             
-            commands = []
+            tap_commands = []
             
             for command_type in moveset.attack_key_combinations[attack_name]:
-                commands.append(Command(command_type, CommandDurations.TAP))
+                tap_commands.append(Command(command_type, CommandDurations.TAP))
             
             attack_command_handler.add_command(
-                commands,
+                tap_commands,
+                attack_action
+            )
+            
+            hold_commands = []
+            
+            for command_type in moveset.attack_key_combinations[attack_name]:
+                hold_commands.append(Command(command_type, CommandDurations.HOLD))
+            
+            attack_command_handler.add_command(
+                hold_commands,
                 attack_action
             )
         
