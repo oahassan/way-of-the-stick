@@ -116,7 +116,7 @@ class PlayerStates():
         ATTACKING : [],
         STUNNED : [],
         BLOCKING : [STANDING,CROUCHING],
-        TRANSITION : []
+        TRANSITION : [RUNNING]
     }
 
 class AttackTypes():
