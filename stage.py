@@ -31,20 +31,22 @@ class ScrollableStage():
         self.floor_height = floor_height
         self.left_screen_position = 0
         self.right_screen_position = gamestate._WIDTH
+        self.width = 1800
+        self.height = 1200
         
         self.left_wall = physics.Wall(
-            position = (-600,0),
+            position = (0,0),
             height = 1600,
             direction = physics.Wall.RIGHT_FACING
         )
         self.right_wall = physics.Wall(
-            position = (1200, 0),
+            position = (1800, 0),
             height = 1600,
             direction = physics.Wall.LEFT_FACING
         )
         self.ground = physics.Ground(
             position = (0, floor_height),
-            width = gamestate._WIDTH)
+            width = 1800)
         self.background_image = self.create_black_background()
         
         self.scroll_threshold = 0
@@ -64,18 +66,32 @@ class ScrollableStage():
         
         return background_surface
     
+    def draw_ground(self):
+        ground_surface = pygame.Surface((self.width, 20))
+        
+        for i in range(20):
+            pygame.draw.line(
+                ground_surface,
+                (int(100 * (20 - i)/20), int(100 * (20 - i)/20), int(100 * (20 - i)/20)),
+                (0, i),
+                (self.width, i),
+                3
+            )
+        
+        return ground_surface
+    
     def create_black_background(self):
         background_surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
         background_surface.fill((0,0,0))
         
-        for i in range(20):
-            pygame.draw.line(
-                background_surface,
-                (int(100 * (20 - i)/20), int(100 * (20 - i)/20), int(100 * (20 - i)/20)),
-                (self.left_wall.position[0], self.floor_height + i - 20),
-                (self.right_wall.position[0], self.floor_height + i - 20),
-                3
-            )
+        #for i in range(20):
+        #    pygame.draw.line(
+        #        background_surface,
+        #        (int(100 * (20 - i)/20), int(100 * (20 - i)/20), int(100 * (20 - i)/20)),
+        #        (self.left_wall.position[0], self.floor_height + i - 20),
+        #        (self.right_wall.position[0], self.floor_height + i - 20),
+        #        3
+        #    )
         
         #debugging code
         #pygame.draw.line(

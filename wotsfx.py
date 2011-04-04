@@ -57,10 +57,7 @@ class Effect():
         
         return (small_height > self.height + (ratio*2)) and (small_width > self.width + 2)
     
-    def draw_ellipse_effect(
-        self,
-        surface
-    ):
+    def draw_ellipse_effect(self):
         
         ratio = float(self.max_height) / float(self.max_width)
         
@@ -91,4 +88,4 @@ class Effect():
             self.center[1] - (.5 * effect_surface_rect.height)
         )
         
-        surface.blit(effect_surface, final_position)
+        return (final_position, effect_surface)

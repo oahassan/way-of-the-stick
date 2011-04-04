@@ -128,3 +128,48 @@ class AttackTypes():
 class Elevations():
     GROUNDED = "GROUNDED"
     AERIAL = "AERIAL"
+
+class PlayerPositions:
+    NONE = "none"
+    PLAYER1 = "player1"
+    PLAYER2 = "player2"
+
+
+class PointNames:
+    HEAD_TOP = "headtop"
+    TORSO_TOP = "torsotop"
+    TORSO_BOTTOM = "torobottom"
+    LEFT_ELBOW = "leftelbow"
+    LEFT_HAND = "lefthand"
+    RIGHT_ELBOW = "rightelbow"
+    RIGHT_HAND = "righthand"
+    LEFT_KNEE = "leftknee"
+    LEFT_FOOT = "leftfoot"
+    RIGHT_KNEE = "rightknee"
+    RIGHT_FOOT = "rightfoot"
+    POINT_NAMES = [HEAD_TOP,TORSO_TOP,TORSO_BOTTOM,LEFT_ELBOW, \
+                   LEFT_HAND,RIGHT_ELBOW,RIGHT_HAND,LEFT_KNEE, \
+                   LEFT_FOOT,RIGHT_KNEE,RIGHT_FOOT]
+
+class LineNames:
+    HEAD = "head"
+    LEFT_UPPER_ARM = "leftupperarm"
+    LEFT_FOREARM = "leftforearm"
+    RIGHT_UPPER_ARM = "rightupperarm"
+    RIGHT_FOREARM = "rightforearm"
+    TORSO = "torso"
+    LEFT_UPPER_LEG = "leftupperleg"
+    LEFT_LOWER_LEG = "leftlowerleg"
+    RIGHT_UPPER_LEG = "rightupperleg"
+    RIGHT_LOWER_LEG = "rightlowerleg"
+
+LINE_TO_POINTS = dict([(LineNames.HEAD, [PointNames.HEAD_TOP,PointNames.TORSO_TOP]),
+                       (LineNames.LEFT_UPPER_ARM, [PointNames.TORSO_TOP,PointNames.LEFT_ELBOW]),
+                       (LineNames.LEFT_FOREARM, [PointNames.LEFT_ELBOW,PointNames.LEFT_HAND]),
+                       (LineNames.RIGHT_UPPER_ARM, [PointNames.TORSO_TOP,PointNames.RIGHT_ELBOW]),
+                       (LineNames.RIGHT_FOREARM, [PointNames.RIGHT_ELBOW,PointNames.RIGHT_HAND]),
+                       (LineNames.TORSO, [PointNames.TORSO_TOP,PointNames.TORSO_BOTTOM]),
+                       (LineNames.LEFT_UPPER_LEG, [PointNames.TORSO_BOTTOM,PointNames.LEFT_KNEE]),
+                       (LineNames.LEFT_LOWER_LEG, [PointNames.LEFT_KNEE,PointNames.LEFT_FOOT]),
+                       (LineNames.RIGHT_UPPER_LEG, [PointNames.TORSO_BOTTOM,PointNames.RIGHT_KNEE]),
+                       (LineNames.RIGHT_LOWER_LEG, [PointNames.RIGHT_KNEE,PointNames.RIGHT_FOOT])])

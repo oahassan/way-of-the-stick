@@ -11,7 +11,9 @@ import stick
 import mathfuncs
 import math
 import settingsdata
+import versusrendering
 from attackbuilderui import AttackLabel
+from enumerations import PlayerPositions
 
 class PlayerTypes:
     HUMAN = 'HUMAN'
@@ -27,15 +29,21 @@ class ClashResults:
     LOSS = 'loss'
     TIE = 'tie'
 
-gamestate.stage = stage.ScrollableStage(447, 0, gamestate._WIDTH)
+gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
 
 initialized = False
-human = None
-bot = None
+player_dictionary = {
+    PlayerPositions.PLAYER1 : None,
+    PlayerPositions.PLAYER2 : None
+}
+player_type_dictionary = {
+    PlayerPositions.PLAYER1 : None,
+    PlayerPositions.PLAYER2 : None
+}
 fight_label = None
 ready_label = None
-human_wins_label = None
-bot_wins_label = None
+player1_wins_label = None
+player2_wins_label = None
 match_state = None
 exit_button = button.ExitButton()
 exit_indicator = False
@@ -47,9 +55,9 @@ versus_mode_start_timer = None
 fight_start_timer = None
 fps_label = None
 command_label = None
-player_type = None
-bot_type = None
 point_effects = {}
+player_renderer_state = None
+surface_renderer = None
 
 stun_channel = None
 clash_sound = pygame.mixer.Sound("./sounds/clash-sound.ogg")
@@ -57,27 +65,26 @@ clash_sound.set_volume(settingsdata.get_sound_volume())
 
 def init():
     global initialized
-    global players
-    global human
-    global bot
+    global player_dictionary
+    global player_type_dictionary
     global ready_label
     global fight_label
-    global human_wins_label
-    global bot_wins_label
+    global player1_wins_label
+    global player2_wins_label
     global match_state
     global fight_end_timer
     global versus_mode_start_timer
     global fight_start_timer
     global fps_label
-    global player_type
-    global bot_type
     global point_effects
     global command_label
+    global player_renderer_state
+    global surface_renderer
     
     point_effects = {}
     fps_label = button.Label((20,20), str(gamestate.clock.get_fps()),(0,0,255),30)
-    command_label = AttackLabel("", [])
-    command_label.key_combination_label.set_position((20,50))
+    #command_label = AttackLabel("", [])
+    #command_label.key_combination_label.set_position((20,50))
     
     match_state = MatchStates.READY
     fight_end_timer = 0
@@ -94,36 +101,44 @@ def init():
                             (gamestate._HEIGHT / 2) - (fight_label.height / 2))
     fight_label.set_position(fight_label_position)
     
-    human_wins_label = button.Label((0,0),'PLAYER 1 WINS!',(0,0,255),80)
-    human_wins_label_position = ((gamestate._WIDTH / 2) - (human_wins_label.width / 2), \
-                            (gamestate._HEIGHT / 2) - (human_wins_label.height / 2))
-    human_wins_label.set_position(human_wins_label_position)
+    player1_wins_label = button.Label((0,0),'PLAYER 1 WINS!',(0,0,255),80)
+    player1_wins_label_position = ((gamestate._WIDTH / 2) - (player1_wins_label.width / 2), \
+                            (gamestate._HEIGHT / 2) - (player1_wins_label.height / 2))
+    player1_wins_label.set_position(player1_wins_label_position)
     
-    bot_wins_label = button.Label((0,0),'PLAYER 2 WINS!',(0,0,255),80)
-    bot_wins_label_position = ((gamestate._WIDTH / 2) - (bot_wins_label.width / 2), \
-                            (gamestate._HEIGHT / 2) - (bot_wins_label.height / 2))
-    bot_wins_label.set_position(bot_wins_label_position)
+    player2_wins_label = button.Label((0,0),'PLAYER 2 WINS!',(0,0,255),80)
+    player2_wins_label_position = ((gamestate._WIDTH / 2) - (player2_wins_label.width / 2), \
+                            (gamestate._HEIGHT / 2) - (player2_wins_label.height / 2))
+    player2_wins_label.set_position(player2_wins_label_position)
     
-    if player_type == PlayerTypes.BOT:
-        new_player = aiplayer.Bot((0, 0))
-    else:
-        new_player = humanplayer.HumanPlayer((0, 0))
+    for player_position in player_type_dictionary.keys():
+        if player_type_dictionary[player_position] == PlayerTypes.BOT:
+            player_dictionary[player_position] = aiplayer.Bot((0, 0))
+        elif player_type_dictionary[player_position] == PlayerTypes.HUMAN:
+            player_dictionary[player_position] = humanplayer.HumanPlayer((0, 0))
+        else:
+            raise Exception("No player type set for player position: " + str(player_position))
     
+    player1 = player_dictionary[PlayerPositions.PLAYER1]
+    player1.init_state()
+    player1.model.move_model((700, 967))
     
-    if bot_type == PlayerTypes.HUMAN:
-        second_player = humanplayer.HumanPlayer((0, 0))
-    else:
-        second_player = aiplayer.Bot((0, 0))
+    player2 = player_dictionary[PlayerPositions.PLAYER2]
+    player2.init_state()
+    player2.model.move_model((1100, 967))
+    player2.color = (0,255,0)
     
-    
-    human = new_player
-    human.init_state()
-    human.model.move_model((200, 367))
-    
-    bot = second_player
-    bot.init_state()
-    bot.model.move_model((500, 367))
-    bot.color = (0,255,0)
+    camera = versusrendering.ViewportCamera(
+        gamestate.stage.width,
+        gamestate.stage.height,
+        gamestate._WIDTH,
+        gamestate._HEIGHT
+    )
+    player_renderer_state = versusrendering.PlayerRendererState(
+        camera,
+        player_dictionary.keys()
+    )
+    surface_renderer = versusrendering.SurfaceRenderer(camera)
     
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH
     initialized = True
@@ -131,40 +146,37 @@ def init():
     gamestate.frame_rate = gamestate.VERSUSMODE_FRAMERATE
     gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
     
+    gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
     gamestate.screen.blit(gamestate.stage.background_image, (0,0))
     gamestate.new_dirty_rects.append(pygame.Rect((0,0),(gamestate._WIDTH, gamestate._HEIGHT)))
     gamestate.clock.get_time()
 
 def exit():
     global initialized
-    global players
-    global human
-    global bot
     global ready_label
     global fight_label
-    global human_wins_label
-    global bot_wins_label
+    global player1_wins_label
+    global player2_wins_label
     global match_state
     global versus_mode_start_timer
     global fight_start_timer
     global fight_end_timer
     global point_effects
     global command_label
+    global player_renderer_state
     
     point_effects = {}
+    player_renderer_state = None
     fps_label = None
     command_label = None
     ready_label = None
     fight_label = None
-    human_wins_label = None
-    bot_wins_label = None
+    player1_wins_label = None
+    player2_wins_label = None
     match_state = None
     versus_mode_start_timer = None
     fight_start_timer = None
     fight_end_timer = None
-    human = None
-    bot = None
-    players = []
     initialized = False
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.NONE
     gamestate.drawing_mode = gamestate.DrawingModes.UPDATE_ALL
@@ -175,8 +187,8 @@ def handle_events():
     global exit_indicator
     global ready_label
     global fight_label
-    global human_wins_label
-    global bot_wins_label
+    global player1_wins_label
+    global player2_wins_label
     global match_state
     global versus_mode_start_timer
     global fight_start_timer
@@ -184,6 +196,9 @@ def handle_events():
     global fps_label
     global comamnd_label
     global effects
+    global player_renderer_state
+    global surface_renderer
+    global player_dictionary
     
     exit_button.draw(gamestate.screen)
     gamestate.new_dirty_rects.append(pygame.Rect(exit_button.position, (exit_button.width,exit_button.height)))
@@ -205,71 +220,67 @@ def handle_events():
             fight_label.draw(gamestate.screen)
             gamestate.new_dirty_rects.append(pygame.Rect(fight_label.position,(fight_label.width,fight_label.height)))
     
-    if bot.health_meter == 0:
+    if player_dictionary[PlayerPositions.PLAYER2].health_meter == 0:
         match_state = MatchStates.END
         
         if fight_end_timer < 8000:
             fight_end_timer += gamestate.clock.get_time()
-            human_wins_label.draw(gamestate.screen)
-            gamestate.new_dirty_rects.append(pygame.Rect(human_wins_label.position, \
-                                             (human_wins_label.width, \
-                                              human_wins_label.height)))
+            player1_wins_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(pygame.Rect(player1_wins_label.position, \
+                                             (player1_wins_label.width, \
+                                              player1_wins_label.height)))
             
         else:
             gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
             exit()
-    elif human.health_meter == 0:
+    elif player_dictionary[PlayerPositions.PLAYER1].health_meter == 0:
         match_state = MatchStates.END
         
         if fight_end_timer < 8000:
             fight_end_timer += gamestate.clock.get_time()
-            bot_wins_label.draw(gamestate.screen)
-            gamestate.new_dirty_rects.append(pygame.Rect(bot_wins_label.position, \
-                                             (bot_wins_label.width, \
-                                              bot_wins_label.height)))
+            player2_wins_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(pygame.Rect(player2_wins_label.position, \
+                                             (player2_wins_label.width, \
+                                              player2_wins_label.height)))
         else:
             gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
             exit()
     
     if ((exit_indicator == False) and 
     ((match_state == MatchStates.FIGHT) or (match_state == MatchStates.END))):
-        if player_type == PlayerTypes.HUMAN:
-            human.handle_events()
+        for player_position, active_player in player_dictionary.iteritems():
+            if player_type_dictionary[player_position] == PlayerTypes.HUMAN:
+                active_player.handle_events()
+            else:
+                [active_player.handle_events(other_player) 
+                for other_player_position, other_player in player_dictionary.iteritems()
+                if not other_player_position == player_position]
             
-            current_command_types = [command.command_type for command in human.controller.attack_command_handler.current_commands]
+            #current_command_types = [command.command_type for command in player1.controller.attack_command_handler.current_commands]
             
-            command_label.set_key_combination(
-                current_command_types
-            )
-            command_label.key_combination_label.draw(gamestate.screen)
-            gamestate.new_dirty_rects.append(
-                pygame.Rect(
-                    command_label.key_combination_label.position,
-                    (command_label.key_combination_label.width,
-                    command_label.key_combination_label.height)
-                )
-            )
-        else:
-            human.handle_events(bot)
-        
-        if bot_type == PlayerTypes.BOT:
-            bot.handle_events(human)
-        else:
-            bot.handle_events()
+            #command_label.set_key_combination(
+            #    current_command_types
+            #)
+            #command_label.key_combination_label.draw(gamestate.screen)
+            #gamestate.new_dirty_rects.append(
+            #    pygame.Rect(
+            #        command_label.key_combination_label.position,
+            #        (command_label.key_combination_label.width,
+            #        command_label.key_combination_label.height)
+            #    )
+            #)
         
         handle_interactions()
         
-        gamestate.stage.scroll_background([human.model, bot.model])
-        gamestate.stage.draw(gamestate.screen)
-        player.draw_model(human, gamestate.screen)
-        player.draw_reflection(human, gamestate.screen)
-        player.draw_model(bot, gamestate.screen)
-        player.draw_reflection(bot, gamestate.screen)
+        player_renderer_state.update(player_dictionary, 1)
+        ground_surface = gamestate.stage.draw_ground()
+        surface_renderer.draw_surface_to_screen((0,gamestate.stage.floor_height - 20), ground_surface)
+        versusrendering.draw_player_renderer_state(player_renderer_state, gamestate.screen)
         
         for effect in point_effects.values():
             effect.update(gamestate.time_passed)
-            gamestate.new_dirty_rects.append(pygame.Rect(effect.get_enclosing_rect()))
-            effect.draw_ellipse_effect(gamestate.screen)
+            effect_position, effect_surface = effect.draw_ellipse_effect()
+            surface_renderer.draw_surface_to_screen(effect_position, effect_surface)
         
         dead_effects = []
         
@@ -296,23 +307,25 @@ def handle_events():
                 exit()
 
 def handle_interactions():
-    global human
-    global bot
+    global player_dictionary
     
-    if bot.get_player_state() == player.PlayerStates.ATTACKING:
-        handle_attacks(bot, human)
-    elif human.get_player_state() == player.PlayerStates.ATTACKING:
-        handle_attacks(human, bot)
+    player1 = player_dictionary[PlayerPositions.PLAYER1]
+    player2 = player_dictionary[PlayerPositions.PLAYER2]
+    
+    if player2.get_player_state() == player.PlayerStates.ATTACKING:
+        handle_attacks(player2, player1)
+    elif player1.get_player_state() == player.PlayerStates.ATTACKING:
+        handle_attacks(player1, player2)
 
-def get_player(input_player):
-    global human
-    
-    return_name = 'bot'
-    
-    if input_player == human:
-        return_name = 'human'
-    
-    return return_name
+#def get_player(input_player):
+#    global player1
+#    
+#    return_name = 'player2'
+#    
+#    if input_player == player1:
+#        return_name = 'player1'
+#    
+#    return return_name
 
 def handle_attacks(attacker, receiver):
     if test_overlap(attacker.get_enclosing_rect(), receiver.get_enclosing_rect()):

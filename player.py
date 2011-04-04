@@ -256,7 +256,6 @@ class Player():
             self.model.position[0], 
             int(math.ceil(gamestate.stage.ground.position[1] - self.model.height))
         )
-        
         self.model.move_model(position)
     
     def get_player_point_positions(self):
