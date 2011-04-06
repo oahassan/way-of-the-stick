@@ -473,13 +473,13 @@ def draw_reflection(
             max(int(
                 player_rect.width * 
                 player_rect.bottom / 
-                (gamestate.stage.floor_height - camera.viewport_position[1]) * 
+                (gamestate.stage.floor_height - camera.viewport_position[1]) /
                 camera.viewport_scale
             ), 10),
             max(int(
                 (.75 * player_rect.height) *
                 player_rect.bottom /
-                (gamestate.stage.floor_height - camera.viewport_position[1]) * 
+                (gamestate.stage.floor_height - camera.viewport_position[1]) /
                 camera.viewport_scale
             ), 10)
         )

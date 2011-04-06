@@ -135,7 +135,7 @@ class Bot(Player):
         return frame_rect
     
     def handle_events(self, enemy):
-        self.set_action(enemy)
+        #self.set_action(enemy)
         Player.handle_events(self)
     
     def get_direction(self, enemy):
