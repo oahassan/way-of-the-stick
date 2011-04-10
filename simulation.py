@@ -155,8 +155,8 @@ class CollisionHandler():
         receiver.set_neutral_state()
         
         separation_vector = self.get_separation_vector(attacker,receiver)
-        receiver.model.shift((-.5 * separation_vector[0], -.5 * separation_vector[1]))
-        attacker.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
+        receiver.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
+        attacker.model.shift((-.5 * separation_vector[0], -.5 * separation_vector[1]))
 
     def apply_collision_physics(
         self,
@@ -166,7 +166,7 @@ class CollisionHandler():
         receiver = attack_result.receiver
         
         separation_vector = self.get_separation_vector(attacker,receiver)
-        receiver.model.shift((-.5 * separation_vector[0], -.5 * separation_vector[1]))
+        receiver.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
         
         receiver.knockback_vector = attack_result.knockback_vector
         receiver.interaction_point = attack_result.receive_point
