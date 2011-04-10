@@ -79,6 +79,17 @@ class PlayerTypes:
     BOT = 'Bot'
     REMOTE = 'Remote'
 
+class MatchStates:
+    READY = 'ready'
+    FIGHT = 'fight'
+    END = 'end'
+
+class ClashResults:
+    WIN = 'win'
+    LOSS = 'loss'
+    TIE = 'tie'
+    NONE = 'None'
+
 class AnimationModes():
     PHYSICS = "PHYSICS"
     KEYFRAME = "KEYFRAME"

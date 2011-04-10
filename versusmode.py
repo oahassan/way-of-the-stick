@@ -12,6 +12,7 @@ import mathfuncs
 import math
 import settingsdata
 import versusrendering
+from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
 from enumerations import PlayerPositions
 
@@ -58,6 +59,7 @@ command_label = None
 point_effects = {}
 player_renderer_state = None
 surface_renderer = None
+match_simulation = None
 
 stun_channel = None
 clash_sound = pygame.mixer.Sound("./sounds/clash-sound.ogg")
@@ -80,6 +82,7 @@ def init():
     global command_label
     global player_renderer_state
     global surface_renderer
+    global match_simulation
     
     point_effects = {}
     fps_label = button.Label((20,20), str(gamestate.clock.get_fps()),(0,0,255),30)
@@ -118,6 +121,11 @@ def init():
             player_dictionary[player_position] = humanplayer.HumanPlayer((0, 0))
         else:
             raise Exception("No player type set for player position: " + str(player_position))
+    
+    match_simulation = MatchSimulation(
+        player_dictionary=player_dictionary,
+        player_type_dictionary=player_type_dictionary
+    )
     
     player1 = player_dictionary[PlayerPositions.PLAYER1]
     player1.init_state()
@@ -164,7 +172,9 @@ def exit():
     global point_effects
     global command_label
     global player_renderer_state
+    global match_simulation
     
+    match_simulation = None
     point_effects = {}
     player_renderer_state = None
     fps_label = None
@@ -199,6 +209,7 @@ def handle_events():
     global player_renderer_state
     global surface_renderer
     global player_dictionary
+    global match_simulation
     
     exit_button.draw(gamestate.screen)
     gamestate.new_dirty_rects.append(pygame.Rect(exit_button.position, (exit_button.width,exit_button.height)))
@@ -222,6 +233,7 @@ def handle_events():
     
     if player_dictionary[PlayerPositions.PLAYER2].health_meter == 0:
         match_state = MatchStates.END
+        player_dictionary[PlayerPositions.PLAYER2].set_stun_timeout(9000)
         
         if fight_end_timer < 8000:
             fight_end_timer += gamestate.clock.get_time()
@@ -235,6 +247,7 @@ def handle_events():
             exit()
     elif player_dictionary[PlayerPositions.PLAYER1].health_meter == 0:
         match_state = MatchStates.END
+        player_dictionary[PlayerPositions.PLAYER1].set_stun_timeout(9000)
         
         if fight_end_timer < 8000:
             fight_end_timer += gamestate.clock.get_time()
@@ -248,29 +261,13 @@ def handle_events():
     
     if ((exit_indicator == False) and 
     ((match_state == MatchStates.FIGHT) or (match_state == MatchStates.END))):
-        for player_position, active_player in player_dictionary.iteritems():
-            if player_type_dictionary[player_position] == PlayerTypes.HUMAN:
-                active_player.handle_events()
-            else:
-                [active_player.handle_events(other_player) 
-                for other_player_position, other_player in player_dictionary.iteritems()
-                if not other_player_position == player_position]
-            
-            #current_command_types = [command.command_type for command in player1.controller.attack_command_handler.current_commands]
-            
-            #command_label.set_key_combination(
-            #    current_command_types
-            #)
-            #command_label.key_combination_label.draw(gamestate.screen)
-            #gamestate.new_dirty_rects.append(
-            #    pygame.Rect(
-            #        command_label.key_combination_label.position,
-            #        (command_label.key_combination_label.width,
-            #        command_label.key_combination_label.height)
-            #    )
-            #)
         
-        handle_interactions()
+        match_simulation.step()
+        attack_result = match_simulation.current_attack_result
+        
+        if attack_result != None:
+            create_collision_effects(attack_result)
+            handle_hit_sounds(attack_result)
         
         player_renderer_state.update(player_dictionary, 1)
         ground_surface = gamestate.stage.draw_ground()
@@ -306,192 +303,33 @@ def handle_events():
                 gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
                 exit()
 
-def handle_interactions():
-    global player_dictionary
-    
-    player1 = player_dictionary[PlayerPositions.PLAYER1]
-    player2 = player_dictionary[PlayerPositions.PLAYER2]
-    
-    if player2.get_player_state() == player.PlayerStates.ATTACKING:
-        handle_attacks(player2, player1)
-    elif player1.get_player_state() == player.PlayerStates.ATTACKING:
-        handle_attacks(player1, player2)
-
-#def get_player(input_player):
-#    global player1
-#    
-#    return_name = 'player2'
-#    
-#    if input_player == player1:
-#        return_name = 'player1'
-#    
-#    return return_name
-
-def handle_attacks(attacker, receiver):
-    if test_overlap(attacker.get_enclosing_rect(), receiver.get_enclosing_rect()):
-        attacker_attack_hitboxes = get_hitbox_dictionary(attacker.get_attack_lines())
-        
-        if receiver.get_player_state() == player.PlayerStates.ATTACKING:
-            receiver_attack_hitboxes = get_hitbox_dictionary(receiver.get_attack_lines())
-            colliding_line_names = test_attack_collision(attacker_attack_hitboxes, receiver_attack_hitboxes)
-            
-            if colliding_line_names:
-                # draw_attacker_hitboxes(attacker_attack_hitboxes)
-                # draw_attacker_hitboxes(receiver_attack_hitboxes)
-                clash_result = get_clash_result(
-                    attacker,
-                    receiver,
-                    colliding_line_names
-                )
-                attacker_hitboxes = get_hitbox_dictionary(attacker.model.lines)
-                
-                if clash_result == ClashResults.TIE:
-                    handle_blocked_attack_collision(
-                        attacker,
-                        receiver,
-                        attacker_attack_hitboxes,
-                        receiver_attack_hitboxes
-                    )
-                elif clash_result == ClashResults.WIN:
-                    handle_unblocked_attack_collision(
-                        attacker,
-                        receiver,
-                        attacker_hitboxes,
-                        receiver_attack_hitboxes
-                    )
-                else:
-                    handle_unblocked_attack_collision(
-                        receiver,
-                        attacker,
-                        receiver_attack_hitboxes,
-                        attacker_hitboxes
-                    )
-            else:
-                attacker_hitboxes = get_hitbox_dictionary(attacker.model.lines)
-                colliding_line_names = test_attack_collision(receiver_attack_hitboxes, attacker_hitboxes)
-                
-                if colliding_line_names:
-                    # print('block1, attacker:' + get_player(receiver))
-                    # print('receiver line name: ' + colliding_line_names[0])
-                    # print('attacker line name: ' + colliding_line_names[1])
-                    colliding_lines = (receiver.model.lines[colliding_line_names[0]], \
-                                       attacker.model.lines[colliding_line_names[1]])
-                    # draw_attacker_hitboxes(receiver_attack_hitboxes)
-                    # draw_receiver_hitboxes(attacker_hitboxes)
-                    
-                    handle_unblocked_attack_collision(receiver, attacker, receiver_attack_hitboxes, attacker_hitboxes)
-                else:
-                    receiver_hitboxes = get_hitbox_dictionary(receiver.model.lines)
-                    colliding_line_names = test_attack_collision(attacker_attack_hitboxes, receiver_hitboxes)
-                    
-                    if colliding_line_names:
-                        # print('block2, attacker:' + get_player(attacker))
-                        # print('receiver_line_name: ' + colliding_line_names[1])
-                        # print('attacker_line_name: ' + colliding_line_names[0])
-                        colliding_lines = (attacker.model.lines[colliding_line_names[0]], \
-                                           receiver.model.lines[colliding_line_names[1]])
-                        # draw_attacker_hitboxes(attacker_attack_hitboxes)
-                        # draw_receiver_hitboxes(receiver_hitboxes)
-                        
-                        handle_unblocked_attack_collision(attacker, receiver, attacker_attack_hitboxes, receiver_hitboxes)
-        else:
-            receiver_hitboxes = get_hitbox_dictionary(receiver.model.lines)
-            colliding_line_names = test_attack_collision(attacker_attack_hitboxes, receiver_hitboxes)
-            
-            if colliding_line_names:
-                # print('block3, attacker:' + get_player(receiver))
-                # print('receiver_line_name: ' + colliding_line_names[1])
-                # print('attacker_line_name: ' + colliding_line_names[0])
-                colliding_lines = (attacker.model.lines[colliding_line_names[0]], \
-                                   receiver.model.lines[colliding_line_names[1]])
-                # draw_attacker_hitboxes(attacker_attack_hitboxes)
-                # draw_receiver_hitboxes(receiver_hitboxes)
-                
-                handle_unblocked_attack_collision(attacker, receiver, attacker_attack_hitboxes, receiver_hitboxes)
-
-def get_clash_result(attacker, receiver, colliding_line_names):
-    colliding_lines = (
-        receiver.model.lines[colliding_line_names[0]],
-        attacker.model.lines[colliding_line_names[1]]
-    )
-    
-    interaction_points = get_interaction_points(receiver, colliding_lines)
-    attack_damage = attacker.get_point_damage(interaction_points[0].name)
-    block_damage = receiver.get_point_damage(interaction_points[1].name)
-    
-    if 5 > abs(attack_damage - block_damage):
-        return ClashResults.TIE
-    elif attack_damage > block_damage:
-        return ClashResults.WIN
-    else:
-        return ClashResults.LOSS
-    
-def draw_attacker_hitboxes(hitbox_dictionary):
-    for name, hitboxes in hitbox_dictionary.iteritems():
-        for hitbox in hitboxes:
-            pygame.draw.rect(gamestate.screen, (255,0,0), hitbox, 1)
-
-def draw_receiver_hitboxes(hitbox_dictionary):
-    for name, hitboxes in hitbox_dictionary.iteritems():
-        for hitbox in hitboxes:
-            pygame.draw.rect(gamestate.screen, (0,0,255), hitbox, 1)
-
-def handle_unblocked_attack_collision(
-    attacker,
-    receiver,
-    attacker_hitboxes,
-    receiver_hitboxes
-):
+def handle_hit_sounds(attack_result):
     global match_state
     
-    colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
-    
-    colliding_lines = (attacker.model.lines[colliding_line_names[0]], \
-                       receiver.model.lines[colliding_line_names[1]])
-    
-    interaction_points = get_interaction_points(receiver, colliding_lines)
-    
-    attack_knockback_vector = attacker.get_point_position_change(interaction_points[0].name)
-    
-    if receiver.get_player_state() == player.PlayerStates.STUNNED:
+    if attack_result.clash_indicator:
+        clash_sound.play()
+    else:
+        attacker = attack_result.attacker
+        receiver = attack_result.receiver
         
-        stun_knockback_vector = receiver.knockback_vector
-        
-        if attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector) and match_state != MatchStates.END:
-            pass
-        else:
-            apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
-            apply_unblocked_collision_effects(
-                attacker,
-                receiver,
-                interaction_points,
-                attack_knockback_vector
-            )
+        if receiver.get_player_state() == player.PlayerStates.STUNNED:
             
             if not attacker.hit_sound_is_playing():
                 attacker.play_hit_sound()
+                
+        else:
             
-    else:
-        apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
-        receiver.set_player_state(player.PlayerStates.STUNNED)
-        apply_unblocked_collision_effects(
-            attacker,
-            receiver,
-            interaction_points,
-            attack_knockback_vector
-        )
-        
-        attacker.play_hit_sound()
+            attacker.play_hit_sound()
 
-def apply_unblocked_collision_effects(
-    attacker,
-    receiver,
-    interaction_points,
-    attack_knockback_vector
-):
+def create_collision_effects(attack_result):
     global point_effects
     
-    damage = attacker.get_point_damage(interaction_points[0].name)
+    attacker = attack_result.attacker
+    receiver = attack_result.receiver
+    attack_point = attack_result.attack_point
+    attack_knockback_vector = attack_result.knockback_vector
+    
+    damage = attacker.get_point_damage(attack_point.name)
     effect_height = max(50, damage)
     effect_width = max(50, .2 * damage)
     fade_rate = .2
@@ -513,20 +351,14 @@ def apply_unblocked_collision_effects(
     else:
         angle_in_degrees = math.degrees(
             math.asin(attack_knockback_vector[1] / math.hypot(
-                attack_knockback_vector[0], attack_knockback_vector[1]
-            ))
+                    attack_knockback_vector[0], attack_knockback_vector[1]
+                )
+            )
         )
     
-    if receiver.health_meter > 0:
-        receiver.health_meter = max(0, receiver.health_meter - damage)
-        receiver.set_stun_timeout(attacker.get_stun_timeout())
-        
-        if receiver.health_meter == 0:
-            receiver.set_stun_timeout(9000)
-    
-    if not interaction_points[0].id in point_effects:
-        point_effects[interaction_points[0].id] = Effect(
-            interaction_points[0].pos,
+    if not attack_point.id in point_effects:
+        point_effects[attack_point.id] = Effect(
+            attack_point.pos,
             angle_in_degrees,
             effect_width,
             effect_height,
@@ -534,299 +366,3 @@ def apply_unblocked_collision_effects(
             fade_rate,
             .6
         )
-
-def attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
-    attack_x_sign = mathfuncs.sign(attack_knockback_vector[0])
-    attack_y_sign = mathfuncs.sign(attack_knockback_vector[1])
-    stun_x_sign = mathfuncs.sign(stun_knockback_vector[0])
-    stun_y_sign = mathfuncs.sign(stun_knockback_vector[1])
-    
-    if (attack_x_sign != stun_x_sign) or (attack_y_sign != stun_y_sign):
-        return True
-    else:
-        return False
-
-def get_separation_vector(attacker, receiver):
-    #x_delta = receiver.model.position[0] - attacker.model.position[0]
-    y_delta = receiver.model.position[1] - attacker.model.position[1]
-    
-    #x_delta, y_delta = get_overlap(attacker, receiver)
-    x_delta = 0
-    
-    if receiver.model.position[0] < attacker.model.position[0]:
-        x_delta = receiver.model.position[0] - attacker.model.position[0]
-    else:
-        x_delta = attacker.model.position[0] - receiver.model.position[0]
-    
-    if y_delta > 0:
-        y_delta = -1 * y_delta
-    
-    return (x_delta, y_delta)
-
-def get_overlap(attacker, receiver):
-    
-    attacker_rect = pygame.Rect(*attacker.get_enclosing_rect())
-    receiver_rect = pygame.Rect(*receiver.get_enclosing_rect())
-    
-    x_overlap = 0
-    y_overlap = 0
-    
-    if receiver_rect.centerx > attacker_rect.centerx:
-        x_overlap = attacker_rect.right - receiver_rect.left
-    else:
-        x_overlap = attacker_rect.left - receiver_rect.right
-   
-    if receiver_rect.centery > attacker_rect.centery:
-        y_overlap = receiver_rect.top - attacker_rect.bottom
-    else:
-       y_overlap = attacker_rect.top - receiver_rect.bottom
-   
-    return x_overlap, y_overlap
-
-def get_knockback_vector(attacker, attack_point):
-    """get the direction and magnitude of the knockback"""
-    
-    return scale_knockback(attacker.get_point_position_change(attack_point.name))
-
-def get_pull_point_deltas(attacker, attack_point):
-    """gets the knockback applied to the interaction point to move the lines in the
-    model"""
-    
-    knockback_vector = attacker.get_point_position_change(attack_point.name)
-    
-    x = knockback_vector[0]
-    y = knockback_vector[1]
-    hypotenuse = math.hypot(x,y)
-    
-    knockback = 3
-    
-    if hypotenuse == 0:
-        return 0, 0
-    else:
-        return knockback * x / hypotenuse, knockback * y / hypotenuse
-
-def scale_knockback(knockback_vector):
-    """binds the scale of a knockback vector to control stun animation"""
-    
-    x = knockback_vector[0]
-    y = knockback_vector[1]
-    hypotenuse = math.hypot(x,y)
-    
-    knockback = .2
-    
-    if hypotenuse == 0:
-        return 0, 0
-    else:
-        return 2 * knockback * x / hypotenuse, knockback * y / hypotenuse
-
-def get_interaction_points(receiver, colliding_lines):
-    attacker_line_index = 0
-    receiver_line_index = 1
-    
-    attack_point1 = colliding_lines[attacker_line_index].endPoint1
-    attack_point2 = colliding_lines[attacker_line_index].endPoint2
-    receiver_point1 = receiver.get_point(stick.PointNames.TORSO_TOP) #colliding_lines[receiver_line_index].endPoint1
-    receiver_point2 = receiver.get_point(stick.PointNames.TORSO_BOTTOM) #colliding_lines[receiver_line_index].endPoint2
-    
-    point_pairs = [(attack_point1, receiver_point1), \
-                   (attack_point1, receiver_point2), \
-                   (attack_point2, receiver_point1), \
-                   (attack_point2, receiver_point2)]
-    point_distances =  [mathfuncs.distance(attack_point1.pos, receiver_point1.pos), \
-                        mathfuncs.distance(attack_point1.pos, receiver_point2.pos), \
-                        mathfuncs.distance(attack_point2.pos, receiver_point1.pos), \
-                        mathfuncs.distance(attack_point2.pos, receiver_point2.pos)]
-    
-    shortest_distance = min(point_distances)
-    
-    return point_pairs[point_distances.index(shortest_distance)]
-
-def handle_blocked_attack_collision(attacker, receiver, attacker_hitboxes, receiver_hitboxes):
-    attacker.set_neutral_state()
-    receiver.set_neutral_state()
-    
-    apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes)
-    apply_collision_physics(receiver, attacker, receiver_hitboxes, attacker_hitboxes)
-    
-    clash_sound.play()
-
-def apply_collision_physics(attacker, receiver, attacker_hitboxes, receiver_hitboxes):
-    separation_vector = get_separation_vector(attacker,receiver)
-    receiver.model.shift(separation_vector)
-    colliding_line_names = test_attack_collision(attacker_hitboxes, receiver_hitboxes)
-    
-    colliding_lines = (attacker.model.lines[colliding_line_names[0]], \
-                       receiver.model.lines[colliding_line_names[1]])
-    
-    interaction_points = get_interaction_points(receiver, colliding_lines)
-    # print('attacker point: ' + interaction_points[0].name)
-    # print('receiver point: ' + interaction_points[1].name)
-    # print('receiver: ' + get_player(receiver))
-    # print('attacker: ' + get_player(attacker))
-    attack_point = interaction_points[0]
-    receiver.knockback_vector = get_knockback_vector(attacker, attack_point)
-    receiver.interaction_point = interaction_points[1]
-    receiver.interaction_vector = get_pull_point_deltas(attacker, attack_point)
-    receiver.pull_point(receiver.interaction_vector)
-    receiver.model.velocity = (0,0)
-    receiver.model.accelerate(receiver.knockback_vector[0], \
-                              receiver.knockback_vector[1])
-
-def get_direction_sign(attacker, receiver):
-    receiver_pos = receiver.model.position
-    attacker_pos = attacker.model.position
-    direction_sign = -1
-    
-    if receiver_pos[0] > attacker_pos[0]:
-        direction_sign = 1
-    
-    return direction_sign
-
-def test_attack_collision(attack_hitbox_dictionary, receiver_hitbox_dictionary):
-    colliding_line_names = None
-    
-    for attack_line_name, attack_hitboxes in attack_hitbox_dictionary.iteritems():
-        for receiver_line_name, receiver_hitboxes in receiver_hitbox_dictionary.iteritems():
-            for attack_hitbox in attack_hitboxes:
-                if attack_hitbox.collidelist(receiver_hitboxes) > -1:
-                    colliding_line_names = (attack_line_name, receiver_line_name)
-                    break
-            if colliding_line_names:
-                break
-        if colliding_line_names:
-            break
-    
-    return colliding_line_names
-
-def test_overlap(rect1, rect2):
-    overlap = True
-    rect1_pos = (rect1.left, rect1.top)
-    rect2_pos = (rect2.left, rect2.top)
-    
-    if ((rect1_pos[0] > (rect2_pos[0] + rect2.width)) or
-        ((rect1_pos[0] + rect1.width) < rect2_pos[0]) or
-        (rect1_pos[1] > (rect2_pos[1] + rect2.height)) or
-        ((rect1_pos[1] + rect1.height) < rect2_pos[1])):
-        overlap = False
-    
-    return overlap
-
-def get_hitbox_dictionary(lines):
-    hitboxes = {}
-    
-    for name, line in lines.iteritems():
-        if name == stick.LineNames.HEAD:
-            hitboxes[name] = [get_circle_hitbox(line)]
-        else:
-            hitboxes[name] = get_line_hitboxes(line)
-    
-    return hitboxes
-
-def get_hitboxes(lines):
-    hitbox_dictionary = get_hitbox_dictionary(lines)
-    hitbox_lines = []
-    
-    for hitbox_list in hitbox_dictionary.values():
-        hitbox_lines.extend(hitbox_list)
-    
-    return hitbox_lines
-
-def get_circle_hitbox(circle):
-    circle.set_length()
-    radius = int(circle.length / 2)
-    hitbox = pygame.Rect((circle.center()[0] - radius, \
-                          circle.center()[1] - radius), \
-                         (circle.length, circle.length))
-    
-    return hitbox
-
-def get_line_hitboxes(line):
-    line_rects = []
-    
-    line.set_length()
-    box_count = line.length / 7
-    
-    if box_count > 0:
-        for pos in get_hitbox_positions(box_count, line):
-            line_rects.append(pygame.Rect(pos, (14,14)))
-    else:
-        line_rects.append(pygame.Rect(line.endPoint1.pos, (14,14)))
-    
-    return line_rects
-
-def get_hitbox_positions(box_count, line):
-        """gets top left of each hitbox on a line.
-        
-        box_count: the number of hit boxes"""
-        hitbox_positions = []
-        
-        start_pos = line.endPoint1.pixel_pos()
-        end_pos = line.endPoint2.pixel_pos()
-        
-        x_delta = end_pos[0] - start_pos[0]
-        y_delta = end_pos[1] - start_pos[1]
-        
-        length = line.length
-        length_to_hit_box_center = 0
-        increment = line.length / box_count
-        
-        hitbox_positions.append((int(end_pos[0] - 7), int(end_pos[1] - 7)))
-        
-        length_to_hit_box_center += increment
-        x_pos = start_pos[0] + x_delta - ((x_delta / length) * length_to_hit_box_center)
-        y_pos = start_pos[1] + y_delta - ((y_delta / length) * length_to_hit_box_center)
-        box_center = (x_pos, y_pos)
-        
-        for i in range(int(box_count)):
-            hitbox_positions.append((int(box_center[0] - 7), int(box_center[1] - 7)))
-            
-            length_to_hit_box_center += increment
-            x_pos = start_pos[0] + x_delta - ((x_delta / length) * length_to_hit_box_center)
-            y_pos = start_pos[1] + y_delta - ((y_delta / length) * length_to_hit_box_center)
-            box_center = (x_pos, y_pos)
-        
-        hitbox_positions.append((int(start_pos[0] - 7), int(start_pos[1] - 7)))
-        
-        return hitbox_positions
-
-class AttackResolver():
-    """Applies the effect of collisions on each player involved in them."""
-    
-    def __init__(self):
-        self.resolved_player_states = {}
-        self.player_knockback_vectors = {}
-        self.player_hitboxes = {}
-        self.player_collisions = ()
-    
-    def reset():
-        """resets the dictionaries of an AttackResolver"""
-        self.resolved_player_states = {}
-        self.player_knockback_vectors = {}
-        self.player_hitboxes = {}
-        self.player_collisions = {}
-    
-    def resolve_collisions(self, players):
-        """applies the effects of collisions between a set of players"""
-        #get attacking players
-        #for each attacking player
-        #   get knockbcak vectors from player attack
-        #   get damage from player attaack
-        
-        #get collisions
-        #for each collision:
-        #   set post collision player states
-        pass
-    
-    def get_collisions(self, players):
-        #get attacking players
-        #for each attacking player
-        #   for each overlapping player       
-        #       create a collision
-        #       if an equivalent collision doesn't exist add it to the collisions dictionary
-        pass
-    
-    def get_post_collision_player_states(self):
-        #for each collision
-        #   if both players are attacking resolve attack attack collision
-        #   if one player is attacking resolve unblocked collision
-        pass
