@@ -75,9 +75,9 @@ class CommandCollections():
     ]
 
 class PlayerTypes:
-    HUMAN = 'Human'
-    BOT = 'Bot'
-    REMOTE = 'Remote'
+    HUMAN = 'HUMAN'
+    BOT = 'BOT'
+    REMOTE = 'REMOTE'
 
 class MatchStates:
     READY = 'ready'

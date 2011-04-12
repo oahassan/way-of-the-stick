@@ -34,12 +34,18 @@ class MatchSimulation():
         """Advance player animations according to the current pygame events"""
         
         for player_position, active_player in self.player_dictionary.iteritems():
-            if self.player_type_dictionary[player_position] == PlayerTypes.HUMAN:
+            player_type = self.player_type_dictionary[player_position]
+            
+            if player_type == PlayerTypes.HUMAN:
                 active_player.handle_events()
-            else:
+            elif player_type == PlayerTypes.BOT:
                 [active_player.handle_events(other_player) 
                 for other_player_position, other_player in self.player_dictionary.iteritems()
                 if not other_player_position == player_position]
+            else:
+                raise Exception(
+                    "Invalid Player Type: " + player_type
+                )
     
     def handle_interactions(self):
         """determine the effects of attacks on each player"""
