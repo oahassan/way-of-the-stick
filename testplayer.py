@@ -56,10 +56,10 @@ class TestPlayer(Player):
             return_action = factory.create_crouch(animation)
             
         elif action_type == PlayerStates.WALKING:
-            return_action = factory.create_walk(direction, animation)
+            return_action = factory.create_walk(animation)
             
         elif action_type == PlayerStates.RUNNING:
-            return_action = factory.create_run(direction, animation)
+            return_action = factory.create_run(animation)
         
         elif (action_type in InputActionTypes.ATTACKS or
         action_type in AttackTypes.ATTACK_TYPES):
