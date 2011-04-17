@@ -99,76 +99,6 @@ class Player():
         self.moveset = None
         self.point_name_to_point_damage = {} #Point name to PointDamage object
         self.previous_point_positions = {}
-        
-        self.play_sound_indicator = True
-        self.sound_channel = None
-        self.hit_sound_channel = None
-        
-        self.movement_sounds = {
-            PlayerStates.WALKING : [
-                pygame.mixer.Sound("sounds/step1-sound.ogg"),
-                pygame.mixer.Sound("sounds/step2-sound.ogg"),
-                pygame.mixer.Sound("sounds/step3-sound.ogg"),
-                pygame.mixer.Sound("sounds/step4-sound.ogg")
-            ],
-            PlayerStates.RUNNING : [
-                pygame.mixer.Sound("sounds/step1-sound.ogg"),
-                pygame.mixer.Sound("sounds/step2-sound.ogg"),
-                pygame.mixer.Sound("sounds/step3-sound.ogg"),
-                pygame.mixer.Sound("sounds/step4-sound.ogg")
-            ],
-            PlayerStates.JUMPING : [
-                pygame.mixer.Sound("sounds/jump-sound.ogg")
-            ]
-        }
-        self.set_sound_volumes(self.movement_sounds)
-        self.attack_sounds = {
-            InputActionTypes.WEAK_PUNCH : [
-                pygame.mixer.Sound("sounds/punch-sound.ogg")
-            ],
-            InputActionTypes.MEDIUM_PUNCH : [
-                pygame.mixer.Sound("sounds/punch-sound.ogg")
-            ],
-            InputActionTypes.STRONG_PUNCH : [
-                pygame.mixer.Sound("sounds/punch-sound.ogg")
-            ],
-            InputActionTypes.WEAK_KICK : [
-                pygame.mixer.Sound("sounds/kick-sound.ogg")
-            ],
-            InputActionTypes.MEDIUM_KICK : [
-                pygame.mixer.Sound("sounds/kick-sound.ogg")
-            ],
-            InputActionTypes.STRONG_KICK : [
-                pygame.mixer.Sound("sounds/kick-sound.ogg")
-            ]
-        }
-        self.set_sound_volumes(self.attack_sounds)
-        self.hit_sounds = {
-            InputActionTypes.WEAK_PUNCH : [
-                pygame.mixer.Sound("sounds/hit-sound.ogg")
-            ],
-            InputActionTypes.MEDIUM_PUNCH : [
-                pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
-            ],
-            InputActionTypes.STRONG_PUNCH : [
-                pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
-            ],
-            InputActionTypes.WEAK_KICK : [
-                pygame.mixer.Sound("sounds/hit-sound.ogg")
-            ],
-            InputActionTypes.MEDIUM_KICK : [
-                pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
-            ],
-            InputActionTypes.STRONG_KICK : [
-                pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
-            ]
-        }
-        self.set_sound_volumes(self.hit_sounds)
-    
-    def set_sound_volumes(self, sound_dict):
-        for sound_list in sound_dict.values():
-            for sound in sound_list:
-                sound.set_volume(settingsdata.get_sound_volume())
     
     def init_state(self):
         self.model.load_points()
@@ -188,10 +118,6 @@ class Player():
         
         self.set_outline_color()
         
-        if self.play_sound_indicator:
-            self.play_sound()
-            self.play_sound_indicator = False
-        
         if self.dash_timer < self.dash_timeout:
             self.dash_timer += gamestate.time_passed
         
@@ -200,46 +126,6 @@ class Player():
         
         if self.stun_timer < self.stun_timeout:
             self.stun_timer += gamestate.time_passed
-    
-    def play_sound(self):
-        
-        player_state = self.get_player_state()
-        
-        if not self.movement_sound_is_playing():
-            if player_state == PlayerStates.ATTACKING:
-                sound = choice(self.attack_sounds[self.get_attack_type()])
-                self.start_sound(sound)
-                
-            elif player_state in self.movement_sounds.keys():
-                sound = choice(self.movement_sounds[player_state])
-                self.start_sound(sound)
-    
-    def start_sound(self, sound):
-        if self.sound_channel == None:
-            self.sound_channel = sound.play()
-        else:
-            self.sound_channel.stop()
-            self.sound_channel = sound.play()
-    
-    def movement_sound_is_playing(self):
-        if (self.sound_channel == None or
-            self.sound_channel.get_busy() == False):
-            return False
-        else:
-            return True
-    
-    def hit_sound_is_playing(self):
-        if (self.hit_sound_channel == None or
-            self.hit_sound_channel.get_busy() == False):
-            return False
-        else:
-            return True
-    
-    def play_hit_sound(self):
-        if self.get_attack_type() in self.hit_sounds.keys():
-            self.hit_sound_channel = choice(self.hit_sounds[self.get_attack_type()]).play()
-        else:
-            self.hit_sound_channel =  pygame.mixer.Sound().play()
     
     def set_outline_color(self):
         if self.get_player_state() == PlayerStates.STUNNED:

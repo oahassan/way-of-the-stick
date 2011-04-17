@@ -1,7 +1,6 @@
 import math
 import pygame
 import mathfuncs
-import wotsuievents
 from enumerations import MatchStates, PlayerTypes, ClashResults, \
 PlayerPositions, PlayerStates, LineNames, PointNames
 
@@ -24,20 +23,20 @@ class MatchSimulation():
         self.current_attack_result = None
         self.collision_handler = CollisionHandler()
     
-    def step(self):
+    def step(self, player_keys_pressed):
         """update the state of the players in the simulation"""
         
-        self.handle_player_events(wotsuievents.keys_pressed)
+        self.handle_player_events(player_keys_pressed)
         self.handle_interactions()
         
-    def handle_player_events(self, pressed_keys):
+    def handle_player_events(self, player_keys_pressed):
         """Advance player animations according to the current pygame events"""
         
         for player_position, active_player in self.player_dictionary.iteritems():
             player_type = self.player_type_dictionary[player_position]
             
             if player_type == PlayerTypes.HUMAN:
-                active_player.handle_events()
+                active_player.handle_events(player_keys_pressed[player_position])
             elif player_type == PlayerTypes.BOT:
                 [active_player.handle_events(other_player) 
                 for other_player_position, other_player in self.player_dictionary.iteritems()

@@ -262,12 +262,11 @@ def handle_events():
     if ((exit_indicator == False) and 
     ((match_state == MatchStates.FIGHT) or (match_state == MatchStates.END))):
         
-        match_simulation.step()
+        match_simulation.step(build_player_keys_pressed())
         attack_result = match_simulation.current_attack_result
         
         if attack_result != None:
             create_collision_effects(attack_result)
-            handle_hit_sounds(attack_result)
         
         player_renderer_state.update(player_dictionary, 1)
         ground_surface = gamestate.stage.draw_ground()
@@ -303,23 +302,11 @@ def handle_events():
                 gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
                 exit()
 
-def handle_hit_sounds(attack_result):
-    global match_state
-    
-    if attack_result.clash_indicator:
-        clash_sound.play()
-    else:
-        attacker = attack_result.attacker
-        receiver = attack_result.receiver
-        
-        if receiver.get_player_state() == player.PlayerStates.STUNNED:
-            
-            if not attacker.hit_sound_is_playing():
-                attacker.play_hit_sound()
-                
-        else:
-            
-            attacker.play_hit_sound()
+def build_player_keys_pressed():
+    return {
+        PlayerPositions.PLAYER1 : wotsuievents.keys_pressed,
+        PlayerPositions.PLAYER2 : wotsuievents.keys_pressed
+    }
 
 def create_collision_effects(attack_result):
     global point_effects

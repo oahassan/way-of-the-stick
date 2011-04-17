@@ -18,8 +18,6 @@ class Action():
         self.left_animation = None
         self.animation = None
         self.direction = PlayerStates.FACING_RIGHT
-        self.last_frame_index = 0
-        self.current_sound_channel = None
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
@@ -202,64 +200,29 @@ class Transition(Action):
         #set friction so that stun friction doesn't remain
         player.model.friction = physics.FRICTION
 
-class GroundMovement():
-    def __init__(self):
-        self.point_on_ground = {
-                stick.PointNames.RIGHT_HAND : False,
-                stick.PointNames.LEFT_HAND : False,
-                stick.PointNames.RIGHT_FOOT : False,
-                stick.PointNames.LEFT_FOOT : False
-            }
-    
-    def play_sounds(self, player):
-        
-        for point_name, on_ground in self.point_on_ground.iteritems():
-            if player.model.points[point_name].pos[1] <= gamestate.stage.ground.position[1]:
-                if not on_ground:
-                    player.play_sound_indicator = True
-                    self.point_on_ground[point_name] = True
-            else:
-                if on_ground:
-                    self.point_on_ground[point_name] = False
-    
-    def init_points_on_ground(self, player):
-        for point_name in self.point_on_ground.keys():
-            if player.model.points[point_name].pos[1] <= gamestate.stage.ground.position[1]:
-                self.point_on_ground[point_name] = True
-            else:
-                self.point_on_ground[point_name] = False
-
-class Walk(Action, GroundMovement):
+class Walk(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.WALKING)
-        GroundMovement.__init__(self)
     
     def move_player(self, player):
         Action.move_player(self, player)
         player.move_to_ground()
-        
-        self.play_sounds(player)
     
     def set_player_state(self, player):
         Action.set_player_state(self, player, self.direction)
         player.dash_timer = 0
-        self.init_points_on_ground(player)
 
-class Run(Action, GroundMovement):
+class Run(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.RUNNING)
-        GroundMovement.__init__(self)
     
     def move_player(self, player):
         Action.move_player(self, player)
         player.move_to_ground()
-        
-        self.play_sounds(player)
     
     def set_player_state(self, player):
         Action.set_player_state(self, player, self.direction)
         self.dash_timer = player.dash_timeout
-        self.init_points_on_ground(player)
 
 class Crouch(Action):
     def __init__(self):
@@ -292,8 +255,6 @@ class Jump(Action):
         player.model.velocity = (player.model.velocity[0], player.jump_speed)
         
         player.drift_velocity_component = 0
-        
-        player.play_sound_indicator = True
         
         if ((player.jump_timer > player.short_jump_timeout) and
         (player.jump_timer < player.high_jump_timeout)):
@@ -419,8 +380,6 @@ class Stun(Action):
             [],
             point_to_lines
         )
-        
-        #import pdb;pdb.set_trace()
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
@@ -464,9 +423,6 @@ class Stun(Action):
     def set_player_state(self, player):
         
         self.set_animation(player)
-        if (player.action.current_sound_channel != None and
-        player.action.current_sound_channel.get_busy()):
-            player.action.current_sound_channel.stop()
         
         player.action = self
         player.model.animation_run_time = 0
@@ -500,40 +456,8 @@ class Attack(Action):
         self.range = (0,0)
         self.use_animation_physics = False
         self.acceleration = ACCELERATION
-        self.frame_sounds = []
-        self.frame_sound_index = 0
-        self.current_sound_channel = None
-        self.hit_sound = None
-        self.hit_sound_channel = None
         self.elevation = Elevations.GROUNDED
         self.overriden = False
-    
-    def set_frame_sounds(self):
-        """Defines sounds for each frame index of the attack"""
-        
-        self.frame_sounds.append(True)
-        
-        for frame_index in range(1, len(self.right_animation.frames) - 1):
-            if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
-                self.frame_sounds.append(
-                    self.test_delta_change(stick.PointNames.RIGHT_HAND, frame_index) or
-                    self.test_delta_change(stick.PointNames.LEFT_HAND, frame_index)
-                )
-            else:
-                self.frame_sounds.append(
-                    self.test_delta_change(stick.PointNames.RIGHT_FOOT, frame_index) or
-                    self.test_delta_change(stick.PointNames.LEFT_FOOT, frame_index)
-                )
-    
-    def test_delta_change(self, point_name, frame_index):
-        delta = self.right_animation.animation_deltas[frame_index][point_name]
-        last_delta = self.right_animation.animation_deltas[frame_index - 1][point_name]
-        
-        if (mathfuncs.sign(delta[0]) != mathfuncs.sign(last_delta[0])): #or
-        #mathfuncs.sign(delta[1]) != mathfuncs.sign(last_delta[1])):
-            return True
-        else:
-            return False
     
     def set_acceleration(self, action_type):
         """sets the animation acceleration for a given InputActionType.  Only
@@ -579,11 +503,6 @@ class Attack(Action):
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
         
-        if frame_index == self.frame_sound_index:
-            player.play_sound_indicator = True
-                
-            self.frame_sound_index += 1
-        
         #apply animation physics first to determine what the player's position 
         #should be.
         if self.use_animation_physics:
@@ -617,8 +536,6 @@ class Attack(Action):
         player.action = self
         player.model.animation_run_time = 0     
         player.current_attack = self
-        self.last_frame_index = 0
-        self.frame_sound_index = 0
         
         if player.direction == PlayerStates.FACING_LEFT:
             self.animation = self.right_animation
@@ -804,7 +721,6 @@ class ActionFactory():
         )
         
         return_attack.set_attack_data(model)
-        return_attack.set_frame_sounds()
         
         return return_attack
     

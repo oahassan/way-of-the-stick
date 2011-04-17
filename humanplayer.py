@@ -63,7 +63,7 @@ class HumanPlayer(player.Player):
     def set_action(self):
         """Set the current action based on what keys are pressed."""
         
-        action = self.get_current_action(wotsuievents.keys_pressed)
+        action = self.get_current_action()
         
         if (action != None and
         action.test_state_change(self)):
@@ -75,14 +75,14 @@ class HumanPlayer(player.Player):
     def set_motion(self):
         """Apply the current motion based on what keys are pressed."""
         
-        motions = self.get_current_motions(wotsuievents.keys_pressed)
+        motions = self.get_current_motions()
         
         if (motions != None):
             for motion in motions:
                 if motion != None:
                     motion.move_object(self.model)
     
-    def get_current_action(self, keys_pressed):
+    def get_current_action(self):
         """Determine the current action state based on the keys pressed. If the
         keys pressed don't map to a valid action then None is returned."""
         
@@ -97,7 +97,7 @@ class HumanPlayer(player.Player):
         
         return action
     
-    def get_current_motions(self, keys_pressed):
+    def get_current_motions(self):
         """Determine the motion to apply to a player if its in the air of 
         stunned."""
         
@@ -111,8 +111,8 @@ class HumanPlayer(player.Player):
         
         return motions
     
-    def handle_events(self):
-        self.controller.update(wotsuievents.keys_pressed)
+    def handle_events(self, keys_pressed):
+        self.controller.update(keys_pressed)
         
         if self.handle_input_events:
             self.set_action()
@@ -444,7 +444,6 @@ class ControllerFactory():
             )
             
             attack_action.set_attack_data(input_player.model)
-            attack_action.set_frame_sounds()
             
             tap_commands = []
             
