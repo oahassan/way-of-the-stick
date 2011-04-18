@@ -80,9 +80,11 @@ class PlayerTypes:
     REMOTE = 'REMOTE'
 
 class MatchStates:
-    READY = 'ready'
-    FIGHT = 'fight'
-    END = 'end'
+    READY = 1
+    FIGHT = 2
+    PLAYER1_WINS = 3
+    PLAYER2_WINS = 4
+    NO_CONTEST = 5
 
 class ClashResults:
     WIN = 'win'

@@ -99,15 +99,16 @@ class Player():
         self.moveset = None
         self.point_name_to_point_damage = {} #Point name to PointDamage object
         self.previous_point_positions = {}
+        self.handle_input_events = True
     
     def init_state(self):
         self.model.load_points()
         self.model.load_lines()
         self.init_point_damage_dictionary()
     
-    def handle_events(self):
+    def handle_events(self, time_passed):
         
-        self.model.time_passed = gamestate.time_passed
+        self.model.time_passed = time_passed
         
         self.set_previous_point_positions()
         

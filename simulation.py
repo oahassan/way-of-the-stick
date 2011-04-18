@@ -1,45 +1,235 @@
 import math
 import pygame
 import mathfuncs
+from threading import Lock
+from wotsprot.rencode import serializable
 from enumerations import MatchStates, PlayerTypes, ClashResults, \
 PlayerPositions, PlayerStates, LineNames, PointNames
+
+class PlayerState():
+    def __init__(
+        self,
+        animation_run_time,
+        keys_pressed,
+        reference_position,
+        health
+    ):
+        self.animation_run_time = animation_run_time
+        self.keys_pressed = keys_pressed
+        self.reference_position = reference_position
+        self.health = health
+    
+    def _pack(self):
+        return (self.animation_run_time, self.keys_pressed, 
+        self.reference_position, self.health)
+
+class SimulationState():
+    def __init__(
+        self,
+        player_states,
+        sequence
+    ):
+        self.player_states = player_states
+        self.sequence = sequence
+    
+    def _pack(self):
+        return (self.player_states, self.sequence)
+
+class SimulationRenderingInfo():
+    def __init__(
+        self,
+        match_state,
+        match_time,
+        player_rendering_info_dictionary,
+        attack_result_rendering_info
+    ):
+        self.match_state = match_state
+        self.match_time = match_time
+        self.player_rendering_info_dictionary = player_rendering_info_dictionary
+        self.attack_result_rendering_info = attack_result_rendering_info
+    
+    def _pack(self):
+        return (self.match_state, self.match_time,
+        self.player_rendering_info_dictionary, self.attack_result_rendering_info)
+
+class AttackResultRenderingInfo():
+    def __init__(
+        self,
+        attack_point,
+        knockback_vector,
+        attack_damage
+    ):
+        self.attack_point = attack_point
+        self.knockback_vector = knockback_vector
+        self.attack_damage = attack_damage
+    
+    def _pack(self):
+        return self.attack_point, self.knockback_vector, self.attack_damage
+
+class PlayerRenderingInfo():
+    def __init__(
+        self,
+        player_model,
+        player_state,
+        player_outline_color,
+        player_health_color,
+        health_percentage
+    ):
+        self.player_model = player_model
+        self.player_state = player_state
+        self.player_outline_color = player_outline_color
+        self.player_health_color = player_health_color
+        self.health_percentage = health_percentage
+    
+    def _pack(self):
+        return (self.player_point_positions, self.player_state,
+        self.player_outline_color, self.player_health_color, self.health_percentage)
+
+def create_player_state_dictionary(player_dictionary, keys_pressed):
+    """creates a dictionary mapping player positions to playerstates"""
+    
+    return_dictionary = {}
+    
+    for player_position, player in player_dictionary:
+        return_dictionary[player_position] = PlayerState(
+            player.model.animation_run_time, 
+            keys_pressed, 
+            player.model.reference_position,
+            player.health_meter
+        )
+    
+    return return_dictionary 
 
 class MatchSimulation():
     def __init__(
         self,
         timestep=20, 
         player_type_dictionary={}, 
-        player_dictionary={},
-        frame_rate=60
+        player_dictionary={}
     ):
         self.timestep = timestep
+        self.accumulator = 0
         self.player_type_dictionary = player_type_dictionary
         self.player_dictionary = player_dictionary
-        self.frame_rate = frame_rate
         self.clock = pygame.time.Clock()
-        self.start_time = None
-        self.end_time = None
         self.attack_resolver = AttackResolver()
         self.current_attack_result = None
         self.collision_handler = CollisionHandler()
+        self.player_lock = Lock()
+        self.history = []
+        self.match_time = 0
+        self.match_state = MatchStates.READY
     
-    def step(self, player_keys_pressed):
+    def step(self, player_keys_pressed, time_passed):
         """update the state of the players in the simulation"""
         
-        self.handle_player_events(player_keys_pressed)
-        self.handle_interactions()
+        self.accumulator += time_passed
         
-    def handle_player_events(self, player_keys_pressed):
+        while self.accumulator > self.timestep:
+            
+            match_state = self.get_match_state()
+            self.match_state = match_state
+            self.handle_match_state(match_state)
+            self.handle_player_events(player_keys_pressed, self.timestep)
+            self.handle_interactions()
+            
+            #TODO - self.history.append(self.get_simulation_state())
+            self.accumulator -= self.timestep
+            self.match_time += self.timestep
+    
+    def handle_match_state(self, match_state):
+        
+        if (self.match_state == MatchStates.READY or 
+        self.match_state == MatchStates.NO_CONTEST):
+            for player in self.player_dictionary.values():
+                player.handle_input_events = False
+            
+        elif self.match_state == MatchStates.FIGHT:
+            for player in self.player_dictionary.values():
+                player.handle_input_events = True
+            
+        elif self.match_state == MatchStates.PLAYER1_WINS:
+            player2 = self.player_dictionary[PlayerPositions.PLAYER2]
+            player2.handle_input_events == False
+            player2.set_stun_timeout(10000)
+            
+        elif self.match_state == MatchStates.PLAYER2_WINS:
+            player1 = self.player_dictionary[PlayerPositions.PLAYER1]
+            player1.handle_input_events == False
+            player1.set_stun_timeout(10000)
+            
+    def get_rendering_info(self):
+        return SimulationRenderingInfo(
+            self.match_state,
+            self.match_time,
+            self.get_player_rendering_info_dictionary(),
+            self.get_attack_result_rendering_info()
+        )
+    
+    def get_match_state(self):
+        match_state = MatchStates.FIGHT
+        
+        if self.match_time < 3000:
+            return MatchStates.READY
+        elif self.match_time < 4000:
+            return MatchStates.FIGHT
+        else:
+            #just check if the game is over
+            if (self.player_dictionary[PlayerPositions.PLAYER1].health_meter == 0 and
+            self.player_dictionary[PlayerPositions.PLAYER2].health_meter == 0):
+                match_state = MatchStates.NO_CONTEST
+                    
+            elif self.player_dictionary[PlayerPositions.PLAYER1].health_meter == 0:
+                match_state = MatchStates.PLAYER2_WINS
+                
+            elif self.player_dictionary[PlayerPositions.PLAYER2].health_meter == 0:
+                match_state = MatchStates.PLAYER1_WINS
+            else:
+                match_state = MatchStates.FIGHT
+        
+        return match_state
+    
+    def get_player_rendering_info_dictionary(self):
+        return_rendering_dictionary = {}
+        
+        for player_position, player in self.player_dictionary.iteritems():
+            return_rendering_dictionary[player_position] = PlayerRenderingInfo(
+                player.model,
+                player.get_player_state(),
+                player.outline_color,
+                player.health_color,
+                player.health_meter / player.health_max
+            )
+        
+        return return_rendering_dictionary
+    
+    def get_attack_result_rendering_info(self):
+        if self.current_attack_result != None:
+            attack_point = self.current_attack_result.attack_point
+            
+            return AttackResultRenderingInfo(
+                attack_point,
+                self.current_attack_result.knockback_vector,
+                self.current_attack_result.attacker.get_point_damage(attack_point.name)
+            )
+        else:
+            return None
+      
+    def handle_player_events(self, player_keys_pressed, timestep):
         """Advance player animations according to the current pygame events"""
         
         for player_position, active_player in self.player_dictionary.iteritems():
             player_type = self.player_type_dictionary[player_position]
             
             if player_type == PlayerTypes.HUMAN:
-                active_player.handle_events(player_keys_pressed[player_position])
+                active_player.handle_events(
+                    player_keys_pressed[player_position],
+                    timestep
+                )
             elif player_type == PlayerTypes.BOT:
-                [active_player.handle_events(other_player) 
-                for other_player_position, other_player in self.player_dictionary.iteritems()
+                [active_player.handle_events(other_player, timestep) 
+                for other_player_position, other_player 
+                in self.player_dictionary.iteritems()
                 if not other_player_position == player_position]
             else:
                 raise Exception(
@@ -70,12 +260,21 @@ class MatchSimulation():
         player1 = self.player_dictionary[PlayerPositions.PLAYER1]
         player2 = self.player_dictionary[PlayerPositions.PLAYER2]
         
-        if self.test_overlap(player1.get_enclosing_rect(), player2.get_enclosing_rect()):
+        if self.test_overlap(
+            player1.get_enclosing_rect(), 
+            player2.get_enclosing_rect()
+        ):
             if player1.get_player_state() == PlayerStates.ATTACKING:
-                attack_result = self.attack_resolver.get_attack_result(player1, player2)
+                attack_result = self.attack_resolver.get_attack_result(
+                    player1, 
+                    player2
+                )
                 
             elif player2.get_player_state() == PlayerStates.ATTACKING:
-                attack_result = self.attack_resolver.get_attack_result(player2, player1)
+                attack_result = self.attack_resolver.get_attack_result(
+                    player2, 
+                    player1
+                )
                 
             else:
                 pass #no attack result
@@ -113,7 +312,10 @@ class CollisionHandler():
             
             stun_knockback_vector = receiver.knockback_vector
             
-            if self.attacker_is_recoiling(attack_knockback_vector, stun_knockback_vector):
+            if self.attacker_is_recoiling(
+                attack_knockback_vector, 
+                stun_knockback_vector
+            ):
                 pass
             else:
                 self.apply_collision_physics(attack_result)
@@ -298,7 +500,9 @@ class AttackResolver():
                     )
             
             else:
-                attacker_hitboxes = self.hitbox_builder.get_hitbox_dictionary(attacker.model.lines)
+                attacker_hitboxes = self.hitbox_builder.get_hitbox_dictionary(
+                    attacker.model.lines
+                )
                 colliding_line_names = self.test_attack_collision(
                     receiver_attack_hitboxes,
                     attacker_hitboxes
@@ -334,7 +538,9 @@ class AttackResolver():
                         )
                         
         else:
-            receiver_hitboxes = self.hitbox_builder.get_hitbox_dictionary(receiver.model.lines)
+            receiver_hitboxes = self.hitbox_builder.get_hitbox_dictionary(
+                receiver.model.lines
+            )
             colliding_line_names = self.test_attack_collision(
                 attacker_attack_hitboxes,
                 receiver_hitboxes
@@ -523,18 +729,30 @@ class HitboxBuilder():
             hitbox_positions.append((int(end_pos[0] - 7), int(end_pos[1] - 7)))
             
             length_to_hit_box_center += increment
-            x_pos = start_pos[0] + x_delta - ((x_delta / length) * length_to_hit_box_center)
-            y_pos = start_pos[1] + y_delta - ((y_delta / length) * length_to_hit_box_center)
+            x_pos = start_pos[0] + x_delta - (
+                (x_delta / length) * length_to_hit_box_center
+            )
+            y_pos = start_pos[1] + y_delta - (
+                (y_delta / length) * length_to_hit_box_center
+            )
             box_center = (x_pos, y_pos)
             
             for i in range(int(box_count)):
-                hitbox_positions.append((int(box_center[0] - 7), int(box_center[1] - 7)))
+                hitbox_positions.append(
+                    (int(box_center[0] - 7), int(box_center[1] - 7))
+                )
                 
                 length_to_hit_box_center += increment
-                x_pos = start_pos[0] + x_delta - ((x_delta / length) * length_to_hit_box_center)
-                y_pos = start_pos[1] + y_delta - ((y_delta / length) * length_to_hit_box_center)
+                x_pos = start_pos[0] + x_delta - (
+                    (x_delta / length) * length_to_hit_box_center
+                )
+                y_pos = start_pos[1] + y_delta - (
+                    (y_delta / length) * length_to_hit_box_center
+                )
                 box_center = (x_pos, y_pos)
             
             hitbox_positions.append((int(start_pos[0] - 7), int(start_pos[1] - 7)))
             
             return hitbox_positions
+
+serializable.register(PlayerState)

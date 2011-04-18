@@ -1,6 +1,7 @@
 import pygame
 import gamestate
 import mathfuncs
+from wotsprot.rencode import serializable
 from enumerations import PlayerPositions, PointNames, LineNames
 from physics import Model, Orientations
 
@@ -221,6 +222,18 @@ class SurfaceRenderer():
             )
         )
 
+class PlayerColors():
+    def __init__(
+        self,
+        outline_color,
+        health_color
+    ):
+        self.outline_color = outline_color
+        self.health_color = health_color
+    
+    def _pack(self):
+        return self.outline_color, self.health_color
+
 class PlayerRendererState():
     def __init__(
         self,
@@ -241,36 +254,34 @@ class PlayerRendererState():
             [(player_position, None) for player_position in player_positions]
         )
     
-    def update(self, player_dictionary, geometric_smoothing_weight):
+    def update(self, player_rendering_info_dictionary, geometric_smoothing_weight):
         """updates the viewport camera and the rendering models
         
-        player_dictionary: a dictionary of players keyed by player position
+        player_rendering_info_dictionary: a data to render each player player position
         geometric_smoothing_weight: the weight to use in averaging the 
         rendering models and given player models to avoid jerky animation"""
         
         constraining_rects = [
-            pygame.Rect(player.model.get_enclosing_rect())
-            for player in player_dictionary.values()
+            pygame.Rect(rendering_info.player_model.get_enclosing_rect())
+            for rendering_info in player_rendering_info_dictionary.values()
         ]
         
         constraining_rect = constraining_rects[0].unionall(constraining_rects)
         
         self.viewport_camera.update(constraining_rect)
         
-        for player_position, player in player_dictionary.iteritems():
-            player = player_dictionary[player_position]
-            
+        for player_position, rendering_info in player_rendering_info_dictionary.iteritems():
             self.set_player_point_positions(
                 player_position,
-                player.model
+                rendering_info.player_model
             )
             
             self.player_outline_color_dictionary[player_position] = \
-                player.outline_color
+                rendering_info.player_outline_color
             self.player_health_color_dictionary[player_position] = \
-                player.health_color
+                rendering_info.player_health_color
             self.player_health_percentage_dictionary[player_position] = \
-                float(player.health_meter) / player.health_max
+                rendering_info.health_percentage
     
     def set_player_point_positions(
         self,
@@ -551,3 +562,5 @@ def build_player_health_percentage_dictionary(player_positions):
         player_health_percentage_dictionary[player_position] = 1
     
     return player_health_percentage_dictionary
+
+serializable.register(PlayerColors)

@@ -134,9 +134,11 @@ class Bot(Player):
         
         return frame_rect
     
-    def handle_events(self, enemy):
-        self.set_action(enemy)
-        Player.handle_events(self)
+    def handle_events(self, enemy, time_passed):
+        if self.handle_input_events:
+            self.set_action(enemy)
+        
+        Player.handle_events(self, time_passed)
     
     def get_direction(self, enemy):
         direction = PlayerStates.FACING_LEFT

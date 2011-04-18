@@ -14,21 +14,7 @@ import settingsdata
 import versusrendering
 from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
-from enumerations import PlayerPositions
-
-class PlayerTypes:
-    HUMAN = 'HUMAN'
-    BOT = 'BOT'
-
-class MatchStates:
-    READY = 'ready'
-    FIGHT = 'fight'
-    END = 'end'
-
-class ClashResults:
-    WIN = 'win'
-    LOSS = 'loss'
-    TIE = 'tie'
+from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults
 
 gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
 
@@ -195,14 +181,7 @@ def exit():
 def handle_events():
     global exit_button
     global exit_indicator
-    global ready_label
-    global fight_label
-    global player1_wins_label
-    global player2_wins_label
     global match_state
-    global versus_mode_start_timer
-    global fight_start_timer
-    global fight_end_timer
     global fps_label
     global comamnd_label
     global effects
@@ -212,66 +191,39 @@ def handle_events():
     global match_simulation
     
     exit_button.draw(gamestate.screen)
-    gamestate.new_dirty_rects.append(pygame.Rect(exit_button.position, (exit_button.width,exit_button.height)))
+    gamestate.new_dirty_rects.append(
+        pygame.Rect(exit_button.position, 
+        (exit_button.width,exit_button.height))
+    )
     
     fps_label.set_text(str(gamestate.clock.get_fps()))
     fps_label.draw(gamestate.screen)
-    gamestate.new_dirty_rects.append(pygame.Rect(fps_label.position,(fps_label.width,fps_label.height)))
+    gamestate.new_dirty_rects.append(
+        pygame.Rect(fps_label.position,(fps_label.width,fps_label.height))
+    )
     
-    if versus_mode_start_timer < 3000:
-        ready_label.draw(gamestate.screen)
-        gamestate.new_dirty_rects.append(pygame.Rect(ready_label.position,(ready_label.width,ready_label.height)))
+    if exit_indicator == False:
+        match_simulation.step(build_player_keys_pressed(), gamestate.time_passed)
+        simulation_rendering_info = match_simulation.get_rendering_info()
         
-        versus_mode_start_timer += gamestate.clock.get_time()
-    else:
-        fight_start_timer += gamestate.clock.get_time()
-        match_state = MatchStates.FIGHT
+        if simulation_rendering_info.attack_result_rendering_info != None:
+            create_collision_effects(
+                simulation_rendering_info.attack_result_rendering_info
+            )
         
-        if fight_start_timer < 1000:
-            fight_label.draw(gamestate.screen)
-            gamestate.new_dirty_rects.append(pygame.Rect(fight_label.position,(fight_label.width,fight_label.height)))
-    
-    if player_dictionary[PlayerPositions.PLAYER2].health_meter == 0:
-        match_state = MatchStates.END
-        player_dictionary[PlayerPositions.PLAYER2].set_stun_timeout(9000)
-        
-        if fight_end_timer < 8000:
-            fight_end_timer += gamestate.clock.get_time()
-            player1_wins_label.draw(gamestate.screen)
-            gamestate.new_dirty_rects.append(pygame.Rect(player1_wins_label.position, \
-                                             (player1_wins_label.width, \
-                                              player1_wins_label.height)))
-            
-        else:
-            gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
-            exit()
-    elif player_dictionary[PlayerPositions.PLAYER1].health_meter == 0:
-        match_state = MatchStates.END
-        player_dictionary[PlayerPositions.PLAYER1].set_stun_timeout(9000)
-        
-        if fight_end_timer < 8000:
-            fight_end_timer += gamestate.clock.get_time()
-            player2_wins_label.draw(gamestate.screen)
-            gamestate.new_dirty_rects.append(pygame.Rect(player2_wins_label.position, \
-                                             (player2_wins_label.width, \
-                                              player2_wins_label.height)))
-        else:
-            gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
-            exit()
-    
-    if ((exit_indicator == False) and 
-    ((match_state == MatchStates.FIGHT) or (match_state == MatchStates.END))):
-        
-        match_simulation.step(build_player_keys_pressed())
-        attack_result = match_simulation.current_attack_result
-        
-        if attack_result != None:
-            create_collision_effects(attack_result)
-        
-        player_renderer_state.update(player_dictionary, 1)
+        player_renderer_state.update(
+            simulation_rendering_info.player_rendering_info_dictionary, 
+            1
+        )
         ground_surface = gamestate.stage.draw_ground()
-        surface_renderer.draw_surface_to_screen((0,gamestate.stage.floor_height - 20), ground_surface)
-        versusrendering.draw_player_renderer_state(player_renderer_state, gamestate.screen)
+        surface_renderer.draw_surface_to_screen(
+            (0,gamestate.stage.floor_height - 20), 
+            ground_surface
+        )
+        versusrendering.draw_player_renderer_state(
+            player_renderer_state, 
+            gamestate.screen
+        )
         
         for effect in point_effects.values():
             effect.update(gamestate.time_passed)
@@ -286,7 +238,12 @@ def handle_events():
         
         for point_id in dead_effects:
             del point_effects[point_id]
-        
+    
+    handle_match_state(
+        simulation_rendering_info.match_state, 
+        simulation_rendering_info.match_time
+    )
+    
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
             exit_indicator = True
@@ -302,21 +259,68 @@ def handle_events():
                 gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
                 exit()
 
+def handle_match_state(match_state, match_time):
+    global ready_label
+    global fight_label
+    global player1_wins_label
+    global player2_wins_label
+    global versus_mode_start_timer
+    global fight_start_timer
+    global fight_end_timer
+    
+    if match_state == MatchStates.READY:
+        ready_label.draw(gamestate.screen)
+        gamestate.new_dirty_rects.append(
+            pygame.Rect(ready_label.position,(ready_label.width,ready_label.height))
+        )
+        
+    elif match_state == MatchStates.FIGHT and match_time < 4000:
+        fight_start_timer += gamestate.clock.get_time()
+        match_state = MatchStates.FIGHT
+        gamestate.new_dirty_rects.append(
+            pygame.Rect(fight_label.position,(fight_label.width,fight_label.height))
+        )
+    
+    elif match_state == MatchStates.PLAYER1_WINS:
+        
+        if fight_end_timer < 8000:
+            fight_end_timer += gamestate.clock.get_time()
+            player1_wins_label.draw(gamestate.screen)
+            
+            gamestate.new_dirty_rects.append(
+                pygame.Rect(
+                    player1_wins_label.position, 
+                    (player1_wins_label.width, player1_wins_label.height)
+                )
+            )
+            
+        else:
+            gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
+            exit()
+    elif match_state == MatchStates.PLAYER2_WINS:
+        
+        if fight_end_timer < 8000:
+            fight_end_timer += gamestate.clock.get_time()
+            player2_wins_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(pygame.Rect(player2_wins_label.position, \
+                                             (player2_wins_label.width, \
+                                              player2_wins_label.height)))
+        else:
+            gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
+            exit()
+
 def build_player_keys_pressed():
     return {
         PlayerPositions.PLAYER1 : wotsuievents.keys_pressed,
         PlayerPositions.PLAYER2 : wotsuievents.keys_pressed
     }
 
-def create_collision_effects(attack_result):
+def create_collision_effects(attack_result_rendering_info):
     global point_effects
     
-    attacker = attack_result.attacker
-    receiver = attack_result.receiver
-    attack_point = attack_result.attack_point
-    attack_knockback_vector = attack_result.knockback_vector
+    attack_knockback_vector = attack_result_rendering_info.knockback_vector
     
-    damage = attacker.get_point_damage(attack_point.name)
+    damage = attack_result_rendering_info.attack_damage
     effect_height = max(50, damage)
     effect_width = max(50, .2 * damage)
     fade_rate = .2
@@ -343,9 +347,10 @@ def create_collision_effects(attack_result):
             )
         )
     
+    attack_point = attack_result_rendering_info.attack_point
     if not attack_point.id in point_effects:
         point_effects[attack_point.id] = Effect(
-            attack_point.pos,
+            attack_result_rendering_info.attack_point.pos,
             angle_in_degrees,
             effect_width,
             effect_height,

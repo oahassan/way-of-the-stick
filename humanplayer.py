@@ -20,7 +20,6 @@ class HumanPlayer(player.Player):
         player.Player.__init__(self, position)
         self.player_type = player.PlayerTypes.HUMAN
         self.controller = None
-        self.handle_input_events = True
     
     def load_moveset(self, moveset):
         controller_factory = ControllerFactory()
@@ -111,14 +110,14 @@ class HumanPlayer(player.Player):
         
         return motions
     
-    def handle_events(self, keys_pressed):
+    def handle_events(self, keys_pressed, time_passed):
         self.controller.update(keys_pressed)
         
         if self.handle_input_events:
             self.set_action()
             self.set_motion()
         
-        player.Player.handle_events(self)
+        player.Player.handle_events(self, time_passed)
 
 class ControllerFactory():
     

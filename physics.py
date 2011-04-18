@@ -133,23 +133,33 @@ class Model(Object):
         Object.__init__(self, position)
         self.points = {}
         self.lines = {}
+        self.init_stick_data()
         self.animation_run_time = 0
         self.time_passed = 0
         self.orientation = Orientations.FACING_RIGHT
     
+    def _pack(self):
+        return (self.position,)
+    
     def center(self):
         if self.orientation == Orientations.FACING_RIGHT:
-            return (self.position[0] + (self.width / 2), self.position[1] + (self.height / 2))
+            return (
+                self.position[0] + (self.width / 2), 
+                self.position[1] + (self.height / 2)
+            )
         else:
-            return (self.position[0] - (self.width / 2), self.position[1] + (self.height / 2))
+            return (
+                self.position[0] - (self.width / 2), 
+                self.position[1] + (self.height / 2)
+            )
     
     def init_stick_data(self):
         self.load_points()
         self.load_lines()
     
     def load_points(self):
-        """sets the position of each point in a stick to that from a passed in dictionary
-        of named point positions"""
+        """sets the position of each point in a stick to that from a passed in 
+        dictionary of named point positions"""
         
         for point_name in stick.PointNames.POINT_NAMES:
             self.points[point_name] = stick.Point((0,0))
@@ -158,26 +168,46 @@ class Model(Object):
     
     def load_lines(self):
         """creates the lines of the body of the model"""
-        self.lines[stick.LineNames.HEAD] = stick.Circle(self.points[stick.PointNames.HEAD_TOP],
-                                                        self.points[stick.PointNames.TORSO_TOP])
-        self.lines[stick.LineNames.TORSO] = stick.Line(self.points[stick.PointNames.TORSO_TOP],
-                                                       self.points[stick.PointNames.TORSO_BOTTOM])
-        self.lines[stick.LineNames.LEFT_UPPER_ARM] = stick.Line(self.points[stick.PointNames.TORSO_TOP],
-                                                                self.points[stick.PointNames.LEFT_ELBOW])
-        self.lines[stick.LineNames.LEFT_FOREARM] = stick.Line(self.points[stick.PointNames.LEFT_ELBOW],
-                                                              self.points[stick.PointNames.LEFT_HAND])
-        self.lines[stick.LineNames.RIGHT_UPPER_ARM] = stick.Line(self.points[stick.PointNames.TORSO_TOP],
-                                                                 self.points[stick.PointNames.RIGHT_ELBOW])
-        self.lines[stick.LineNames.RIGHT_FOREARM] = stick.Line(self.points[stick.PointNames.RIGHT_ELBOW],
-                                                               self.points[stick.PointNames.RIGHT_HAND])
-        self.lines[stick.LineNames.LEFT_UPPER_LEG] = stick.Line(self.points[stick.PointNames.TORSO_BOTTOM],
-                                                                self.points[stick.PointNames.LEFT_KNEE])
-        self.lines[stick.LineNames.LEFT_LOWER_LEG] = stick.Line(self.points[stick.PointNames.LEFT_KNEE],
-                                                                self.points[stick.PointNames.LEFT_FOOT])
-        self.lines[stick.LineNames.RIGHT_UPPER_LEG] = stick.Line(self.points[stick.PointNames.TORSO_BOTTOM],
-                                                                self.points[stick.PointNames.RIGHT_KNEE])
-        self.lines[stick.LineNames.RIGHT_LOWER_LEG] = stick.Line(self.points[stick.PointNames.RIGHT_KNEE],
-                                                                 self.points[stick.PointNames.RIGHT_FOOT])
+        self.lines[stick.LineNames.HEAD] = stick.Circle(
+            self.points[stick.PointNames.HEAD_TOP],
+            self.points[stick.PointNames.TORSO_TOP]
+        )
+        self.lines[stick.LineNames.TORSO] = stick.Line(
+            self.points[stick.PointNames.TORSO_TOP],
+            self.points[stick.PointNames.TORSO_BOTTOM]
+        )
+        self.lines[stick.LineNames.LEFT_UPPER_ARM] = stick.Line(
+            self.points[stick.PointNames.TORSO_TOP],
+            self.points[stick.PointNames.LEFT_ELBOW]
+        )
+        self.lines[stick.LineNames.LEFT_FOREARM] = stick.Line(
+            self.points[stick.PointNames.LEFT_ELBOW],
+            self.points[stick.PointNames.LEFT_HAND]
+        )
+        self.lines[stick.LineNames.RIGHT_UPPER_ARM] = stick.Line(
+            self.points[stick.PointNames.TORSO_TOP],
+            self.points[stick.PointNames.RIGHT_ELBOW]
+        )
+        self.lines[stick.LineNames.RIGHT_FOREARM] = stick.Line(
+            self.points[stick.PointNames.RIGHT_ELBOW],
+            self.points[stick.PointNames.RIGHT_HAND]
+        )
+        self.lines[stick.LineNames.LEFT_UPPER_LEG] = stick.Line(
+            self.points[stick.PointNames.TORSO_BOTTOM],
+            self.points[stick.PointNames.LEFT_KNEE]
+        )
+        self.lines[stick.LineNames.LEFT_LOWER_LEG] = stick.Line(
+            self.points[stick.PointNames.LEFT_KNEE],
+            self.points[stick.PointNames.LEFT_FOOT]
+        )
+        self.lines[stick.LineNames.RIGHT_UPPER_LEG] = stick.Line(
+            self.points[stick.PointNames.TORSO_BOTTOM],
+            self.points[stick.PointNames.RIGHT_KNEE]
+        )
+        self.lines[stick.LineNames.RIGHT_LOWER_LEG] = stick.Line(
+            self.points[stick.PointNames.RIGHT_KNEE],
+            self.points[stick.PointNames.RIGHT_FOOT]
+        )
         
         for line in self.lines.values():
             line.thickness = 7
