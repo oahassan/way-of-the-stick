@@ -27,7 +27,7 @@ class DrawingModes():
 
 stage = None
 
-VERSUSMODE_FRAMERATE = 60
+VERSUSMODE_FRAMERATE = 100
 NORMAL_FRAMERATE = 30
 
 frame_rate = NORMAL_FRAMERATE
@@ -44,6 +44,8 @@ old_dirty_rects = []
 new_dirty_rects = []
 
 hosting = False
+
+processes = []
 
 def clear_old_dirty_rects():
     global old_dirty_rects

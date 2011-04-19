@@ -1,3 +1,4 @@
+import multiprocessing
 import pygame
 from wotsfx import Effect
 import wotsuievents
@@ -14,7 +15,8 @@ import settingsdata
 import versusrendering
 from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
-from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults
+from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults, \
+PlayerStates
 
 gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
 
@@ -32,6 +34,7 @@ ready_label = None
 player1_wins_label = None
 player2_wins_label = None
 match_state = None
+match_time = None
 exit_button = button.ExitButton()
 exit_indicator = False
 versus_mode_start_time = None
@@ -46,6 +49,8 @@ point_effects = {}
 player_renderer_state = None
 surface_renderer = None
 match_simulation = None
+simulation_process = None
+simulation_connection = None
 
 stun_channel = None
 clash_sound = pygame.mixer.Sound("./sounds/clash-sound.ogg")
@@ -53,6 +58,7 @@ clash_sound.set_volume(settingsdata.get_sound_volume())
 
 def init():
     global initialized
+    global exit_indicator
     global player_dictionary
     global player_type_dictionary
     global ready_label
@@ -60,6 +66,7 @@ def init():
     global player1_wins_label
     global player2_wins_label
     global match_state
+    global match_time
     global fight_end_timer
     global versus_mode_start_timer
     global fight_start_timer
@@ -69,6 +76,7 @@ def init():
     global player_renderer_state
     global surface_renderer
     global match_simulation
+    global simulation_connection
     
     point_effects = {}
     fps_label = button.Label((20,20), str(gamestate.clock.get_fps()),(0,0,255),30)
@@ -76,6 +84,7 @@ def init():
     #command_label.key_combination_label.set_position((20,50))
     
     match_state = MatchStates.READY
+    match_time = 0
     fight_end_timer = 0
     versus_mode_start_timer = 0
     fight_start_timer = 0
@@ -108,7 +117,10 @@ def init():
         else:
             raise Exception("No player type set for player position: " + str(player_position))
     
+    simulation_connection, input_connection = multiprocessing.Pipe()
+    
     match_simulation = MatchSimulation(
+        input_connection,
         player_dictionary=player_dictionary,
         player_type_dictionary=player_type_dictionary
     )
@@ -120,7 +132,8 @@ def init():
     player2 = player_dictionary[PlayerPositions.PLAYER2]
     player2.init_state()
     player2.model.move_model((1100, 967))
-    player2.color = (0,255,0)
+    player2.color = (100,100,100)
+    player2.health_color = (200,200,200)
     
     camera = versusrendering.ViewportCamera(
         gamestate.stage.width,
@@ -132,10 +145,12 @@ def init():
         camera,
         player_dictionary.keys()
     )
+    
     surface_renderer = versusrendering.SurfaceRenderer(camera)
     
     wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH
     initialized = True
+    exit_indicator = False
     
     gamestate.frame_rate = gamestate.VERSUSMODE_FRAMERATE
     gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
@@ -152,6 +167,7 @@ def exit():
     global player1_wins_label
     global player2_wins_label
     global match_state
+    global match_time
     global versus_mode_start_timer
     global fight_start_timer
     global fight_end_timer
@@ -159,7 +175,16 @@ def exit():
     global command_label
     global player_renderer_state
     global match_simulation
+    global simulation_connection
+    global simulation_process
     
+    simulation_connection.send('STOP')
+    simulation_connection.close()
+    simulation_process.terminate()
+    simulation_process.join()
+    simulation_connection = None
+    gamestate.processes.remove(simulation_process)
+    simulation_process = None
     match_simulation = None
     point_effects = {}
     player_renderer_state = None
@@ -170,6 +195,7 @@ def exit():
     player1_wins_label = None
     player2_wins_label = None
     match_state = None
+    match_time = 0
     versus_mode_start_timer = None
     fight_start_timer = None
     fight_end_timer = None
@@ -189,6 +215,25 @@ def handle_events():
     global surface_renderer
     global player_dictionary
     global match_simulation
+    global simulation_process
+    global simulation_connection
+    global match_state
+    global match_time
+    
+    if simulation_process == None and exit_indicator == False:
+        #initialize renderer state
+        player_renderer_state.update(
+            match_simulation.get_rendering_info().player_rendering_info_dictionary, 
+            1
+        )
+        
+        #start simulation process
+        simulation_process = multiprocessing.Process(
+            target=match_simulation.run,
+            name="Way of the stick simulation"
+        )
+        gamestate.processes.append(simulation_process)
+        simulation_process.start()
     
     exit_button.draw(gamestate.screen)
     gamestate.new_dirty_rects.append(
@@ -203,21 +248,29 @@ def handle_events():
     )
     
     if exit_indicator == False:
-        match_simulation.step(build_player_keys_pressed(), gamestate.time_passed)
-        simulation_rendering_info = match_simulation.get_rendering_info()
+        simulation_rendering_info = None
         
-        if simulation_rendering_info.attack_result_rendering_info != None:
-            create_collision_effects(
-                simulation_rendering_info.attack_result_rendering_info
+        while simulation_connection.poll():
+            simulation_rendering_info = simulation_connection.recv()
+        
+        if simulation_rendering_info != None:
+            set_outline_color(simulation_rendering_info)
+            
+            if simulation_rendering_info.attack_result_rendering_info != None:
+                create_collision_effects(
+                    simulation_rendering_info.attack_result_rendering_info
+                )
+            
+            player_renderer_state.update(
+                simulation_rendering_info.player_rendering_info_dictionary, 
+                1
             )
+            match_state = simulation_rendering_info.match_state
+            match_time = simulation_rendering_info.match_time
         
-        player_renderer_state.update(
-            simulation_rendering_info.player_rendering_info_dictionary, 
-            1
-        )
         ground_surface = gamestate.stage.draw_ground()
         surface_renderer.draw_surface_to_screen(
-            (0,gamestate.stage.floor_height - 20), 
+            (0, gamestate.stage.floor_height - 20), 
             ground_surface
         )
         versusrendering.draw_player_renderer_state(
@@ -228,7 +281,10 @@ def handle_events():
         for effect in point_effects.values():
             effect.update(gamestate.time_passed)
             effect_position, effect_surface = effect.draw_ellipse_effect()
-            surface_renderer.draw_surface_to_screen(effect_position, effect_surface)
+            surface_renderer.draw_surface_to_screen(
+                effect_position, 
+                effect_surface
+            )
         
         dead_effects = []
         
@@ -238,11 +294,13 @@ def handle_events():
         
         for point_id in dead_effects:
             del point_effects[point_id]
+        
+        handle_match_state()
     
-    handle_match_state(
-        simulation_rendering_info.match_state, 
-        simulation_rendering_info.match_time
-    )
+    if simulation_connection != None:
+        simulation_connection.send(
+            (build_player_keys_pressed(), gamestate.time_passed)
+        )
     
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
@@ -259,7 +317,22 @@ def handle_events():
                 gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
                 exit()
 
-def handle_match_state(match_state, match_time):
+def set_outline_color(simulation_rendering_info):
+    player_rendering_info_dictionary = simulation_rendering_info.player_rendering_info_dictionary
+    
+    for player_position, rendering_info in player_rendering_info_dictionary.iteritems():
+        
+        if rendering_info.player_state == PlayerStates.STUNNED:
+            if (simulation_rendering_info.match_time % 30) >= 15:
+                rendering_info.player_outline_color = (255, 255, 0)
+            else:
+                rendering_info.player_outline_color = (255, 0, 0)
+        else:
+            pass #leave the outline color as it is
+
+def handle_match_state():
+    global match_state
+    global match_time
     global ready_label
     global fight_label
     global player1_wins_label

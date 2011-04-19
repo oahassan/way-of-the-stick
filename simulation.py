@@ -1,3 +1,4 @@
+import os
 import math
 import pygame
 import mathfuncs
@@ -103,10 +104,12 @@ def create_player_state_dictionary(player_dictionary, keys_pressed):
 class MatchSimulation():
     def __init__(
         self,
+        pipe_connection,
         timestep=20, 
         player_type_dictionary={}, 
         player_dictionary={}
     ):
+        self.pipe_connection = pipe_connection
         self.timestep = timestep
         self.accumulator = 0
         self.player_type_dictionary = player_type_dictionary
@@ -119,6 +122,20 @@ class MatchSimulation():
         self.history = []
         self.match_time = 0
         self.match_state = MatchStates.READY
+    
+    def run(self):
+        while 1:
+            while self.pipe_connection.poll():
+                message = self.pipe_connection.recv()
+                
+                if message == 'STOP':
+                    raise Exception("Terminating Simulation Process!")
+                else:
+                    player_keys_pressed, time_passed = message
+                    self.step(player_keys_pressed, time_passed)
+            
+            self.pipe_connection.send(self.get_rendering_info())
+            self.clock.tick(100)
     
     def step(self, player_keys_pressed, time_passed):
         """update the state of the players in the simulation"""
@@ -139,21 +156,21 @@ class MatchSimulation():
     
     def handle_match_state(self, match_state):
         
-        if (self.match_state == MatchStates.READY or 
-        self.match_state == MatchStates.NO_CONTEST):
+        if (match_state == MatchStates.READY or 
+        match_state == MatchStates.NO_CONTEST):
             for player in self.player_dictionary.values():
                 player.handle_input_events = False
             
-        elif self.match_state == MatchStates.FIGHT:
+        elif match_state == MatchStates.FIGHT:
             for player in self.player_dictionary.values():
                 player.handle_input_events = True
             
-        elif self.match_state == MatchStates.PLAYER1_WINS:
+        elif match_state == MatchStates.PLAYER1_WINS:
             player2 = self.player_dictionary[PlayerPositions.PLAYER2]
             player2.handle_input_events == False
             player2.set_stun_timeout(10000)
             
-        elif self.match_state == MatchStates.PLAYER2_WINS:
+        elif match_state == MatchStates.PLAYER2_WINS:
             player1 = self.player_dictionary[PlayerPositions.PLAYER1]
             player1.handle_input_events == False
             player1.set_stun_timeout(10000)
@@ -175,14 +192,14 @@ class MatchSimulation():
             return MatchStates.FIGHT
         else:
             #just check if the game is over
-            if (self.player_dictionary[PlayerPositions.PLAYER1].health_meter == 0 and
-            self.player_dictionary[PlayerPositions.PLAYER2].health_meter == 0):
+            if (self.player_dictionary[PlayerPositions.PLAYER1].health_meter <= 0 and
+            self.player_dictionary[PlayerPositions.PLAYER2].health_meter <= 0):
                 match_state = MatchStates.NO_CONTEST
                     
-            elif self.player_dictionary[PlayerPositions.PLAYER1].health_meter == 0:
+            elif self.player_dictionary[PlayerPositions.PLAYER1].health_meter <= 0:
                 match_state = MatchStates.PLAYER2_WINS
                 
-            elif self.player_dictionary[PlayerPositions.PLAYER2].health_meter == 0:
+            elif self.player_dictionary[PlayerPositions.PLAYER2].health_meter <= 0:
                 match_state = MatchStates.PLAYER1_WINS
             else:
                 match_state = MatchStates.FIGHT

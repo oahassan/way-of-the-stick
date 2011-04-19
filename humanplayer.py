@@ -111,12 +111,12 @@ class HumanPlayer(player.Player):
         return motions
     
     def handle_events(self, keys_pressed, time_passed):
+        
+        #if self.handle_input_events:
         self.controller.update(keys_pressed)
-        
-        if self.handle_input_events:
-            self.set_action()
-            self.set_motion()
-        
+        self.set_action()
+        self.set_motion()
+    
         player.Player.handle_events(self, time_passed)
 
 class ControllerFactory():

@@ -120,13 +120,13 @@ class Player():
         self.set_outline_color()
         
         if self.dash_timer < self.dash_timeout:
-            self.dash_timer += gamestate.time_passed
+            self.dash_timer += time_passed
         
         if self.jump_timer < self.high_jump_timeout:
-            self.jump_timer += gamestate.time_passed
+            self.jump_timer += time_passed
         
         if self.stun_timer < self.stun_timeout:
-            self.stun_timer += gamestate.time_passed
+            self.stun_timer += time_passed
     
     def set_outline_color(self):
         if self.get_player_state() == PlayerStates.STUNNED:

@@ -204,7 +204,9 @@ class SurfaceRenderer():
     
     def draw_surface_to_screen(self, position, surface):
         
-        surface_viewport_position = self.viewport_camera.get_position_in_viewport(position)
+        surface_viewport_position = self.viewport_camera.get_position_in_viewport(
+            position
+        )
         
         scaled_surface = pygame.transform.scale(
             surface,
