@@ -47,6 +47,12 @@ hosting = False
 
 processes = []
 
+def update_time():
+    global time_passed
+    global clock
+    
+    time_passed = clock.get_time()
+
 def clear_old_dirty_rects():
     global old_dirty_rects
     

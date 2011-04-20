@@ -100,13 +100,17 @@ def init():
     fight_label.set_position(fight_label_position)
     
     player1_wins_label = button.Label((0,0),'PLAYER 1 WINS!',(0,0,255),80)
-    player1_wins_label_position = ((gamestate._WIDTH / 2) - (player1_wins_label.width / 2), \
-                            (gamestate._HEIGHT / 2) - (player1_wins_label.height / 2))
+    player1_wins_label_position = (
+        (gamestate._WIDTH / 2) - (player1_wins_label.width / 2), 
+        (gamestate._HEIGHT / 2) - (player1_wins_label.height / 2)
+    )
     player1_wins_label.set_position(player1_wins_label_position)
     
     player2_wins_label = button.Label((0,0),'PLAYER 2 WINS!',(0,0,255),80)
-    player2_wins_label_position = ((gamestate._WIDTH / 2) - (player2_wins_label.width / 2), \
-                            (gamestate._HEIGHT / 2) - (player2_wins_label.height / 2))
+    player2_wins_label_position = (
+        (gamestate._WIDTH / 2) - (player2_wins_label.width / 2),
+        (gamestate._HEIGHT / 2) - (player2_wins_label.height / 2)
+    )
     player2_wins_label.set_position(player2_wins_label_position)
     
     for player_position in player_type_dictionary.keys():
@@ -115,7 +119,9 @@ def init():
         elif player_type_dictionary[player_position] == PlayerTypes.HUMAN:
             player_dictionary[player_position] = humanplayer.HumanPlayer((0, 0))
         else:
-            raise Exception("No player type set for player position: " + str(player_position))
+            raise Exception(
+                "No player type set for player position: " + str(player_position)
+            )
     
     simulation_connection, input_connection = multiprocessing.Pipe()
     
@@ -157,8 +163,9 @@ def init():
     
     gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
     gamestate.screen.blit(gamestate.stage.background_image, (0,0))
-    gamestate.new_dirty_rects.append(pygame.Rect((0,0),(gamestate._WIDTH, gamestate._HEIGHT)))
-    gamestate.clock.get_time()
+    gamestate.new_dirty_rects.append(
+        pygame.Rect((0,0), (gamestate._WIDTH, gamestate._HEIGHT))
+    )
 
 def exit():
     global initialized
@@ -234,6 +241,9 @@ def handle_events():
         )
         gamestate.processes.append(simulation_process)
         simulation_process.start()
+        
+        #reset game clock
+        gamestate.time_passed = 10
     
     exit_button.draw(gamestate.screen)
     gamestate.new_dirty_rects.append(

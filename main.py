@@ -43,7 +43,7 @@ while 1:
         if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
             screen.fill((0,0,0))
         
-        gamestate.time_passed = gamestate.clock.get_time()
+        gamestate.update_time()
         wotsuievents.get_events()
         
         events = wotsuievents.events
