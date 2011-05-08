@@ -8,6 +8,7 @@ import versusmode
 import button
 import movesetselectui
 import wotsuicontainers
+from versusmovesetselectui import MovesetSelector
 from enumerations import PlayerPositions, PlayerTypes
 
 loaded = False
@@ -48,11 +49,8 @@ def load():
     )
     
     player1_moveset_select_position = (50, 50 + player1_type_select.height + 30)
-    player1_moveset_select = movesetselectui.MovesetSelectContainer(
+    player1_moveset_select = MovesetSelector(
         player1_moveset_select_position,
-        300,
-        100,
-        'Select Your Moveset',
         playable_movesets
     )
     player2_type_select = wotsuicontainers.ButtonContainer(
@@ -64,11 +62,8 @@ def load():
         [['Human',15], ['Bot',15]]
     )
     player2_moveset_select_position = (400, 50 + player2_type_select.height + 30)
-    player2_moveset_select = movesetselectui.MovesetSelectContainer(
+    player2_moveset_select = MovesetSelector(
         player2_moveset_select_position,
-        300, \
-        100, \
-        'Select Enemy Moveset', \
         playable_movesets
     )
     

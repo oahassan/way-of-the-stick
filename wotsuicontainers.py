@@ -905,3 +905,142 @@ class AlertBox(TextBox):
         )
         
         TextBox.draw(self, surface)
+
+class Slider(HorizontalScrollBar):
+    
+    def __init__(self):
+        HorizontalScrollBar.__init__(self)
+    
+    def create_children(self):
+        self.scroll_left_button = SliderButton(SCROLL_LEFT)
+        self.scroll_right_button = SliderButton(SCROLL_RIGHT)
+        self.bar = Bar()
+        self.track = TaperedTrack()
+        
+        self.add_children([self.scroll_left_button,
+                           self.scroll_right_button,
+                           self.track,
+                           self.bar])
+    
+    def set_layout_data(self, position, width, bar_height = 40, bar_width = 15):
+        wotsui.UIObjectBase.set_layout_data(self, position, SCROLL_BUTTON_HEIGHT, width)
+        
+        track_height = SCROLL_BUTTON_HEIGHT
+        track_width = width - (2 * SCROLL_BUTTON_HEIGHT)
+        track_position = (position[0] + SCROLL_BUTTON_WIDTH, position[1])
+        self.track.set_layout_data(track_position, track_height, track_width)
+        
+        self.scroll_left_button.set_layout_data(position)
+        
+        scroll_right_button_position = (position[0] + width - SCROLL_BUTTON_WIDTH, \
+                                        position[1])
+        self.scroll_right_button.set_layout_data(scroll_right_button_position)
+        
+        bar_position = (position[0] + SCROLL_BUTTON_WIDTH, position[1] - int(SCROLL_BUTTON_HEIGHT / 2) - 5)
+        self.bar.set_layout_data(bar_position, bar_height, bar_width)
+
+class TaperedTrack(Track):
+    def __init__(self):
+        Track.__init__(self)
+        self.height = 14
+    
+    def draw(self, surface):
+        tip_point = (self.position[0] + (self.height / 2), self.center()[1])
+        top_right = (self.top_right()[0] - (self.height / 2), self.top_right()[1])
+        bottom_right =  (
+            self.bottom_right()[0] - (self.height / 2), 
+            self.bottom_right()[1]
+        )
+        
+        pygame.draw.polygon(
+            surface,
+            self.color,
+            [tip_point,
+            top_right,
+            bottom_right])
+        
+        pygame.draw.aalines(
+            surface,
+            self.color,
+            True,
+            [tip_point,
+            top_right,
+            bottom_right])
+    
+    def draw_relative(self, surface, position):
+        tip_point = (
+            self.get_relative_position(position)[0] + (self.height / 2),
+            self.center_relative(position)[1]
+        )
+        top_right = (
+            self.top_right_relative(position)[0] - (self.height / 2),
+            self.top_right_relative(position)[1]
+        )
+        bottom_right =  (
+            self.bottom_right_relative(position)[0] - (self.height / 2),
+            self.bottom_right_relative(position)()[1]
+        )
+        
+        pygame.draw.polygon(
+            surface,
+            self.color,
+            [tip_point,
+            top_right,
+            bottom_right])
+        
+        pygame.draw.aalines(
+            surface,
+            self.color,
+            True
+            [tip_point,
+            top_right,
+            bottom_right])
+
+class SliderButton(ScrollButton):
+    
+    def __init__(self, direction):
+        ScrollButton.__init__(self, direction)
+        
+        if self.direction == SCROLL_LEFT:
+            self.image = button.Label(self.position, '-', self.color)
+        else:
+            self.image = button.Label(self.position, '+', self.color)
+        
+        self.add_child(self.image)
+    
+    def set_layout_data(self, position):
+        ScrollButton.set_layout_data(self, position)
+        self.layout_image()
+    
+    def layout_image(self):
+        
+        position_delta = (self.center()[0] - self.image.center()[0], self.center()[1] - self.image.center()[1])
+        
+        self.image.shift(position_delta[0], position_delta[1])
+    
+    def handle_selected(self):
+        ScrollButton.handle_selected(self)
+        self.image.text_color = self.color
+    
+    def handle_deselected(self):
+        ScrollButton.handle_deselected(self)
+        self.image.text_color = self.color
+    
+    def _draw_left_button(self, surface):
+        self.image.draw(surface)
+    
+    def _draw_left_button_relative(self, surface, position):
+        self.image.draw_relative(surface, position)
+        
+    def _draw_right_button(self, surface):
+        self.image.draw(surface)
+    
+    def _draw_right_button_relative(self, surface, position):
+        self.image.draw(surface, position)
+
+class SliderBar(Bar):
+    HEIGHT = 40
+    WIDTH = 15
+    
+    def __init__(self):
+        wotsui.SelectableObjectBase.__init__(self)

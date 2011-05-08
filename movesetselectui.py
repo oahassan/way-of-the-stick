@@ -53,11 +53,38 @@ class MovesetActionLabel(button.Label, wotsui.SelectableObjectBase):
         self.active = False
         self.selected = False
 
-class MovesetSelectContainer(wotsuicontainers.ScrollableContainer):
+class MovesetLoader():
+    def __init__(self, movesets):
+        self.selected_moveset = None
+        self.thumbnails = []
+        self.load_movesets(movesets)
+    
+    def load_movesets(self, movesets):
+        
+        raise NotImplementedError(
+            "classes ineriting MovesetLoader must implement layout_thumbnails"
+        )
+    
+    def handle_events(self):
+        
+        if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
+            for thumbnail in self.thumbnails:
+                if thumbnail.contains(wotsuievents.mouse_pos):
+                    if thumbnail.selected:
+                        thumbnail.handle_deselected()
+                        self.selected_moveset = None
+                    else:
+                        for other_thumbnail in self.thumbnails:
+                            if other_thumbnail.selected:
+                                other_thumbnail.handle_deselected()
+                        
+                        thumbnail.handle_selected()
+                        self.selected_moveset = thumbnail.moveset
+
+class MovesetSelectContainer(wotsuicontainers.ScrollableContainer, MovesetLoader):
     def __init__(self, position, moveset_container_height, moveset_container_width, title_text, movesets):
         wotsuicontainers.ScrollableContainer.__init__(self)
         
-        self.selected_moveset = None
         self.position = position
         self.frame = None
         self.title = button.Label(position, title_text, (255,255,255), 22)
@@ -69,8 +96,7 @@ class MovesetSelectContainer(wotsuicontainers.ScrollableContainer):
                                max(self.height, moveset_container_height - wotsuicontainers.SCROLL_BUTTON_HEIGHT), \
                                max(self.width, moveset_container_width - wotsuicontainers.SCROLL_BUTTON_WIDTH))
         
-        self.thumbnails = []
-        self.load_movesets(movesets)
+        MovesetLoader.__init__(self, movesets)
         
         self.init_vertical_scrollbar()
         self.init_horizontal_scrollbar()
@@ -121,19 +147,7 @@ class MovesetSelectContainer(wotsuicontainers.ScrollableContainer):
         wotsuicontainers.ScrollableContainer.handle_events(self)
         
         if self.viewable_area.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
-                for thumbnail in self.thumbnails:
-                    if thumbnail.contains(wotsuievents.mouse_pos):
-                        if thumbnail.selected:
-                            thumbnail.handle_deselected()
-                            self.selected_moveset = None
-                        else:
-                            for other_thumbnail in self.thumbnails:
-                                if other_thumbnail.selected:
-                                    other_thumbnail.handle_deselected()
-                            
-                            thumbnail.handle_selected()
-                            self.selected_moveset = thumbnail.moveset
+            MovesetLoader.handle_events(self)
 
 class MovesetThumbnail(button.Button):
     _THUMBNAIL_HEIGHT = 80
