@@ -8,7 +8,7 @@ import versusmode
 import button
 import movesetselectui
 import wotsuicontainers
-from versusmovesetselectui import MovesetSelector
+from versusmovesetselectui import MovesetSelector, PlayerStatsWidget
 from enumerations import PlayerPositions, PlayerTypes
 
 loaded = False
@@ -16,8 +16,10 @@ exit_button = None
 start_match_label = None
 player1_type_select = None
 player1_moveset_select = None
+player1_stats_widget = None
 player2_type_select = None
 player2_moveset_select = None
+player2_stats_widget = None
 
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
@@ -31,12 +33,14 @@ def load():
     global start_match_label
     global player1_type_select
     global player1_moveset_select
+    global player1_stats_widget
     global player2_type_select
     global player2_moveset_select
+    global player2_stats_widget
     
     exit_button = button.ExitButton()
     loaded = True
-    start_match_label = movesetselectui.MovesetActionLabel((10, 500), "Start Match!")
+    start_match_label = movesetselectui.MovesetActionLabel((50, 550), "Start Match!")
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
     player1_type_select = wotsuicontainers.ButtonContainer(
@@ -53,19 +57,30 @@ def load():
         player1_moveset_select_position,
         playable_movesets
     )
+    player1_widget_position = (
+        50, 
+        player1_moveset_select.position[1] + player1_moveset_select.height + 10
+    )
+    player1_stats_widget = PlayerStatsWidget(player1_widget_position)
+    
     player2_type_select = wotsuicontainers.ButtonContainer(
-        (400,50),
+        (450,50),
         100,
         300,
         'Select Enemy Type',
         button.TextButton,
         [['Human',15], ['Bot',15]]
     )
-    player2_moveset_select_position = (400, 50 + player2_type_select.height + 30)
+    player2_moveset_select_position = (450, 50 + player2_type_select.height + 30)
     player2_moveset_select = MovesetSelector(
         player2_moveset_select_position,
         playable_movesets
     )
+    player2_widget_position = (
+        450, 
+        player2_moveset_select.position[1] + player2_moveset_select.height + 10
+    )
+    player2_stats_widget = PlayerStatsWidget(player2_widget_position)
     
 def unload():
     global loaded
@@ -73,16 +88,20 @@ def unload():
     global start_match_label
     global player1_type_select
     global player1_moveset_select
+    global player1_stats_widget
     global player2_type_select
     global player2_moveset_select
+    global player2_stats_widget
     
     exit_button = None
     loaded = False
     start_match_label = None
     player1_type_select = None
     player1_moveset_select = None
+    player1_stats_widget = None
     player2_type_select = None
     player2_moveset_select = None
+    player2_stats_widget = None
 
 def handle_events():
     global loaded
@@ -90,8 +109,10 @@ def handle_events():
     global start_match_label
     global player1_type_select
     global player1_moveset_select
+    global player2_stats_widget
     global player2_type_select
     global player2_moveset_select
+    global player2_stats_widget
     
     if loaded == False:
         load()
@@ -163,6 +184,8 @@ def handle_events():
     if loaded:
         player1_moveset_select.handle_events()
         player2_moveset_select.handle_events()
+        player1_stats_widget.handle_events()
+        player2_stats_widget.handle_events()
         
         if ((player1_moveset_select.selected_moveset != None) and
             (player1_type_select.selected_button != None) and
@@ -178,5 +201,7 @@ def handle_events():
         start_match_label.draw(gamestate.screen)
         player1_type_select.draw(gamestate.screen)
         player1_moveset_select.draw(gamestate.screen)
+        player1_stats_widget.draw(gamestate.screen)
         player2_type_select.draw(gamestate.screen)
         player2_moveset_select.draw(gamestate.screen)
+        player2_stats_widget.draw(gamestate.screen)

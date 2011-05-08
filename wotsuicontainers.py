@@ -936,7 +936,10 @@ class Slider(HorizontalScrollBar):
                                         position[1])
         self.scroll_right_button.set_layout_data(scroll_right_button_position)
         
-        bar_position = (position[0] + SCROLL_BUTTON_WIDTH, position[1] - int(SCROLL_BUTTON_HEIGHT / 2) - 5)
+        bar_position = (
+            position[0] + SCROLL_BUTTON_WIDTH, 
+            self.track.center()[1] - int(bar_height / 2)
+        )
         self.bar.set_layout_data(bar_position, bar_height, bar_width)
 
 class TaperedTrack(Track):
