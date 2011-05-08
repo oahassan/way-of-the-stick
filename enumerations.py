@@ -1,3 +1,21 @@
+class SimulationDataKeys:
+    ACTION = 0
+    KEYS_PRESSED = 1
+    TIME_PASSED = 2
+    MATCH_TIME = 3
+    SIMULATION_STATE = 4
+    PLAYER_STATE = 5
+    RENDERING_INFO = 6
+    PLAYER_POSITION = 7
+
+class SimulationActionTypes:
+    STEP = 0
+    GET_STATE = 1
+    UPDATE_STATE = 2
+    STOP = 3
+    GET_INPUT = 4
+    UPDATE_INPUT = 5
+
 class CommandHandlerTypes:
     GROUND_MOVEMENT = "ground movement"
     AERIAL_MOVEMENT = "aerial movement"

@@ -67,7 +67,7 @@ while 1:
         elif gamestate.mode == gamestate.Modes.MAINMENU:
             menupage.handle_events()
         elif gamestate.mode == gamestate.Modes.VERSUSMODE:
-            if versusmode.initialized == False:
+            if versusmode.initialized() == False:
                 versusmode.init()
                 
             versusmode.handle_events()
@@ -112,11 +112,25 @@ while 1:
         gamestate.clock.tick(gamestate.frame_rate)
     
     except:
-        if versusmode.simulation_process != None:
-            print("terminiating!")
-            if versusmode.simulation_connection != None:
-                versusmode.simulation_connection.send('STOP')
-            else:
-                versusmode.simulation_process.terminate()
-            versusmode.simulation_process.join()
+        if (versusmode.local_state != None and
+        versusmode.local_state.simulation_process != None):
+            
+            if versusmode.local_state.simulation_process.is_alive():
+                print("terminiating!")
+                if versusmode.local_state.simulation_connection != None:
+                    versusmode.local_state.simulation_connection.send('STOP')
+                else:
+                    versusmode.local_state.simulation_process.terminate()
+                versusmode.local_state.simulation_process.join()
+        
+        elif (onlineversusmode.local_state != None and
+        onlineversusmode.local_state.simulation_process != None):
+            
+            if onlineversusmode.local_state.simulation_process.is_alive():
+                print("terminiating!")
+                if onlineversusmode.local_state.simulation_connection != None:
+                    onlineversusmode.local_state.simulation_connection.send('STOP')
+                else:
+                    onlineversusmode.local_state.simulation_process.terminate()
+                onlineversusmode.local_state.simulation_process.join()
         raise

@@ -1,13 +1,10 @@
 import urllib
 import socket
 
+from functools import reduce
 from wotsprot.udpserver import Server
 from wotsprot.channel import Channel
-
-class PlayerPositions:
-    NONE = "none"
-    PLAYER1 = "player1"
-    PLAYER2 = "player2"
+from enumerations import PlayerPositions
 
 class DataKeys:
     ACTION = "action"
@@ -24,6 +21,9 @@ class DataKeys:
     PLAYER_STATE = "player state"
     POINT_POSITIONS = "point positions"
     MESSAGE = "message"
+    MOVESET = "moveset"
+    PLAYER_MOVESETS = "player movesets"
+    SIMULATION_STATE = "simulation state"
 
 class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
@@ -34,10 +34,11 @@ class ClientActions:
     MATCH_FULL = "match_full"
     PLAYER_JOINED_MATCH = "player_joined_match"
     PLAYER_READY = "player_ready"
-    RECEIVE_PLAYER_INITIAL_STATE = "receive_player_initial_state"
     SET_GAME_MODE = "set_game_mode"
-    UPDATE_PLAYER_STATE = "update_player_state"
+    UPDATE_SIMULATION_STATE = "update_simulation_state"
+    UPDATE_INPUT_STATE = "update_input_state"
     RECEIVE_CHAT_MESSAGE = "receive_chat_message"
+    
 
 class ServerModes:
     MOVESET_SELECT = "moveset select"
@@ -66,22 +67,20 @@ class ClientChannel(Channel):
         player_position = self._server.add_player(self)
         
         if player_position == PlayerPositions.NONE:
-            data = \
-                {
-                    DataKeys.ACTION : ClientActions.MATCH_FULL,
-                    DataKeys.PLAYER_POSITION : player_position,
-                    DataKeys.PLAYER_ID : self.player_id
-                }
+            data = {
+                DataKeys.ACTION : ClientActions.MATCH_FULL,
+                DataKeys.PLAYER_POSITION : player_position,
+                DataKeys.PLAYER_ID : self.player_id
+            }
             
             self.Send(data)
         else:
-            data = \
-                {
-                    DataKeys.ACTION : ClientActions.PLAYER_JOINED_MATCH,
-                    DataKeys.PLAYER_POSITION : player_position,
-                    DataKeys.PLAYER_ID : self.player_id,
-                    DataKeys.NICKNAME : self.nickname
-                }
+            data = {
+                DataKeys.ACTION : ClientActions.PLAYER_JOINED_MATCH,
+                DataKeys.PLAYER_POSITION : player_position,
+                DataKeys.PLAYER_ID : self.player_id,
+                DataKeys.NICKNAME : self.nickname
+            }
             
             self._server.send_to_all(data)
     
@@ -99,24 +98,23 @@ class ClientChannel(Channel):
         
         self._server.send_to_all(send_data)
     
-    def Network_initial_player_states_received(self, data):
+    def Network_all_movesets_loaded(self, data):
         """indicate on server that all remote player states have been received"""
         
         player_position = self._server.get_player_position(self)
         
         if player_position != None:
-            self._server.set_initial_player_states_received(player_position, True)
+            self._server.set_all_movesets_loaded_indicator(player_position, True)
         
         #TODO - add timeout not necessarily here
-        if self._server.all_initial_player_states_received():
+        if self._server.all_movesets_loaded():
             
             self._server.mode = ServerModes.MATCH
             
-            data = \
-                {
-                    DataKeys.ACTION : ClientActions.SET_GAME_MODE,
-                    DataKeys.SERVER_MODE : ServerModes.MATCH
-                }
+            data = {
+                DataKeys.ACTION : ClientActions.SET_GAME_MODE,
+                DataKeys.SERVER_MODE : ServerModes.MATCH
+            }
             
             self._server.send_to_all(data)
     
@@ -133,7 +131,7 @@ class ClientChannel(Channel):
         
         self._server.send_to_all(data)
     
-    def Network_update_player_state(self, data):
+    def Network_update_simulation_state(self, data):
         self._server.send_to_all(data)
     
     def Network_player_ready(self, data):
@@ -141,16 +139,24 @@ class ClientChannel(Channel):
         player_position = self._server.get_player_position(self)
         self._server.set_player_position_ready(player_position, True)
         
-        data = \
-                {
-                    DataKeys.ACTION : ClientActions.PLAYER_READY,
-                    DataKeys.PLAYER_POSITION : player_position,
-                    DataKeys.PLAYER_ID : self.player_id,
-                    DataKeys.PLAYER_READY_INDICATOR : True
-                }
+        data = {
+            DataKeys.ACTION : ClientActions.PLAYER_READY,
+            DataKeys.PLAYER_POSITION : player_position,
+            DataKeys.PLAYER_ID : self.player_id,
+            DataKeys.PLAYER_READY_INDICATOR : True
+        }
         
         self._server.send_to_all(data)
     
+    def Network_set_moveset(self, data):
+        self._server.player_movesets[
+            self._server.get_player_position(self)
+        ] = data[DataKeys.MOVESET]
+        
+        self._server.send_to_all(data)
+    
+    def Network_update_input_state(self, data):
+        self._server.send_to_all(data)
     
     def Network_set_game_mode(self, data):
         if self._server.client_is_player(self):
@@ -170,15 +176,24 @@ class WotsServer(Server):
     def __init__(self, *args, **kwargs):
         Server.__init__(self, *args, **kwargs)
         self.player_name_count = 0
-        self.player_positions = \
-            {PlayerPositions.PLAYER1 : None, PlayerPositions.PLAYER2 : None}
-        self.player_positions_ready = \
-            {PlayerPositions.PLAYER1 : False, PlayerPositions.PLAYER2 : False}
-        
+        self.player_positions = {
+            PlayerPositions.PLAYER1 : None, 
+            PlayerPositions.PLAYER2 : None
+        }
+        self.player_positions_ready = {
+            PlayerPositions.PLAYER1 : False,
+            PlayerPositions.PLAYER2 : False
+        }
+        self.player_movesets = {
+            PlayerPositions.PLAYER1 : None, 
+            PlayerPositions.PLAYER2 : None
+        }
         #indicates that point position data has been received by players in the match
         #this ensures that models are ready to be drawn at each client.
-        self.initial_remote_player_state_received = \
-            {PlayerPositions.PLAYER1 : False, PlayerPositions.PLAYER2 : False}
+        self.all_movesets_loaded_indicators = {
+            PlayerPositions.PLAYER1 : False, 
+            PlayerPositions.PLAYER2 : False
+        }
         
         self.players = []
         self.spectators = []
@@ -203,17 +218,19 @@ class WotsServer(Server):
         
         Server.close(self)
     
-    def set_initial_player_states_received(self, player_position, indicator):
-        self.initial_remote_player_state_received[player_position] = indicator
+    def set_all_movesets_loaded_indicator(self, player_position, indicator):
+        self.all_movesets_loaded_indicators[player_position] = indicator
     
-    def all_initial_player_states_received(self):
-        return_indicator = True
+    def all_movesets_loaded(self):
         
-        for player_state_received in self.initial_remote_player_state_received.values():
-            if player_state_received == False:
-                return_indicator = False
-        
-        return return_indicator
+        return reduce(
+            lambda x, y : x and y,
+            [
+                all_movesets_loaded_indicator 
+                for all_movesets_loaded_indicator 
+                in self.all_movesets_loaded_indicators.values()
+            ]
+        )
     
     def sync_client_to_server(self, client):
         """send the client the current state of the server"""
@@ -235,13 +252,13 @@ class WotsServer(Server):
         for spectator in self.spectators:
             player_nicknames[spectator.player_id] = spectator.nickname
         
-        data = \
-            {
+        data = {
                 DataKeys.ACTION : ClientActions.SYNC_TO_SERVER,
                 DataKeys.SPECTATORS : spectators,
                 DataKeys.PLAYER_POSITIONS : player_positions,
                 DataKeys.PLAYER_NICKNAMES : player_nicknames,
                 DataKeys.PLAYER_POSITIONS_READY : self.player_positions_ready,
+                DataKeys.PLAYER_MOVESETS : self.player_movesets,
                 DataKeys.SERVER_MODE : self.mode
             }
         

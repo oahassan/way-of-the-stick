@@ -45,20 +45,6 @@ class HumanPlayer(player.Player):
         
         self.actions[PlayerStates.STANDING].set_player_state(self)
     
-    #def handle_animation_end(self):
-    #    """Determine the next action to use if an animation is copmlete."""
-    #    
-    #    action = self.get_current_action(wotsuievents.keys_pressed)
-    #   
-    #    if action == None:
-    #        self.set_neutral_state()
-    #   elif action.test_state_change(self):
-    #        action.set_player_state(self)
-    #    else:
-    #        if (self.actions[PlayerStates.STANDING].test_state_change(self) or
-    #       self.actions[PlayerStates.FLOATING].test_state_change(self)):
-    #            self.set_neutral_state()
-    
     def set_action(self):
         """Set the current action based on what keys are pressed."""
         
@@ -311,12 +297,12 @@ class ControllerFactory():
             CommandDurations.HOLD
         )
         
-        walk_right_action = self.create_action(
+        input_player.walk_right_action = self.create_action(
             player.PlayerStates.WALKING,
             moveset.movement_animations[PlayerStates.WALKING],
             player.PlayerStates.FACING_RIGHT
         )
-        run_right_action = self.create_action(
+        input_player.run_right_action = self.create_action(
             player.PlayerStates.RUNNING,
             moveset.movement_animations[PlayerStates.RUNNING],
             PlayerStates.FACING_RIGHT
@@ -324,11 +310,11 @@ class ControllerFactory():
         
         ground_movement_command_handler.add_command(
             [tap_right_command, tap_right_command],
-            run_right_action
+            input_player.run_right_action
         )
         ground_movement_command_handler.add_command(
             [tap_right_command],
-            walk_right_action
+            input_player.walk_right_action
         )
         ground_movement_command_handler.add_command(
             [hold_right_command],
@@ -375,12 +361,12 @@ class ControllerFactory():
             CommandDurations.HOLD
         )
         
-        walk_left_action = self.create_action(
+        input_player.walk_left_action = self.create_action(
             player.PlayerStates.WALKING,
             moveset.movement_animations[PlayerStates.WALKING],
             PlayerStates.FACING_LEFT
         )
-        run_left_action = self.create_action(
+        input_player.run_left_action = self.create_action(
             player.PlayerStates.RUNNING,
             moveset.movement_animations[PlayerStates.RUNNING],
             PlayerStates.FACING_LEFT
@@ -388,11 +374,11 @@ class ControllerFactory():
         
         ground_movement_command_handler.add_command(
             [tap_left_command, tap_left_command],
-            run_left_action
+            input_player.run_left_action
         )
         ground_movement_command_handler.add_command(
             [tap_left_command],
-            walk_left_action
+            input_player.walk_left_action
         )
         ground_movement_command_handler.add_command(
             [hold_left_command],
@@ -443,6 +429,8 @@ class ControllerFactory():
             )
             
             attack_action.set_attack_data(input_player.model)
+            
+            input_player.actions[attack_name] = attack_action
             
             tap_commands = []
             

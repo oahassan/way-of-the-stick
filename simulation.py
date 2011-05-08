@@ -1,40 +1,13 @@
 import os
 import math
+from functools import reduce
+from collections import deque
 import pygame
 import mathfuncs
-from threading import Lock
 from wotsprot.rencode import serializable
 from enumerations import MatchStates, PlayerTypes, ClashResults, \
-PlayerPositions, PlayerStates, LineNames, PointNames
-
-class PlayerState():
-    def __init__(
-        self,
-        animation_run_time,
-        keys_pressed,
-        reference_position,
-        health
-    ):
-        self.animation_run_time = animation_run_time
-        self.keys_pressed = keys_pressed
-        self.reference_position = reference_position
-        self.health = health
-    
-    def _pack(self):
-        return (self.animation_run_time, self.keys_pressed, 
-        self.reference_position, self.health)
-
-class SimulationState():
-    def __init__(
-        self,
-        player_states,
-        sequence
-    ):
-        self.player_states = player_states
-        self.sequence = sequence
-    
-    def _pack(self):
-        return (self.player_states, self.sequence)
+PlayerPositions, PlayerStates, LineNames, PointNames, SimulationDataKeys, \
+SimulationActionTypes
 
 class SimulationRenderingInfo():
     def __init__(
@@ -86,28 +59,13 @@ class PlayerRenderingInfo():
         return (self.player_point_positions, self.player_state,
         self.player_outline_color, self.player_health_color, self.health_percentage)
 
-def create_player_state_dictionary(player_dictionary, keys_pressed):
-    """creates a dictionary mapping player positions to playerstates"""
-    
-    return_dictionary = {}
-    
-    for player_position, player in player_dictionary:
-        return_dictionary[player_position] = PlayerState(
-            player.model.animation_run_time, 
-            keys_pressed, 
-            player.model.reference_position,
-            player.health_meter
-        )
-    
-    return return_dictionary 
-
 class MatchSimulation():
     def __init__(
         self,
         pipe_connection,
         timestep=20, 
-        player_type_dictionary={}, 
-        player_dictionary={}
+        player_type_dictionary=None, 
+        player_dictionary=None
     ):
         self.pipe_connection = pipe_connection
         self.timestep = timestep
@@ -118,8 +76,6 @@ class MatchSimulation():
         self.attack_resolver = AttackResolver()
         self.current_attack_result = None
         self.collision_handler = CollisionHandler()
-        self.player_lock = Lock()
-        self.history = []
         self.match_time = 0
         self.match_state = MatchStates.READY
     
@@ -143,16 +99,24 @@ class MatchSimulation():
         self.accumulator += time_passed
         
         while self.accumulator > self.timestep:
-            
-            match_state = self.get_match_state()
-            self.match_state = match_state
-            self.handle_match_state(match_state)
-            self.handle_player_events(player_keys_pressed, self.timestep)
-            self.handle_interactions()
-            
-            #TODO - self.history.append(self.get_simulation_state())
-            self.accumulator -= self.timestep
-            self.match_time += self.timestep
+            self.update_simulation_state(player_keys_pressed)
+    
+    def update_simulation_state(self, player_keys_pressed):
+        self.update_match_state()
+        self.update_player_states(player_keys_pressed)
+        self.accumulator -= self.timestep
+        self.match_time += self.timestep
+    
+    def update_match_state(self):
+        
+        match_state = self.get_match_state()
+        self.match_state = match_state
+        self.handle_match_state(match_state)
+    
+    def update_player_states(self, player_keys_pressed):
+        
+        self.handle_player_events(player_keys_pressed, self.timestep)
+        self.handle_interactions()
     
     def handle_match_state(self, match_state):
         
@@ -772,4 +736,455 @@ class HitboxBuilder():
             
             return hitbox_positions
 
+class ActionData():
+    def __init__(
+        self,
+        action_state,
+        direction
+    ):
+        self.action_state = action_state
+        self.direction = direction
+    
+    def _pack(self):
+        
+        return self.action_state, self.direction
+
+class TimedActionData(ActionData):
+    def __init__(
+        self,
+        action_state,
+        direction,
+        timeout,
+        timer
+    ):
+        ActionData.__init__(
+            self, 
+            action_state,
+            direction
+        )
+        self.timeout = timeout
+        self.timer = timer
+    
+    def _pack(self):
+        return self.action_state, self.direction, self.timeout, self.timer
+
+class AttackActionData(ActionData):
+    def __init__(
+        self,
+        action_state,
+        direction,
+        animation_name
+    ):
+        ActionData.__init__(self, action_state, direction)
+        self.animation_name = animation_name
+    
+    def _pack(self):
+        return self.action_state, self.direction, self.animation_name
+
+class GeneratedActionData(ActionData):
+    def __init__(
+        self,
+        action_state,
+        direction,
+        animation
+    ):
+        ActionData.__init__(self, action_state, direction)
+        self.animation = animation
+    
+    def _pack(self):
+        return self.action_state, self.direction, self.animation
+
+class TransitionActionData(GeneratedActionData):
+    def __init__(
+        self,
+        action_state,
+        direction,
+        animation,
+        next_action_state,
+        next_action_animation_name
+    ):
+        GeneratedActionData.__init__(self, action_state, direction, animation)
+        self.next_action_state = next_action_state
+        self.next_action_animation_name = next_action_animation_name
+    
+    def _pack(self):
+        return (self.action_state, self.direction, self.animation,
+        self.next_action_state, self.next_action_animation_name)
+
+class StunActionData(GeneratedActionData, TimedActionData):
+    def __init__(
+        self,
+        action_state,
+        direction,
+        animation,
+        timeout,
+        timer
+    ):
+        GeneratedActionData.__init__(
+            self, 
+            action_state,
+            direction,
+            animation
+        )
+        TimedActionData.__init__(
+            self,
+            action_state,
+            direction,
+            timeout,
+            timer
+        )
+    
+    def _pack(self):
+        return (self.action_state, self.direction, self.animation, self.timeout,
+        self.timer)
+
+class ActionDataFactory():
+    
+    def create_action_data(self, player):
+        return_data = None
+        action_state = player.get_player_state()
+        
+        if action_state == PlayerStates.STUNNED:
+            return_data = StunActionData(
+                player.get_player_state(),
+                player.direction,
+                player.action.right_animation,
+                player.stun_timeout,
+                player.stun_timer
+            )
+        
+        elif action_state == PlayerStates.TRANSITION:
+            return_data = TransitionActionData(
+                player.get_player_state(),
+                player.direction,
+                player.action.right_animation,
+                player.action.next_action.action_state,
+                player.action.next_action.right_animation.name
+            )
+        
+        elif action_state == PlayerStates.JUMPING:
+            return_data = TimedActionData(
+                player.get_player_state(),
+                player.direction,
+                player.high_jump_timeout,
+                player.jump_timer
+            )
+        
+        elif action_state == PlayerStates.ATTACKING:
+            return_data = AttackActionData(
+                player.get_player_state(),
+                player.direction,
+                player.action.right_animation.name
+            )
+        
+        else:
+            return_data = ActionData(player.get_player_state(), player.direction)
+        
+        return return_data
+
+class PlayerState():
+    def __init__(
+        self,
+        animation_run_time,
+        keys_pressed,
+        action_data,
+        reference_position,
+        velocity,
+        health,
+        direction
+    ):
+        self.animation_run_time = animation_run_time
+        self.keys_pressed = keys_pressed
+        self.action_data = action_data
+        self.reference_position = reference_position
+        self.velocity = velocity
+        self.health = health
+        self.direction = direction
+    
+    def __eq__(self, x):
+       
+        return (
+            self.animation_run_time == x.animation_run_time and
+            self.action_data.action_state == x.action_data.action_state and
+            self.reference_position == x.reference_position and
+            self.velocity == x.velocity and
+            self.health == x.health and
+            self.direction == x.direction
+        )
+    
+    def _pack(self):
+        return (self.animation_run_time, self.keys_pressed, self.action_data,
+        self.reference_position, self.velocity, self.health, self.direction)
+
+class SimulationState():
+    def __init__(
+        self,
+        player_states,
+        match_time
+    ):
+        self.player_states = player_states
+        self.match_time = match_time
+    
+    def __eq__(self, z):
+        return reduce(
+            lambda x, y: x and y,
+            [
+                self.player_states[player_position] == z.player_states[player_position]
+                for player_position
+                in self.player_states.keys()
+            ]
+        )
+    
+    def __ne__(self, z):
+        return not self.__eq__(z)
+    
+    def _pack(self):
+        return (self.player_states, self.match_time)
+
+class NetworkedSimulation(MatchSimulation):
+    def __init__(
+        self,
+        pipe_connection,
+        timestep=20,
+        player_type_dictionary=None,
+        player_dictionary=None,
+        player_position=PlayerPositions.NONE
+    ):
+        MatchSimulation.__init__(
+            self,
+            pipe_connection,
+            timestep = timestep,
+            player_type_dictionary = player_type_dictionary,
+            player_dictionary = player_dictionary
+        )
+        
+        self.player_position = player_position
+        self.state_history = []
+        self.input_history = []
+        self.action_data_factory = ActionDataFactory()
+    
+    def step(self, player_keys_pressed, time_passed):
+        """update the state of the players in the simulation"""
+        
+        self.accumulator += time_passed
+        
+        while self.accumulator > self.timestep:
+            for player_position in player_keys_pressed:
+                #set the keys pressed to the last known keys pressed for any player
+                #that's not local
+                if (player_position != self.player_position and
+                len(self.input_history) > 0):
+                    player_keys_pressed[player_position] = self.input_history[-1][player_position]
+            
+            self.update_simulation_state(player_keys_pressed)
+            
+            self.state_history.append(self.get_simulation_state())
+            self.input_history.append(player_keys_pressed)
+    
+    def get_simulation_state(self):
+        player_state_dictionary = dict(
+            [
+                (player_position, self.get_player_state(player))
+                for player_position, player 
+                in self.player_dictionary.iteritems()
+            ]
+        )
+        
+        return SimulationState(
+            player_state_dictionary,
+            self.match_time
+        )
+    
+    def get_player_state(self, player):
+        inputs = []
+        
+        if len(self.input_history) > 1:
+            inputs = self.input_history[-1]
+        
+        return PlayerState(
+            player.model.animation_run_time,
+            inputs,
+            self.action_data_factory.create_action_data(player),
+            player.model.position,
+            player.model.velocity,
+            player.health_meter,
+            player.direction
+        )
+    
+    def get_history_index(self, input_match_time):
+        
+        return_index = None
+        
+        time_difference = self.match_time - input_match_time
+        
+        if time_difference > 0:
+            return_index = -1 - int(time_difference / self.timestep)
+        elif time_difference == 0:
+            return_index = -1
+        
+        return return_index
+    
+    def replay(self, input_step_count):
+        for i in range(input_step_count,0,-1):
+            self.update_match_state()
+            
+            self.update_player_states(
+                self.input_history[-i]
+            )
+            self.state_history.append(
+                self.get_simulation_state()
+            )
+
+class ServerSimulation(NetworkedSimulation):
+    def run(self):
+        while 1:
+            while self.pipe_connection.poll():
+                data = self.pipe_connection.recv()
+                action_type = data[SimulationDataKeys.ACTION]
+                
+                if action_type == SimulationActionTypes.STOP or data == 'STOP':
+                    raise Exception("Terminating Simulation Process!")
+                    
+                elif action_type == SimulationActionTypes.STEP:
+                    
+                    self.step(
+                        data[SimulationDataKeys.KEYS_PRESSED], 
+                        data[SimulationDataKeys.TIME_PASSED]
+                    )
+                
+                    self.pipe_connection.send(
+                        {
+                            SimulationDataKeys.ACTION : SimulationActionTypes.STEP,
+                            SimulationDataKeys.RENDERING_INFO : self.get_rendering_info()
+                        }
+                    )
+                    
+                    if self.match_time % 30 == 0:
+                        self.pipe_connection.send(
+                            {
+                                SimulationDataKeys.ACTION : SimulationActionTypes.GET_STATE,
+                                SimulationDataKeys.SIMULATION_STATE : self.get_simulation_state()
+                            }
+                        )
+                    
+                elif action_type == SimulationActionTypes.UPDATE_INPUT:
+                    
+                    self.sync_to_client(
+                        data[SimulationDataKeys.MATCH_TIME],
+                        data[SimulationDataKeys.PLAYER_POSITION],
+                        data[SimulationDataKeys.KEYS_PRESSED]
+                    )
+                
+                elif action_type == SimulationActionTypes.UPDATE_STATE:
+                    pass #Since hosts are the authority they don't get checked against
+                    #remote simulation states.
+                else:
+                    raise Exception("Invalid Action Type: " + str(action_type))
+            
+            self.clock.tick(100)
+    
+    def sync_to_client(self, match_time, player_position, keys_pressed):
+        """replay the given number of steps with a client's inputs"""
+        
+        history_index = self.get_history_index(match_time)
+        
+        self.state_history = self.state_history[:history_index]
+        print(match_time)
+        print(player_position)
+        print(
+            "server input: " + 
+            str(self.input_history[history_index][player_position])
+        )
+        print("client input: " + str(keys_pressed))
+        if self.input_history[history_index][player_position] != keys_pressed:
+            self.input_history[history_index][player_position] = keys_pressed
+            self.replay(len(self.input_history) - len(self.state_history))
+    
+    def send_simulation_state(self):
+        self.pipe_connection.send(self.get_simulation_state())
+
+class ClientSimulation(NetworkedSimulation):
+    
+    def run(self):
+        while 1:
+            while self.pipe_connection.poll():
+                data = self.pipe_connection.recv()
+                action_type = data[SimulationDataKeys.ACTION]
+                
+                if action_type == SimulationActionTypes.STOP or data == 'STOP':
+                    raise Exception("Terminating Simulation Process!")
+                    
+                elif action_type == SimulationActionTypes.STEP:
+                    
+                    self.step(
+                        data[SimulationDataKeys.KEYS_PRESSED], 
+                        data[SimulationDataKeys.TIME_PASSED]
+                    )
+                
+                    self.pipe_connection.send(
+                        {
+                            SimulationDataKeys.ACTION : SimulationActionTypes.STEP,
+                            SimulationDataKeys.RENDERING_INFO : self.get_rendering_info()
+                        }
+                    )
+                    
+                    if self.player_position != PlayerPositions.NONE:
+                        if (
+                            len(self.input_history) == 1 or
+                            (len(self.input_history) > 1 and
+                            self.input_history[-1] != self.input_history[-2])
+                        ):
+                            self.pipe_connection.send(
+                                {
+                                    SimulationDataKeys.ACTION : SimulationActionTypes.UPDATE_INPUT,
+                                    SimulationDataKeys.KEYS_PRESSED : self.input_history[-1],
+                                    SimulationDataKeys.PLAYER_POSITION : self.player_position,
+                                    SimulationDataKeys.MATCH_TIME : self.match_time
+                                }
+                            )
+                
+                elif action_type == SimulationActionTypes.UPDATE_STATE:
+                    self.sync_to_server_state(
+                        data[SimulationDataKeys.SIMULATION_STATE]
+                    )
+                
+                elif action_type == SimulationActionTypes.UPDATE_INPUT:
+                    pass #clients should only update against the player state of the
+                    #host
+                else:
+                    raise Exception("Invalid Action Type: " + str(action_type))
+            
+            self.clock.tick(100)
+    
+    def sync_to_server_state(self, server_simulation_state):
+        #sync players to simulation state
+        
+        #get matching history index. NOTE - history index is negative
+        history_index = self.get_history_index(server_simulation_state.match_time)
+        
+        if history_index != None and abs(history_index) < len(self.state_history):
+            client_simulation_state = self.state_history[history_index]
+            
+            if client_simulation_state != server_simulation_state:
+                
+                self.state_history = self.state_history[:history_index]
+                #sync player states to simulation state
+                for player_position, player_state in server_simulation_state.player_states.iteritems():
+                    self.player_dictionary[player_position].sync_to_server_state(
+                        player_state
+                    )
+            
+            #change history to match
+            self.state_history.append(server_simulation_state)
+            
+            #replay from point in history
+            self.replay(len(self.input_history) - len(self.state_history))
+
 serializable.register(PlayerState)
+serializable.register(SimulationState)
+serializable.register(ActionData)
+serializable.register(TimedActionData)
+serializable.register(AttackActionData)
+serializable.register(GeneratedActionData)
+serializable.register(TransitionActionData)
+serializable.register(StunActionData)

@@ -199,6 +199,10 @@ class Transition(Action):
         
         #set friction so that stun friction doesn't remain
         player.model.friction = physics.FRICTION
+    
+    def sync(self, direction, animation):
+        self.right_animation = animation
+        self.direction = direction
 
 class Walk(Action):
     def __init__(self):
@@ -433,6 +437,10 @@ class Stun(Action):
         
         if player.model.time_passed > 0:
             self.move_player(player)
+    
+    def sync(self, direction, animation):
+        self.right_animation = animation
+        self.direction = direction
 
 class Attack(Action):
     PUNCH_LINE_NAMES = [

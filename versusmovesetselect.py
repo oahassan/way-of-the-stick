@@ -8,7 +8,7 @@ import versusmode
 import button
 import movesetselectui
 import wotsuicontainers
-from enumerations import PlayerPositions
+from enumerations import PlayerPositions, PlayerTypes
 
 loaded = False
 exit_button = None
@@ -141,25 +141,28 @@ def handle_events():
         
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):
+                
                 if player1_type_select.selected_button != None:
                     if player1_type_select.selected_button.text.text == 'Human':
-                        versusmode.player_type_dictionary[PlayerPositions.PLAYER1] = versusmode.PlayerTypes.HUMAN
+                        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER1] = PlayerTypes.HUMAN
                     elif player1_type_select.selected_button.text.text == 'Bot':
-                        versusmode.player_type_dictionary[PlayerPositions.PLAYER1] = versusmode.PlayerTypes.BOT
+                        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER1] = PlayerTypes.BOT
                 
                 if player2_type_select.selected_button != None:
                     if player2_type_select.selected_button.text.text == 'Human':
-                        versusmode.player_type_dictionary[PlayerPositions.PLAYER2] = versusmode.PlayerTypes.HUMAN
+                        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.HUMAN
                     elif player2_type_select.selected_button.text.text == 'Bot':
-                        versusmode.player_type_dictionary[PlayerPositions.PLAYER2] = versusmode.PlayerTypes.BOT
+                        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.BOT
                 
                 versusmode.init()
-                versusmode.player_dictionary[PlayerPositions.PLAYER1].load_moveset(
+                
+                versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1].load_moveset(
                     player1_moveset_select.selected_moveset
                 )
-                versusmode.player_dictionary[PlayerPositions.PLAYER2].load_moveset(
+                versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2].load_moveset(
                     player2_moveset_select.selected_moveset
                 )
+                
                 unload()
                 gamestate.mode = gamestate.Modes.VERSUSMODE
     if loaded:

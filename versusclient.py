@@ -4,12 +4,8 @@ from wotsprot.udpclient import EndPoint
 import wotsuievents
 import movesetdata
 import gamestate
-import versusmode
-from versusserver import DFLT_PORT, PlayerPositions, DataKeys, ServerModes
-
-import button
-import movesetselectui
-import wotsuicontainers
+from enumerations import PlayerPositions, SimulationDataKeys
+from versusserver import DFLT_PORT, DataKeys, ServerModes
 
 class ConnectionStatus:
     CONNECTING = 'connecting'
@@ -23,26 +19,57 @@ class ServerActions:
     PLAYER_READY = "player_ready"
     SET_GAME_MODE = "set_game_mode"
     END_MATCH = "end_match"
-    INITIAL_PLAYER_STATES_RECEIVED = "initial_player_states_received"
-    SEND_INITIAL_PLAYER_STATE = "send_initial_player_state"
-    UPDATE_PLAYER_STATE = "update_player_state"
+    ALL_MOVESETS_LOADED = "all_movesets_loaded"
+    UPDATE_SIMULATION_STATE = "update_simulation_state"
     SEND_CHAT_MESSAGE = "send_chat_message"
+    SET_MOVESET = "set_moveset"
+    UPDATE_INPUT_STATE = "update_input_state"
 
 class ClientConnectionListener(EndPoint):
     def __init__(self):
         EndPoint.__init__(self, local_address=("",0))
         self.connection_status = ConnectionStatus.DISCONNECTED
-        self.player_positions = \
-            {PlayerPositions.PLAYER1 : None, PlayerPositions.PLAYER2 : None}
-        self.player_positions_ready_dictionary = \
-            {PlayerPositions.PLAYER1 : False, PlayerPositions.PLAYER2 : False}
-        self.player_states = \
-            {PlayerPositions.PLAYER1 : None, PlayerPositions.PLAYER2 : None}
+        self.player_positions = {
+            PlayerPositions.PLAYER1 : None, 
+            PlayerPositions.PLAYER2 : None
+        }
+        self.player_positions_ready_dictionary = {
+            PlayerPositions.PLAYER1 : False, 
+            PlayerPositions.PLAYER2 : False
+        }
+        self.simulation_state = None
+        self.player_input = {
+            PlayerPositions.PLAYER1: None, 
+            PlayerPositions.PLAYER2 : None
+        }
+        self.player_movesets = {
+            PlayerPositions.PLAYER1 : None, 
+            PlayerPositions.PLAYER2 : None
+        }
         self.player_nicknames = {}
         self.spectators = []
         self.actions_received = []
         self.player_id = None
         self.server_mode = None
+        self.new_simulation_state_indicator = False
+        self.new_player_inputs_indicator = False
+        self.new_player_input_inditicators = {
+            PlayerPositions.PLAYER1 : False,
+            PlayerPositions.PLAYER2 : False
+        }
+        self.callbacks = {}
+    
+    def register_callback(self, client_action, f):
+        
+        if client_action in self.callbacks:
+            self.callbacks[client_action].append(f)
+            
+        else:
+            self.callbacks[client_action] = [f]
+    
+    def clear_callbacks(self, client_action):
+        
+        del self.callbacks[client_action]
     
     def Close(self):
         EndPoint.Close(self)
@@ -85,6 +112,11 @@ class ClientConnectionListener(EndPoint):
         
         self.Send(data)
     
+    def send_all_movesets_loaded(self):
+        data = {DataKeys.ACTION : ServerActions.ALL_MOVESETS_LOADED}
+        
+        self.Send(data)
+    
     def start_match(self):
         data = {
             DataKeys.ACTION : ServerActions.SET_GAME_MODE,
@@ -99,6 +131,23 @@ class ClientConnectionListener(EndPoint):
         }
         
         self.Send(data)
+    
+    def set_moveset(self, moveset):
+        data = {
+            DataKeys.ACTION : ServerActions.SET_MOVESET,
+            DataKeys.MOVESET : moveset,
+            DataKeys.PLAYER_POSITION : get_local_player_position()
+        }
+        
+        self.Send(data)
+    
+    def send_input_to_host(self, data):
+        data[DataKeys.ACTION] = ServerActions.UPDATE_INPUT_STATE
+        
+        self.Send(data)
+    
+    def get_moveset(self, player_position):
+        return self.player_movesets[player_position]
     
     def del_player(self, player_to_delete_id):
         del self.player_nicknames[player_to_delete_id]
@@ -117,7 +166,7 @@ class ClientConnectionListener(EndPoint):
                 self.player_states[player_position] = None
                 print("player deleted")
     
-    def all_player_states_received(self):
+    def all_player_data_received(self):
         """If any player state is null this returns false."""
         return_indicator = True
         
@@ -127,33 +176,35 @@ class ClientConnectionListener(EndPoint):
         
         return return_indicator
     
-    def send_player_initial_state(self, player_state_dictionary, player_position):
-        """notify the server of a local players initial state"""
-        
-        data = \
-            {
-                DataKeys.ACTION : ServerActions.SEND_INITIAL_PLAYER_STATE,
-                DataKeys.PLAYER_STATE : player_state_dictionary,
-                DataKeys.PLAYER_POSITION : get_local_player_position()
-            }
-        
-        self.Send(data)
+    def get_remote_input(self):
     
-    def update_player_state(self, player_state_dictionary, player_position):
+        self.new_player_inputs_indicator = False
+        return self.player_inputs
+    
+    def get_server_simulation_state(self, data):
+        
+        self.new_player_states_indicator = False
+        return self.simulation_state
+    
+    def update_simulation_state(self, simulation_state):
         
         if self.server_mode == ServerModes.MATCH:
-            data = \
-                {
-                    DataKeys.ACTION : ServerActions.UPDATE_PLAYER_STATE,
-                    DataKeys.PLAYER_STATE : player_state_dictionary,
-                    DataKeys.PLAYER_POSITION : get_local_player_position()
-                }
+            data = {
+                DataKeys.ACTION : ServerActions.UPDATE_SIMULATION_STATE,
+                DataKeys.SIMULATION_STATE : simulation_state
+            }
             
             self.Send(data)
         
     def clear_player_states(self):
         for player_position in self.player_states.keys():
             self.player_states[player_position] = None
+            self.player_movesets[player_position] = None
+            self.player_input[player_position] = None
+        
+        self.new_player_inputs_indicator = False
+        self.new_simulation_state_indicator = False
+        self.simulation_state = None
     
     
     #Network methods
@@ -163,6 +214,11 @@ class ClientConnectionListener(EndPoint):
             self.connection_status = ConnectionStatus.CONNECTED
         
         self.actions_received.append(data)
+        
+        action = data[DataKeys.ACTION]
+        if action in self.callbacks:
+            for f in self.callbacks[action]:
+                f(data)
         
         #print("local client")
         #print(data)
@@ -192,6 +248,11 @@ class ClientConnectionListener(EndPoint):
     def Network_get_player_id(self, data):
         self.player_id = data[DataKeys.PLAYER_ID]
     
+    def Network_set_moveset(self, data):
+        
+        player_position = data[DataKeys.PLAYER_POSITION]
+        self.player_movesets[player_position] = data[DataKeys.MOVESET]
+    
     def Network_sync_to_server(self, data):
         """syncs client data on connected players with server"""
         
@@ -201,21 +262,9 @@ class ClientConnectionListener(EndPoint):
         self.player_positions = data[DataKeys.PLAYER_POSITIONS]
         self.player_nicknames = data[DataKeys.PLAYER_NICKNAMES]
         self.player_positions_ready_dictionary = data[DataKeys.PLAYER_POSITIONS_READY]
+        self.player_movesets = data[DataKeys.PLAYER_MOVESETS]
         
         self.server_mode = data[DataKeys.SERVER_MODE]
-    
-    def Network_receive_player_initial_state(self, data):
-        """receive the inital state of a remote player.  If all states have been received
-        notify the server."""
-        player_position = data[DataKeys.PLAYER_POSITION]
-        
-        self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
-        
-        if self.all_player_states_received():
-            #notify server that all player states have been received
-            data = {DataKeys.ACTION : ServerActions.INITIAL_PLAYER_STATES_RECEIVED}
-            
-            self.Send(data)
     
     def Network_match_full(self, data):
         pass
@@ -236,13 +285,6 @@ class ClientConnectionListener(EndPoint):
         
         self.player_positions_ready_dictionary[player_position] = \
             data[DataKeys.PLAYER_READY_INDICATOR]
-    
-    def Network_update_player_state(self, data):
-    
-        if self.server_mode == ServerModes.MATCH:
-            player_position = data[DataKeys.PLAYER_POSITION]
-            
-            self.player_states[player_position] = data[DataKeys.PLAYER_STATE]
     
     def Network_receive_chat_message(self, data):
         pass
@@ -283,12 +325,12 @@ def update_player_state(player_state_dictionary, player_position):
     listener.update_player_state(player_state_dictionary, player_position)
 
 def get_player_state(player_position):
-    return listener.player_states[player_position]
+    return listener.simulation_state.player_states[player_position]
 
 def local_player_match_data_loaded():
     player_position = get_local_player_position()
     
-    if listener.player_states[player_position] == None:
+    if listener.simulation_state.player_states[player_position] == None:
         return False
     else:
         return True
@@ -297,6 +339,8 @@ def get_local_player_position():
     for player_position, player_id in listener.player_positions.iteritems():
         if player_id == listener.player_id:
             return player_position
+    
+    return PlayerPositions.NONE
 
 def local_player_is_in_match(): 
     if listener == None:

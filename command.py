@@ -43,6 +43,7 @@ TODO
 """
 
 import inputtree
+from wotsprot.rencode import serializable
 from enumerations import InputActionTypes, CommandDurations
 from collections import deque
 
@@ -51,6 +52,9 @@ class Command:
     def __init__(self, command_type, duration):
         self.command_type = command_type
         self.duration = duration
+    
+    def _pack(self):
+        return (command_type, duration)
     
     def __str__(self):
         return ("Command Type: {0}, Duration: {1}".format(
@@ -360,6 +364,8 @@ class CommandHandler:
                 Valid values are {0}.
                 Got {1}""".format(self.command_types, command.command_type)
             )
+
+serializable.register(Command)
 
 if __name__ == '__main__':
     import unittest
