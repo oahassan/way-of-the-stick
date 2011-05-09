@@ -393,7 +393,7 @@ class Circle(Line):
         dimensions = (int(2*(radius + line_thickness)), int(2*(radius + line_thickness)))
         enclosing_circle_rect = pygame.Rect(top_left, dimensions)
         
-        return enclosing_rect1.union(enclosing_rect2).union (enclosing_circle_rect)
+        return enclosing_rect1.union(enclosing_rect2).union(enclosing_circle_rect)
     
     def draw(self, \
             surface, \

@@ -24,7 +24,7 @@ class Bot(Player):
     def load_moveset(self, moveset):
         self.moveset = moveset
         
-        factory = ActionFactory()
+        factory = ActionFactory(self)
         
         #load rest animation
         stand_animation = moveset.movement_animations[PlayerStates.STANDING]

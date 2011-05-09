@@ -109,7 +109,7 @@ def handle_events():
     global start_match_label
     global player1_type_select
     global player1_moveset_select
-    global player2_stats_widget
+    global player1_stats_widget
     global player2_type_select
     global player2_moveset_select
     global player2_stats_widget
@@ -172,8 +172,14 @@ def handle_events():
                 
                 versusmode.init()
                 
+                versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1].set_player_stats(
+                    player1_stats_widget.get_size()
+                )
                 versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1].load_moveset(
                     player1_moveset_select.selected_moveset
+                )
+                versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2].set_player_stats(
+                    player2_stats_widget.get_size()
                 )
                 versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2].load_moveset(
                     player2_moveset_select.selected_moveset

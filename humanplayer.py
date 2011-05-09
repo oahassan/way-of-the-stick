@@ -22,7 +22,7 @@ class HumanPlayer(player.Player):
         self.controller = None
     
     def load_moveset(self, moveset):
-        controller_factory = ControllerFactory()
+        controller_factory = ControllerFactory(self)
         self.actions[PlayerStates.STUNNED] = controller_factory.create_action(
             PlayerStates.STUNNED
         )
@@ -107,8 +107,8 @@ class HumanPlayer(player.Player):
 
 class ControllerFactory():
     
-    def __init__(self):
-        self.action_factory = ActionFactory()
+    def __init__(self, input_player):
+        self.action_factory = ActionFactory(input_player)
     
     def create_controller_from_moveset(self, moveset, input_player):
         """Creates a controller object from a moveset"""

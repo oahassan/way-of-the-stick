@@ -83,11 +83,15 @@ class Player():
         self.run_speed = .75
         self.jump_speed = -.5
         self.high_jump_speed = -.75
-        self.aerial_acceleration = .01
-        self.max_aerial_velocity = .75
+        self.size = 5
+        self.power = 5
+        self.speed = 5
+        self.weight = 5
+        self.max_stun_velocity = 1
         self.tap_stun_acceleration = .05
         self.hold_stun_acceleration = .01
-        self.max_stun_velocity = 1
+        self.aerial_acceleration = .01
+        self.max_aerial_velocity = .1
         self.actions = {}
         self.knockback_vector = (0,0)
         self.interaction_vector = (0,0)
@@ -100,6 +104,12 @@ class Player():
         self.point_name_to_point_damage = {} #Point name to PointDamage object
         self.previous_point_positions = {}
         self.handle_input_events = True
+    
+    def set_player_stats(self, size):
+        self.size = size
+    
+    def get_animation_height(self):
+        return 50 + (10 * self.size)
     
     def init_state(self):
         self.model.load_points()

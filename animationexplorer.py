@@ -187,7 +187,23 @@ def create_WOTS_animation():
     frame.add_line(right_upper_leg)
     frame.add_line(right_lower_leg)
     
+    #set_point_radii(WOTS_animation)
+    #set_line_thicknesses(WOTS_animation)
+    
     return WOTS_animation
+
+def set_point_radii(animation):
+    for frame in animation.frames:
+        for point in frame.point_dictionary.values():
+            point.radius = 8
+
+def set_line_thicknesses(animation):
+    
+    for circle in frame.circles():
+        circle.thickness = 16
+    
+    for line in frame.lines():
+        line.thickness = 16
 
 def add_names_to_points_and_lines(animation):
     for frame in animation.frames:

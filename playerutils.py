@@ -657,8 +657,8 @@ class Attack(Action):
 class ActionFactory():
     """factory class for creating attack objects"""
     
-    def __init__(self):
-        pass
+    def __init__(self, input_player):
+        self.player = input_player
     
     def create_stand(self, animation):
         return_stand = Stand()
@@ -745,7 +745,10 @@ class ActionFactory():
     
     def crte_player_animation(self, animation):
         rtn_animation = copy.deepcopy(animation)
-        rtn_animation.scale(.7)
+        rtn_animation.set_animation_height(
+            self.player.get_animation_height(), 
+            REFERENCE_HEIGHT
+        )
         rtn_animation.set_frame_deltas()
         rtn_animation.set_animation_deltas()
         

@@ -195,7 +195,8 @@ class PlayerSettingControl(Slider):
         self.add_child(self.title_label)
         self.add_child(self.value_label)
         
-        
+    def get_value(self):
+        return int(10 * self.get_scroll_percent())
     
     def set_layout_data(self, position, slider_width, bar_height):
         slider_position = (
@@ -255,10 +256,10 @@ class PlayerStatsWidget(UIObjectBase):
             200, 
             "Weight"
         )
-        self.add_child(self.weight_control)
+        #self.add_child(self.weight_control)
     
-    def get_value(self):
-        return int(10 * self.get_scroll_percent)
+    def get_size(self): 
+        return self.size_control.get_value()
     
     def handle_events(self):
         size_control_percent = self.size_control.get_scroll_percent()
@@ -300,4 +301,4 @@ class PlayerStatsWidget(UIObjectBase):
                 self.power_control.set_scroll_percent(1 - new_speed_control_percent)
                 self.size_control.set_scroll_percent(1 - new_speed_control_percent)
         
-        self.weight_control.handle_events()
+        #self.weight_control.handle_events()

@@ -14,7 +14,7 @@ class TestPlayer(Player):
         self.action = None
         
     def load_action(self, action_type, animation):
-        factory = ActionFactory()
+        factory = ActionFactory(self)
         
         self.action = self.create_action(action_type, animation)
         self.action.animation = self.action.right_animation
@@ -39,7 +39,7 @@ class TestPlayer(Player):
     
     def create_action(self, action_type, animation = None, direction = PlayerStates.FACING_RIGHT, key = pygame.K_UP):
         return_action = None
-        factory = ActionFactory()
+        factory = ActionFactory(self)
         
         if action_type == PlayerStates.STANDING:
             return_action = factory.create_stand(animation)

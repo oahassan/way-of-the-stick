@@ -488,24 +488,30 @@ class Animation:
             if image_height < Animation._ThumbnailHeight:
                 scale = 1
             else:
-                scale = Animation._ThumbnailHeight / image_height
+                scale = Animation._ThumbnailHeight / float(image_height)
             
             reference_pos = frame.get_reference_position()
             
-            pos_delta = (frame_pos[0] - reference_pos[0], \
-                        frame_pos[1] - reference_pos[1])
+            pos_delta = (
+                frame_pos[0] - reference_pos[0],
+                frame_pos[1] - reference_pos[1]
+            )
             
             if scale > 0:
-                frame.draw(surface, \
-                          color, \
-                          scale, \
-                          pos_delta, \
-                          Animation._ThumbnailPointRadius, \
-                          Animation._ThumbnailLineThickness)
+                frame.draw(
+                    surface,
+                    color,
+                    scale,
+                    pos_delta,
+                    Animation._ThumbnailPointRadius,
+                    Animation._ThumbnailLineThickness
+                )
             
-            next_x_pos = frame_pos[0] + \
-                         (scale * frame.image_width()) + \
-                         Animation._ThumbnailPadding
+            next_x_pos = (
+                frame_pos[0] +
+                (scale * frame.image_width()) + 
+                Animation._ThumbnailPadding
+            )
             
             frame_pos = (next_x_pos, frame_pos[1])
     
@@ -607,7 +613,7 @@ class Animation:
         for i in range(len(self.frames)):
             frame = self.frames[i]
             
-            relative_heights[i] = frame.image_height() / reference_height
+            relative_heights[i] = frame.image_height() / float(reference_height)
         
         for i in range(len(self.frames)):
             frame = self.frames[i]
@@ -615,7 +621,7 @@ class Animation:
             relative_height = height * relative_heights[i]
             
             if frame.image_height() > relative_height:
-                scale = relative_height / frame.image_height()
+                scale = relative_height / float(frame.image_height())
                 frame.scale(scale)
     
     def scale(self, scale):
