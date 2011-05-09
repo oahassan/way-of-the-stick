@@ -2,6 +2,8 @@ import sys
 import os
 import multiprocessing
 
+multiprocessing.freeze_support()
+
 # sys.stderr = open("logfile.txt","w")
 # sys.stdout = open("logfile_out.txt","w")
 
