@@ -37,8 +37,8 @@ drawing_mode = DrawingModes.UPDATE_ALL
 mode = Modes.SPLASH
 animation = None
 
-screen = pygame.display.set_mode((_WIDTH, _HEIGHT))
-clock = pygame.time.Clock()
+screen = None
+clock = None
 
 old_dirty_rects = []
 new_dirty_rects = []
@@ -46,6 +46,13 @@ new_dirty_rects = []
 hosting = False
 
 processes = []
+
+def init_pygame_vars():
+    global screen
+    global clock
+    
+    screen = pygame.display.set_mode((_WIDTH, _HEIGHT))
+    clock = pygame.time.Clock()
 
 def update_time():
     global time_passed

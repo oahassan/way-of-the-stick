@@ -19,6 +19,7 @@ from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults
 PlayerStates
 
 gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
+step_number = 0
 
 class VersusModeState():
     def __init__(self):
@@ -343,6 +344,10 @@ class VersusModeState():
 
     def start_match_simulation(self):    
         
+        self.match_simulation.step(
+            self.build_player_keys_pressed(), self.match_simulation.timestep
+        )
+        
         #initialize renderer state
         self.player_renderer_state.update(
             self.match_simulation.get_rendering_info(
@@ -359,7 +364,10 @@ class VersusModeState():
         self.simulation_process.start()
         
         #reset game clock
-        gamestate.time_passed = 10
+        gamestate.clock.tick(gamestate.frame_rate)
+        gamestate.update_time()
+        gamestate.clock.tick(gamestate.frame_rate)
+        gamestate.update_time()
 
     def set_outline_color(self, simulation_rendering_info):
         player_rendering_info_dictionary = simulation_rendering_info.player_rendering_info_dictionary
@@ -385,7 +393,7 @@ class VersusModeState():
             )
             
         elif self.match_state == MatchStates.FIGHT and self.match_time < 4000:
-            self.fight_start_timer += gamestate.clock.get_time()
+            self.fight_start_timer += gamestate.time_passed
             self.match_state = MatchStates.FIGHT
             gamestate.new_dirty_rects.append(
                 pygame.Rect(
@@ -396,7 +404,7 @@ class VersusModeState():
         elif self.match_state == MatchStates.PLAYER1_WINS:
             
             if self.fight_end_timer < 8000:
-                self.fight_end_timer += gamestate.clock.get_time()
+                self.fight_end_timer += gamestate.time_passed
                 self.player1_wins_label.draw(gamestate.screen)
                 
                 gamestate.new_dirty_rects.append(
@@ -415,7 +423,7 @@ class VersusModeState():
         elif self.match_state == MatchStates.PLAYER2_WINS:
             
             if self.fight_end_timer < 8000:
-                self.fight_end_timer += gamestate.clock.get_time()
+                self.fight_end_timer += gamestate.time_passed
                 self.player2_wins_label.draw(gamestate.screen)
                 gamestate.new_dirty_rects.append(
                     pygame.Rect(

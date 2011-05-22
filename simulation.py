@@ -1,4 +1,5 @@
 import os
+import time
 import math
 from functools import reduce
 from collections import deque
@@ -8,6 +9,36 @@ from wotsprot.rencode import serializable
 from enumerations import MatchStates, PlayerTypes, ClashResults, \
 PlayerPositions, PlayerStates, LineNames, PointNames, SimulationDataKeys, \
 SimulationActionTypes
+
+class SimulationClock():
+    """A pickleable clock"""
+    def __init__(self, frame_rate):
+        #the target time between each tick in seconds
+        tick_time = max(1 / float(frame_rate), 0)
+        
+        #execution should stop until the next tick time if tick is called.
+        self.next_tick_time = time.clock() + tick_time
+    
+    def tick(self, frame_rate):
+        """pause execution until the next tick time.  If the current time has
+        passed the next tick time, update the next tick time to match the 
+        frame rate starting from the current time and continue execution."""
+        
+        current_time = time.clock()
+        tick_time = max(1 / float(frame_rate), 0)
+        
+        if current_time > self.next_tick_time:
+            self.next_tick_time = current_time + tick_time
+            
+        else:
+            time.sleep(
+                min(
+                    tick_time,
+                    self.next_tick_time - current_time
+                )
+            )
+             
+            self.next_tick_time += tick_time
 
 class SimulationRenderingInfo():
     def __init__(
@@ -72,7 +103,7 @@ class MatchSimulation():
         self.accumulator = 0
         self.player_type_dictionary = player_type_dictionary
         self.player_dictionary = player_dictionary
-        self.clock = pygame.time.Clock()
+        self.clock = SimulationClock(100)
         self.attack_resolver = AttackResolver()
         self.current_attack_result = None
         self.collision_handler = CollisionHandler()
@@ -100,11 +131,11 @@ class MatchSimulation():
         
         while self.accumulator > self.timestep:
             self.update_simulation_state(player_keys_pressed)
+            self.accumulator -= self.timestep    
     
     def update_simulation_state(self, player_keys_pressed):
         self.update_match_state()
         self.update_player_states(player_keys_pressed)
-        self.accumulator -= self.timestep
         self.match_time += self.timestep
     
     def update_match_state(self):
