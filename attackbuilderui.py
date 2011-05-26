@@ -558,7 +558,12 @@ class AttackSelectContainer(AnimationSelectContainer):
                 self.moveset.delete_attack(label.attack_name)
     
     def handle_events(self):
+        reload_indicator = self.animation_navigator.reload_indicator
+        
         self.animation_navigator.handle_events()
+        
+        if reload_indicator:
+            self.sync_to_moveset()
         
         if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
             for button in self.buttons:
@@ -959,7 +964,8 @@ if __name__ == "__main__":
     pygame.font.init()
 
     import gamestate
-
+    gamestate.init_pygame_vars()
+    
     screen = gamestate.screen
     pygame.display.set_caption("Way of the Stick")
     attack_builder_container = AttackBuilderContainer()
