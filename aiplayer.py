@@ -143,7 +143,7 @@ class Bot(Player):
     def get_direction(self, enemy):
         direction = PlayerStates.FACING_LEFT
         
-        if enemy.model.position[0] > self.model.position[0]:
+        if enemy.model.center()[0] > self.model.center()[0]:
             direction = PlayerStates.FACING_RIGHT
         
         return direction
@@ -164,7 +164,9 @@ class Bot(Player):
             next_action = self.move_towards_enemy(enemy)
         
         if next_action != None:
-            next_action.direction = self.get_direction(enemy)
+            direction = self.get_direction(enemy)
+            self.direction = direction
+            next_action.direction = direction
         
         if (next_action != None
         and next_action != self.action
