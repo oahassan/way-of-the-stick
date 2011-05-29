@@ -200,6 +200,16 @@ class Transition(Action):
         #set friction so that stun friction doesn't remain
         player.model.friction = physics.FRICTION
     
+    def test_state_change(self, player):
+        change_state = False
+        
+        if self.next_action.action_state == PlayerStates.ATTACKING:
+            pass
+        elif self.action_state in PlayerStates.PRESSED_KEY_STATE_TRANSITIONS[player.action.action_state]:
+            change_state = True
+        
+        return change_state
+    
     def sync(self, direction, animation):
         self.right_animation = animation
         self.direction = direction
