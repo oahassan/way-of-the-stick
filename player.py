@@ -11,7 +11,7 @@ import physics
 import mathfuncs
 import stick
 import pulltool
-from controlsdata import InputActionTypes
+from enumerations import InputActionTypes
 import settingsdata
 from playerutils import Transition
 from playerconstants import *
@@ -278,6 +278,8 @@ class Player():
         
         current_point_positions_dictionary = self.get_player_point_positions()
         
+        
+        
         for point_name in self.point_name_to_point_damage.keys():
             
             current_relative_position = \
@@ -293,17 +295,18 @@ class Player():
                 )
             
             additional_damage = \
-                mathfuncs.distance(
-                    current_relative_position,
-                    previous_relative_position
-                ) + self.get_extension_damage(
-                    point_name,
-                    current_point_positions_dictionary
+                min(
+                    self.get_max_attack_damage(),
+                    (mathfuncs.distance(
+                        current_relative_position,
+                        previous_relative_position
+                    ) + self.get_extension_damage(
+                        point_name,
+                        current_point_positions_dictionary
+                    )) * self.get_damage_growth_rate()
                 )
             
-            #use multiplier to adjust damage given the attack type
-            self.point_name_to_point_damage[point_name] += \
-                additional_damage * self.action.get_damage_multiplier()
+            self.point_name_to_point_damage[point_name] += additional_damage
     
     def get_extension_damage(self, point_name, current_point_positions):
         if point_name == stick.PointNames.RIGHT_HAND:
@@ -415,6 +418,32 @@ class Player():
     
     def get_attack_type(self):
         return self.action.attack_type
+    
+    def get_max_attack_damage(self):
+        if (self.get_attack_type() in 
+        [InputActionTypes.WEAK_PUNCH, InputActionTypes.WEAK_KICK]):
+            return WEAK_ATTACK_MAX_DAMAGE
+            
+        elif (self.get_attack_type() in 
+        [InputActionTypes.MEDIUM_PUNCH, InputActionTypes.MEDIUM_KICK]):
+            return MEDIUM_ATTACK_MAX_DAMAGE
+            
+        elif (self.get_attack_type() in 
+        [InputActionTypes.STRONG_PUNCH, InputActionTypes.STRONG_KICK]):
+            return STRONG_ATTACK_MAX_DAMAGE
+    
+    def get_damage_growth_rate(self):
+        if (self.get_attack_type() in 
+        [InputActionTypes.WEAK_PUNCH, InputActionTypes.WEAK_KICK]):
+            return WEAK_DAMAGE_GROWTH_RATE
+            
+        elif (self.get_attack_type() in 
+        [InputActionTypes.MEDIUM_PUNCH, InputActionTypes.MEDIUM_KICK]):
+            return MEDIUM_DAMAGE_GROWTH_RATE
+            
+        elif (self.get_attack_type() in 
+        [InputActionTypes.STRONG_PUNCH, InputActionTypes.STRONG_KICK]):
+            return STRONG_DAMAGE_GROWTH_RATE
     
     def get_attack_acceleration(self):
         
