@@ -617,12 +617,10 @@ class Animation:
         
         for i in range(len(self.frames)):
             frame = self.frames[i]
-            scale = 1
-            relative_height = height * relative_heights[i]
             
-            if frame.image_height() > relative_height:
-                scale = relative_height / float(frame.image_height())
-                frame.scale(scale)
+            relative_height = height * relative_heights[i]
+            scale = relative_height / float(frame.image_height())
+            frame.scale(scale)
     
     def scale(self, scale):
         for frame in self.frames:
