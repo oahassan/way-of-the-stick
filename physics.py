@@ -38,18 +38,21 @@ class Object():
     def collide(self, object, duration):
         pass
     
-    def resolve_self(self, duration):
+    def resolve_self(self, duration, gravity = True):
         """Changes the position of an object based on its velocity"""
         
         x_velocity = self.velocity[0]
         y_velocity = self.velocity[1] 
         
         x_displacement = x_velocity*duration
-        y_displacement = y_velocity*duration + (.5*self.gravity*(duration**2))
+        
+        if gravity == True:
+            y_displacement = y_velocity*duration + (.5*self.gravity*(duration**2))
+            self.velocity = (x_velocity, y_velocity + self.gravity*duration)
+        else:
+            y_displacement = y_velocity*duration
         
         self.shift((x_displacement,y_displacement))
-        
-        self.velocity = (x_velocity, y_velocity + self.gravity*duration)
     
     def resolve_system(self, system, duration):
         """Changes the position of an object based off of its interaction with
@@ -351,6 +354,25 @@ class Model(Object):
         
         for point_name, position in point_position_dictionary.iteritems():
             self.points[point_name].pos = position
+        
+        self.set_dimensions()
+        self.position = self.get_reference_position()
+    
+    def set_relative_point_positions(self, reference_position, deltas):
+        """sets the position of each point in the model by name from the
+        point_position_dictionary"""
+        
+        for point_name, pos_delta in deltas.iteritems():
+            if self.orientation == Orientations.FACING_RIGHT:
+                self.points[point_name].pos = (
+                    reference_position[0] + pos_delta[0],
+                    reference_position[1] + pos_delta[1]
+                )
+            elif self.orientation == Orientations.FACING_LEFT:
+                self.points[point_name].pos = (
+                    reference_position[0] - pos_delta[0],
+                    reference_position[1] + pos_delta[1]
+                )
         
         self.set_dimensions()
         self.position = self.get_reference_position()

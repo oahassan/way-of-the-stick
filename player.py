@@ -515,9 +515,9 @@ class Player():
         system = []
         
         self.set_velocity()
-        self.model.resolve_self(duration)
+        self.model.resolve_self(duration, gravity)
         
-        if self.is_aerial() == False and gravity == True:
+        if self.is_aerial() == False:
             system.append(gamestate.stage.ground)
             
             if (((self.action.action_state == PlayerStates.FLOATING)
