@@ -510,14 +510,14 @@ class Player():
     def is_aerial(self):
         return int(self.model.position[1] + self.model.height) < gamestate.stage.ground.position[1]
     
-    def apply_physics(self, duration):
+    def apply_physics(self, duration, gravity = True):
         
         system = []
         
         self.set_velocity()
         self.model.resolve_self(duration)
         
-        if self.is_aerial() == False:
+        if self.is_aerial() == False and gravity == True:
             system.append(gamestate.stage.ground)
             
             if (((self.action.action_state == PlayerStates.FLOATING)

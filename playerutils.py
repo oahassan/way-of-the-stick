@@ -286,8 +286,75 @@ class Stand(Action):
         Action.__init__(self, PlayerStates.STANDING)
     
     def move_player(self, player):
-        Action.move_player(self, player)
-        player.move_to_ground()
+        
+        start_time = player.model.animation_run_time
+        end_time = start_time + player.model.time_passed
+        
+        if end_time > self.animation.animation_length:
+            end_time = self.animation.animation_length
+            player.model.animation_run_time = end_time
+            player.model.time_passed = start_time + player.model.time_passed - end_time
+            # player.model.time_passed = 0
+        else:
+            player.model.animation_run_time += player.model.time_passed
+        
+        frame_index = self.animation.get_frame_index_at_time(end_time)
+        
+        self.apply_animation_physics(player, start_time, end_time)
+        player.apply_physics(end_time - start_time, gravity = False)
+        
+        #set the point positions affects whether the player is grounded, so 
+        #there are extra case statements here
+        #if the player was in a grounded state shift back to the ground after 
+        #setting the initial point positions
+        if self.animation.get_matching_jump_interval(frame_index) == None:
+            player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
+            player.move_to_ground()
+        else:
+            player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
+        
+        if player.model.animation_run_time >= self.animation.animation_length:
+            player.handle_animation_end()
+    
+    def apply_animation_physics(self, player, start_time, end_time):
+        """returns the displacement of a point given the start time of the movement and
+        the end time of the movement.  Time resets to 0 at start of animation and 
+        increments in milliseconds.
+        
+        point_id: id of the point to return deltas for"""
+        start_frame_index = self.animation.get_frame_index_at_time(start_time)
+        end_frame_index = self.animation.get_frame_index_at_time(end_time)
+        
+        x_velocity = 0
+        y_velocity = 0
+        
+        for frame_index in range(start_frame_index, end_frame_index + 1):
+            #Initialize the frame times to match start and end of frame
+            displacement_start_time = self.animation.frame_start_times[frame_index]
+            displacement_end_time = (displacement_start_time + 
+                                     self.animation.frame_times[frame_index])
+            elapsed_time = 0
+            if frame_index == start_frame_index:
+                displacement_start_time = start_time
+            
+            if displacement_end_time > end_time:
+                displacement_end_time = end_time
+            
+            duration = displacement_end_time - displacement_start_time
+            
+            x_velocity = self.animation.get_lateral_velocity(displacement_start_time,frame_index)
+            y_velocity = self.animation.get_jump_velocity(displacement_start_time,frame_index)
+            
+            if player.model.orientation == physics.Orientations.FACING_RIGHT:
+                player.model.velocity = (x_velocity, y_velocity)
+            elif player.model.orientation == physics.Orientations.FACING_LEFT:
+                player.model.velocity = (-x_velocity, y_velocity)
+            
+            player.apply_physics(duration)
+    
+    #def move_player(self, player):
+    #    Action.move_player(self, player)
+    #    player.move_to_ground()
     
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)

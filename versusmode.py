@@ -165,12 +165,12 @@ class VersusModeState():
         player1 = self.player_dictionary[PlayerPositions.PLAYER1]
         player1.direction = PlayerStates.FACING_RIGHT
         player1.init_state()
-        player1.model.move_model((700, 967))
+        player1.model.move_model((400, 967))
         
         player2 = self.player_dictionary[PlayerPositions.PLAYER2]
         player2.direction = PlayerStates.FACING_LEFT
         player2.init_state()
-        player2.model.move_model((1100, 967))
+        player2.model.move_model((1200, 967))
         player2.color = (100,100,100)
         player2.health_color = (200,200,200)
 

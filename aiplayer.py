@@ -160,7 +160,7 @@ class Bot(Player):
         if attack != None:
             if attack.test_state_change(self):
                 next_action = attack
-        else:
+        elif self.get_player_state() != PlayerStates.TRANSITION:
             next_action = self.move_towards_enemy(enemy)
         
         if next_action != None:
@@ -169,8 +169,7 @@ class Bot(Player):
             next_action.direction = direction
         
         if (next_action != None
-        and next_action != self.action
-        and self.get_player_state() != PlayerStates.TRANSITION):
+        and next_action != self.action):
             self.transition(next_action)
     
     def move_towards_enemy(self, enemy):
