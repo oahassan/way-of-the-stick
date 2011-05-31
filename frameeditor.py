@@ -40,6 +40,7 @@ class FrameStats():
     def __init__(self):
         self.reference_position_label = button.Label((300, 10), "Reference Position: ", (255,255,255), 15)
         self.bottom_position_label = button.Label((300, 40), "Bottom Position: ", (255,255,255), 15)
+        self.visible = True
     
     def update_frame_stats(self, frame):
         reference_position = frame.get_reference_position()
@@ -47,6 +48,12 @@ class FrameStats():
         self.bottom_position_label.set_text(
             "Bottom Position: " + str(reference_position[1] + frame.image_height())
         )
+    
+    def hide(self):
+        self.visible = False
+    
+    def show(self):
+        self.visible = True
 
 tools = []
 exit_button = button.ExitButton()
@@ -158,8 +165,9 @@ def draw(surface):
     for tool in tools:
         tool.draw(surface)
     
-    frame_stats.reference_position_label.draw(surface)
-    frame_stats.bottom_position_label.draw(surface)
+    if frame_stats.visible:
+        frame_stats.reference_position_label.draw(surface)
+        frame_stats.bottom_position_label.draw(surface)
     
     exit_button.draw(surface)
 
@@ -268,6 +276,11 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
                 unload()
             else:
                 exit_button.color = button.Button._InactiveColor
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_f:
+            if frame_stats.visible:
+                frame_stats.hide()
+            else:
+                frame_stats.show()
     
     if ((slctd_tool == None) and
         (currentTool != None) and
