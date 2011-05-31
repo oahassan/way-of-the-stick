@@ -38,16 +38,28 @@ _TOOL_SET_POS = (0,0)
 
 class FrameStats():
     def __init__(self):
-        self.reference_position_label = button.Label((300, 10), "Reference Position: ", (255,255,255), 15)
-        self.bottom_position_label = button.Label((300, 40), "Bottom Position: ", (255,255,255), 15)
+        self.reference_position_label = button.Label((300, 110), "Reference Position: ", (255,255,255), 15)
+        self.bottom_position_label = button.Label((300, 130), "Bottom Position: ", (255,255,255), 15)
+        self.rect_label = button.Label((300, 150), "Enclosing Rect: ", (255,255,255), 15)
         self.visible = True
     
     def update_frame_stats(self, frame):
         reference_position = frame.get_reference_position()
         self.reference_position_label.set_text("Reference Position: " + str(reference_position))
         self.bottom_position_label.set_text(
-            "Bottom Position: " + str(reference_position[1] + frame.image_height())
+            "Reference Position + Image Height: " + str(reference_position[1] + frame.image_height())
         )
+        enclosing_rect = frame.get_enclosing_rect()
+        self.rect_label.set_text(
+            "Enclosing Rect: Top-" + str(enclosing_rect.top) + " Bottom-" + str(enclosing_rect.bottom) + 
+            " Left-" + str(enclosing_rect.left) + " Right-" + str(enclosing_rect.right)
+        )
+    
+    def draw(self, surface):
+        if self.visible:
+            self.reference_position_label.draw(surface)
+            self.bottom_position_label.draw(surface)
+            self.rect_label.draw(surface)
     
     def hide(self):
         self.visible = False
@@ -165,9 +177,7 @@ def draw(surface):
     for tool in tools:
         tool.draw(surface)
     
-    if frame_stats.visible:
-        frame_stats.reference_position_label.draw(surface)
-        frame_stats.bottom_position_label.draw(surface)
+    frame_stats.draw(surface)
     
     exit_button.draw(surface)
 
