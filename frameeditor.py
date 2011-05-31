@@ -35,6 +35,19 @@ _VERTICAL_PADDING = 5
 _ContainerLineThickness = 2
 _TOOL_SET_POS = (0,0)
 
+
+class FrameStats():
+    def __init__(self):
+        self.reference_position_label = button.Label((300, 10), "Reference Position: ", (255,255,255), 15)
+        self.bottom_position_label = button.Label((300, 40), "Bottom Position: ", (255,255,255), 15)
+    
+    def update_frame_stats(self, frame):
+        reference_position = frame.get_reference_position()
+        self.reference_position_label.set_text("Reference Position: " + str(reference_position))
+        self.bottom_position_label.set_text(
+            "Bottom Position: " + str(reference_position[1] + frame.image_height())
+        )
+
 tools = []
 exit_button = button.ExitButton()
 animation = None
@@ -45,6 +58,7 @@ play_tool = None
 exit_state = gamestate.Modes.ANIMATIONEXPLORER
 exit_ind = False
 loaded = False
+frame_stats = None
 
 def load(animation_type, edit_animation, rtn_state):
     global animation
@@ -56,6 +70,7 @@ def load(animation_type, edit_animation, rtn_state):
     global tools
     global loaded
     global play_tool
+    global frame_stats
     
     animation = edit_animation
     animation.frame_index = 0
@@ -87,6 +102,9 @@ def load(animation_type, edit_animation, rtn_state):
     save_tool.animation_type = animation_type
     tools.append(save_tool)
     
+    frame_stats = FrameStats()
+    
+    
     layout_tools()
     loaded = True
 
@@ -100,6 +118,7 @@ def unload():
     global tools
     global loaded
     global play_tool
+    global frame_stats
     
     play_tool = None
     animation = None
@@ -109,6 +128,7 @@ def unload():
     exit_ind = False
     exit_state = None 
     tools = None
+    frame_stats = None
     loaded = False
 
 def layout_tools():
@@ -137,6 +157,9 @@ def draw(surface):
     surface: the surface to draw the tool set on"""
     for tool in tools:
         tool.draw(surface)
+    
+    frame_stats.reference_position_label.draw(surface)
+    frame_stats.bottom_position_label.draw(surface)
     
     exit_button.draw(surface)
 
@@ -204,6 +227,7 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
     global currentTool
     global exit_ind
     global loaded
+    global animation
     
     mouseover_tool = get_mouseover_tool(mousePos)
     
@@ -254,6 +278,7 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
                                   events)
     
     if loaded:
+        frame_stats.update_frame_stats(animation.frames[animation.frame_index])
         draw(surface)
         
         if currentTool != play_tool:
