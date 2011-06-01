@@ -293,8 +293,9 @@ class Stand(Action):
         
         if end_time > self.animation.animation_length:
             end_time = self.animation.animation_length
+            player.model.time_passed -= self.animation.animation_length - player.model.animation_run_time
             player.model.animation_run_time = end_time
-            player.model.time_passed = start_time + player.model.time_passed - end_time
+            #player.model.time_passed = start_time + player.model.time_passed - end_time
             # player.model.time_passed = 0
         else:
             player.model.animation_run_time += player.model.time_passed

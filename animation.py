@@ -983,10 +983,8 @@ class Animation:
     def figure_is_airborne_in_frame(self, frame_index):
         """returns whether the figure is grounded in the given frame index.  The first
         frame is used as a reference for where the ground is."""
-        first_frame_bottom = (self.frames[0].get_reference_position()[1] + 
-                              self.frames[0].image_height())
-        current_frame_bottom = (self.frames[frame_index].get_reference_position()[1] + 
-                                self.frames[frame_index].image_height())
+        first_frame_bottom = self.frames[0].get_enclosing_rect().bottom
+        current_frame_bottom = self.frames[frame_index].get_enclosing_rect().bottom
         
         #if this frame's bottom is above the first frame's bottom the figure is airborne.
         return (current_frame_bottom < first_frame_bottom)
