@@ -120,8 +120,8 @@ class MatchSimulation():
                 else:
                     player_keys_pressed, time_passed = message
                     self.step(player_keys_pressed, time_passed)
+                    self.pipe_connection.send(self.get_rendering_info())
             
-            self.pipe_connection.send(self.get_rendering_info())
             self.clock.tick(100)
     
     def step(self, player_keys_pressed, time_passed):
