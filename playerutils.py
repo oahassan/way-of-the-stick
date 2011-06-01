@@ -299,6 +299,7 @@ class Stand(Action):
             # player.model.time_passed = 0
         else:
             player.model.animation_run_time += player.model.time_passed
+            player.model.time_passed = 0
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
         
