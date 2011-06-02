@@ -17,6 +17,7 @@ from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
 from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults, \
 PlayerStates
+from versussound import AttackResultSoundMixer
 
 gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
 step_number = 0
@@ -56,9 +57,7 @@ class VersusModeState():
         self.simulation_process = None
         self.simulation_connection = None
 
-        self.stun_channel = None
-        self.clash_sound = pygame.mixer.Sound("./sounds/clash-sound.ogg")
-        self.clash_sound.set_volume(settingsdata.get_sound_volume())
+        self.attack_result_sound_mixer = AttackResultSoundMixer()
     
     def init(self):
         
@@ -334,6 +333,9 @@ class VersusModeState():
         
         if simulation_rendering_info.attack_result_rendering_info != None:
             self.create_collision_effects(
+                simulation_rendering_info.attack_result_rendering_info
+            )
+            self.attack_result_sound_mixer.handle_hit_sounds(
                 simulation_rendering_info.attack_result_rendering_info
             )
         

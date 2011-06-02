@@ -62,14 +62,19 @@ class AttackResultRenderingInfo():
         self,
         attack_point,
         knockback_vector,
-        attack_damage
+        attack_damage,
+        attack_type,
+        clash_indicator
     ):
         self.attack_point = attack_point
         self.knockback_vector = knockback_vector
         self.attack_damage = attack_damage
+        self.attack_type = attack_type
+        self.clash_indicator = clash_indicator
     
     def _pack(self):
-        return self.attack_point, self.knockback_vector, self.attack_damage
+        return (self.attack_point, self.knockback_vector, self.attack_damage, 
+        attack_type, self.clash_indicator)
 
 class PlayerRenderingInfo():
     def __init__(
@@ -222,7 +227,9 @@ class MatchSimulation():
             return AttackResultRenderingInfo(
                 attack_point,
                 self.current_attack_result.knockback_vector,
-                self.current_attack_result.attacker.get_point_damage(attack_point.name)
+                self.current_attack_result.attacker.get_point_damage(attack_point.name),
+                self.current_attack_result.attacker.get_attack_type(),
+                self.current_attack_result.clash_indicator
             )
         else:
             return None
@@ -255,7 +262,6 @@ class MatchSimulation():
         self.current_attack_result = attack_result
         
         if attack_result != None:
-            
             if attack_result.clash_indicator:
                 self.collision_handler.handle_blocked_attack_collision(
                     attack_result.attacker,

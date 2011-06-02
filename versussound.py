@@ -1,8 +1,17 @@
 import pygame
 import settingsdata
+from enumerations import InputActionTypes, PlayerStates
 
-class PlayerSoundLibrary():
-    def __init__(self, attack_actions, run_action, walk_action):
+class SoundLibrary():
+    def set_sound_volumes(self, sound_dict):
+        for sound_list in sound_dict.values():
+            for sound in sound_list:
+                sound.set_volume(settingsdata.get_sound_volume())
+
+class PlayerSoundLibrary(SoundLibrary):
+    def __init__(self):
+        SoundLibrary.__init__(self)
+        
         self.movement_sounds = {
             PlayerStates.WALKING : [
                 pygame.mixer.Sound("sounds/step1-sound.ogg"),
@@ -43,33 +52,6 @@ class PlayerSoundLibrary():
             ]
         }
         self.set_sound_volumes(self.attack_sounds)
-        
-        self.hit_sounds = {
-            InputActionTypes.WEAK_PUNCH : [
-                pygame.mixer.Sound("sounds/hit-sound.ogg")
-            ],
-            InputActionTypes.MEDIUM_PUNCH : [
-                pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
-            ],
-            InputActionTypes.STRONG_PUNCH : [
-                pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
-            ],
-            InputActionTypes.WEAK_KICK : [
-                pygame.mixer.Sound("sounds/hit-sound.ogg")
-            ],
-            InputActionTypes.MEDIUM_KICK : [
-                pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
-            ],
-            InputActionTypes.STRONG_KICK : [
-                pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
-            ]
-        }
-        self.set_sound_volumes(self.hit_sounds)
-    
-    def set_sound_volumes(self, sound_dict):
-        for sound_list in sound_dict.values():
-            for sound in sound_list:
-                sound.set_volume(settingsdata.get_sound_volume())
 
 class SoundMap():
     def __init__(self):
@@ -147,11 +129,11 @@ class AttackSoundMap(SoundMap):
             return False
 
 class PlayerSoundMixer():
-    def __init__(self, sound_library):
+    def __init__(self):
         
         self.play_sound_indicator = True
         self.sound_channel = None
-        self.hit_sound_channel = None
+        self.sound_library = PlayerSoundLibrary()
     
     def play_sound(self, player_state):
         
@@ -177,32 +159,54 @@ class PlayerSoundMixer():
             return False
         else:
             return True
+
+class AttackResultSoundLibrary(SoundLibrary):
+    def __init__(self):
+        
+        self.hit_sounds = {
+            InputActionTypes.WEAK_PUNCH : [
+                pygame.mixer.Sound("sounds/hit-sound.ogg")
+            ],
+            InputActionTypes.MEDIUM_PUNCH : [
+                pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
+            ],
+            InputActionTypes.STRONG_PUNCH : [
+                pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
+            ],
+            InputActionTypes.WEAK_KICK : [
+                pygame.mixer.Sound("sounds/hit-sound.ogg")
+            ],
+            InputActionTypes.MEDIUM_KICK : [
+                pygame.mixer.Sound("sounds/medium-hit-sound.ogg")
+            ],
+            InputActionTypes.STRONG_KICK : [
+                pygame.mixer.Sound("sounds/strong-hit-sound.ogg")
+            ]
+        }
+        self.set_sound_volumes(self.hit_sounds)
+        
+        self.clash_sound = pygame.mixer.Sound("./sounds/clash-sound.ogg")
+        self.clash_sound.set_volume(settingsdata.get_sound_volume())
+
+class AttackResultSoundMixer():
+    def __init__(self):
+        self.sound_library = AttackResultSoundLibrary()
+        self.sound_channel = None
     
     def hit_sound_is_playing(self):
-        if (self.hit_sound_channel == None or
-            self.hit_sound_channel.get_busy() == False):
+        if (self.sound_channel == None or
+            self.sound_channel.get_busy() == False):
             return False
         else:
             return True
     
-    def play_hit_sound(self):
-        if self.get_attack_type() in self.hit_sounds.keys():
-            self.hit_sound_channel = choice(self.hit_sounds[self.get_attack_type()]).play()
-        else:
-            self.hit_sound_channel =  pygame.mixer.Sound().play()
-
-def handle_hit_sounds(attack_result):
-    if attack_result.clash_indicator:
-        clash_sound.play()
-    else:
-        attacker = attack_result.attacker
-        receiver = attack_result.receiver
-        
-        if receiver.get_player_state() == player.PlayerStates.STUNNED:
+    def play_hit_sound(self, attack_type):
+        if not self.hit_sound_is_playing():
+            self.sound_channel = self.sound_library.hit_sounds[attack_type][0].play()
+    
+    def handle_hit_sounds(self, attack_result_rendering_info):
+        if attack_result_rendering_info.clash_indicator:
+            self.sound_channel = self.sound_library.clash_sound.play()
             
-            if not attacker.hit_sound_is_playing():
-                attacker.play_hit_sound()
-                
-        else:
-            
-            attacker.play_hit_sound()
+        elif not self.hit_sound_is_playing():
+            self.play_hit_sound(attack_result_rendering_info.attack_type)
