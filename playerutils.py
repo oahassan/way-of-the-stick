@@ -1,7 +1,7 @@
 """
 Utility classes used by player modules.
 """
-
+import math
 import gamestate
 import copy
 import stick
@@ -81,6 +81,16 @@ class Action():
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             
         else:
+            #if player.model.bottom() > gamestate.stage.ground.position[1]:
+            #    print("below ground")
+            #    print("player bottom: " + str(player.model.bottom()))
+            #    print("stage position: " + str(gamestate.stage.ground.position[1]))
+            #    print("expected position" + str(
+            #           (player.model.position[0], 
+            #           int(math.ceil(gamestate.stage.ground.position[1] - player.model.height)))
+            #        )
+            #    )
+            #   print("actual position: " + str(player.model.position))
             player.model.set_frame_point_pos(self.animation.frame_deltas[0])
             player.move_to_ground()
         
@@ -89,6 +99,8 @@ class Action():
             # print(current_x_position)
             # print("end position")
             # print(player.model.position[0])
+        
+        
         
         if player.model.time_passed > 0:
             self.move_player(player)
@@ -304,7 +316,6 @@ class Stand(Action):
         frame_index = self.animation.get_frame_index_at_time(end_time)
         
         #self.apply_animation_physics(player, start_time, end_time)
-        player.apply_physics(end_time - start_time, gravity = False)
         
         #set the point positions affects whether the player is grounded, so 
         #there are extra case statements here
@@ -330,6 +341,9 @@ class Stand(Action):
             
             self.frame_index = i
         
+        #apply physics after rendering
+        player.apply_physics(end_time - start_time, gravity = False)
+        
         #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         #player.model.set_point_position_in_place(point_deltas)
         if player.model.animation_run_time >= self.animation.animation_length:
@@ -340,9 +354,48 @@ class Stand(Action):
     #    player.move_to_ground()
     
     def set_player_state(self, player):
+        self.last_frame_index = 0
         self.frame_index = 0
         self.start_position = (player.model.position[0], player.model.position[1])
-        Action.set_player_state(self, player, player.direction)
+        
+        player.action = self
+        player.model.animation_run_time = 0     
+        
+        if player.direction == PlayerStates.FACING_LEFT:
+            self.animation = self.right_animation
+            player.model.orientation = physics.Orientations.FACING_LEFT
+            
+        elif player.direction == PlayerStates.FACING_RIGHT:
+            self.animation = self.right_animation
+            player.model.orientation = physics.Orientations.FACING_RIGHT
+        
+        #Check if the player is in the air.  If not, shift back to the gRound after
+        #changing to the new animation.
+        
+        #if player.model.bottom() > gamestate.stage.ground.position[1]:
+        #    print("below ground")
+        #    print("player bottom: " + str(player.model.bottom()))
+        #    print("stage position: " + str(gamestate.stage.ground.position[1]))
+        #    print("expected position" + str(
+        #           (player.model.position[0], 
+        #           int(math.ceil(gamestate.stage.ground.position[1] - player.model.height)))
+        #        )
+        #    )
+        #   print("actual position: " + str(player.model.position))
+        player.model.set_relative_point_positions(
+            self.start_position, 
+            self.animation.animation_deltas[0]
+        )
+        player.move_to_ground()
+        
+        # if current_x_position != player.model.position[0]:
+            # print("start position")
+            # print(current_x_position)
+            # print("end position")
+            # print(player.model.position[0])
+        
+        if player.model.time_passed > 0:
+            self.move_player(player)
 
 class Land(Action):
     def __init__(self):

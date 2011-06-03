@@ -224,13 +224,24 @@ class MatchSimulation():
         if self.current_attack_result != None:
             attack_point = self.current_attack_result.attack_point
             
-            return AttackResultRenderingInfo(
-                attack_point,
-                self.current_attack_result.knockback_vector,
-                self.current_attack_result.attacker.get_point_damage(attack_point.name),
-                self.current_attack_result.attacker.get_attack_type(),
-                self.current_attack_result.clash_indicator
-            )
+            if self.current_attack_result.clash_indicator:
+                #There isn't an attack type after a clash
+                return AttackResultRenderingInfo(
+                    attack_point,
+                    self.current_attack_result.knockback_vector,
+                    self.current_attack_result.attacker.get_point_damage(attack_point.name),
+                    None,
+                    self.current_attack_result.clash_indicator
+                )
+            else:
+                
+                return AttackResultRenderingInfo(
+                    attack_point,
+                    self.current_attack_result.knockback_vector,
+                    self.current_attack_result.attacker.get_point_damage(attack_point.name),
+                    self.current_attack_result.attacker.get_attack_type(),
+                    self.current_attack_result.clash_indicator
+                )
         else:
             return None
       

@@ -156,6 +156,9 @@ class Model(Object):
                 self.position[1] + (self.height / 2)
             )
     
+    def bottom(self):
+        return self.position[1] + self.height
+    
     def init_stick_data(self):
         self.load_points()
         self.load_lines()
