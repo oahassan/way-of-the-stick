@@ -3,6 +3,7 @@ import mathfuncs
 import copy
 import settingsdata
 from enumerations import InputActionTypes, PlayerStates, PointNames
+import time
 
 class SoundLibrary():
     def set_sound_volumes(self, sound_dict):
@@ -57,27 +58,23 @@ class PlayerSoundLibrary(SoundLibrary):
 class SoundMap():
     def __init__(self):
         self.frame_sounds = []
-        self.sound_channel = None
+        self.start_time = 0
     
     def play_sound(self, frame_index):
+        sound = self.frame_sounds[frame_index]
         
-        if not self.sound_is_playing():
-            if self.frame_sounds[frame_index] != None:
-                self.start_sound(self.frame_sounds[frame_index])
+        if sound != None and not self.sound_is_playing(sound):
+            
+            self.start_sound(sound)
     
     def start_sound(self, sound):
-        if self.sound_channel == None:
-            self.sound_channel = sound.play()
-        else:
-            self.sound_channel.stop()
-            self.sound_channel = sound.play()
+        
+        self.start_time = time.clock()
+        pygame.mixer.find_channel(True).play(sound)
     
-    def sound_is_playing(self):
-        if (self.sound_channel == None or
-            self.sound_channel.get_busy() == False):
-            return False
-        else:
-            return True
+    def sound_is_playing(self, sound):
+        
+        return (time.clock() - self.start_time) < sound.get_length()
 
 class GroundMovementSoundMap(SoundMap):
     def __init__(self):
@@ -138,8 +135,8 @@ class AttackSoundMap(SoundMap):
         delta = animation.animation_deltas[frame_index][point_name]
         last_delta = animation.animation_deltas[frame_index - 1][point_name]
         
-        if (mathfuncs.sign(delta[0]) != mathfuncs.sign(last_delta[0])): #or
-        #mathfuncs.sign(delta[1]) != mathfuncs.sign(last_delta[1])):
+        if (mathfuncs.sign(delta[0]) != mathfuncs.sign(last_delta[0])):
+        #or mathfuncs.sign(delta[1]) != mathfuncs.sign(last_delta[1])):
             return True
         else:
             return False
@@ -217,22 +214,28 @@ class AttackResultSoundLibrary(SoundLibrary):
 class AttackResultSoundMixer():
     def __init__(self):
         self.sound_library = AttackResultSoundLibrary()
-        self.sound_channel = None
+        self.start_time = 0
     
-    def hit_sound_is_playing(self):
-        if (self.sound_channel == None or
-            self.sound_channel.get_busy() == False):
-            return False
-        else:
-            return True
+    def hit_sound_is_playing(self, hit_sound):
+        return (time.clock() - self.start_time) < hit_sound.get_length()
     
-    def play_hit_sound(self, attack_type):
-        if not self.hit_sound_is_playing():
-            self.sound_channel = self.sound_library.hit_sounds[attack_type][0].play()
+    def play_hit_sound(self, hit_sound):
+        
+        self.start_time = time.clock()
+        pygame.mixer.find_channel(True).play(hit_sound)
     
     def handle_hit_sounds(self, attack_result_rendering_info):
         if attack_result_rendering_info.clash_indicator:
-            self.sound_channel = self.sound_library.clash_sound.play()
+            pygame.mixer.find_channel(True).play(self.sound_library.clash_sound)
             
-        elif not self.hit_sound_is_playing():
-            self.play_hit_sound(attack_result_rendering_info.attack_type)
+        else:
+            hit_sound = self.get_hit_sound(attack_result_rendering_info)
+            
+            if not self.hit_sound_is_playing(hit_sound):
+                self.play_hit_sound(hit_sound)
+    
+    def get_hit_sound(self, attack_result_rendering_info):
+        attack_type = attack_result_rendering_info.attack_type
+        hit_sound = self.sound_library.hit_sounds[attack_type][0]
+        
+        return hit_sound
