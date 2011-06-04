@@ -96,6 +96,13 @@ class HumanPlayer(player.Player):
         
         return motions
     
+    def get_attack_actions(self):
+        return [
+            attack_action
+            for attack_action in self.actions.values()
+            if attack_action.action_state == PlayerStates.ATTACKING
+        ]
+    
     def handle_events(self, keys_pressed, time_passed):
         
         #if self.handle_input_events:

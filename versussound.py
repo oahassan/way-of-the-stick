@@ -1,6 +1,8 @@
 import pygame
+import mathfuncs
+import copy
 import settingsdata
-from enumerations import InputActionTypes, PlayerStates
+from enumerations import InputActionTypes, PlayerStates, PointNames
 
 class SoundLibrary():
     def set_sound_volumes(self, sound_dict):
@@ -10,7 +12,6 @@ class SoundLibrary():
 
 class PlayerSoundLibrary(SoundLibrary):
     def __init__(self):
-        SoundLibrary.__init__(self)
         
         self.movement_sounds = {
             PlayerStates.WALKING : [
@@ -56,10 +57,27 @@ class PlayerSoundLibrary(SoundLibrary):
 class SoundMap():
     def __init__(self):
         self.frame_sounds = []
-        self.frame_sound_index = 0
-        self.current_sound_channel = None
-        self.last_frame_index = 0
-        self.current_sound_channel = None
+        self.sound_channel = None
+    
+    def play_sound(self, frame_index):
+        
+        if not self.sound_is_playing():
+            if self.frame_sounds[frame_index] != None:
+                self.start_sound(self.frame_sounds[frame_index])
+    
+    def start_sound(self, sound):
+        if self.sound_channel == None:
+            self.sound_channel = sound.play()
+        else:
+            self.sound_channel.stop()
+            self.sound_channel = sound.play()
+    
+    def sound_is_playing(self):
+        if (self.sound_channel == None or
+            self.sound_channel.get_busy() == False):
+            return False
+        else:
+            return True
 
 class GroundMovementSoundMap(SoundMap):
     def __init__(self):
@@ -91,60 +109,68 @@ class GroundMovementSoundMap(SoundMap):
                 self.point_on_ground[point_name] = False
 
 class AttackSoundMap(SoundMap):
-    def __init__(self):
+    def __init__(self, animation, attack_sound, attack_type):
         SoundMap.__init__(self)
-        
-        self.hit_sound = None
-        self.hit_sound_channel = None
+        self.set_frame_sounds(animation, attack_sound, attack_type)
     
-    def reset(self):
-        self.last_frame_index = 0
-        self.frame_sound_index = 0
-    
-    def set_frame_sounds(self):
+    def set_frame_sounds(self, animation, attack_sound, attack_type):
         """Defines sounds for each frame index of the attack"""
         
-        self.frame_sounds.append(True)
+        self.frame_sounds.append(attack_sound)
         
-        for frame_index in range(1, len(self.right_animation.frames) - 1):
-            if self.attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
-                self.frame_sounds.append(
-                    self.test_delta_change(stick.PointNames.RIGHT_HAND, frame_index) or
-                    self.test_delta_change(stick.PointNames.LEFT_HAND, frame_index)
-                )
+        for frame_index in range(1, len(animation.frames)):
+            if attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
+                if (self.test_delta_change(animation, PointNames.RIGHT_HAND, frame_index) 
+                or self.test_delta_change(animation, PointNames.LEFT_HAND, frame_index)):
+                    self.frame_sounds.append(attack_sound)
+                else:
+                    self.frame_sounds.append(None)
+            elif attack_type in [InputActionTypes.WEAK_KICK, InputActionTypes.MEDIUM_KICK, InputActionTypes.STRONG_KICK]:
+                if (self.test_delta_change(animation, PointNames.RIGHT_FOOT, frame_index) 
+                or self.test_delta_change(animation, PointNames.LEFT_FOOT, frame_index)):
+                    self.frame_sounds.append(attack_sound)
+                else:
+                    self.frame_sounds.append(None)
             else:
-                self.frame_sounds.append(
-                    self.test_delta_change(stick.PointNames.RIGHT_FOOT, frame_index) or
-                    self.test_delta_change(stick.PointNames.LEFT_FOOT, frame_index)
-                )
+                self.frame_sounds.append(None)
     
-    def test_delta_change(self, point_name, frame_index):
-        delta = self.right_animation.animation_deltas[frame_index][point_name]
-        last_delta = self.right_animation.animation_deltas[frame_index - 1][point_name]
+    def test_delta_change(self, animation, point_name, frame_index):
+        delta = animation.animation_deltas[frame_index][point_name]
+        last_delta = animation.animation_deltas[frame_index - 1][point_name]
         
         if (mathfuncs.sign(delta[0]) != mathfuncs.sign(last_delta[0])): #or
         #mathfuncs.sign(delta[1]) != mathfuncs.sign(last_delta[1])):
             return True
         else:
             return False
+        
 
 class PlayerSoundMixer():
-    def __init__(self):
+    def __init__(self, player):
         
         self.play_sound_indicator = True
         self.sound_channel = None
         self.sound_library = PlayerSoundLibrary()
+        self.sound_maps = {}
+        self.create_sound_maps(player)
     
-    def play_sound(self, player_state):
+    def create_sound_maps(self, player):
+        for action in player.get_attack_actions():
+            
+            self.sound_maps[action.right_animation.name] = AttackSoundMap(
+                action.right_animation,
+                self.sound_library.attack_sounds[action.attack_type][0],
+                action.attack_type
+            )
+    
+    def play_sound(self, player_state, animation_name, frame_index):
         
-        if not self.movement_sound_is_playing():
-            if player_state == PlayerStates.ATTACKING:
-                sound = choice(self.attack_sounds[self.get_attack_type()])
-                self.start_sound(sound)
-                
-            elif player_state in self.movement_sounds.keys():
-                sound = choice(self.movement_sounds[player_state])
-                self.start_sound(sound)
+        if player_state == PlayerStates.ATTACKING:
+            self.sound_maps[animation_name].play_sound(frame_index)
+        
+        #elif player_state in self.movement_sounds.keys():
+        #    sound = choice(self.movement_sounds[player_state])
+        #    self.start_sound(sound)
     
     def start_sound(self, sound):
         if self.sound_channel == None:

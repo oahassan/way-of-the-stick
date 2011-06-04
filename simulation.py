@@ -83,17 +83,22 @@ class PlayerRenderingInfo():
         player_state,
         player_outline_color,
         player_health_color,
-        health_percentage
+        health_percentage,
+        animation_name,
+        frame_index
     ):
         self.player_model = player_model
         self.player_state = player_state
         self.player_outline_color = player_outline_color
         self.player_health_color = player_health_color
         self.health_percentage = health_percentage
+        self.animation_name = animation_name
+        self.frame_index = frame_index
     
     def _pack(self):
         return (self.player_point_positions, self.player_state,
-        self.player_outline_color, self.player_health_color, self.health_percentage)
+        self.player_outline_color, self.player_health_color, 
+        self.health_percentage, self.animation_name, self.frame_index)
 
 class MatchSimulation():
     def __init__(
@@ -215,7 +220,9 @@ class MatchSimulation():
                 player.get_player_state(),
                 player.outline_color,
                 player.health_color,
-                player.health_meter / player.health_max
+                player.health_meter / player.health_max,
+                player.action.animation.name,
+                player.action.last_frame_index
             )
         
         return return_rendering_dictionary

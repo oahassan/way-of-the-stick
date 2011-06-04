@@ -185,6 +185,8 @@ def handle_events():
                     player2_moveset_select.selected_moveset
                 )
                 
+                versusmode.local_state.init_player_sounds()
+                
                 unload()
                 gamestate.mode = gamestate.Modes.VERSUSMODE
     if loaded:

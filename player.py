@@ -195,6 +195,8 @@ class Player():
         pass
     
     def handle_animation_end(self):
+        self.action.last_frame_index = 0
+        
         if self.action.action_state == PlayerStates.JUMPING:
             self.transition(self.actions[PlayerStates.FLOATING])
         elif self.action.action_state == PlayerStates.LANDING:

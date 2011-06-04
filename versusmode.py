@@ -17,7 +17,7 @@ from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
 from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults, \
 PlayerStates
-from versussound import AttackResultSoundMixer
+from versussound import AttackResultSoundMixer, PlayerSoundMixer
 
 gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
 step_number = 0
@@ -31,6 +31,10 @@ class VersusModeState():
             PlayerPositions.PLAYER2 : None
         }
         self.player_type_dictionary = {
+            PlayerPositions.PLAYER1 : None,
+            PlayerPositions.PLAYER2 : None
+        }
+        self.player_sound_mixer_dictionary = {
             PlayerPositions.PLAYER1 : None,
             PlayerPositions.PLAYER2 : None
         }
@@ -172,7 +176,14 @@ class VersusModeState():
         player2.model.move_model((1200, 967))
         player2.color = (100,100,100)
         player2.health_color = (200,200,200)
-
+    
+    def init_player_sounds(self):
+        player1 = self.player_dictionary[PlayerPositions.PLAYER1]
+        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1] = PlayerSoundMixer(player1)
+        
+        player2 = self.player_dictionary[PlayerPositions.PLAYER2]
+        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER2] = PlayerSoundMixer(player2)
+    
     def init_match_state_variables(self):
         
         self.match_state = MatchStates.READY
@@ -343,9 +354,20 @@ class VersusModeState():
             simulation_rendering_info.player_rendering_info_dictionary, 
             1
         )
+        self.play_player_sounds(simulation_rendering_info, PlayerPositions.PLAYER1)
+        self.play_player_sounds(simulation_rendering_info, PlayerPositions.PLAYER2)
         self.match_state = simulation_rendering_info.match_state
         self.match_time = simulation_rendering_info.match_time
-
+    
+    def play_player_sounds(self, simulation_rendering_info, player_position):
+        player_rendering_info = simulation_rendering_info.player_rendering_info_dictionary[player_position]
+        
+        self.player_sound_mixer_dictionary[player_position].play_sound(
+            player_rendering_info.player_state,
+            player_rendering_info.animation_name,
+            player_rendering_info.frame_index
+        )
+    
     def start_match_simulation(self):    
         
         self.match_simulation.step(

@@ -81,6 +81,9 @@ class Bot(Player):
         self.actions[PlayerStates.STANDING].set_player_state(self)
         self.set_attack_rect_data()
     
+    def get_attack_actions(self):
+        return self.actions[PlayerStates.ATTACKING]
+    
     def set_attack_rect_data(self):
         """build a list of rects bounding the attack lines in each frame of an
         attack animation.  Each rect's position is relative the first rect and

@@ -18,6 +18,7 @@ class Action():
         self.left_animation = None
         self.animation = None
         self.direction = PlayerStates.FACING_RIGHT
+        self.last_frame_index = 0
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
@@ -34,12 +35,14 @@ class Action():
             player.model.animation_run_time += player.model.time_passed
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
+        
         player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
         
         #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         #player.model.set_point_position_in_place(point_deltas)
         
         player.apply_physics(end_time - start_time)
+        self.last_frame_index = frame_index
         
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
@@ -61,8 +64,6 @@ class Action():
         return change_state
     
     def set_player_state(self, player, direction):
-        self.last_frame_index = 0
-        
         player.action = self
         player.direction = direction
         player.model.animation_run_time = 0     
@@ -191,6 +192,7 @@ class Transition(Action):
         else:
             player.model.animation_run_time += player.model.time_passed
         
+        self.last_frame_index = self.animation.get_frame_index_at_time(end_time)
         point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         player.model.set_point_position_in_place(point_deltas)
         
@@ -314,7 +316,7 @@ class Stand(Action):
             player.model.time_passed = 0
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
-        
+        self.last_frame_index = frame_index
         #self.apply_animation_physics(player, start_time, end_time)
         
         #set the point positions affects whether the player is grounded, so 
@@ -625,6 +627,7 @@ class Attack(Action):
             player.model.animation_run_time += player.model.time_passed
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
+        self.last_frame_index = frame_index
         
         #apply animation physics first to determine what the player's position 
         #should be.
