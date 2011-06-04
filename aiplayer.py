@@ -81,6 +81,12 @@ class Bot(Player):
         self.actions[PlayerStates.STANDING].set_player_state(self)
         self.set_attack_rect_data()
     
+    def get_foot_actions(self):
+        return [
+            self.actions[PlayerStates.WALKING],
+            self.actions[PlayerStates.RUNNING]
+        ]
+    
     def get_attack_actions(self):
         return self.actions[PlayerStates.ATTACKING]
     
