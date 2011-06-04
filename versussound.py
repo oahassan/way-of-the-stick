@@ -150,6 +150,7 @@ class PlayerSoundMixer():
         self.sound_library = PlayerSoundLibrary()
         self.sound_maps = {}
         self.create_sound_maps(player)
+        self.last_player_state = PlayerStates.STANDING
     
     def create_sound_maps(self, player):
         for action in player.get_attack_actions():
@@ -164,10 +165,15 @@ class PlayerSoundMixer():
         
         if player_state == PlayerStates.ATTACKING:
             self.sound_maps[animation_name].play_sound(frame_index)
-        
+        elif player_state == PlayerStates.JUMPING:
+            if self.last_player_state != PlayerStates.JUMPING:
+                jump_sound = self.sound_library.movement_sounds[PlayerStates.JUMPING][0]
+                pygame.mixer.find_channel().play(jump_sound)
         #elif player_state in self.movement_sounds.keys():
         #    sound = choice(self.movement_sounds[player_state])
         #    self.start_sound(sound)
+        
+        self.last_player_state = player_state
     
     def start_sound(self, sound):
         if self.sound_channel == None:
