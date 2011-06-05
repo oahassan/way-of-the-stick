@@ -155,9 +155,8 @@ class MatchSimulation():
         self.handle_match_state(match_state)
     
     def update_player_states(self, player_keys_pressed):
-        
-        self.handle_player_events(player_keys_pressed, self.timestep)
         self.handle_interactions()
+        self.handle_player_events(player_keys_pressed, self.timestep)
     
     def handle_match_state(self, match_state):
         
