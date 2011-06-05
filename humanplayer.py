@@ -51,7 +51,7 @@ class HumanPlayer(player.Player):
         action = self.get_current_action()
         
         if (action != None and
-        action.test_state_change(self)):
+        action.test_state_change(self)): #self.action.test_change_to_action(action)):
             if type(Continue) == type(Action):
                 action.set_player_state(self)
             else:
@@ -324,6 +324,10 @@ class ControllerFactory():
             input_player.run_right_action
         )
         ground_movement_command_handler.add_command(
+            [hold_right_command, tap_right_command],
+            input_player.run_right_action
+        )
+        ground_movement_command_handler.add_command(
             [tap_right_command],
             input_player.walk_right_action
         )
@@ -385,6 +389,10 @@ class ControllerFactory():
         
         ground_movement_command_handler.add_command(
             [tap_left_command, tap_left_command],
+            input_player.run_left_action
+        )
+        ground_movement_command_handler.add_command(
+            [hold_left_command, tap_left_command],
             input_player.run_left_action
         )
         ground_movement_command_handler.add_command(

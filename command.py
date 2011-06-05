@@ -208,13 +208,19 @@ class CommandHandler:
         in the command tree."""
         
         self._validate_command_sequence(command_sequence)
-        return self.command_tree.get_value(command_sequence)
+        
+        return_value = self.command_tree.get_value(command_sequence)
+            
+        if return_value == None:
+            return_value = self.command_tree.get_value(command_sequence[-1:])
+        
+        return return_value
     
     def get_current_command_sequence_value(self):
         """returns the value for the current command sequence in the inputtree.
         If the command sequence doesn't exist None is returned."""
         
-        return self.command_tree.get_value(self.current_commands)
+        return self.get_command_sequence_value(self.current_commands)
     
     def get_command_state(self):
         """returns a command state object with command types matching this 
@@ -284,7 +290,7 @@ class CommandHandler:
     
     def _get_repeated_commands(self, current_commands):
         """Get a list of commands that have been repeated within the repeat
-        threshold of this CommandHelper."""
+        threshold of this CommandHandler."""
         
         commands = []
         

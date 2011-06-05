@@ -41,6 +41,8 @@ class PlayerStates():
     BLOCKING = 'BLOCKING'
     TRANSITION = 'TRANSITION'
     
+    GROUND_STATES = [STANDING, CROUCHING, WALKING, RUNNING]
+    
     MOVEMENTS = [STANDING,WALKING,RUNNING,JUMPING,FLOATING, \
                  LANDING,CROUCHING]
     
@@ -510,7 +512,15 @@ class Player():
         return in_range
     
     def is_aerial(self):
-        return int(self.model.position[1] + self.model.height) < gamestate.stage.ground.position[1]
+        if self.action.action_state in PlayerStates.GROUND_STATES:
+            return False
+        elif self.action.action_state == PlayerStates.TRANSITION:
+            if self.action.last_action.action_state in PlayerStates.GROUND_STATES:
+                return False
+            else:
+                return int(self.model.position[1] + self.model.height) < gamestate.stage.ground.position[1]
+        else:
+            return int(self.model.position[1] + self.model.height) < gamestate.stage.ground.position[1]
     
     def apply_physics(self, duration, gravity = True):
         
