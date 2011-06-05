@@ -42,45 +42,48 @@ def load():
     loaded = True
     start_match_label = movesetselectui.MovesetActionLabel((50, 550), "Start Match!")
     start_match_label.inactivate()
-    playable_movesets = get_playable_movesets()
-    player1_type_select = wotsuicontainers.ButtonContainer(
-        (50,50),
-        100,
-        300,
-        'Select Player Type',
-        button.TextButton,
-        [['Human',15], ['Bot',15]]
-    )
     
-    player1_moveset_select_position = (50, 50 + player1_type_select.height + 30)
-    player1_moveset_select = MovesetSelector(
-        player1_moveset_select_position,
-        playable_movesets
-    )
-    player1_widget_position = (
-        50, 
-        player1_moveset_select.position[1] + player1_moveset_select.height + 10
-    )
-    player1_stats_widget = PlayerStatsWidget(player1_widget_position)
-    
-    player2_type_select = wotsuicontainers.ButtonContainer(
-        (450,50),
-        100,
-        300,
-        'Select Enemy Type',
-        button.TextButton,
-        [['Human',15], ['Bot',15]]
-    )
-    player2_moveset_select_position = (450, 50 + player2_type_select.height + 30)
-    player2_moveset_select = MovesetSelector(
-        player2_moveset_select_position,
-        playable_movesets
-    )
-    player2_widget_position = (
-        450, 
-        player2_moveset_select.position[1] + player2_moveset_select.height + 10
-    )
-    player2_stats_widget = PlayerStatsWidget(player2_widget_position)
+    if player1_moveset_select == None:
+        playable_movesets = get_playable_movesets()
+        
+        player1_type_select = wotsuicontainers.ButtonContainer(
+            (50,50),
+            100,
+            300,
+            'Select Player Type',
+            button.TextButton,
+            [['Human',15], ['Bot',15]]
+        )
+        
+        player1_moveset_select_position = (50, 50 + player1_type_select.height + 30)
+        player1_moveset_select = MovesetSelector(
+            player1_moveset_select_position,
+            playable_movesets
+        )
+        player1_widget_position = (
+            50, 
+            player1_moveset_select.position[1] + player1_moveset_select.height + 10
+        )
+        player1_stats_widget = PlayerStatsWidget(player1_widget_position)
+        
+        player2_type_select = wotsuicontainers.ButtonContainer(
+            (450,50),
+            100,
+            300,
+            'Select Enemy Type',
+            button.TextButton,
+            [['Human',15], ['Bot',15]]
+        )
+        player2_moveset_select_position = (450, 50 + player2_type_select.height + 30)
+        player2_moveset_select = MovesetSelector(
+            player2_moveset_select_position,
+            playable_movesets
+        )
+        player2_widget_position = (
+            450, 
+            player2_moveset_select.position[1] + player2_moveset_select.height + 10
+        )
+        player2_stats_widget = PlayerStatsWidget(player2_widget_position)
     
 def unload():
     global loaded
@@ -96,12 +99,12 @@ def unload():
     exit_button = None
     loaded = False
     start_match_label = None
-    player1_type_select = None
-    player1_moveset_select = None
-    player1_stats_widget = None
-    player2_type_select = None
-    player2_moveset_select = None
-    player2_stats_widget = None
+    #player1_type_select = None
+    #player1_moveset_select = None
+    #player1_stats_widget = None
+    #player2_type_select = None
+    #player2_moveset_select = None
+    #player2_stats_widget = None
 
 def handle_events():
     global loaded
