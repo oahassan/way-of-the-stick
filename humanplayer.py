@@ -108,8 +108,9 @@ class HumanPlayer(player.Player):
     
     def handle_events(self, keys_pressed, time_passed):
         
-        #if self.handle_input_events:
-        self.controller.update(keys_pressed)
+        if self.handle_input_events:
+            self.controller.update(keys_pressed)
+        
         self.set_action()
         self.set_motion()
     
