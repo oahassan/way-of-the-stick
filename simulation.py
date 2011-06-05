@@ -238,12 +238,24 @@ class MatchSimulation():
                     self.current_attack_result.clash_indicator
                 )
             else:
+                attack_type = None
+                attacker_action = self.current_attack_result.attacker.action
+                
+                if attacker_action.action_state == PlayerStates.ATTACKING:
+                    attack_type = attacker_action.attack_type
+                    
+                elif attacker_action.action_state == PlayerStates.TRANSITION:
+                    attack_type = attacker_action.last_action.attack_type
+                else:
+                    attack_type = None
                 
                 return AttackResultRenderingInfo(
                     attack_point,
                     self.current_attack_result.knockback_vector,
-                    self.current_attack_result.attacker.get_point_damage(attack_point.name),
-                    self.current_attack_result.attacker.get_attack_type(),
+                    self.current_attack_result.attacker.get_point_damage(
+                        attack_point.name
+                    ),
+                    attack_type,
                     self.current_attack_result.clash_indicator
                 )
         else:
