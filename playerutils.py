@@ -309,33 +309,27 @@ class Stand(Action):
             end_time = self.animation.animation_length
             player.model.time_passed -= self.animation.animation_length - player.model.animation_run_time
             player.model.animation_run_time = end_time
-            #player.model.time_passed = start_time + player.model.time_passed - end_time
-            # player.model.time_passed = 0
         else:
             player.model.animation_run_time += player.model.time_passed
             player.model.time_passed = 0
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
         self.last_frame_index = frame_index
-        #self.apply_animation_physics(player, start_time, end_time)
         
         #set the point positions affects whether the player is grounded, so 
         #there are extra case statements here
         #if the player was in a grounded state shift back to the ground after 
         #setting the initial point positions
-        
         if frame_index != self.frame_index:
             for i in range(self.frame_index, frame_index + 1):
             
                 if self.animation.get_matching_jump_interval(frame_index) == None:
-                    #player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
                     player.model.set_relative_point_positions(
                         self.start_position, 
                         self.animation.animation_deltas[i]
                     )
-                    #player.move_to_ground()
+                    
                 else:
-                    #player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
                     player.model.set_relative_point_positions(
                         self.start_position, 
                         self.animation.animation_deltas[i]
@@ -346,14 +340,8 @@ class Stand(Action):
         #apply physics after rendering
         player.apply_physics(end_time - start_time, gravity = False)
         
-        #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
-        #player.model.set_point_position_in_place(point_deltas)
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
-    
-    #def move_player(self, player):
-    #    Action.move_player(self, player)
-    #    player.move_to_ground()
     
     def set_player_state(self, player):
         self.last_frame_index = 0
@@ -371,30 +359,11 @@ class Stand(Action):
             self.animation = self.right_animation
             player.model.orientation = physics.Orientations.FACING_RIGHT
         
-        #Check if the player is in the air.  If not, shift back to the gRound after
-        #changing to the new animation.
-        
-        #if player.model.bottom() > gamestate.stage.ground.position[1]:
-        #    print("below ground")
-        #    print("player bottom: " + str(player.model.bottom()))
-        #    print("stage position: " + str(gamestate.stage.ground.position[1]))
-        #    print("expected position" + str(
-        #           (player.model.position[0], 
-        #           int(math.ceil(gamestate.stage.ground.position[1] - player.model.height)))
-        #        )
-        #    )
-        #   print("actual position: " + str(player.model.position))
         player.model.set_relative_point_positions(
             self.start_position, 
             self.animation.animation_deltas[0]
         )
         player.move_to_ground()
-        
-        # if current_x_position != player.model.position[0]:
-            # print("start position")
-            # print(current_x_position)
-            # print("end position")
-            # print(player.model.position[0])
         
         if player.model.time_passed > 0:
             self.move_player(player)
@@ -601,6 +570,8 @@ class Attack(Action):
         
         if player.get_player_state() == PlayerStates.STUNNED:
             return False
+        elif player.get_player_state() == PlayerStates.TRANSITION:
+            return player.action.next_action.test_change_to_action(self)
         else:
             return Action.test_state_change(self, player)
     
