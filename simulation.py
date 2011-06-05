@@ -193,8 +193,6 @@ class MatchSimulation():
         
         if self.match_time < 3000:
             return MatchStates.READY
-        elif self.match_time < 4000:
-            return MatchStates.FIGHT
         else:
             #just check if the game is over
             if (self.player_dictionary[PlayerPositions.PLAYER1].health_meter <= 0 and

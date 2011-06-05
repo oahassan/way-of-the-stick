@@ -122,7 +122,8 @@ class VersusModeState():
             while self.simulation_connection.poll():
                 simulation_rendering_info = self.simulation_connection.recv()
                 
-                self.update_simulation_rendering(simulation_rendering_info)
+                if simulation_rendering_info.match_time > self.match_time:
+                    self.update_simulation_rendering(simulation_rendering_info)
             
             self.render_simulation()
             
@@ -419,8 +420,7 @@ class VersusModeState():
             )
             
         elif self.match_state == MatchStates.FIGHT and self.match_time < 4000:
-            self.fight_start_timer += gamestate.time_passed
-            self.match_state = MatchStates.FIGHT
+            self.fight_label.draw(gamestate.screen)
             gamestate.new_dirty_rects.append(
                 pygame.Rect(
                     self.fight_label.position,
