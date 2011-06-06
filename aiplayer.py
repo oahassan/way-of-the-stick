@@ -8,6 +8,8 @@ from player import Player, PlayerTypes
 from stick import LineNames
 from enumerations import PlayerStates, CommandDurations, InputActionTypes, AttackTypes
 from playerutils import ActionFactory, Transition, Action, Attack
+from simulation import HitboxBuilder
+import st_versusmode
 
 class Bot(Player):
     """an algorithm controlled player"""
@@ -18,8 +20,7 @@ class Bot(Player):
         self.player_type = PlayerTypes.BOT
         
         #a dictionary mapping attacks to a list of rects for each frame
-        self.attack_rects = {}
-        self.attack_rect_deltas = {}
+        self.attack_prediction_engine = None
         
     def load_moveset(self, moveset):
         self.moveset = moveset
@@ -79,7 +80,11 @@ class Bot(Player):
             self.actions[PlayerStates.ATTACKING].append(attack_action)
         
         self.actions[PlayerStates.STANDING].set_player_state(self)
-        self.set_attack_rect_data()
+        self.attack_prediction_engine = AttackPredictionEngine(
+            100, 
+            2000, 
+            self
+        )
     
     def get_foot_actions(self):
         return [
@@ -89,59 +94,6 @@ class Bot(Player):
     
     def get_attack_actions(self):
         return self.actions[PlayerStates.ATTACKING]
-    
-    def set_attack_rect_data(self):
-        """build a list of rects bounding the attack lines in each frame of an
-        attack animation.  Each rect's position is relative the first rect and
-        the first rect's position is (0,0)"""
-        
-        for attack in self.actions[PlayerStates.ATTACKING]:
-            attack_rects = self.get_attack_rects(
-                attack.right_animation,
-                attack.attack_type
-            )
-            self.attack_rects[attack.right_animation.name] = attack_rects
-            
-            initial_position = attack_rects[0].topleft
-            self.attack_rect_deltas[attack.right_animation.name] = \
-                [(rect.left - initial_position[0], rect.top - initial_position[1]) for rect in attack_rects]
-    
-    def get_attack_rects(self, attack_animation, attack_type):
-        """creates a rect surrounding the attack lines for each frame in
-        the given animation"""
-        
-        return_rects = []
-        
-        for frame in attack_animation.frames:
-            return_rects.append(self.get_attack_rect(frame, attack_type))
-        
-        initial_position = return_rects[0].topleft
-        
-        for frame_rect in return_rects:
-            frame_rect.move(-initial_position[0], -initial_position[1])
-        
-        return return_rects
-    
-    def get_attack_rect(self, frame, attack_type):
-        attack_line_names = None
-        
-        if (attack_type in InputActionTypes.PUNCHES or
-        attack_type == AttackTypes.PUNCH):
-            attack_line_names = Attack.PUNCH_LINE_NAMES
-        elif (attack_type in InputActionTypes.KICKS or
-        attack_type == AttackTypes.KICK):
-            attack_line_names = Attack.KICK_LINE_NAMES
-        
-        frame_rect = None
-        
-        for line in frame.lines():
-            if line.name in attack_line_names:
-                if frame_rect == None:
-                    frame_rect = pygame.Rect(line.get_enclosing_rect())
-                else:
-                    frame_rect.union_ip(pygame.Rect(line.get_enclosing_rect()))
-        
-        return frame_rect
     
     def handle_events(self, enemy, time_passed):
         if self.handle_input_events:
@@ -161,8 +113,9 @@ class Bot(Player):
         
         attack = None
         
-        if self.action.action_state != PlayerStates.ATTACKING:
-            attack = self.get_in_range_attack(enemy)
+        if (self.action.action_state != PlayerStates.ATTACKING
+        and self.action.action_state != PlayerStates.STUNNED):
+            attack = self.attack_prediction_engine.get_in_range_attack(enemy)
         
         next_action = None
         
@@ -231,43 +184,341 @@ class Bot(Player):
             return choice(in_range_attacks)
         else:
             return None
+
+class AttackPredictionEngine():
+    def __init__(self, timestep, prediction_time_frame, player):
+        self.timestep = timestep
+        self.prediction_time_frame = prediction_time_frame
+        self.player = player
+        self.attack_prediction_data = {}
+        self.hitbox_builder = HitboxBuilder()
+        self.load_data()
     
-    def aerial_attack_in_range(self, attack, enemy):
-        bottom_right_top_left = self.model.get_top_left_and_bottom_right()
-        bottom_right = bottom_right_top_left[1]
-        top_left = bottom_right_top_left[0]
+    def load_data(self):
+        attack_prediction_data_factory = AttackPredictionDataFactory(self.timestep)
         
-        attack_range_point = top_left
+        for attack in self.player.actions[PlayerStates.ATTACKING]:
+            self.attack_prediction_data[attack.right_animation.name] = attack_prediction_data_factory.create_attack_prediction_data(
+                self.player, 
+                attack
+            )
+    
+    def get_in_range_attack(self, enemy):
+        in_range_attacks = []
+        player = self.player
+        enemy_rects = self.get_enemy_rects(enemy)
         
-        if self.direction == PlayerStates.FACING_LEFT:
-            attack_range_point = (bottom_right[0] - attack.range[0], \
-                                  top_left[1])
+        if player.is_aerial():
+            in_range_attacks = [
+                attack 
+                for attack in player.actions[PlayerStates.ATTACKING] 
+                if self.aerial_attack_in_range(attack, enemy, enemy_rects)
+            ]
+        else:
+            in_range_attacks = [
+                attack 
+                for attack in player.actions[PlayerStates.ATTACKING] 
+                if self.attack_in_range(attack, enemy, enemy_rects)
+            ]
         
-        attack_rect = pygame.Rect(attack_range_point, (attack.range[0], attack.range[1]))
-        enemy_rect = pygame.Rect(enemy.model.position, (enemy.model.width, enemy.model.height))
+        if len(in_range_attacks) > 0:
+            return choice(in_range_attacks)
+        else:
+            return None
+    
+    def get_enemy_rects(self, enemy):
+        timestep = self.timestep
         
-        in_range = attack_rect.colliderect(enemy_rect)
+        return_rects = [pygame.Rect(enemy.model.get_enclosing_rect())]
+        
+        prediction_time_frame = self.prediction_time_frame
+        new_rect_position = return_rects[-1].topleft
+        old_rect_position = return_rects[-1].topleft
+        rect_velocity = enemy.model.velocity
+        
+        while prediction_time_frame > 0:
+            last_rect = return_rects[-1]
+            
+            if ((last_rect.topleft[1] + last_rect.height) < 
+            gamestate.stage.ground.position[1]):
+                rect_velocity = (
+                    rect_velocity[0],
+                    rect_velocity[1] + (timestep * enemy.model.gravity)
+                )
+            else:
+                rect_velocity = (
+                    rect_velocity[0],
+                    0
+                )
+            
+            new_rect_position = (
+                old_rect_position[0] + (timestep * rect_velocity[0]),
+                old_rect_position[1] + (timestep * rect_velocity[1])
+            )
+            
+            if ((new_rect_position[1] + last_rect.height) > 
+            gamestate.stage.ground.position[1]):
+                new_rect_position = (
+                    new_rect_position[0],
+                    gamestate.stage.ground.position[1] - last_rect.height
+                )
+            
+            return_rects.append(
+                pygame.Rect(
+                    new_rect_position, (last_rect.width, last_rect.height)
+                )
+            )
+            
+            prediction_time_frame -= self.timestep
+        
+        return return_rects
+    
+    def get_arial_attack_rects(self, attack):
+        timestep = self.timestep
+        player = self.player
+        
+        attack_rects = self.attack_prediction_data[attack.right_animation.name].attack_rects
+        
+        initial_position = (player.model.position[0], player.model.position[1])
+        
+        return_rects = [
+            pygame.Rect(
+                initial_position, 
+                (attack_rects[0].width, attack_rects[0].height)
+            )
+        ]
+        
+        attack_rect_index = 1
+        prediction_time_frame = self.prediction_time_frame
+        new_rect_position = initial_position
+        old_rect_position = initial_position
+        rect_velocity = player.model.velocity
+        
+        while (prediction_time_frame > 0 
+        and attack_rect_index < len(attack_rects)):
+            last_rect = return_rects[-1]
+            
+            if ((last_rect.topleft[1] + last_rect.height) < 
+            gamestate.stage.ground.position[1]):
+                rect_velocity = (
+                    rect_velocity[0],
+                    rect_velocity[1] + (timestep * player.model.gravity)
+                )
+            else:
+                rect_velocity = (
+                    rect_velocity[0],
+                    0
+                )
+            
+            new_rect_position = (
+                old_rect_position[0] + (timestep * rect_velocity[0]),
+                old_rect_position[1] + (timestep * rect_velocity[1])
+            )
+            
+            new_rect = pygame.Rect(
+                new_rect_position, 
+                (
+                    attack_rects[attack_rect_index].width, 
+                    attack_rects[attack_rect_index].height
+                )
+            )
+            
+            if ((new_rect.topleft[1] + new_rect.height) > 
+            gamestate.stage.ground.position[1]):
+                new_rect_position = (
+                    new_rect_position[0],
+                    gamestate.stage.ground.position[1] - last_rect.height
+                )
+                new_rect.topleft = new_rect_position
+            
+            return_rects.append(new_rect)
+            
+            prediction_time_frame -= self.timestep
+            attack_rect_index += 1
+        
+        return return_rects
+    
+    def aerial_attack_in_range(self, attack, enemy, enemy_rects):
+        
+        attack_rects = self.get_arial_attack_rects(attack)
+        
+        collision_index = self.get_max_collsion_index(attack_rects, enemy_rects)
+        
+        in_range = False
+        
+        if collision_index > -1:
+            
+            enemy_hitboxes = self.get_enemy_hitboxes_for_rect(
+                enemy,
+                enemy_rects[collision_index]
+            )
+            
+            attack_hitboxes = self.get_aerial_attack_hitboxes(
+                attack, 
+                collision_index
+            )
+            
+            in_range = self.get_hitbox_collision_indicator(
+                attack_hitboxes,
+                enemy_hitboxes
+            )
         
         return in_range
     
-    def attack_in_range(self, attack, enemy):
+    def get_aerial_attack_hitboxes(self, attack, collision_index):
+        animation_name = attack.right_animation.name
+        animation_prediction_data = self.attack_prediction_data[animation_name]
+        attack_hitboxes = animation_prediction_data.attack_hitboxes[collision_index]
         
-        attack_rect_deltas = self.attack_rect_deltas[attack.right_animation.name]
+        top_left_position = None
+        
+        for hitbox in attack_hitboxes:
+            if top_left_position == None:
+                top_left_position = [hitbox.topleft[0], hitbox.topleft[1]]
+            else:
+                if hitbox.topleft[0] < top_left_position[0]:
+                    top_left_position[0] = hitbox.topleft[0]
+                
+                if hitbox.topleft[1] < top_left_position[1]:
+                    top_left_position[1] = hitbox.topleft[1]
+        
+        player_position = pygame.Rect(
+            self.player.model.get_enclosing_rect()
+        ).topleft
+        
+        position_delta = (
+            player_position[0] - top_left_position[0],
+            player_position[1] - top_left_position[1]
+        )
+        
+        return_hitboxes = []
+        
+        for hitbox in attack_hitboxes:
+            hitbox_position = (
+                hitbox.topleft[0] + position_delta[0],
+                hitbox.topleft[1] + position_delta[1]
+            )
+            return_hitboxes.append(pygame.Rect(hitbox_position, hitbox.size))
+        
+        return return_hitboxes
+    
+    def get_enemy_hitboxes_for_rect(self, enemy, enemy_rect):
+        hitboxes = self.hitbox_builder.get_hitboxes(enemy.model.lines)
+        
+        enemy_position = pygame.Rect(enemy.get_enclosing_rect()).topleft
+        
+        position_delta = (
+            enemy_rect.topleft[0] - enemy_position[0],
+            enemy_rect.topleft[1] - enemy_position[1]
+        )
+        
+        for hitbox in hitboxes:
+            hitbox.topleft = (
+                hitbox.topleft[0] + position_delta[0],
+                hitbox.topleft[1] + position_delta[1]
+            )
+        
+        return hitboxes
+    
+    def attack_in_range(self, attack, enemy, enemy_rects):
+        
+        animation_name = attack.right_animation.name
+        attack_prediction_data = self.attack_prediction_data[animation_name]
+        
+        initial_position = (
+            self.player.model.position[0],
+            (gamestate.stage.ground.position[1] - 
+            attack_prediction_data.attack_rects[0].height)
+        )
+        
+        attack_rect_deltas = attack_prediction_data.attack_rect_deltas
         attack_rects = self.set_rect_positions(
-            self.get_initial_attack_rect(attack),
-            self.attack_rects[attack.right_animation.name],
+            initial_position,
+            attack_prediction_data.attack_rects,
             attack_rect_deltas
         )
         
-        enemy_rect = pygame.Rect(enemy.model.position, (enemy.model.width, enemy.model.height))
+        collision_index = self.get_max_collsion_index(attack_rects, enemy_rects)
+        in_range = False
         
-        in_range = enemy_rect.collidelist(attack_rects)
+        if collision_index > -1:
+            
+            enemy_hitboxes = self.get_enemy_hitboxes_for_rect(
+                enemy,
+                enemy_rects[collision_index]
+            )
+            
+            attack_hitboxes = self.set_rect_positions(
+                initial_position, 
+                attack_prediction_data.attack_hitboxes[collision_index],
+                attack_prediction_data.attack_hitbox_deltas[collision_index]
+            )
+            
+            in_range = self.get_hitbox_collision_indicator(
+                attack_hitboxes,
+                enemy_hitboxes
+            )
+            
+            ##debug code
+            #attack_rect_color = (255,0,0)
+            #if in_range:
+            #    attack_rect_color = (0,255,0)
+            #
+            ##debugging code
+            #for attack_rect in enemy_hitboxes:
+            #    rect_surface = pygame.Surface(
+            #        (attack_rect.width, attack_rect.height)
+            #    )
+            #   drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #   pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        attack_rect.topleft, 
+            #       rect_surface
+            #    )
+            #
+            ##debugging code
+            #for attack_rect in attack_hitboxes:
+            #    rect_surface = pygame.Surface(
+            #        (attack_rect.width, attack_rect.height)
+            #    )
+            #   drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    pygame.draw.rect(rect_surface, attack_rect_color, drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        attack_rect.topleft, 
+            #        rect_surface
+            #    )
+            
+            #if in_range:
+            #    print(collision_index)
+            #    #debugging code
+            #    attack_rect = attack_rects[collision_index]
+            #    rect_surface = pygame.Surface(
+            #        (attack_rect.width, attack_rect.height)
+            #    )
+            #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    pygame.draw.rect(rect_surface, (0,255,0), drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        attack_rect.topleft, 
+            #        rect_surface
+            #    )
+            #    
+            #    #debugging code
+            #    enemy_rect = enemy_rects[collision_index]
+            #    rect_surface = pygame.Surface(
+            #        (enemy_rect.width, enemy_rect.height)
+            #   )
+            #    drawing_rect = pygame.Rect((0,0), enemy_rect.size)
+            #    pygame.draw.rect(rect_surface, (0,0,255), drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        enemy_rect.topleft, 
+            #        rect_surface
+            #    )
         
-        return in_range > -1
+        return in_range
     
     def set_rect_positions(
         self,
-        initial_rect,
+        initial_position,
         attack_rects,
         attack_rect_deltas
     ): 
@@ -277,58 +528,221 @@ class Bot(Player):
             rect = attack_rects[i]
             delta = None
             
-            if self.model.orientation == physics.Orientations.FACING_RIGHT:
+            if self.player.model.orientation == physics.Orientations.FACING_RIGHT:
                 delta = (
-                    initial_rect.left - rect.left + attack_rect_deltas[i][0],
-                    initial_rect.top - rect.top + attack_rect_deltas[i][1]
+                    initial_position[0] - rect.left + attack_rect_deltas[i][0],
+                    initial_position[1] - rect.top + attack_rect_deltas[i][1]
                 )
             else:
                  delta = (
-                    initial_rect.left - rect.left - attack_rect_deltas[i][0],
-                    initial_rect.top - rect.top + attack_rect_deltas[i][1]
+                    initial_position[0] - rect.right - attack_rect_deltas[i][0],
+                    initial_position[1] - rect.top + attack_rect_deltas[i][1]
                 )   
             
             new_rect = rect.move(*delta)
             new_rects.append(new_rect)
-            
-            #debugging code
-            #pygame.draw.rect(gamestate.screen, (255,0,0), new_rect, 1)
-            #gamestate.new_dirty_rects.append(new_rect)
         
         return new_rects
     
-    def get_initial_attack_rect(self, attack):
-        animation = attack.right_animation
-        attack_rect = self.get_attack_rect(
-            animation.frames[0],
+    def get_hitbox_collision_indicator(self, attack_hitboxes, enemy_hitboxes):
+        for attack_hitbox in attack_hitboxes:
+            if attack_hitbox.collidelist(enemy_hitboxes) > -1:
+                return True
+        
+        return False
+    
+    def get_max_collsion_index(
+        self, 
+        attack_rects, 
+        enemy_rects
+    ):
+        
+        collision_indices = []
+        collision_areas = []
+        
+        for i in range(min(len(attack_rects), len(enemy_rects))):
+            if attack_rects[i].colliderect(enemy_rects[i]):
+                collision_indices.append(i)
+                collision_areas.append(
+                    self.get_collision_area(
+                        attack_rects[i],
+                        enemy_rects[i]
+                    )
+                )
+                
+        max_collision_index = -1
+        max_collision_area = 0
+        
+        for i in range(len(collision_indices)):
+            if collision_areas[i] > max_collision_area:
+                max_collision_area = collision_areas[i]
+                max_collision_index = collision_indices[i]
+        
+        return max_collision_index
+    
+    def get_collision_area(self, attack_rect, enemy_rect):
+        overlap_rect = attack_rect.clip(enemy_rect)
+        
+        return overlap_rect.width * overlap_rect.height
+        
+                
+class AttackPredictionData():
+    """An attack prediction engine can predict whether a particular attack will hit
+    a player"""
+    def __init__(
+        self,
+        attack_rects,
+        attack_rect_deltas,
+        attack_hitboxes,
+        attack_hitbox_deltas
+    ):
+        self.attack_rects = attack_rects
+        self.attack_rect_deltas = attack_rect_deltas
+        self.attack_hitboxes = attack_hitboxes
+        self.attack_hitbox_deltas = attack_hitbox_deltas
+        
+        self.attack_x_range = 0
+        self.attack_y_range = 0
+        self.set_attack_range()
+    
+    def set_attack_range(self):
+        start_position = self.attack_rects[0].topleft
+        end_position = (
+            self.attack_rects[-1].topleft[0] + self.attack_rects[-1].width,
+            self.attack_rects[-1].topleft[1] + self.attack_rects[-1].height
+        )
+        self.attack_x_range = abs(end_position[0] - start_position[0])
+        self.attack_y_range = abs(end_position[1] - start_position[1])
+
+class AttackPredictionDataFactory():
+    def __init__(self, timestep):
+        self.timestep = timestep
+        self.hitbox_builder = HitboxBuilder()
+    
+    def create_attack_prediction_data(self, player, attack):
+        attack_rects = self.get_attack_rects(
+            player, 
+            attack,
             attack.attack_type
         )
+        attack_rect_deltas = self.get_attack_rect_deltas(attack_rects)
         
-        current_position = self.model.position
-        
-        if self.is_aerial() == False:
-            rect = self.get_enclosing_rect()
-            
-            current_position = (
-                current_position[0],
-                rect.bottom - animation.frames[0].image_height()
-            )
-        
-        animation_position = animation.frames[0].get_reference_position()
-        
-        if self.model.orientation == physics.Orientations.FACING_LEFT:
-            animation_position = (
-                animation_position[0] + animation.frames[0].image_width(),
-                animation_position[1]
-            )
-        
-        attack_rect = attack_rect.move(
-            current_position[0] - animation_position[0],
-            current_position[1] - animation_position[1]
+        attack_hitboxes = self.get_attack_hitboxes(
+            player, 
+            attack, 
+            attack.attack_type
+        )
+        attack_hitbox_deltas = self.get_attack_hitbox_deltas(
+            attack_rects[0],
+            attack_hitboxes
         )
         
-        #debugging code
-        #pygame.draw.rect(gamestate.screen, (0,0,255), attack_rect)
-        #gamestate.new_dirty_rects.append(attack_rect)
+        return AttackPredictionData(
+            attack_rects,
+            attack_rect_deltas,
+            attack_hitboxes,
+            attack_hitbox_deltas
+        )
+    
+    def get_attack_rect_deltas(self, attack_rects):
+        initial_position = attack_rects[0].topleft
+        attack_rect_deltas = \
+            [(rect.left - initial_position[0], rect.top - initial_position[1]) 
+            for rect in attack_rects]
         
-        return attack_rect
+        return attack_rect_deltas
+    
+    def get_attack_hitbox_deltas(self, initial_rect, attack_hitboxes):
+        initial_position = initial_rect.topleft
+        
+        attack_hitbox_deltas = []
+        
+        for time_hitboxes in attack_hitboxes:
+            time_hitbox_deltas = \
+                [(rect.left - initial_position[0], rect.top - initial_position[1]) 
+                for rect in time_hitboxes]
+            
+            attack_hitbox_deltas.append(time_hitbox_deltas)
+        
+        return attack_hitbox_deltas
+    
+    #################### common building functions
+    def reset_player(self, player):
+        player.model.move_model((100,100))
+        player.model.time_passed = 0
+        player.model.animation_run_time = 0
+        player.direction = PlayerStates.FACING_RIGHT
+        player.actions[PlayerStates.STANDING].set_player_state(player)
+    
+    def get_attack_lines(self, model, attack_type):
+        attack_lines = None
+        
+        if (attack_type in InputActionTypes.PUNCHES or
+        attack_type == AttackTypes.PUNCH):
+            attack_lines = dict([
+                (line_name, model.lines[line_name])
+                for line_name in Attack.PUNCH_LINE_NAMES
+            ])
+        elif (attack_type in InputActionTypes.KICKS or
+        attack_type == AttackTypes.KICK):
+            attack_lines = dict([
+                (line_name, model.lines[line_name]) 
+                for line_name in Attack.KICK_LINE_NAMES
+            ])
+        
+        return attack_lines
+    
+    #################### Attack Rect Building
+    def get_attack_rects(self, player, attack, attack_type):
+        """creates a rect surrounding the attack lines for each frame in
+        the given animation"""
+        return_rects = []
+        
+        self.reset_player(player)
+        attack.set_player_state(player)
+        
+        while (player.model.animation_run_time < 
+        (attack.right_animation.animation_length - self.timestep)):
+            player.model.time_passed = self.timestep
+            attack.move_player(player)
+            return_rects.append(pygame.Rect(player.model.get_enclosing_rect()))
+        
+        self.reset_player(player)
+        attack.set_player_state(player)
+        initial_position = (player.model.position[0], player.model.position[1])
+        
+        for frame_rect in return_rects:
+            frame_rect.move(-initial_position[0], -initial_position[1])
+        
+        return return_rects
+
+    #################### Attack Hitbox Building
+    def get_attack_hitboxes(self, player, attack, attack_type):
+        """gets the hitboxes for each frame in the given animation"""
+        time_hitboxes_list = []
+        
+        self.reset_player(player)
+        attack.set_player_state(player)
+        
+        while (player.model.animation_run_time < 
+        (attack.right_animation.animation_length - self.timestep)):
+            player.model.time_passed = self.timestep
+            attack.move_player(player)
+            time_hitboxes_list.append(
+                self.get_model_hitboxes(player.model, attack_type)
+            )
+        
+        self.reset_player(player)
+        attack.set_player_state(player)
+        initial_position = (player.model.position[0], player.model.position[1])
+        
+        for time_hitboxes in time_hitboxes_list:
+            for hitbox in time_hitboxes:
+                hitbox.move(-initial_position[0], -initial_position[1])
+        
+        return time_hitboxes_list
+    
+    def get_model_hitboxes(self, model, attack_type):
+        attack_lines = self.get_attack_lines(model, attack_type)
+        
+        return self.hitbox_builder.get_hitboxes(attack_lines)
