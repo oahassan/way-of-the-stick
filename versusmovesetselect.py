@@ -9,7 +9,7 @@ import button
 import movesetselectui
 import wotsuicontainers
 from versusmovesetselectui import MovesetSelector, PlayerStatsWidget
-from enumerations import PlayerPositions, PlayerTypes
+from enumerations import PlayerPositions, PlayerTypes, PlayerStates
 
 loaded = False
 exit_button = None
@@ -175,18 +175,7 @@ def handle_events():
                 
                 versusmode.init()
                 
-                versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1].set_player_stats(
-                    player1_stats_widget.get_size()
-                )
-                versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1].load_moveset(
-                    player1_moveset_select.selected_moveset
-                )
-                versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2].set_player_stats(
-                    player2_stats_widget.get_size()
-                )
-                versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2].load_moveset(
-                    player2_moveset_select.selected_moveset
-                )
+                init_players()
                 
                 versusmode.local_state.init_player_sounds()
                 
@@ -216,3 +205,39 @@ def handle_events():
         player2_type_select.draw(gamestate.screen)
         player2_moveset_select.draw(gamestate.screen)
         player2_stats_widget.draw(gamestate.screen)
+
+def init_players():
+    global player1_type_select
+    global player1_moveset_select
+    global player1_stats_widget
+    global player2_type_select
+    global player2_moveset_select
+    global player2_stats_widget
+    
+    player1 = versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1]
+    
+    player1.set_player_stats(
+        player1_stats_widget.get_size()
+    )
+    player1.load_moveset(
+        player1_moveset_select.selected_moveset
+    )
+    player1.model.velocity = (0,0)
+    player1.direction = PlayerStates.FACING_RIGHT
+    player1.model.move_model((400, 967))
+    player1.actions[PlayerStates.STANDING].set_player_state(player1)
+    
+    
+    player2 = versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2]
+    
+    player2.set_player_stats(
+        player2_stats_widget.get_size()
+    )
+    player2.load_moveset(
+        player2_moveset_select.selected_moveset
+    )
+    player2.direction = PlayerStates.FACING_LEFT
+    player2.model.velocity = (0,0)
+    player2.model.move_model((1200, 967))
+    player2.actions[PlayerStates.STANDING].set_player_state(player2)
+    
