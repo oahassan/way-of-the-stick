@@ -418,10 +418,24 @@ class Player():
     
     def get_stun_timeout(self):
         """only call when attacking"""
-        return 1 / self.get_attack_acceleration()
+        #return 1 / self.get_attack_acceleration()
+        return self.get_attack_stun_timeout()
     
     def get_attack_type(self):
         return self.action.attack_type
+    
+    def get_attack_stun_timeout(self):
+        if (self.get_attack_type() in 
+        [InputActionTypes.WEAK_PUNCH, InputActionTypes.WEAK_KICK]):
+            return WEAK_STUN_TIMEOUT
+            
+        elif (self.get_attack_type() in 
+        [InputActionTypes.MEDIUM_PUNCH, InputActionTypes.MEDIUM_KICK]):
+            return MEDIUM_STUN_TIMEOUT
+            
+        elif (self.get_attack_type() in 
+        [InputActionTypes.STRONG_PUNCH, InputActionTypes.STRONG_KICK]):
+            return STRONG_STUN_TIMEOUT
     
     def get_max_attack_damage(self):
         if (self.get_attack_type() in 
