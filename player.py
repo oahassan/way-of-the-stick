@@ -204,7 +204,7 @@ class Player():
         elif self.action.action_state == PlayerStates.LANDING:
             self.transition(self.get_neutral_state())
         elif self.action.action_state == PlayerStates.ATTACKING:
-            self.current_attack = None
+            self.handle_attack_end()
             self.transition(self.get_neutral_state())
         elif self.action.action_state == PlayerStates.TRANSITION:
             self.action.next_action.set_player_state(self)
@@ -262,6 +262,14 @@ class Player():
         
         if self.actions[player_state].test_state_change(self):
             self.actions[player_state].set_player_state(self)
+    
+    def update_attack_data(self):
+        """additional actions to be taken when an attack connects"""
+        pass
+    
+    def handle_attack_end(self):
+        """additional actions to be taken when an attack ends"""
+        self.current_attack = None
     
     def get_attack_lines(self):
         return self.action.attack_lines

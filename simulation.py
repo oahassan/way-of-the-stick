@@ -365,11 +365,17 @@ class CollisionHandler():
             else:
                 self.apply_collision_physics(attack_result)
                 self.apply_attack_damage(attack_result)
+                attacker.update_attack_data()
                 
         else:
             self.apply_collision_physics(attack_result)
+            
+            if receiver.get_player_state() == PlayerStates.ATTACKING:
+                receiver.handle_attack_end()
+            
             receiver.set_player_state(PlayerStates.STUNNED)
             self.apply_attack_damage(attack_result)
+            attacker.update_attack_data()
 
     def apply_attack_damage(self, attack_result):
         attacker = attack_result.attacker
