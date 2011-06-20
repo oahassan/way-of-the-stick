@@ -22,6 +22,7 @@ class Bot(Player):
         #a dictionary mapping attacks to a list of rects for each frame
         self.attack_prediction_engine = None
         self.attack_landed = False
+        self.pre_attack_state = None
         
     def load_moveset(self, moveset):
         self.moveset = moveset
@@ -99,6 +100,15 @@ class Bot(Player):
         if self.attack_landed == False:
             if not self.attack_prediction_engine.last_attack_name is None:
                 self.attack_prediction_engine.reduce_attack_weight(
+                    self.attack_prediction_engine.combo_graph,
+                    self.attack_prediction_engine.last_attack_name,
+                    current_attack_name
+                )
+                
+            elif self.attack_prediction_engine.pre_attack_state != None:
+                self.attack_prediction_engine.reduce_attack_weight(
+                    self.attack_prediction_engine.initial_attack_graph,
+                    self.attack_prediction_engine.pre_attack_state,
                     current_attack_name
                 )
             
@@ -107,11 +117,21 @@ class Bot(Player):
         else:
             if not self.attack_prediction_engine.last_attack_name is None:
                 self.attack_prediction_engine.increase_attack_weight(
+                    self.attack_prediction_engine.combo_graph,
+                    self.attack_prediction_engine.last_attack_name,
+                    current_attack_name
+                )
+                
+            elif self.attack_prediction_engine.pre_attack_state != None:
+                self.attack_prediction_engine.increase_attack_weight(
+                    self.attack_prediction_engine.initial_attack_graph,
+                    self.attack_prediction_engine.pre_attack_state,
                     current_attack_name
                 )
             
             self.attack_prediction_engine.last_attack_name = current_attack_name
         
+        self.pre_attack_state = None
         self.attack_landed = False
         self.current_attack = None
     
@@ -220,10 +240,12 @@ class AttackPredictionEngine():
         self.player = player
         self.attack_prediction_data = {}
         self.combo_graph = None
+        self.initial_attack_graph = None
         self.hitbox_builder = HitboxBuilder()
         self.load_data()
         self.last_attack_name = None
-        self.combo_weight_threshold = .7
+        self.pre_attack_state = None
+        self.combo_weight_threshold = .9
         self.attack_weight_increment = .1
     
     def load_data(self):
@@ -237,7 +259,9 @@ class AttackPredictionEngine():
         
         graph_factory = AIGraphFactory()
         self.combo_graph = graph_factory.create_combo_graph(self.player)
-        
+        self.initial_attack_graph = graph_factory.create_initial_attack_graph(
+            self.player
+        )
         ##debug code for validating the combo_graph
         #print ('\n'.join([
         #        str(
@@ -247,14 +271,14 @@ class AttackPredictionEngine():
         #    ])
         #)
     
-    def reduce_attack_weight(self, attack_name):
-        node = self.combo_graph[self.last_attack_name]
+    def reduce_attack_weight(self, graph, node_name, attack_name):
+        node = graph[node_name]
         edge = node.edge_dictionary[attack_name]
         
         edge.weight = max(0, edge.weight - self.attack_weight_increment)
         
-    def increase_attack_weight(self, attack_name):
-        node = self.combo_graph[self.last_attack_name]
+    def increase_attack_weight(self, graph, node_name, attack_name):
+        node = graph[node_name]
         edge = node.edge_dictionary[attack_name]
         
         edge.weight = min(1, edge.weight + self.attack_weight_increment)
@@ -279,26 +303,61 @@ class AttackPredictionEngine():
         
         if len(in_range_attacks) > 0:
             if self.last_attack_name is None:            
-                return choice(in_range_attacks)
+                player_state = self.player.get_player_state()
+                
+                if player_state in self.initial_attack_graph:
+                    self.pre_attack_state = player_state
+                    
+                    return self.get_weighted_attack(
+                        self.initial_attack_graph, 
+                        player_state, 
+                        in_range_attacks
+                    )
+                    
+                else:
+                    return choice(in_range_attacks)
                 
             else:
-                combo_attacks = [
-                    node.data
-                    for node 
-                    in self.combo_graph[self.last_attack_name].get_neighbors(
-                        self.combo_weight_threshold
-                    )
-                ]
-                attack_list = [
-                        attack 
-                        for attack in in_range_attacks 
-                        if attack in combo_attacks
-                    ]
                 
-                return choice(attack_list)
+                return self.get_weighted_attack(
+                    self.combo_graph, 
+                    self.last_attack_name,
+                    in_range_attacks
+                )
                 
         else:
             return None
+    
+    def get_weighted_attack(self, graph, node_name, in_range_attacks):
+        weighted_attacks = [
+            node.data
+            for node
+            in graph[node_name].get_neighbors(
+                self.combo_weight_threshold
+            )
+        ]
+        
+        if len(weighted_attacks) == 0:
+            graph[node_name].reset_edge_weights()
+            
+            weighted_attacks = [
+                node.data
+                for node
+                in graph[node_name].get_neighbors(
+                    self.combo_weight_threshold
+                )
+            ]
+        
+        attack_list = [
+            attack 
+            for attack in in_range_attacks 
+            if attack in weighted_attacks
+        ]
+        
+        if len(attack_list) == 0:
+            return None
+        else:
+            return choice(attack_list)
     
     def get_enemy_rects(self, enemy):
         timestep = self.timestep
@@ -688,6 +747,77 @@ class AIGraphFactory():
                 )
         
         return combo_graph
+    
+    def create_initial_attack_graph(self, player):
+        """Creates a graph mapping player states to attacks."""
+        
+        attack_graph = {}
+        attacks = player.actions[PlayerStates.ATTACKING]
+        
+        stand_node = Node(PlayerStates.STANDING, None, [])
+        attack_graph[PlayerStates.STANDING] = stand_node
+        
+        #add edges for every attack
+        for neighbor_attack in attacks:
+            neighbor_attack_name = neighbor_attack.right_animation.name
+            neighbor_attack_node = self.get_node(
+                attack_graph, 
+                neighbor_attack_name,
+                neighbor_attack
+            )
+            stand_node.add_edge(
+                WeightedEdge(neighbor_attack_node, 1)
+            )
+        
+        walk_node = Node(PlayerStates.WALKING, None, [])
+        attack_graph[PlayerStates.WALKING] = walk_node
+        
+        #add edges for every attack
+        for neighbor_attack in attacks:
+            neighbor_attack_name = neighbor_attack.right_animation.name
+            neighbor_attack_node = self.get_node(
+                attack_graph, 
+                neighbor_attack_name,
+                neighbor_attack
+            )
+            walk_node.add_edge(
+                WeightedEdge(neighbor_attack_node, 1)
+            )
+        
+        run_node = Node(PlayerStates.RUNNING, None, [])
+        attack_graph[PlayerStates.RUNNING] = run_node
+        
+        #add edges for every attack
+        for neighbor_attack in attacks:
+            neighbor_attack_name = neighbor_attack.right_animation.name
+            neighbor_attack_node = self.get_node(
+                attack_graph, 
+                neighbor_attack_name,
+                neighbor_attack
+            )
+            run_node.add_edge(
+                WeightedEdge(neighbor_attack_node, 1)
+            )
+        
+        float_node = Node(PlayerStates.FLOATING, None, [])
+        attack_graph[PlayerStates.FLOATING] = float_node
+        
+        #add edges for every attack
+        for neighbor_attack in attacks:
+            neighbor_attack_name = neighbor_attack.right_animation.name
+            neighbor_attack_node = self.get_node(
+                attack_graph, 
+                neighbor_attack_name,
+                neighbor_attack
+            )
+            float_node.add_edge(
+                WeightedEdge(neighbor_attack_node, 1)
+            )
+        
+        jump_node = Node(PlayerStates.JUMPING, None, float_node.edges)
+        attack_graph[PlayerStates.JUMPING] = jump_node
+        
+        return attack_graph
     
     def get_node(self, graph, name, data):
         """Returns an existing node from the graph with the given name.  If the
