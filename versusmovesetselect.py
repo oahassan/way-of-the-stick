@@ -72,9 +72,15 @@ def load():
             300,
             'Select Enemy Type',
             button.TextButton,
-            [['Human',15], ['Bot',15]]
+            [['Bot',15]]
         )
-        player2_moveset_select_position = (450, 50 + player2_type_select.height + 30)
+        player2_type_select.buttons[0].handle_selected()
+        player2_type_select.selected_button = player2_type_select.buttons[0]
+        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.BOT
+        player2_moveset_select_position = (
+            450, 
+            50 + player2_type_select.height + 30
+        )
         player2_moveset_select = MovesetSelector(
             player2_moveset_select_position,
             playable_movesets
