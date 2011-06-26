@@ -83,7 +83,7 @@ class Bot(Player):
         
         self.actions[PlayerStates.STANDING].set_player_state(self)
         self.attack_prediction_engine = AttackPredictionEngine(
-            100, 
+            20, 
             2000, 
             self
         )
@@ -213,6 +213,10 @@ class Bot(Player):
             (y_distance < -20) and
             (self.model.velocity[0] > 0)):
             movement = self.actions[PlayerStates.JUMPING]
+        
+        #jumping player ai
+        #if self.model.velocity[0] != 0:
+        #    movement = self.actions[PlayerStates.JUMPING]
         
         if ((movement != None) and
             (movement.test_state_change(self))):
@@ -384,21 +388,15 @@ class AttackPredictionEngine():
         while prediction_time_frame > 0:
             last_rect = return_rects[-1]
             
-            if ((last_rect.topleft[1] + last_rect.height) < 
-            gamestate.stage.ground.position[1]):
-                rect_velocity = (
-                    rect_velocity[0],
-                    rect_velocity[1] + (timestep * enemy.model.gravity)
-                )
-            else:
-                rect_velocity = (
-                    rect_velocity[0],
-                    0
-                )
+            x_delta = timestep * rect_velocity[0]
+            y_delta = (
+                (.5*enemy.model.gravity*(timestep**2)) + 
+                (timestep * rect_velocity[1])
+            )
             
             new_rect_position = (
-                old_rect_position[0] + (timestep * rect_velocity[0]),
-                old_rect_position[1] + (timestep * rect_velocity[1])
+                old_rect_position[0] + x_delta,
+                old_rect_position[1] + y_delta
             )
             
             if ((new_rect_position[1] + last_rect.height) > 
@@ -425,6 +423,19 @@ class AttackPredictionEngine():
             return_rects.append(
                 new_rect
             )
+            
+            # Set the new aerial velocity
+            if ((last_rect.topleft[1] + last_rect.height) < 
+            gamestate.stage.ground.position[1]):
+                rect_velocity = (
+                    rect_velocity[0],
+                    rect_velocity[1] + (timestep * enemy.model.gravity)
+                )
+            else:
+                rect_velocity = (
+                    rect_velocity[0],
+                    0
+                )
             
             prediction_time_frame -= self.timestep
         
@@ -455,21 +466,15 @@ class AttackPredictionEngine():
         and attack_rect_index < len(attack_rects)):
             last_rect = return_rects[-1]
             
-            if ((last_rect.topleft[1] + last_rect.height) < 
-            gamestate.stage.ground.position[1]):
-                rect_velocity = (
-                    rect_velocity[0],
-                    rect_velocity[1] + (timestep * player.model.gravity)
-                )
-            else:
-                rect_velocity = (
-                    rect_velocity[0],
-                    0
-                )
+            x_delta = timestep * rect_velocity[0]
+            y_delta = (
+                (.5*player.model.gravity*(timestep**2)) + 
+                (timestep * rect_velocity[1])
+            )
             
             new_rect_position = (
-                old_rect_position[0] + (timestep * rect_velocity[0]),
-                old_rect_position[1] + (timestep * rect_velocity[1])
+                old_rect_position[0] + x_delta,
+                old_rect_position[1] + y_delta
             )
             
             new_rect = pygame.Rect(
@@ -489,6 +494,19 @@ class AttackPredictionEngine():
                 new_rect.topleft = new_rect_position
             
             return_rects.append(new_rect)
+            
+            #Update Rect Velocity
+            if ((last_rect.topleft[1] + last_rect.height) < 
+            gamestate.stage.ground.position[1]):
+                rect_velocity = (
+                    rect_velocity[0],
+                    rect_velocity[1] + (timestep * player.model.gravity)
+                )
+            else:
+                rect_velocity = (
+                    rect_velocity[0],
+                    0
+                )
             
             prediction_time_frame -= self.timestep
             attack_rect_index += 1
