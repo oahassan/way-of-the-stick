@@ -2,6 +2,7 @@
 Utility classes used by player modules.
 """
 import math
+import pygame
 import gamestate
 import copy
 import stick
@@ -735,7 +736,11 @@ class Attack(Action):
             
             x_velocity = self.animation.get_lateral_velocity(displacement_start_time,frame_index)
             y_velocity = self.animation.get_jump_velocity(displacement_start_time,frame_index)
-            
+            #print(
+            #    (y_velocity, 
+            #    pygame.Rect(*player.model.get_enclosing_rect()).bottom, 
+            #    displacement_start_time)
+            #)
             if player.model.orientation == physics.Orientations.FACING_RIGHT:
                 player.model.velocity = (x_velocity, y_velocity)
             elif player.model.orientation == physics.Orientations.FACING_LEFT:
@@ -825,12 +830,10 @@ class ActionFactory():
         
         action.right_animation = self.crte_player_animation(animation)
         action.right_animation.set_animation_point_path_data(ACCELERATION)
-        action.right_animation.set_animation_reference_point_path_data(acceleration,
-                                                                       physics.GRAVITY)
+        action.right_animation.set_animation_reference_point_path_data(acceleration, physics.GRAVITY)
         action.left_animation = self.crte_player_animation(animation.flip())
         action.left_animation.set_animation_point_path_data(ACCELERATION)
-        action.left_animation.set_animation_reference_point_path_data(acceleration,
-                                                                      physics.GRAVITY)
+        action.left_animation.set_animation_reference_point_path_data(acceleration, physics.GRAVITY)
     
     def crte_player_animation(self, animation):
         rtn_animation = copy.deepcopy(animation)

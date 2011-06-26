@@ -38,12 +38,14 @@ _TOOL_SET_POS = (0,0)
 
 class FrameStats():
     def __init__(self):
+        self.frame_index_label = button.Label((300, 90), "Frame Index: ", (255,255,255), 15)
         self.reference_position_label = button.Label((300, 110), "Reference Position: ", (255,255,255), 15)
         self.bottom_position_label = button.Label((300, 130), "Bottom Position: ", (255,255,255), 15)
         self.rect_label = button.Label((300, 150), "Enclosing Rect: ", (255,255,255), 15)
         self.visible = True
     
-    def update_frame_stats(self, frame):
+    def update_frame_stats(self, frame_index, frame):
+        self.frame_index_label.set_text("Frame Index: " + str(frame_index))
         reference_position = frame.get_reference_position()
         self.reference_position_label.set_text("Reference Position: " + str(reference_position))
         self.bottom_position_label.set_text(
@@ -57,6 +59,7 @@ class FrameStats():
     
     def draw(self, surface):
         if self.visible:
+            self.frame_index_label.draw(surface)
             self.reference_position_label.draw(surface)
             self.bottom_position_label.draw(surface)
             self.rect_label.draw(surface)
@@ -301,7 +304,10 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
                                   events)
     
     if loaded:
-        frame_stats.update_frame_stats(animation.frames[animation.frame_index])
+        frame_stats.update_frame_stats(
+            animation.frame_index, 
+            animation.frames[animation.frame_index]
+        )
         draw(surface)
         
         if currentTool != play_tool:

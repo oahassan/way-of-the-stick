@@ -975,7 +975,7 @@ class Animation:
                 #previous frame set the previous frame as end of a jump
                 if figure_is_airborne_indicator:
                     figure_is_airborne_indicator = False
-                    jump_interval_end_indices.append(frame_index - 1)
+                    jump_interval_end_indices.append(frame_index)
         
         return zip(jump_interval_start_indices, jump_interval_end_indices)
         
@@ -999,7 +999,11 @@ class Animation:
         
         for jump_interval in jump_intervals:
             #Find how high the figure jumps
-            y_displacement = self.get_jump_height(jump_interval[0], jump_interval[1])
+            y_displacement = self.get_jump_height(
+                gravity,
+                jump_interval[0], 
+                jump_interval[-1]
+            )
             
             #calculate the initial velocity given the displacement, a final velocity of 0 
             #and an acceleration of the given gravity.
@@ -1011,11 +1015,16 @@ class Animation:
     def get_jump_interval_durations(self, gravity, jump_intervals):
         """returns a dictionary of the durations in milliseconds of each frame in a
         jump interval keyed by the frame index"""
+        
         jump_interval_durations = {}
         
         for jump_interval in jump_intervals:
             #Find how high the figure jumps
-            y_displacement = self.get_jump_height(jump_interval[0], jump_interval[1])
+            y_displacement = self.get_jump_height(
+                gravity,
+                jump_interval[0], 
+                jump_interval[-1]
+            )
             
             #calculate the initial velocity given the displacement, a final velocity of 0 
             #and an acceleration of the given gravity.
@@ -1027,21 +1036,58 @@ class Animation:
         
         return jump_interval_durations
     
-    def get_jump_height(self, start_frame_index, end_frame_index):
+    def get_jump_height(self, gravity, start_frame_index, end_frame_index):
         """returns the height of the jump between two frame indices"""
-        start_frame_bottom = (self.frames[start_frame_index].get_reference_position()[1] + 
-                              self.frames[start_frame_index].image_height())
+        start_frame_bottom =  self.frames[start_frame_index].get_enclosing_rect().bottom
+        
         jump_height_frame_bottom = start_frame_bottom
         
         for frame_index in range(start_frame_index + 1, end_frame_index + 1):
-            frame_bottom = (self.frames[frame_index].get_reference_position()[1] + 
-                            self.frames[frame_index].image_height())
+            frame_bottom = self.frames[frame_index].get_enclosing_rect().bottom
             
             if frame_bottom < jump_height_frame_bottom:
                 jump_height_frame_bottom = frame_bottom
         
-        #subtract the height frames y position from the starting frame's y position
-        return jump_height_frame_bottom - start_frame_bottom
+        end_frame_bottom =  self.frames[end_frame_index].get_enclosing_rect().bottom
+        
+        max_jump_height = self.get_max_jump_height(
+                    gravity, 
+                    start_frame_index, 
+                    end_frame_index
+                )
+        
+        if end_frame_bottom >= start_frame_bottom:
+            
+            #subtract the height frames y position from the starting frame's y position
+            return max(
+                jump_height_frame_bottom - start_frame_bottom,
+                max_jump_height
+            )
+        
+        else:
+            return jump_height_frame_bottom - start_frame_bottom
+    
+    def get_max_jump_height(self, gravity, start_frame_index, end_frame_index):
+        """determine the maximum height of the jump based on the duration of the
+        jump interval"""
+        
+        duration = (
+            self.frame_start_times[end_frame_index] - 
+            self.frame_start_times[start_frame_index]
+        )
+        
+        if end_frame_index < len(self.frames) - 1:
+            duration += (
+                self.frame_start_times[end_frame_index + 1] - 
+                self.frame_start_times[end_frame_index]
+            )
+        half_duration = duration / 2
+        max_initial_velocity = -(half_duration * gravity)
+        max_height = (
+            .5*gravity*(half_duration**2) + max_initial_velocity*half_duration
+        )
+        
+        return max_height
     
     #Create Point Travel Data
     def set_animation_point_path_data(self, acceleration):
