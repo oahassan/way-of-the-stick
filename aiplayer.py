@@ -247,6 +247,7 @@ class AttackPredictionEngine():
         self.pre_attack_state = None
         self.combo_weight_threshold = .9
         self.attack_weight_increment = .1
+        self.last_enemy_rect = None
     
     def load_data(self):
         attack_prediction_data_factory = AttackPredictionDataFactory(self.timestep)
@@ -286,7 +287,15 @@ class AttackPredictionEngine():
     def get_in_range_attack(self, enemy):
         in_range_attacks = []
         player = self.player
+        
+        if self.last_enemy_rect is None:
+            self.last_enemy_rect = pygame.Rect(
+                *enemy.model.get_enclosing_rect()
+            )
+        
         enemy_rects = self.get_enemy_rects(enemy)
+        
+        self.last_enemy_rect = enemy_rects[0]
         
         if player.is_aerial():
             in_range_attacks = [
@@ -368,6 +377,9 @@ class AttackPredictionEngine():
         new_rect_position = return_rects[-1].topleft
         old_rect_position = return_rects[-1].topleft
         rect_velocity = enemy.model.velocity
+        direction = enemy.direction
+        width_delta = return_rects[-1].width - self.last_enemy_rect.width
+        height_delta = return_rects[-1].height - self.last_enemy_rect.height
         
         while prediction_time_frame > 0:
             last_rect = return_rects[-1]
@@ -396,10 +408,22 @@ class AttackPredictionEngine():
                     gamestate.stage.ground.position[1] - last_rect.height
                 )
             
-            return_rects.append(
-                pygame.Rect(
-                    new_rect_position, (last_rect.width, last_rect.height)
+            new_rect = pygame.Rect(
+                new_rect_position, (last_rect.width, last_rect.height)
+            )
+            
+            #Predict changes in the size of the hitbox
+            if direction == PlayerStates.FACING_LEFT:
+                new_rect.topleft = (
+                    new_rect_position[0] + width_delta,
+                    new_rect_position[1] + height_delta
                 )
+            
+            new_rect.width = max(1, new_rect.width + width_delta)
+            new_rect.height = max(1, new_rect.height + height_delta)
+            
+            return_rects.append(
+                new_rect
             )
             
             prediction_time_frame -= self.timestep
