@@ -32,6 +32,7 @@ import controlspage
 import chat
 import splash
 import volume
+import music
 
 import gamestate
 
@@ -40,7 +41,8 @@ if __name__ == "__main__":
     gamestate.init_pygame_vars()
     screen = gamestate.screen
     pygame.display.set_caption("Way of the Stick")
-
+    music.init()
+    
     while 1:
         try:
             if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
