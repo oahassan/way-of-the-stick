@@ -56,6 +56,8 @@ if __name__ == "__main__":
             mousePos = wotsuievents.mouse_pos
             mouseButtonsPressed = wotsuievents.mouse_buttons_pressed
             
+            music.update()
+            
             if pygame.QUIT in event_types:
                 sys.exit()
             elif gamestate.mode == gamestate.Modes.FRAMEEDITOR:
