@@ -83,7 +83,7 @@ class Bot(Player):
         
         self.actions[PlayerStates.STANDING].set_player_state(self)
         self.attack_prediction_engine = AttackPredictionEngine(
-            20, 
+            200, 
             2000, 
             self
         )
@@ -215,8 +215,8 @@ class Bot(Player):
             movement = self.actions[PlayerStates.JUMPING]
         
         #jumping player ai
-        #if self.model.velocity[0] != 0:
-        #    movement = self.actions[PlayerStates.JUMPING]
+        if self.model.velocity[0] != 0:
+            movement = self.actions[PlayerStates.JUMPING]
         
         if ((movement != None) and
             (movement.test_state_change(self))):
@@ -447,7 +447,8 @@ class AttackPredictionEngine():
         
         attack_rects = self.attack_prediction_data[attack.right_animation.name].attack_rects
         
-        initial_position = (player.model.position[0], player.model.position[1])
+        player_rect = pygame.Rect(*player.model.get_enclosing_rect())
+        initial_position = (player.model.position[0] - player_rect.width, player.model.position[1])
         
         return_rects = [
             pygame.Rect(
@@ -456,6 +457,7 @@ class AttackPredictionEngine():
             )
         ]
         
+        direction = player.direction
         attack_rect_index = 1
         prediction_time_frame = self.prediction_time_frame
         new_rect_position = initial_position
@@ -472,10 +474,17 @@ class AttackPredictionEngine():
                 (timestep * rect_velocity[1])
             )
             
-            new_rect_position = (
-                old_rect_position[0] + x_delta,
-                old_rect_position[1] + y_delta
-            )
+            if direction == PlayerStates.FACING_LEFT:
+                new_rect_position = (
+                    old_rect_position[0] + x_delta - player_rect.width,
+                    old_rect_position[1] + y_delta #+ player_rect.height
+                )
+
+            else:
+                new_rect_position = (
+                    old_rect_position[0] + x_delta,
+                    old_rect_position[1] + y_delta
+                )
             
             new_rect = pygame.Rect(
                 new_rect_position, 
@@ -511,6 +520,18 @@ class AttackPredictionEngine():
             prediction_time_frame -= self.timestep
             attack_rect_index += 1
         
+        ##debug code
+        #for attack_rect in return_rects:
+        #    rect_surface = pygame.Surface(
+        #        (attack_rect.width, attack_rect.height)
+        #    )
+        #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+        #    pygame.draw.rect(rect_surface, (0,255,0), drawing_rect, 2)
+        #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+        #        attack_rect.topleft, 
+        #        rect_surface
+        #    )
+        
         return return_rects
     
     def aerial_attack_in_range(self, attack, enemy, enemy_rects):
@@ -530,17 +551,42 @@ class AttackPredictionEngine():
             
             attack_hitboxes = self.get_aerial_attack_hitboxes(
                 attack, 
-                collision_index
+                collision_index,
+                attack_rects[collision_index]
             )
             
             in_range = self.get_hitbox_collision_indicator(
                 attack_hitboxes,
                 enemy_hitboxes
             )
-        
+            
+            ##debugging code
+            #for attack_rect in enemy_hitboxes:
+            #    rect_surface = pygame.Surface(
+            #        (attack_rect.width, attack_rect.height)
+            #    )
+            #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        attack_rect.topleft, 
+            #       rect_surface
+            #    )
+            # 
+            ##debugging code
+            #for attack_rect in attack_hitboxes:
+            #    rect_surface = pygame.Surface(
+            #       (attack_rect.width, attack_rect.height)
+            #    )
+            #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
+            #   st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        attack_rect.topleft, 
+            #        rect_surface
+            #    )
+            
         return in_range
     
-    def get_aerial_attack_hitboxes(self, attack, collision_index):
+    def get_aerial_attack_hitboxes(self, attack, collision_index, attack_rect):
         animation_name = attack.right_animation.name
         animation_prediction_data = self.attack_prediction_data[animation_name]
         attack_hitboxes = animation_prediction_data.attack_hitboxes[collision_index]
@@ -557,22 +603,26 @@ class AttackPredictionEngine():
                 if hitbox.topleft[1] < top_left_position[1]:
                     top_left_position[1] = hitbox.topleft[1]
         
-        player_position = pygame.Rect(
-            self.player.model.get_enclosing_rect()
-        ).topleft
-        
         position_delta = (
-            player_position[0] - top_left_position[0],
-            player_position[1] - top_left_position[1]
+            attack_rect.topleft[0] - top_left_position[0],
+            attack_rect.topleft[1] - top_left_position[1]
         )
         
         return_hitboxes = []
         
         for hitbox in attack_hitboxes:
-            hitbox_position = (
+            hitbox_position = [
                 hitbox.topleft[0] + position_delta[0],
                 hitbox.topleft[1] + position_delta[1]
-            )
+            ]
+            
+            #Flip hitbox orientation if facing left
+            if self.player.direction == PlayerStates.FACING_LEFT:
+                hitbox_position[0] = (
+                    attack_rect.topright[0] - 
+                    (hitbox_position[0] - attack_rect.topleft[0])
+                )
+            
             return_hitboxes.append(pygame.Rect(hitbox_position, hitbox.size))
         
         return return_hitboxes
@@ -635,7 +685,7 @@ class AttackPredictionEngine():
             )
             
             ##debug code
-            #attack_rect_color = (255,0,0)
+            attack_rect_color = (255,0,0)
             #if in_range:
             #    attack_rect_color = (0,255,0)
             #
@@ -644,27 +694,28 @@ class AttackPredictionEngine():
             #    rect_surface = pygame.Surface(
             #        (attack_rect.width, attack_rect.height)
             #    )
-            #   drawing_rect = pygame.Rect((0,0), attack_rect.size)
-            #   pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
+            #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
             #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
             #        attack_rect.topleft, 
             #       rect_surface
             #    )
-            #
+            # 
             ##debugging code
             #for attack_rect in attack_hitboxes:
             #    rect_surface = pygame.Surface(
             #        (attack_rect.width, attack_rect.height)
             #    )
-            #   drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
             #    pygame.draw.rect(rect_surface, attack_rect_color, drawing_rect, 2)
-            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #   st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
             #        attack_rect.topleft, 
             #        rect_surface
             #    )
-            
+            #
             #if in_range:
-            #    print(collision_index)
+            #    #print(collision_index)
+            # 
             #    #debugging code
             #    attack_rect = attack_rects[collision_index]
             #    rect_surface = pygame.Surface(
@@ -676,7 +727,7 @@ class AttackPredictionEngine():
             #        attack_rect.topleft, 
             #        rect_surface
             #    )
-            #    
+            #     
             #    #debugging code
             #    enemy_rect = enemy_rects[collision_index]
             #    rect_surface = pygame.Surface(
