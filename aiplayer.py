@@ -215,8 +215,8 @@ class Bot(Player):
             movement = self.actions[PlayerStates.JUMPING]
         
         #jumping player ai
-        if self.model.velocity[0] != 0:
-            movement = self.actions[PlayerStates.JUMPING]
+        #if self.model.velocity[0] != 0:
+        #    movement = self.actions[PlayerStates.JUMPING]
         
         if ((movement != None) and
             (movement.test_state_change(self))):
@@ -679,13 +679,42 @@ class AttackPredictionEngine():
                 attack_prediction_data.attack_hitbox_deltas[collision_index]
             )
             
+            #if attack.direction == PlayerStates.FACING_LEFT:
+            #    attack_rect_color = (0,255,0)
+            #    if in_range:
+            #        attack_rect_color = (0,255,0)
+            #    
+            #    #debugging code
+            #    for attack_rect in enemy_hitboxes:
+            #        rect_surface = pygame.Surface(
+            #            (attack_rect.width, attack_rect.height)
+            #        )
+            #        drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #        pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
+            #        st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #           attack_rect.topleft, 
+            #           rect_surface
+            #        )
+            #     
+            #    #debugging code
+            #    for attack_rect in attack_hitboxes:
+            #        rect_surface = pygame.Surface(
+            #            (attack_rect.width, attack_rect.height)
+            #        )
+            #        drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #        pygame.draw.rect(rect_surface, attack_rect_color, drawing_rect, 2)
+            #        st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #            attack_rect.topleft, 
+            #            rect_surface
+            #        )
+                
             in_range = self.get_hitbox_collision_indicator(
                 attack_hitboxes,
                 enemy_hitboxes
             )
             
             ##debug code
-            attack_rect_color = (255,0,0)
+            #attack_rect_color = (255,0,0)
             #if in_range:
             #    attack_rect_color = (0,255,0)
             #
