@@ -64,6 +64,13 @@ class Action():
         
         return change_state
     
+    def get_previous_action(self, action):
+        
+        if action.action_state == PlayerStates.TRANSITION:
+            return self.get_previous_action(action.last_action)
+        else:
+            return action
+    
     def set_player_state(self, player, direction):
         player.action = self
         player.direction = direction
@@ -122,7 +129,7 @@ class Transition(Action):
         last_frame_index = len(player.action.animation.frames) - 1
         first_frame = self.create_first_frame(player)
         
-        last_frame = self.create_last_frame(first_frame, player.action, next_action)
+        last_frame = self.create_last_frame(player, first_frame, player.action, next_action)
         
         #when running or walking is the next action state the reference 
         #position may change. So special logic is here to handle correctly
@@ -167,7 +174,7 @@ class Transition(Action):
         
         return first_frame
     
-    def create_last_frame(self, first_frame, current_action, next_action):
+    def create_last_frame(self, player, first_frame, current_action, next_action):
         """Creates a frame with ids that match the first frame"""
         
         last_frame = copy.deepcopy(first_frame)
@@ -177,8 +184,20 @@ class Transition(Action):
             position = last_frame_point_positions[point_name]
             last_frame.point_dictionary[point_id].pos = position
         
-        return last_frame
+        previous_action = self.get_previous_action(current_action)
         
+        if (current_action.action_state in PlayerStates.GROUND_STATES
+        or player.is_aerial() == False):
+            frame_bottom_diff = (
+                first_frame.get_enclosing_rect().bottom - 
+                last_frame.get_enclosing_rect().bottom
+            )
+            
+            if frame_bottom_diff > 0:
+                last_frame.move((0,frame_bottom_diff))
+        
+        return last_frame
+    
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
         start_time = player.model.animation_run_time
@@ -627,6 +646,7 @@ class Attack(Action):
     
     def set_player_state(self, player):
         previous_action = player.action
+        player_is_aerial = player.is_aerial()
         
         if previous_action.action_state == PlayerStates.TRANSITION:
             previous_action = self.get_previous_action(player.action)
@@ -658,7 +678,7 @@ class Attack(Action):
             self.use_animation_physics = True
             self.elevation = Elevations.GROUNDED
         
-        elif not player.is_aerial():
+        elif not player_is_aerial:
             player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
             self.use_animation_physics = True
             self.elevation = Elevations.GROUNDED
@@ -671,13 +691,6 @@ class Attack(Action):
         
         if player.model.time_passed > 0:
             self.move_player(player)
-    
-    def get_previous_action(self, action):
-        
-        if action.action_state == PlayerStates.TRANSITION:
-            return self.get_previous_action(action.last_action)
-        else:
-            return action
     
     def get_attack_lines(self, model):
         """get the lines that used to attack in the animation"""
@@ -836,6 +849,7 @@ class ActionFactory():
         action.left_animation.set_animation_reference_point_path_data(acceleration, physics.GRAVITY)
     
     def crte_player_animation(self, animation):
+        
         rtn_animation = copy.deepcopy(animation)
         rtn_animation.set_animation_height(
             self.player.get_animation_height(), 
@@ -843,5 +857,16 @@ class ActionFactory():
         )
         rtn_animation.set_frame_deltas()
         rtn_animation.set_animation_deltas()
+        
+        #if animation.name == "meia lua":
+        #    print("original meia lua")
+        #    
+        #    for frame in animation.frames:
+        #        print(frame.get_enclosing_rect().bottom)
+        #    
+        #    print("scaled meia lua")
+        #    
+        #    for frame in rtn_animation.frames:
+        #        print(frame.get_enclosing_rect().bottom)
         
         return rtn_animation

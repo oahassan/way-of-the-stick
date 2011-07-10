@@ -184,8 +184,7 @@ class Frame:
             del self.point_to_circles[point.id]
     
     def move(self, pos_delta):
-        """draws the frame image with the top left corner of the image at the
-        given position
+        """shifts all points in the frame by the given delta
         
         pos_delta: the change in position of the point"""
         
@@ -209,7 +208,8 @@ class Frame:
         """scales the lines in a frame by the given ratio
         
         scale: floating number to multiply the size of the frame by"""
-        reference_position = self.get_reference_position()
+        top_left_and_bottom_right = self.get_top_left_and_bottom_right()
+        reference_position = (top_left_and_bottom_right[0][0],top_left_and_bottom_right[1][1])
         pos_delta_dictionary = self.build_pos_delta_dictionary(reference_position)
         
         for point in self.points():
@@ -609,23 +609,63 @@ class Animation:
     def set_animation_height(self, height, reference_height):
         """scales each frame to the given height"""
         
-        relative_heights = {}
+        reference_position = self.frames[0].get_reference_position()
+        unscaled_frame_distances = [
+            (
+                frame.get_reference_position()[0] - reference_position[0],
+                frame.get_reference_position()[1] - reference_position[1]
+            )
+            for frame in self.frames
+        ]
         
+        reference_height_ratios = {}
         for i in range(len(self.frames)):
             frame = self.frames[i]
             
-            relative_heights[i] = frame.image_height() / float(reference_height)
+            reference_height_ratios[i] = frame.image_height() / float(reference_height)
         
+        frame_scales = []
         for i in range(len(self.frames)):
             frame = self.frames[i]
             
-            relative_height = height * relative_heights[i]
+            relative_height = height * reference_height_ratios[i]
             scale = relative_height / float(frame.image_height())
             frame.scale(scale)
+            frame_scales.append(scale)
+        
+        new_reference_position = self.frames[0].get_reference_position()
+        for i in range(len(self.frames)):
+            frame_reference_position = (
+                new_reference_position[0] + (frame_scales[i] * unscaled_frame_distances[i][0]),
+                new_reference_position[1] + (frame_scales[i] * unscaled_frame_distances[i][1])
+            )
+            
+            frame.set_position(frame_reference_position)
     
     def scale(self, scale):
+        
+        reference_position = self.frames[0].get_reference_position()
+        
+        unscaled_frame_distances = [
+            (
+                frame.get_reference_position()[0] - reference_position[0],
+                frame.get_reference_position()[1] - reference_position[1]
+            )
+            for frame in self.frames
+        ]
+        
         for frame in self.frames:
             frame.scale(scale)
+        
+        new_reference_position = self.frames[0].get_reference_position()
+        
+        for i in range(len(self.frames)):
+            frame_reference_position = (
+                new_reference_position[0] + (scale * unscaled_frame_distances[i][0]),
+                new_reference_position[1] + (scale * unscaled_frame_distances[i][1])
+            )
+            
+            frame.set_position(frame_reference_position)
     
     def set_frame_positions(self, reference_pos):
         """sets the position of each frame with respect to the reference

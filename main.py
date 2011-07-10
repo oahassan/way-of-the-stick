@@ -3,7 +3,7 @@ import os
 import multiprocessing
 
 # sys.stderr = open("logfile.txt","w")
-sys.stdout = open("logfile_out.txt","w")
+# sys.stdout = open("logfile_out.txt","w")
 
 import pygame
 
