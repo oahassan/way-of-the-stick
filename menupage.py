@@ -125,7 +125,7 @@ def load():
         )
     
     main_menu_buttons.append(versus_mode_button)
-    #main_menu_buttons.append(multiplayer_versus_mode_button)
+    main_menu_buttons.append(multiplayer_versus_mode_button)
     main_menu_buttons.append(move_set_builder_button)
     main_menu_buttons.append(controls_page_button)
     main_menu_buttons.append(settings_page_button)

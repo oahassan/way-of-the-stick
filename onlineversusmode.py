@@ -183,7 +183,7 @@ class OnlineVersusModeState(VersusModeState):
             )
 
     def exit(self):
-        
+        print("exiting")
         self.unregister_network_callbacks()
         self.end_simulation()
         self.cleanup_rendering_objects()
@@ -191,7 +191,18 @@ class OnlineVersusModeState(VersusModeState):
         self.reset_GUI_variables()
         self.initialized = False
         self.chatting = False
-
+    
+    def end_simulation(self):
+        
+        self.simulation_connection.send('STOP')
+        self.simulation_connection.close()
+        self.simulation_process.terminate()
+        self.simulation_process.join()
+        self.simulation_connection = None
+        gamestate.processes.remove(self.simulation_process)
+        self.simulation_process = None
+        self.match_simulation = None
+    
     def unregister_network_callbacks(self):
         if gamestate.hosting:
             versusclient.listener.clear_callbacks(
@@ -207,11 +218,10 @@ class OnlineVersusModeState(VersusModeState):
         if self.exit_indicator == False:
             if self.simulation_process == None:
                 self.start_match_simulation()
-            else:
-                if not self.simulation_process.is_alive():
-                    self.simulation_process.terminate()
-                    self.simulation_process.join()
-                    raise Exception("Simulation Unexpectedly Failed!")
+            #else:
+            #    if not self.simulation_process.is_alive():
+            #        self.end_simulation()
+            #        raise Exception("Simulation Unexpectedly Failed!")
         
         self.fps_label.set_text(str(gamestate.clock.get_fps()))
         self.fps_label.draw(gamestate.screen)
@@ -228,6 +238,8 @@ class OnlineVersusModeState(VersusModeState):
             while self.simulation_connection.poll():
                 data = self.simulation_connection.recv()
                 action = data[SimulationDataKeys.ACTION]
+                
+                print("simulation: " + str(data))
                 
                 if action == SimulationActionTypes.STEP:
                     self.update_simulation_rendering(
@@ -299,18 +311,16 @@ class OnlineVersusModeState(VersusModeState):
                 
                 gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
             
-            if versusclient.get_connection_status() == versusclient.ConnectionStatus.DISCONNECTED:
-                #TODO - goto mainmenu if hosting
-                self.exit()
-                
-                #This must be called here to make sure that the player states get set to None. If
-                #not a new match cannot be joined
-                versusclient.clear_player_states()
-                
-                gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
-            
             versusclient.get_network_messages()
             versusclient.listener.Pump()
+            
+        else:
+            self.exit()
+            #This must be called here to make sure that the player states get set to None. If
+            #not a new match cannot be joined
+            versusclient.clear_player_states()
+            
+            gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
         
         if gamestate.hosting:
             versusserver.server.Pump()
@@ -408,8 +418,9 @@ class OnlineVersusModeState(VersusModeState):
                         #if you're a spectator go to the main menu
                         versusclient.listener.close()
                         versusclient.unload()
-                        self.exit()
                         gamestate.mode = gamestate.Modes.MAINMENU
+                
+                self.exit()
 
 local_state = OnlineVersusModeState()
 

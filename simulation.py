@@ -1179,12 +1179,13 @@ class ClientSimulation(NetworkedSimulation):
         while 1:
             while self.pipe_connection.poll():
                 data = self.pipe_connection.recv()
+                
+                if data == 'STOP':
+                    raise Exception("Terminating Simulation Process!")
+                
                 action_type = data[SimulationDataKeys.ACTION]
                 
-                if action_type == SimulationActionTypes.STOP or data == 'STOP':
-                    raise Exception("Terminating Simulation Process!")
-                    
-                elif action_type == SimulationActionTypes.STEP:
+                if action_type == SimulationActionTypes.STEP:
                     
                     self.step(
                         data[SimulationDataKeys.KEYS_PRESSED], 

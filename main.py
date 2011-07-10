@@ -3,7 +3,7 @@ import os
 import multiprocessing
 
 # sys.stderr = open("logfile.txt","w")
-# sys.stdout = open("logfile_out.txt","w")
+sys.stdout = open("logfile_out.txt","w")
 
 import pygame
 
@@ -33,6 +33,7 @@ import chat
 import splash
 import volume
 import music
+import versusclient
 
 import gamestate
 
@@ -135,9 +136,8 @@ if __name__ == "__main__":
                 
                 if onlineversusmode.local_state.simulation_process.is_alive():
                     print("terminiating!")
-                    if onlineversusmode.local_state.simulation_connection != None:
-                        onlineversusmode.local_state.simulation_connection.send('STOP')
-                    else:
-                        onlineversusmode.local_state.simulation_process.terminate()
-                    onlineversusmode.local_state.simulation_process.join()
+                    onlineversusmode.local_state.simulation_process.terminate()
+                    #onlineversusmode.local_state.simulation_process.join()
+                
+                print versusclient.listener.__dict__
             raise

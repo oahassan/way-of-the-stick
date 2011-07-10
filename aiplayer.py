@@ -228,9 +228,17 @@ class Bot(Player):
         in_range_attacks = []
         
         if self.is_aerial():
-            in_range_attacks = [attack for attack in self.actions[PlayerStates.ATTACKING] if self.aerial_attack_in_range(attack, enemy)]
+            in_range_attacks = [
+                attack 
+                for attack in self.actions[PlayerStates.ATTACKING] 
+                if self.aerial_attack_in_range(attack, enemy)
+            ]
         else:
-            in_range_attacks = [attack for attack in self.actions[PlayerStates.ATTACKING] if self.attack_in_range(attack, enemy)]
+            in_range_attacks = [
+                attack 
+                for attack in self.actions[PlayerStates.ATTACKING] 
+                if self.attack_in_range(attack, enemy)
+            ]
         
         if len(in_range_attacks) > 0:
             return choice(in_range_attacks)
@@ -257,10 +265,14 @@ class AttackPredictionEngine():
         attack_prediction_data_factory = AttackPredictionDataFactory(self.timestep)
         
         for attack in self.player.actions[PlayerStates.ATTACKING]:
-            self.attack_prediction_data[attack.right_animation.name] = attack_prediction_data_factory.create_attack_prediction_data(
+            
+            attack_prediction_data = attack_prediction_data_factory.create_attack_prediction_data(
                 self.player, 
                 attack
             )
+            
+            if attack_prediction_data != None:
+                self.attack_prediction_data[attack.right_animation.name] = attack_prediction_data
         
         graph_factory = AIGraphFactory()
         self.combo_graph = graph_factory.create_combo_graph(self.player)
@@ -305,13 +317,15 @@ class AttackPredictionEngine():
             in_range_attacks = [
                 attack 
                 for attack in player.actions[PlayerStates.ATTACKING] 
-                if self.aerial_attack_in_range(attack, enemy, enemy_rects)
+                if attack.right_animation.name in self.attack_prediction_data
+                and self.aerial_attack_in_range(attack, enemy, enemy_rects)
             ]
         else:
             in_range_attacks = [
                 attack 
                 for attack in player.actions[PlayerStates.ATTACKING] 
-                if self.attack_in_range(attack, enemy, enemy_rects)
+                if attack.right_animation.name in self.attack_prediction_data
+                and self.attack_in_range(attack, enemy, enemy_rects)
             ]
         
         if len(in_range_attacks) > 0:
@@ -1039,24 +1053,28 @@ class AttackPredictionDataFactory():
             attack,
             attack.attack_type
         )
-        attack_rect_deltas = self.get_attack_rect_deltas(attack_rects)
         
-        attack_hitboxes = self.get_attack_hitboxes(
-            player, 
-            attack, 
-            attack.attack_type
-        )
-        attack_hitbox_deltas = self.get_attack_hitbox_deltas(
-            attack_rects[0],
-            attack_hitboxes
-        )
-        
-        return AttackPredictionData(
-            attack_rects,
-            attack_rect_deltas,
-            attack_hitboxes,
-            attack_hitbox_deltas
-        )
+        if len(attack_rects) > 0:
+            attack_rect_deltas = self.get_attack_rect_deltas(attack_rects)
+            
+            attack_hitboxes = self.get_attack_hitboxes(
+                player, 
+                attack, 
+                attack.attack_type
+            )
+            attack_hitbox_deltas = self.get_attack_hitbox_deltas(
+                attack_rects[0],
+                attack_hitboxes
+            )
+            
+            return AttackPredictionData(
+                attack_rects,
+                attack_rect_deltas,
+                attack_hitboxes,
+                attack_hitbox_deltas
+            )
+        else:
+            return None
     
     def get_attack_rect_deltas(self, attack_rects):
         initial_position = attack_rects[0].topleft
