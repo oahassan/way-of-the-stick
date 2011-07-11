@@ -204,12 +204,28 @@ class Frame:
         
         self.move(deltas)
     
+    def set_bottom_left(self, input_bottom_left):
+        """moves the frame such that min x position and max y positions is at 
+        the given position."""
+        bottom_left = self.get_bottom_left()
+        
+        deltas = (
+            input_bottom_left[0] - bottom_left[0],
+            input_bottom_left[1] - bottom_left[1]
+        )
+        
+        self.move(deltas)
+    
+    def get_bottom_left(self):
+        """returns the minimum x position and the maximum y position"""
+        top_left_and_bottom_right = self.get_top_left_and_bottom_right()
+        return (top_left_and_bottom_right[0][0],top_left_and_bottom_right[1][1])
+    
     def scale(self, scale):
         """scales the lines in a frame by the given ratio
         
         scale: floating number to multiply the size of the frame by"""
-        top_left_and_bottom_right = self.get_top_left_and_bottom_right()
-        reference_position = (top_left_and_bottom_right[0][0],top_left_and_bottom_right[1][1])
+        reference_position = self.get_bottom_left()
         pos_delta_dictionary = self.build_pos_delta_dictionary(reference_position)
         
         for point in self.points():
@@ -607,65 +623,56 @@ class Animation:
         return frame_deltas
     
     def set_animation_height(self, height, reference_height):
-        """scales each frame to the given height"""
+        """scales each frame to the given height.  Uses the bottom left as a 
+        reference position so that the bottom position is not inferred to 
+        keep jump inference safe from rounding errors."""
         
-        reference_position = self.frames[0].get_reference_position()
+        bottom_left = self.frames[0].get_bottom_left()
         unscaled_frame_distances = [
             (
-                frame.get_reference_position()[0] - reference_position[0],
-                frame.get_reference_position()[1] - reference_position[1]
+                self.frames[i].get_bottom_left()[0] - bottom_left[0],
+                self.frames[i].get_bottom_left()[1] - bottom_left[1]
             )
-            for frame in self.frames
+            for i in range(len(self.frames))
         ]
         
-        reference_height_ratios = {}
+        scale = height / float(reference_height)
         for i in range(len(self.frames)):
-            frame = self.frames[i]
             
-            reference_height_ratios[i] = frame.image_height() / float(reference_height)
+            self.frames[i].scale(scale)
         
-        frame_scales = []
+        new_bottom_left = self.frames[0].get_bottom_left()
         for i in range(len(self.frames)):
-            frame = self.frames[i]
-            
-            relative_height = height * reference_height_ratios[i]
-            scale = relative_height / float(frame.image_height())
-            frame.scale(scale)
-            frame_scales.append(scale)
-        
-        new_reference_position = self.frames[0].get_reference_position()
-        for i in range(len(self.frames)):
-            frame_reference_position = (
-                new_reference_position[0] + (frame_scales[i] * unscaled_frame_distances[i][0]),
-                new_reference_position[1] + (frame_scales[i] * unscaled_frame_distances[i][1])
+            frame_bottom_left = (
+                new_bottom_left[0] + (scale * unscaled_frame_distances[i][0]),
+                new_bottom_left[1] + (scale * unscaled_frame_distances[i][1])
             )
             
-            frame.set_position(frame_reference_position)
+            self.frames[i].set_bottom_left(frame_bottom_left)
     
     def scale(self, scale):
         
         reference_position = self.frames[0].get_reference_position()
-        
         unscaled_frame_distances = [
             (
-                frame.get_reference_position()[0] - reference_position[0],
-                frame.get_reference_position()[1] - reference_position[1]
+                self.frames[i].get_reference_position()[0] - reference_position[0],
+                self.frames[i].get_reference_position()[1] - reference_position[1]
             )
-            for frame in self.frames
+            for i in range(len(self.frames))
         ]
         
-        for frame in self.frames:
-            frame.scale(scale)
+        for i in range(len(self.frames)):
+            
+            self.frames[i].scale(scale)
         
         new_reference_position = self.frames[0].get_reference_position()
-        
         for i in range(len(self.frames)):
             frame_reference_position = (
                 new_reference_position[0] + (scale * unscaled_frame_distances[i][0]),
                 new_reference_position[1] + (scale * unscaled_frame_distances[i][1])
             )
             
-            frame.set_position(frame_reference_position)
+            self.frames[i].set_position(frame_reference_position)
     
     def set_frame_positions(self, reference_pos):
         """sets the position of each frame with respect to the reference

@@ -844,6 +844,11 @@ class ActionFactory():
         action.right_animation = self.crte_player_animation(animation)
         action.right_animation.set_animation_point_path_data(ACCELERATION)
         action.right_animation.set_animation_reference_point_path_data(acceleration, physics.GRAVITY)
+        
+        #if animation.name == "rasteira de costa":
+        #    print(action.right_animation.lateral_velocities)
+        #    print([frame.get_reference_position() for frame in action.right_animation.frames])
+        
         action.left_animation = self.crte_player_animation(animation.flip())
         action.left_animation.set_animation_point_path_data(ACCELERATION)
         action.left_animation.set_animation_reference_point_path_data(acceleration, physics.GRAVITY)

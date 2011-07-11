@@ -72,7 +72,7 @@ def load():
             300,
             'Select Enemy Type',
             button.TextButton,
-            [['Bot',15]]
+            [['Human',15]]
         )
         player2_type_select.buttons[0].handle_selected()
         player2_type_select.selected_button = player2_type_select.buttons[0]

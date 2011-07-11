@@ -22,8 +22,8 @@ def slope(pos1, pos2):
 
 def midpoint(pos1, pos2):
     """Finds the midpoint between two points"""
-    x_pos = (pos1[0] + pos2[0]) / 2
-    y_pos = (pos1[1] + pos2[1]) / 2
+    x_pos = (pos1[0] + pos2[0]) / float(2)
+    y_pos = (pos1[1] + pos2[1]) / float(2)
     
     return (x_pos, y_pos)
 
