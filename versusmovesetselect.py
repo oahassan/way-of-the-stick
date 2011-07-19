@@ -72,7 +72,7 @@ def load():
             300,
             'Select Enemy Type',
             button.TextButton,
-            [['Human',15]]
+            [['Bot',15]]
         )
         player2_type_select.buttons[0].handle_selected()
         player2_type_select.selected_button = player2_type_select.buttons[0]
@@ -95,6 +95,12 @@ def unload():
     global loaded
     global exit_button
     global start_match_label
+    
+    exit_button = None
+    loaded = False
+    start_match_label = None
+
+def clear_data():
     global player1_type_select
     global player1_moveset_select
     global player1_stats_widget
@@ -102,15 +108,12 @@ def unload():
     global player2_moveset_select
     global player2_stats_widget
     
-    exit_button = None
-    loaded = False
-    start_match_label = None
-    #player1_type_select = None
-    #player1_moveset_select = None
-    #player1_stats_widget = None
-    #player2_type_select = None
-    #player2_moveset_select = None
-    #player2_stats_widget = None
+    player1_type_select = None
+    player1_moveset_select = None
+    player1_stats_widget = None
+    player2_type_select = None
+    player2_moveset_select = None
+    player2_stats_widget = None
 
 def handle_events():
     global loaded
@@ -163,6 +166,7 @@ def handle_events():
             if exit_button.contains(wotsuievents.mouse_pos):
                 gamestate.mode = gamestate.Modes.MAINMENU
                 unload()
+                clear_data()
         
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):

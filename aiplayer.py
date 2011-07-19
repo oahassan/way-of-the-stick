@@ -314,12 +314,13 @@ class AttackPredictionEngine():
         self.last_enemy_rect = enemy_rects[0]
         
         if player.is_aerial():
-            in_range_attacks = [
-                attack 
-                for attack in player.actions[PlayerStates.ATTACKING] 
-                if attack.right_animation.name in self.attack_prediction_data
-                and self.aerial_attack_in_range(attack, enemy, enemy_rects)
-            ]
+            #in_range_attacks = [
+            #    attack 
+            #    for attack in player.actions[PlayerStates.ATTACKING] 
+            #    if attack.right_animation.name in self.attack_prediction_data
+            #    and self.aerial_attack_in_range(attack, enemy, enemy_rects)
+            #]
+            pass
         else:
             in_range_attacks = [
                 attack 
