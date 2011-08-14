@@ -11,7 +11,7 @@ import actionwizard
 from controlsdata import get_control_key, get_controls
 from enumerations import PlayerStates, CommandDurations, InputActionTypes, CommandCollections
 from playercontroller import Controller
-from playerutils import ActionFactory, Transition, Action, Attack
+from playerutils import ActionFactory, Transition, Action, Attack, JumpAttack
 from motion import AerialMotion, StunMotion
 from command import Command, CommandHandler
 
@@ -438,7 +438,13 @@ class ControllerFactory():
         for attack_name in moveset.get_attacks():
             attack_type = moveset.get_attack_type(attack_name)
             
-            attack_action = Attack(attack_type)
+            attack_action = None
+            if InputActionTypes.JUMP in moveset.attack_key_combinations[attack_name]:
+                attack_action = JumpAttack(attack_type)
+                
+            else:
+                attack_action = Attack(attack_type)
+            
             attack_action.set_acceleration(attack_type)
             
             self.action_factory._set_action_animations(
@@ -470,6 +476,28 @@ class ControllerFactory():
                 hold_commands,
                 attack_action
             )
+            
+            if InputActionTypes.JUMP in moveset.attack_key_combinations[attack_name]:
+                short_command_list = moveset.attack_key_combinations[attack_name]
+                short_command_list.remove(InputActionTypes.JUMP)
+                
+                for command_type in short_command_list:
+                    tap_commands.append(Command(command_type, CommandDurations.TAP))
+                
+                attack_command_handler.add_command(
+                    tap_commands,
+                    attack_action
+                )
+                
+                hold_commands = []
+                
+                for command_type in short_command_list:
+                    hold_commands.append(Command(command_type, CommandDurations.HOLD))
+                
+                attack_command_handler.add_command(
+                    hold_commands,
+                    attack_action
+                )
         
         return Controller(
             movement_key_to_command_type, 

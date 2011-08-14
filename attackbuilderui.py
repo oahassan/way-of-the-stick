@@ -239,6 +239,8 @@ class KeyReferenceContainer(wotsui.UIObjectBase):
         label_list.append(mp_label)
         sp_label = button.Label((0,0), "SP - Strong Punch", (255,255,255), 15)
         label_list.append(sp_label)
+        ju_label = button.Label((0,0), "JU - Jump", (255,255,255), 15)
+        label_list.append(ju_label)
         
         self.layout_labels(
             label_list,
@@ -280,11 +282,12 @@ class KeySetContainer(BuilderContainer):
             ((0,0), "SK", 18, InputActionTypes.STRONG_KICK),
             ((0,0), "WP", 18, InputActionTypes.WEAK_PUNCH),
             ((0,0), "MP", 18, InputActionTypes.MEDIUM_PUNCH),
-            ((0,0), "SP", 18, InputActionTypes.STRONG_PUNCH)
+            ((0,0), "SP", 18, InputActionTypes.STRONG_PUNCH),
+            ((0,0), "JU", 18, InputActionTypes.JUMP)
         ]
         self.key_buttons = KeyButtonContainer(
             key_container_position,
-            220,
+            270,
             250,
             "",
             KeyButton,
@@ -445,6 +448,9 @@ class KeySetContainer(BuilderContainer):
         
         elif action_type == InputActionTypes.STRONG_PUNCH:
             return "SP"
+        
+        elif action_type == InputActionTypes.JUMP:
+            return "JU"
 
 class AttackSelectContainer(AnimationSelectContainer):
     def __init__(self, position, title_text, animation_types):

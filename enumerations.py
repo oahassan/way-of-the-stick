@@ -89,7 +89,8 @@ class CommandCollections():
         InputActionTypes.MEDIUM_KICK, InputActionTypes.STRONG_KICK,
         InputActionTypes.MOVE_RIGHT, InputActionTypes.MOVE_LEFT, 
         InputActionTypes.FORWARD, InputActionTypes.MOVE_DOWN,
-        InputActionTypes.MOVE_UP
+        InputActionTypes.MOVE_UP, InputActionTypes.JUMP
+        
     ]
 
 class PlayerTypes:

@@ -572,6 +572,7 @@ class Attack(Action):
         self.acceleration = ACCELERATION
         self.elevation = Elevations.GROUNDED
         self.overriden = False
+        self.is_jump_attack = False
     
     def set_acceleration(self, action_type):
         """sets the animation acceleration for a given InputActionType.  Only
@@ -588,7 +589,8 @@ class Attack(Action):
     
     def test_state_change(self, player):
         
-        if player.get_player_state() == PlayerStates.STUNNED:
+        if (player.get_player_state() == PlayerStates.STUNNED or
+        player.is_aerial()):
             return False
         elif player.get_player_state() == PlayerStates.TRANSITION:
             return player.action.next_action.test_change_to_action(self)
@@ -761,6 +763,23 @@ class Attack(Action):
             
             player.apply_physics(duration)
 
+class JumpAttack(Attack):
+    def __init__(self, attack_type):
+        Attack.__init__(self, attack_type)
+        self.is_jump_attack = True
+    
+    def test_state_change(self, player):
+        
+        if player.get_player_state() == PlayerStates.STUNNED:
+            return False
+        elif (player.get_player_state() == PlayerStates.TRANSITION and
+        player.is_aerial()):
+            return player.action.next_action.test_change_to_action(self)
+        elif player.is_aerial():
+            return Action.test_state_change(self, player)
+        else:
+            return False
+
 class ActionFactory():
     """factory class for creating attack objects"""
     
@@ -826,6 +845,21 @@ class ActionFactory():
         """create an attack model for the given action type"""
         
         return_attack = Attack(action_type)
+        
+        return_attack.set_acceleration(action_type)
+        
+        self._set_action_animations(
+            return_attack,
+            animation,
+            return_attack.acceleration
+        )
+        
+        return_attack.set_attack_data(model)
+        
+        return return_attack
+    
+    def create_jump_attack(self, action_type, animation, model):
+        return_attack = JumpAttack(action_type)
         
         return_attack.set_acceleration(action_type)
         
