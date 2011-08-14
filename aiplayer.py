@@ -72,12 +72,19 @@ class Bot(Player):
         
         #load attack actions
         for attack_name in moveset.get_attacks():
-            
-            attack_action = factory.create_attack(
-                moveset.get_attack_type(attack_name),
-                moveset.attack_animations[attack_name],
-                self.model
-            )
+            attack_action = None
+            if InputActionTypes.JUMP in moveset.attack_key_combinations[attack_name]:
+                attack_action = factory.create_jump_attack(
+                    moveset.get_attack_type(attack_name),
+                    moveset.attack_animations[attack_name],
+                    self.model
+                )
+            else:
+                attack_action = factory.create_attack(
+                    moveset.get_attack_type(attack_name),
+                    moveset.attack_animations[attack_name],
+                    self.model
+                )
                 
             self.actions[PlayerStates.ATTACKING].append(attack_action)
         
@@ -314,12 +321,13 @@ class AttackPredictionEngine():
         self.last_enemy_rect = enemy_rects[0]
         
         if player.is_aerial():
-            #in_range_attacks = [
-            #    attack 
-            #    for attack in player.actions[PlayerStates.ATTACKING] 
-            #    if attack.right_animation.name in self.attack_prediction_data
-            #    and self.aerial_attack_in_range(attack, enemy, enemy_rects)
-            #]
+            in_range_attacks = [
+                attack 
+                for attack in player.actions[PlayerStates.ATTACKING] 
+                if attack.right_animation.name in self.attack_prediction_data
+                and attack.is_jump_attack
+                and self.aerial_attack_in_range(attack, enemy, enemy_rects)
+            ]
             pass
         else:
             in_range_attacks = [
