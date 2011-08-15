@@ -78,7 +78,7 @@ class CommandCollections():
         InputActionTypes.MOVE_DOWN, InputActionTypes.MOVE_UP,
         InputActionTypes.NO_MOVEMENT
     ]
-    AERIAL_ACTIONS = [InputActionTypes.JUMP, InputActionTypes.NO_MOVEMENT]
+    
     STUN_MOVEMENTS = [
         InputActionTypes.MOVE_RIGHT, InputActionTypes.MOVE_LEFT, 
         InputActionTypes.MOVE_DOWN, InputActionTypes.MOVE_UP
@@ -92,6 +92,8 @@ class CommandCollections():
         InputActionTypes.MOVE_UP, InputActionTypes.JUMP
         
     ]
+    AERIAL_ACTIONS = [InputActionTypes.JUMP, InputActionTypes.NO_MOVEMENT]
+    AERIAL_ACTIONS.extend(ATTACK_ACTIONS)
 
 class PlayerTypes:
     HUMAN = 'HUMAN'

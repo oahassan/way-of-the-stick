@@ -71,13 +71,13 @@ class HumanPlayer(player.Player):
         """Determine the current action state based on the keys pressed. If the
         keys pressed don't map to a valid action then None is returned."""
         
-        action = self.controller.get_current_attack()
+        if self.is_aerial():
+            action = self.controller.get_current_aerial_action()
         
-        if action == None:
-            if self.is_aerial():
-                action = self.controller.get_current_aerial_action()
+        else:
+            action = self.controller.get_current_attack()
             
-            else:
+            if action == None:
                 action = self.controller.get_current_ground_movement()
         
         return action
@@ -457,31 +457,10 @@ class ControllerFactory():
             
             input_player.actions[attack_name] = attack_action
             
-            tap_commands = []
-            
-            for command_type in moveset.attack_key_combinations[attack_name]:
-                tap_commands.append(Command(command_type, CommandDurations.TAP))
-            
-            attack_command_handler.add_command(
-                tap_commands,
-                attack_action
-            )
-            
-            hold_commands = []
-            
-            for command_type in moveset.attack_key_combinations[attack_name]:
-                hold_commands.append(Command(command_type, CommandDurations.HOLD))
-            
-            attack_command_handler.add_command(
-                hold_commands,
-                attack_action
-            )
-            
             if InputActionTypes.JUMP in moveset.attack_key_combinations[attack_name]:
-                short_command_list = moveset.attack_key_combinations[attack_name]
-                short_command_list.remove(InputActionTypes.JUMP)
+                tap_commands = []
                 
-                for command_type in short_command_list:
+                for command_type in moveset.attack_key_combinations[attack_name]:
                     tap_commands.append(Command(command_type, CommandDurations.TAP))
                 
                 attack_command_handler.add_command(
@@ -491,7 +470,48 @@ class ControllerFactory():
                 
                 hold_commands = []
                 
+                for command_type in moveset.attack_key_combinations[attack_name]:
+                    hold_commands.append(Command(command_type, CommandDurations.HOLD))
+                
+                attack_command_handler.add_command(
+                    hold_commands,
+                    attack_action
+                )
+                
+                short_command_list = moveset.attack_key_combinations[attack_name]
+                short_command_list.remove(InputActionTypes.JUMP)
+                
                 for command_type in short_command_list:
+                    tap_commands.append(Command(command_type, CommandDurations.TAP))
+                
+                aerial_action_command_handler.add_command(
+                    tap_commands,
+                    attack_action
+                )
+                
+                hold_commands = []
+                
+                for command_type in short_command_list:
+                    hold_commands.append(Command(command_type, CommandDurations.HOLD))
+                
+                aerial_action_command_handler.add_command(
+                    hold_commands,
+                    attack_action
+                )
+            else:
+                tap_commands = []
+                
+                for command_type in moveset.attack_key_combinations[attack_name]:
+                    tap_commands.append(Command(command_type, CommandDurations.TAP))
+                
+                attack_command_handler.add_command(
+                    tap_commands,
+                    attack_action
+                )
+                
+                hold_commands = []
+                
+                for command_type in moveset.attack_key_combinations[attack_name]:
                     hold_commands.append(Command(command_type, CommandDurations.HOLD))
                 
                 attack_command_handler.add_command(
