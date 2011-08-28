@@ -294,8 +294,11 @@ class Jump(Action):
             (player.jump_timer < player.high_jump_timeout) and
             (player.jump_timer > player.short_jump_timeout)):
             change_state = True
+            player.jump_timer = player.high_jump_timeout
         else:
             change_state = Action.test_state_change(self, player)
+            if change_state:
+                player.jump_timer = 0
         
         return change_state
     
@@ -307,9 +310,6 @@ class Jump(Action):
         if ((player.jump_timer > player.short_jump_timeout) and
         (player.jump_timer < player.high_jump_timeout)):
             player.model.velocity = (player.model.velocity[0], player.high_jump_speed)
-            player.jump_timer = player.high_jump_timeout
-        elif player.jump_timer >= player.high_jump_timeout:
-            player.jump_timer = 0
     
     def set_player_state(self, player):
         self.set_player_jump_velocity(player)
