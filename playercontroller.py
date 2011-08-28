@@ -286,7 +286,7 @@ class Controller():
         
         command_types = self._get_aerial_action_command_types(keys_pressed)
         
-        for command_type in self._get_aerial_action_command_types(keys_pressed):
+        for command_type in command_types:
             command_states.set_command_state(command_type, True)
         
         return command_states

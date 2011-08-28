@@ -568,7 +568,6 @@ class Attack(Action):
         self.attack_type = attack_type
         self.attack_lines = []
         self.range = (0,0)
-        self.use_animation_physics = False
         self.acceleration = ACCELERATION
         self.elevation = Elevations.GROUNDED
         self.overriden = False
@@ -624,34 +623,21 @@ class Attack(Action):
         
         #apply animation physics first to determine what the player's position 
         #should be.
-        if self.use_animation_physics:
-            self.apply_animation_physics(player, start_time, end_time)
-        else:
-            player.apply_physics(end_time - start_time)
+        self.apply_animation_physics(player, start_time, end_time)
         
-        #set the point positions affects whether the player is grounded, so 
-        #there are extra case statements here
-        #if the player was in a grounded state shift back to the ground after 
-        #setting the initial point positions
-        if (self.use_animation_physics and
-        self.animation.get_matching_jump_interval(frame_index) == None):
+        if self.animation.get_matching_jump_interval(frame_index) == None:
             player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
-            player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
+            player.model.move_model(
+                (player.model.position[0], 
+                gamestate.stage.ground.position[1] - player.model.height)
+            )
         else:
             player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
-        
-        #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
-        #player.model.set_point_position_in_place(point_deltas)
         
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
     
     def set_player_state(self, player):
-        previous_action = player.action
-        player_is_aerial = player.is_aerial()
-        
-        if previous_action.action_state == PlayerStates.TRANSITION:
-            previous_action = self.get_previous_action(player.action)
         
         player.action = self
         player.model.animation_run_time = 0     
@@ -667,27 +653,11 @@ class Attack(Action):
         
         player.model.set_frame_point_pos(self.animation.frame_deltas[0])
         
-        #set the point positions affects whether the player is grounded, so there are extra case statements here
-        #if the player was in a grounded state shift back to the ground after setting the initial point positions
-        if previous_action.action_state in [PlayerStates.WALKING, PlayerStates.STANDING, PlayerStates.CROUCHING, PlayerStates.RUNNING, PlayerStates.LANDING]:
-            player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
-            self.use_animation_physics = True
-            self.elevation = Elevations.GROUNDED
-        
-        elif (previous_action.action_state == PlayerStates.ATTACKING and
-        previous_action.overriden == True and
-        previous_action.elevation == Elevations.GROUNDED):
-            self.use_animation_physics = True
-            self.elevation = Elevations.GROUNDED
-        
-        elif not player_is_aerial:
-            player.model.move_model((player.model.position[0], gamestate.stage.ground.position[1] - player.model.height))
-            self.use_animation_physics = True
-            self.elevation = Elevations.GROUNDED
-            
-        else:
-            self.use_animation_physics = False
-            self.elevation = Elevations.AERIAL
+        player.model.move_model(
+            (player.model.position[0], 
+            gamestate.stage.ground.position[1] - player.model.height)
+        )
+        self.elevation = Elevations.GROUNDED
         
         player.reset_point_damage()
         
@@ -767,6 +737,54 @@ class JumpAttack(Attack):
     def __init__(self, attack_type):
         Attack.__init__(self, attack_type)
         self.is_jump_attack = True
+    
+    def move_player(self, player):
+        
+        start_time = player.model.animation_run_time
+        end_time = start_time + player.model.time_passed
+        
+        if end_time > self.animation.animation_length:
+            end_time = self.animation.animation_length
+            player.model.animation_run_time = end_time
+            player.model.time_passed = start_time + player.model.time_passed - end_time
+            # player.model.time_passed = 0
+        else:
+            player.model.animation_run_time += player.model.time_passed
+        
+        frame_index = self.animation.get_frame_index_at_time(end_time)
+        self.last_frame_index = frame_index
+        
+        #apply physics first to determine what the player's position 
+        #should be.
+        player.apply_physics(end_time - start_time)
+        
+        player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
+        
+        if player.model.animation_run_time >= self.animation.animation_length:
+            player.handle_animation_end()
+    
+    def set_player_state(self, player):
+        
+        player.action = self
+        player.model.animation_run_time = 0     
+        player.current_attack = self
+        
+        if player.direction == PlayerStates.FACING_LEFT:
+            self.animation = self.right_animation
+            player.model.orientation = physics.Orientations.FACING_LEFT
+            
+        elif player.direction == PlayerStates.FACING_RIGHT:
+            self.animation = self.right_animation
+            player.model.orientation = physics.Orientations.FACING_RIGHT
+        
+        player.model.set_frame_point_pos(self.animation.frame_deltas[0])
+        
+        self.elevation = Elevations.AERIAL
+        
+        player.reset_point_damage()
+        
+        if player.model.time_passed > 0:
+            self.move_player(player)
     
     def test_state_change(self, player):
         

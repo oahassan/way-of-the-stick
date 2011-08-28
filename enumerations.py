@@ -89,8 +89,7 @@ class CommandCollections():
         InputActionTypes.MEDIUM_KICK, InputActionTypes.STRONG_KICK,
         InputActionTypes.MOVE_RIGHT, InputActionTypes.MOVE_LEFT, 
         InputActionTypes.FORWARD, InputActionTypes.MOVE_DOWN,
-        InputActionTypes.MOVE_UP, InputActionTypes.JUMP
-        
+        InputActionTypes.MOVE_UP, InputActionTypes.JUMP   
     ]
     AERIAL_ACTIONS = [InputActionTypes.JUMP, InputActionTypes.NO_MOVEMENT]
     AERIAL_ACTIONS.extend(ATTACK_ACTIONS)
