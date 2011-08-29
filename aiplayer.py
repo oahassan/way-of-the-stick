@@ -444,21 +444,21 @@ class ApproachEngine():
     
     def set_move_towards_enemy(self, player, enemy):
         player.approach_selected = True
-        
-        approach_types = [
-            approach_type
-            for approach_type, approach_timing_function
-            in self.approach_timing_functions.iteritems()
-            if approach_timing_function(player, enemy)
-        ]
-        
-        if len(approach_types) == 0:
-            player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
-        else:
-            player.move_towards_enemy = choice([
-                self.approach_functions[approach_type]
-                for approach_type in approach_types
-            ])
+        player.move_towards_enemy = self.run_jump
+        #approach_types = [
+        #    approach_type
+        #    for approach_type, approach_timing_function
+        #    in self.approach_timing_functions.iteritems()
+        #    if approach_timing_function(player, enemy)
+        #]
+        #
+        #if len(approach_types) == 0:
+        #    player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
+        #else:
+        #    player.move_towards_enemy = choice([
+        #        self.approach_functions[approach_type]
+        #        for approach_type in approach_types
+        #    ])
 
 
 class AttackPredictionEngine():
@@ -673,14 +673,18 @@ class AttackPredictionEngine():
         
         return return_rects
     
-    def get_arial_attack_rects(self, attack):
+    def get_aerial_attack_rects(self, attack):
         timestep = self.timestep
         player = self.player
         
         attack_rects = self.attack_prediction_data[attack.right_animation.name].attack_rects
         
         player_rect = pygame.Rect(*player.model.get_enclosing_rect())
-        initial_position = (player.model.position[0] - player_rect.width, player.model.position[1])
+        initial_position = (player.model.position[0], player.model.position[1])
+        direction = player.direction
+        
+        if direction == PlayerStates.FACING_LEFT:
+            initial_position = (player.model.position[0] - player_rect.width, player.model.position[1])
         
         return_rects = [
             pygame.Rect(
@@ -689,7 +693,6 @@ class AttackPredictionEngine():
             )
         ]
         
-        direction = player.direction
         attack_rect_index = 1
         prediction_time_frame = self.prediction_time_frame
         new_rect_position = initial_position
@@ -752,23 +755,23 @@ class AttackPredictionEngine():
             prediction_time_frame -= self.timestep
             attack_rect_index += 1
         
-        ##debug code
-        #for attack_rect in return_rects:
-        #    rect_surface = pygame.Surface(
-        #        (attack_rect.width, attack_rect.height)
-        #    )
-        #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
-        #    pygame.draw.rect(rect_surface, (0,255,0), drawing_rect, 2)
-        #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
-        #        attack_rect.topleft, 
-        #        rect_surface
-        #    )
+        #debug code
+        for attack_rect in return_rects:
+            rect_surface = pygame.Surface(
+                (attack_rect.width, attack_rect.height)
+            )
+            drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            pygame.draw.rect(rect_surface, (0,255,0), drawing_rect, 2)
+            st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+                attack_rect.topleft, 
+                rect_surface
+            )
         
         return return_rects
     
     def aerial_attack_in_range(self, attack, enemy, enemy_rects):
         
-        attack_rects = self.get_arial_attack_rects(attack)
+        attack_rects = self.get_aerial_attack_rects(attack)
         
         collision_index = self.get_max_collsion_index(attack_rects, enemy_rects)
         
