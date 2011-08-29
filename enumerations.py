@@ -1,3 +1,15 @@
+# AI
+
+class ApproachTypes:
+    RUN = 0
+    WALK = 1
+    STAND = 2
+    RUN_JUMP = 3
+    WALK_JUMP = 4
+    STAND_JUMP = 5
+
+# networking
+
 class SimulationDataKeys:
     ACTION = 0
     KEYS_PRESSED = 1
@@ -15,6 +27,8 @@ class SimulationActionTypes:
     STOP = 3
     GET_INPUT = 4
     UPDATE_INPUT = 5
+
+# Controls
 
 class CommandHandlerTypes:
     GROUND_MOVEMENT = "ground movement"
@@ -117,6 +131,8 @@ class AnimationModes():
     KEYFRAME = "KEYFRAME"
     HYBRID = "HYBRID"
 
+# player state
+
 class PlayerStates():
     FACING_RIGHT = 'FACING_RIGHT'
     FACING_LEFT = 'FACING_LEFT'
@@ -169,6 +185,7 @@ class PlayerPositions:
     PLAYER1 = "player1"
     PLAYER2 = "player2"
 
+# Stick Data
 
 class PointNames:
     HEAD_TOP = "headtop"

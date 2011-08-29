@@ -23,8 +23,11 @@ class Bot(Player):
         self.attack_prediction_engine = None
         self.attack_landed = False
         self.pre_attack_state = None
+        self.approach_selected = False
+        self.approach_engine = None
         
     def load_moveset(self, moveset):
+        self.approach_engine = ApproachEngine()
         self.moveset = moveset
         
         factory = ActionFactory(self)
@@ -150,10 +153,21 @@ class Bot(Player):
         self.attack_landed = True
     
     def handle_events(self, enemy, time_passed):
+        self.set_approach(enemy)
+        
         if self.handle_input_events:
             self.set_action(enemy)
         
         Player.handle_events(self, time_passed)
+    
+    def set_approach(self, enemy):
+        if (self.action.action_state == PlayerStates.ATTACKING or
+        self.action.action_state == PlayerStates.STUNNED or
+        self.action.action_state == PlayerStates.LANDING):
+            self.approach_selected = False
+        
+        if self.approach_selected == False:
+            self.approach_engine.set_move_towards_enemy(self, enemy)
     
     def get_direction(self, enemy):
         direction = PlayerStates.FACING_LEFT
@@ -178,18 +192,23 @@ class Bot(Player):
                 next_action = attack
                 self.current_attack = attack
         elif self.get_player_state() != PlayerStates.TRANSITION:
-            next_action = self.move_towards_enemy(enemy)
+            next_action = self.move_towards_enemy(self)
         
         direction = self.get_direction(enemy)
         
         if next_action != None:
-            self.direction = direction
-            next_action.direction = direction
+            if not self.is_aerial():
+                self.direction = direction
+                next_action.direction = direction
+            else:
+                next_action.direction = self.direction
         else:
             if (self.action.action_state != PlayerStates.ATTACKING 
             and self.action.direction != direction):
                 next_action = self.action
-                self.action.direction = direction
+                
+                if not self.is_aerial():
+                    self.action.direction = direction
         
         if (next_action != None
         and next_action != self.action):
@@ -251,6 +270,109 @@ class Bot(Player):
             return choice(in_range_attacks)
         else:
             return None
+
+class ApproachEngine():
+    
+    def run(self, player):
+        
+        movement = None
+        
+        if ((player.action.action_state == PlayerStates.STANDING) or
+            (player.action.action_state == PlayerStates.WALKING)):
+            movement = player.actions[PlayerStates.RUNNING]
+            player.dash_timer = 0
+        
+        if ((movement != None) and
+            (movement.test_state_change(player))):
+            return movement
+        else:
+            return None
+    
+    def run_jump(self, player):
+        
+        movement = None
+        
+        if ((player.action.action_state == PlayerStates.STANDING) or
+            (player.action.action_state == PlayerStates.WALKING)):
+            movement = player.actions[PlayerStates.RUNNING]
+            player.dash_timer = 0
+            
+        elif player.action.action_state == PlayerStates.RUNNING:
+            movement = player.actions[PlayerStates.JUMPING]
+        
+        if ((movement != None) and
+            (movement.test_state_change(player))):
+            return movement
+        else:
+            return None
+    
+    def walk(self, player):
+        movement = None
+        
+        if ((player.action.action_state == PlayerStates.STANDING) or
+            (player.action.action_state == PlayerStates.RUNNING)):
+            movement = player.actions[PlayerStates.WALKING]
+        
+        if ((movement != None) and
+            (movement.test_state_change(player))):
+            return movement
+        else:
+            return None
+    
+    def walk_jump(self, player):
+        movement = None
+        
+        if ((player.action.action_state == PlayerStates.STANDING) or
+            (player.action.action_state == PlayerStates.RUNNING)):
+            movement = player.actions[PlayerStates.WALKING]
+            
+        elif player.action.action_state == PlayerStates.WALKING:
+            movement = player.actions[PlayerStates.JUMPING]
+        
+        if ((movement != None) and
+            (movement.test_state_change(player))):
+            return movement
+        else:
+            return None
+    
+    def stand_jump(self, player):
+        movement = None
+        
+        if ((player.action.action_state == PlayerStates.WALKING) or
+            (player.action.action_state == PlayerStates.RUNNING)):
+            movement = player.actions[PlayerStates.STANDING]
+            
+        elif (player.action.action_state == PlayerStates.STANDING and 
+        player.model.velocity[0] == 0):
+            movement = player.actions[PlayerStates.JUMPING]
+        
+        if ((movement != None) and
+            (movement.test_state_change(player))):
+            return movement
+        else:
+            return None
+    
+    def stand(self, player):
+        movement = None
+        
+        if ((player.action.action_state == PlayerStates.WALKING) or
+            (player.action.action_state == PlayerStates.RUNNING)):
+            movement = player.actions[PlayerStates.STANDING]
+        
+        if ((movement != None) and
+            (movement.test_state_change(player))):
+            return movement
+        else:
+            return None
+    
+    def set_move_towards_enemy(self, player, enemy):
+        player.approach_selected = True
+        
+        if enemy.model.velocity[0] == 0:
+            player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
+        else:
+            player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump, self.stand, self.stand_jump])
+
 
 class AttackPredictionEngine():
     def __init__(self, timestep, prediction_time_frame, player):
