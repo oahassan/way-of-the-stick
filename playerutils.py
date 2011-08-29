@@ -119,6 +119,7 @@ class Transition(Action):
         Action.__init__(self, PlayerStates.TRANSITION)
         self.next_action = None
         self.last_action = None
+        self.grounded = False
     
     def init_transition(self, player, next_action):
         self.set_animation(player, next_action)
@@ -225,14 +226,17 @@ class Transition(Action):
             player.handle_animation_end()
     
     def set_player_state(self, player):
+        #set friction so that stun friction doesn't remain
+        player.model.friction = physics.FRICTION
+        
+        if player.is_aerial() == False:
+            self.grounded = True
+        
         if self.next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING]:
             Action.set_player_state(self, player, self.next_action.direction)
             
         else:
             Action.set_player_state(self, player, player.direction)
-        
-        #set friction so that stun friction doesn't remain
-        player.model.friction = physics.FRICTION
     
     def test_state_change(self, player):
         change_state = False
@@ -791,6 +795,7 @@ class JumpAttack(Attack):
         if player.get_player_state() == PlayerStates.STUNNED:
             return False
         elif (player.get_player_state() == PlayerStates.TRANSITION and
+        player.action.grounded == False and
         player.is_aerial()):
             return player.action.next_action.test_change_to_action(self)
         elif player.is_aerial():

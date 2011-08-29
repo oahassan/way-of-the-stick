@@ -444,21 +444,21 @@ class ApproachEngine():
     
     def set_move_towards_enemy(self, player, enemy):
         player.approach_selected = True
-        player.move_towards_enemy = self.run_jump
-        #approach_types = [
-        #    approach_type
-        #    for approach_type, approach_timing_function
-        #    in self.approach_timing_functions.iteritems()
-        #    if approach_timing_function(player, enemy)
-        #]
-        #
-        #if len(approach_types) == 0:
-        #    player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
-        #else:
-        #    player.move_towards_enemy = choice([
-        #        self.approach_functions[approach_type]
-        #        for approach_type in approach_types
-        #    ])
+        
+        approach_types = [
+            approach_type
+            for approach_type, approach_timing_function
+            in self.approach_timing_functions.iteritems()
+            if approach_timing_function(player, enemy)
+        ]
+        
+        if len(approach_types) == 0:
+            player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
+        else:
+            player.move_towards_enemy = choice([
+                self.approach_functions[approach_type]
+                for approach_type in approach_types
+            ])
 
 
 class AttackPredictionEngine():
@@ -755,17 +755,17 @@ class AttackPredictionEngine():
             prediction_time_frame -= self.timestep
             attack_rect_index += 1
         
-        #debug code
-        for attack_rect in return_rects:
-            rect_surface = pygame.Surface(
-                (attack_rect.width, attack_rect.height)
-            )
-            drawing_rect = pygame.Rect((0,0), attack_rect.size)
-            pygame.draw.rect(rect_surface, (0,255,0), drawing_rect, 2)
-            st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
-                attack_rect.topleft, 
-                rect_surface
-            )
+        ##debug code
+        #for attack_rect in return_rects:
+        #    rect_surface = pygame.Surface(
+        #        (attack_rect.width, attack_rect.height)
+        #   )
+        #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+        #    pygame.draw.rect(rect_surface, (0,255,0), drawing_rect, 2)
+        #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+        #        attack_rect.topleft, 
+        #        rect_surface
+        #   )
         
         return return_rects
     
@@ -795,29 +795,29 @@ class AttackPredictionEngine():
                 enemy_hitboxes
             )
             
-            #debugging code
-            for attack_rect in enemy_hitboxes:
-                rect_surface = pygame.Surface(
-                    (attack_rect.width, attack_rect.height)
-                )
-                drawing_rect = pygame.Rect((0,0), attack_rect.size)
-                pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
-                st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
-                    attack_rect.topleft, 
-                   rect_surface
-                )
-             
-            #debugging code
-            for attack_rect in attack_hitboxes:
-                rect_surface = pygame.Surface(
-                   (attack_rect.width, attack_rect.height)
-                )
-                drawing_rect = pygame.Rect((0,0), attack_rect.size)
-                pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
-                st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
-                    attack_rect.topleft, 
-                    rect_surface
-                )
+            ##debugging code
+            #for attack_rect in enemy_hitboxes:
+            #    rect_surface = pygame.Surface(
+            #        (attack_rect.width, attack_rect.height)
+            #    )
+            #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        attack_rect.topleft, 
+            #       rect_surface
+            #    )
+            # 
+            ##debugging code
+            #for attack_rect in attack_hitboxes:
+            #    rect_surface = pygame.Surface(
+            #       (attack_rect.width, attack_rect.height)
+            #    )
+            #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    pygame.draw.rect(rect_surface, (255,0,0), drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        attack_rect.topleft, 
+            #        rect_surface
+            #    )
             
         return in_range
     
