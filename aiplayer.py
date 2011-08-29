@@ -4,11 +4,13 @@ import pygame
 import gamestate
 import physics
 import animationexplorer
+from mathfuncs import sign
 from player import Player, PlayerTypes
 from stick import LineNames
-from enumerations import PlayerStates, CommandDurations, InputActionTypes, AttackTypes
+from enumerations import PlayerStates, CommandDurations, InputActionTypes, AttackTypes, ApproachTypes
 from playerutils import ActionFactory, Transition, Action, Attack
 from simulation import HitboxBuilder
+from playerconstants import *
 import st_versusmode
 
 class Bot(Player):
@@ -28,6 +30,7 @@ class Bot(Player):
         
     def load_moveset(self, moveset):
         self.approach_engine = ApproachEngine()
+        self.approach_engine.init()
         self.moveset = moveset
         
         factory = ActionFactory(self)
@@ -272,6 +275,80 @@ class Bot(Player):
             return None
 
 class ApproachEngine():
+    def __init__(self):
+        self.approach_functions = {}
+        self.approach_timing_functions = {}
+    
+    def init(self):
+        self.approach_functions[ApproachTypes.RUN] = self.run
+        self.approach_functions[ApproachTypes.WALK] = self.walk
+        self.approach_functions[ApproachTypes.STAND] = self.stand
+        self.approach_functions[ApproachTypes.RUN_JUMP] = self.run_jump
+        self.approach_functions[ApproachTypes.WALK_JUMP] = self.walk_jump
+        self.approach_functions[ApproachTypes.STAND_JUMP] = self.stand_jump
+        self.approach_timing_functions[ApproachTypes.RUN] = self.get_run_intersection
+        self.approach_timing_functions[ApproachTypes.WALK] = self.get_walk_intersection
+        self.approach_timing_functions[ApproachTypes.STAND] = self.get_stand_intersection
+        self.approach_timing_functions[ApproachTypes.RUN_JUMP] = self.get_run_jump_intersection
+        self.approach_timing_functions[ApproachTypes.WALK_JUMP] = self.get_walk_jump_intersection
+        self.approach_timing_functions[ApproachTypes.STAND_JUMP] = self.get_stand_jump_intersection
+    
+    def get_run_intersection(self, player, enemy):
+        
+        return self.get_x_intersection(player, player.run_speed, enemy)
+    
+    def get_walk_intersection(self, player, enemy):
+        
+        return self.get_x_intersection(player, player.walk_speed, enemy)
+    
+    def get_stand_intersection(self, player, enemy):
+        
+        return self.get_x_intersection(player, 0, enemy)
+    
+    def get_run_jump_intersection(self, player, enemy):
+        return self.get_run_intersection(player, enemy) and self.get_y_intersection(player, enemy)
+        
+    def get_walk_jump_intersection(self, player, enemy):
+        return self.get_walk_intersection(player, enemy) and self.get_y_intersection(player, enemy)
+    
+    def get_stand_jump_intersection(self, player, enemy):
+        return self.get_stand_intersection(player, enemy) and self.get_y_intersection(player, enemy)
+    
+    def get_x_intersection(self, player, player_v_x, enemy):
+        player_x = player.model.position[0]
+        player_width = player.model.width
+        enemy_x = enemy.model.position[0]
+        enemy_v_x = enemy.model.velocity[0]
+        
+        if player_x > enemy_x:
+            player_v_x = -1 * player_v_x
+        
+        does_intersect = False
+        
+        for delta_t in range(APPROACH_PREDICTION_DELTA, APPROACH_PREDICTION_INTERVAL, APPROACH_PREDICTION_DELTA):
+            if abs((player_x + (player_v_x*delta_t)) - (enemy_x + (enemy_v_x*delta_t))) < (1.5*player_width):
+                does_intersect = True
+                break
+        
+        return does_intersect
+    
+    def get_y_intersection(self, player, enemy):
+        player_y = player.model.position[1]
+        player_v_y = player.model.velocity[1]
+        player_gravity = player.model.gravity
+        
+        enemy_y = enemy.model.position[1]
+        enemy_v_y = enemy.model.velocity[1]
+        enemy_gravity = enemy.model.gravity
+        
+        does_intersect = False
+        
+        for delta_t in range(APPROACH_PREDICTION_DELTA, APPROACH_PREDICTION_INTERVAL, APPROACH_PREDICTION_DELTA):
+            if abs((player_y + (player_v_y*delta_t) + (player_gravity*(delta_t**2))) - (enemy_y + (enemy_v_y*delta_t) + (enemy_gravity*(delta_t**2)))) < player.model.height:
+                does_intersect = True
+                break
+        
+        return does_intersect
     
     def run(self, player):
         
@@ -368,10 +445,20 @@ class ApproachEngine():
     def set_move_towards_enemy(self, player, enemy):
         player.approach_selected = True
         
-        if enemy.model.velocity[0] == 0:
+        approach_types = [
+            approach_type
+            for approach_type, approach_timing_function
+            in self.approach_timing_functions.iteritems()
+            if approach_timing_function(player, enemy)
+        ]
+        
+        if len(approach_types) == 0:
             player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
         else:
-            player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump, self.stand, self.stand_jump])
+            player.move_towards_enemy = choice([
+                self.approach_functions[approach_type]
+                for approach_type in approach_types
+            ])
 
 
 class AttackPredictionEngine():
