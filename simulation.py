@@ -8,7 +8,7 @@ import mathfuncs
 from wotsprot.rencode import serializable
 from enumerations import MatchStates, PlayerTypes, ClashResults, \
 PlayerPositions, PlayerStates, LineNames, PointNames, SimulationDataKeys, \
-SimulationActionTypes
+SimulationActionTypes, InputActionTypes
 
 class SimulationClock():
     """A pickleable clock"""
@@ -644,16 +644,38 @@ class AttackResolver():
             attacker.model.lines[colliding_line_names[1]]
         )
         
-        interaction_points = self.get_interaction_points(receiver, colliding_lines)
-        attack_damage = attacker.get_point_damage(interaction_points[0].name)
-        block_damage = receiver.get_point_damage(interaction_points[1].name)
+        attacker_attack_type = attacker.action.attack_type
+        receiver_attack_type = receiver.action.attack_type
         
-        if 5 > abs(attack_damage - block_damage):
+        if attacker_attack_type == receiver_attack_type:
             return ClashResults.TIE
-        elif attack_damage > block_damage:
+            
+            #interaction_points = self.get_interaction_points(receiver, colliding_lines)
+            #attack_damage = attacker.get_point_damage(interaction_points[0].name)
+            #block_damage = receiver.get_point_damage(interaction_points[1].name)
+            
+            #if 5 > abs(attack_damage - block_damage):
+            #    return ClashResults.TIE
+            #elif attack_damage > block_damage:
+            #    return ClashResults.WIN
+            #else:
+            #    return ClashResults.LOSS
+        
+        elif attacker_attack_type == self.get_type_clash_winner(attacker_attack_type, receiver_attack_type):
             return ClashResults.WIN
         else:
             return ClashResults.LOSS
+    
+    def get_type_clash_winner(self, attacker_attack_type, receiver_attack_type):
+        if ((attacker_attack_type in InputActionTypes.QUICK_ATTACKS and 
+        receiver_attack_type in InputActionTypes.TRICKY_ATTACKS) or
+        (attacker_attack_type in InputActionTypes.TRICKY_ATTACKS and 
+        receiver_attack_type in InputActionTypes.STRONG_ATTACKS) or
+        (attacker_attack_type in InputActionTypes.STRONG_ATTACKS and 
+        receiver_attack_type in InputActionTypes.QUICK_ATTACKS)):
+            return receiver_attack_type
+        else:
+            return attacker_attack_type
     
     def get_interaction_points(self, receiver, colliding_lines):
         attacker_line_index = 0
