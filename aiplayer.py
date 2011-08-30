@@ -374,7 +374,8 @@ class ApproachEngine():
             movement = player.actions[PlayerStates.RUNNING]
             player.dash_timer = 0
             
-        elif player.action.action_state == PlayerStates.RUNNING:
+        elif (player.action.action_state == PlayerStates.RUNNING and
+        abs(player.model.velocity[0]) >= player.run_speed - player.model.friction):
             movement = player.actions[PlayerStates.JUMPING]
         
         if ((movement != None) and
@@ -403,7 +404,8 @@ class ApproachEngine():
             (player.action.action_state == PlayerStates.RUNNING)):
             movement = player.actions[PlayerStates.WALKING]
             
-        elif player.action.action_state == PlayerStates.WALKING:
+        elif (player.action.action_state == PlayerStates.WALKING and
+        abs(player.model.velocity[0]) >= player.walk_speed - player.model.friction):
             movement = player.actions[PlayerStates.JUMPING]
         
         if ((movement != None) and

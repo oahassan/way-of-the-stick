@@ -238,20 +238,39 @@ class Player():
             else:
                 return self.actions[PlayerStates.STANDING]
     
-    def set_velocity(self):
+    def set_velocity(self, duration):
         velocity = self.model.velocity
-        friction = self.model.friction
+        friction = self.model.friction * duration
         
         if self.direction == PlayerStates.FACING_RIGHT:
-            if self.action.action_state == PlayerStates.WALKING:
-                self.model.velocity = (self.walk_speed + friction, velocity[1])
-            elif self.action.action_state == PlayerStates.RUNNING:
-                self.model.velocity = (self.run_speed + friction, velocity[1])
+            if (self.action.action_state == PlayerStates.WALKING and
+            velocity[0] != (self.walk_speed + friction)):
+                self.model.velocity = (
+                    min(velocity[0] + WALK_ACCELERATION + friction, self.walk_speed + friction),
+                    velocity[1]
+                )
+                
+            elif (self.action.action_state == PlayerStates.RUNNING and
+            velocity[0] != (self.run_speed + friction)):
+                self.model.velocity = (
+                    min(velocity[0] + RUN_ACCELERATION + friction, self.run_speed + friction),
+                    velocity[1]
+                )
+                
         elif self.direction == PlayerStates.FACING_LEFT:
-            if self.action.action_state == PlayerStates.WALKING:
-                self.model.velocity = (-(self.walk_speed + friction), velocity[1])
-            elif self.action.action_state == PlayerStates.RUNNING:
-                self.model.velocity = (-(self.run_speed + friction), velocity[1])
+            if (self.action.action_state == PlayerStates.WALKING and
+            velocity[0] != -(self.walk_speed + friction)):
+                self.model.velocity = (
+                    max(velocity[0] - WALK_ACCELERATION - friction, -(self.walk_speed + friction)),
+                    velocity[1]
+                )
+                
+            elif (self.action.action_state == PlayerStates.RUNNING and
+            velocity[0] != -(self.run_speed + friction)):
+                self.model.velocity = (
+                    max(velocity[0] - RUN_ACCELERATION - friction, -(self.run_speed + friction)),
+                    velocity[1]
+                )
     
     def get_player_state(self):
         """returns the current state of the player"""
@@ -548,10 +567,11 @@ class Player():
         
         system = []
         
-        self.set_velocity()
+        self.set_velocity(duration)
         self.model.resolve_self(duration, gravity)
         
-        if self.is_aerial() == False:
+        if (self.is_aerial() == False or 
+        self.get_player_state() in [PlayerStates.WALKING, PlayerStates.RUNNING, PlayerStates.CROUCHING, PlayerStates.STANDING, PlayerStates.LANDING]):
             system.append(gamestate.stage.ground)
             
             if (((self.action.action_state == PlayerStates.FLOATING)
