@@ -47,7 +47,22 @@ class Controller():
         self._update_attack(keys_pressed)
     
     def get_current_aerial_action(self):
-        return self.aerial_action_command_handler.get_current_command_sequence_value()
+        return_aerial_action = self.aerial_action_command_handler.get_current_command_sequence_value()
+        
+        if return_aerial_action == None:
+            command_state = self.aerial_action_command_handler.get_command_state()
+            
+            for command in self.aerial_action_command_handler.current_commands:
+                if command.command_type not in InputActionTypes.MOVEMENTS or command.command_type == InputActionTypes.JUMP:
+                    command_state.set_command_state(command.command_type, True)
+            
+            self.aerial_action_command_handler.replace_current_commands(
+                command_state
+            )
+            
+            return_aerial_action = self.aerial_action_command_handler.get_current_command_sequence_value()
+        
+        return return_aerial_action
     
     def get_current_aerial_movements(self):
         """Return the values that corresponds to each current aerial movement
@@ -85,7 +100,22 @@ class Controller():
         return self.ground_movement_command_handler.get_current_command_sequence_value()
     
     def get_current_attack(self):
-        return self.attack_command_handler.get_current_command_sequence_value()
+        return_attack = self.attack_command_handler.get_current_command_sequence_value()
+        
+        if return_attack == None:
+            command_state = self.attack_command_handler.get_command_state()
+            
+            for command in self.attack_command_handler.current_commands:
+                if command.command_type not in InputActionTypes.MOVEMENTS:
+                    command_state.set_command_state(command.command_type, True)
+            
+            self.attack_command_handler.replace_current_commands(
+                command_state
+            )
+            
+            return_attack = self.attack_command_handler.get_current_command_sequence_value()
+        
+        return return_attack
     
     def _update_aerial_movement(self, keys_pressed):
         """Returns PhysicsModifiers for each movement key the list 

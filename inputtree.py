@@ -68,8 +68,27 @@ class InputNode:
             else:
                 return None
     
+    def get_closest_matching_node(self, key_sequence):
+        return_node = None
+        
+        for i in range(len(key_sequence)):
+            return_node = self._get_node(key_sequence, i)
+            
+            if return_node != None:
+                break
+        
+        return return_node
+    
     def get_value(self, key_sequence):
         node = self.get_node(key_sequence)
+        
+        if node == None:
+            return None
+        else:
+            return node.value
+            
+    def get_closest_matching_value(self, key_seqeuence):
+        node = self.get_closest_matching_node(key_sequence)
         
         if node == None:
             return None

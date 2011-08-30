@@ -243,6 +243,21 @@ class CommandHandler:
         
         self.command_sequence += 1
     
+    def replace_current_commands(self, command_states):
+        """takes in the current raw commands and replaces the current command 
+        list and command durations"""
+        
+        if not isinstance(command_states, CommandState):
+            raise Exception("command_state must be a CommandState object.")
+        
+        if len(self.command_buffer) > 0:
+            self.command_buffer.pop()
+        
+        self._update_current_command_types(command_states)
+        self._update_current_commands(command_states)
+        
+        self.command_buffer.append(self.current_commands)
+    
     def _update_current_command_types(self, command_states):
         """Sets the current command type list to only contain active command
         types in the given CommandState"""
