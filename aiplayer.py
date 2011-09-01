@@ -306,13 +306,13 @@ class ApproachEngine():
         return self.get_x_intersection(player, 0, enemy)
     
     def get_run_jump_intersection(self, player, enemy):
-        return self.get_run_intersection(player, enemy) and self.get_y_intersection(player, enemy)
+        return self.get_x_y_intersection(player, enemy)
         
     def get_walk_jump_intersection(self, player, enemy):
-        return self.get_walk_intersection(player, enemy) and self.get_y_intersection(player, enemy)
+        return self.get_x_y_intersection(player, enemy)
     
     def get_stand_jump_intersection(self, player, enemy):
-        return self.get_stand_intersection(player, enemy) and self.get_y_intersection(player, enemy)
+        return self.get_x_y_intersection(player, enemy)
     
     def get_x_intersection(self, player, player_v_x, enemy):
         player_x = player.model.position[0]
@@ -331,6 +331,36 @@ class ApproachEngine():
                 break
         
         return does_intersect
+    
+    def get_x_y_intersection(self, player, enemy):
+        player_x = player.model.position[0]
+        player_v_x = player.model.velocity[0]
+        player_width = player.model.width
+        enemy_x = enemy.model.position[0]
+        enemy_v_x = enemy.model.velocity[0]
+        
+        if player_x > enemy_x:
+            player_v_x = -1 * player_v_x
+        
+        does_intersect = False
+        
+        for delta_t in range(APPROACH_PREDICTION_DELTA, APPROACH_PREDICTION_INTERVAL, APPROACH_PREDICTION_DELTA):
+            if abs((player_x + (player_v_x*delta_t)) - (enemy_x + (enemy_v_x*delta_t))) < (1.5*player_width) and self.get_y_intersection_at_t(player, enemy, delta_t):
+                does_intersect = True
+                break
+        
+        return does_intersect
+    
+    def get_y_intersection_at_t(self, player, enemy, delta_t):
+        player_y = player.model.position[1]
+        player_v_y = player.model.velocity[1]
+        player_gravity = player.model.gravity
+        
+        enemy_y = enemy.model.position[1]
+        enemy_v_y = enemy.model.velocity[1]
+        enemy_gravity = enemy.model.gravity
+        
+        return abs((player_y + (player_v_y*delta_t) + (player_gravity*(delta_t**2))) - (enemy_y + (enemy_v_y*delta_t) + (enemy_gravity*(delta_t**2)))) < player.model.height
     
     def get_y_intersection(self, player, enemy):
         player_y = player.model.position[1]
