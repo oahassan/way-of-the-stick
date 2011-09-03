@@ -446,7 +446,7 @@ class CollisionHandler():
             receiver.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
         else:
             separation_vector = self.get_separation_vector(attacker,receiver)
-            receiver.model.shift((0, .5 * separation_vector[0] + .5 * separation_vector[1]))
+            receiver.model.shift((0, -1 * abs(.5 * separation_vector[0]) + .5 * separation_vector[1]))
         
         receiver.knockback_vector = attack_result.knockback_vector
         receiver.interaction_point = attack_result.receive_point
@@ -459,7 +459,7 @@ class CollisionHandler():
                                       receiver.knockback_vector[1])
         elif attack_type in InputActionTypes.TRICKY_ATTACKS:
             receiver.model.accelerate(0, \
-                                      receiver.knockback_vector[0] + receiver.knockback_vector[1])
+                                      -1 * abs(receiver.knockback_vector[0]) + receiver.knockback_vector[1])
         else:
             pass
     
