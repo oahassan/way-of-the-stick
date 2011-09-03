@@ -217,10 +217,10 @@ class Transition(Action):
         point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         player.model.set_point_position_in_place(point_deltas)
         
-        if self.last_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING, PlayerStates.STANDING, PlayerStates.CROUCHING]:
-            player.move_to_ground()
-        
         player.apply_physics(end_time - start_time)
+        
+        if self.grounded:
+            player.move_to_ground()
         
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
@@ -237,6 +237,9 @@ class Transition(Action):
             
         else:
             Action.set_player_state(self, player, player.direction)
+        
+        if self.grounded:
+            player.move_to_ground()
     
     def test_state_change(self, player):
         change_state = False
@@ -416,6 +419,8 @@ class Stun(Action):
         self.physics_vector = (0,0)
         self.toy_model = physics.Model((0,0))
         self.toy_model.init_stick_data()
+        self.grounded = False
+        self.aerial = False
     
     def set_animation(self, player):
         """creates a stun animation from the player model."""
@@ -522,6 +527,14 @@ class Stun(Action):
             
         player.apply_physics(player.model.time_passed)
         
+        if player.is_aerial() == False:
+            self.grounded = True
+        else:
+            self.aerial = True
+        
+        if self.grounded and self.aerial:
+            player.move_to_ground()
+        
         if player.stun_timer >= player.stun_timeout:
             
             player.handle_animation_end()
@@ -537,6 +550,8 @@ class Stun(Action):
     def set_player_state(self, player):
         
         self.set_animation(player)
+        self.grounded = False
+        self.aerial = False
         
         player.action = self
         player.model.animation_run_time = 0
@@ -741,6 +756,7 @@ class JumpAttack(Attack):
     def __init__(self, attack_type):
         Attack.__init__(self, attack_type)
         self.is_jump_attack = True
+        self.grounded = False
     
     def move_player(self, player):
         
@@ -762,7 +778,13 @@ class JumpAttack(Attack):
         #should be.
         player.apply_physics(end_time - start_time)
         
+        if player.is_aerial() == False:
+            self.grounded = True
+        
         player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
+        
+        if self.grounded:
+            player.move_to_ground()
         
         if player.model.animation_run_time >= self.animation.animation_length:
             player.handle_animation_end()
@@ -772,6 +794,7 @@ class JumpAttack(Attack):
         player.action = self
         player.model.animation_run_time = 0     
         player.current_attack = self
+        self.grounded = False
         
         if player.direction == PlayerStates.FACING_LEFT:
             self.animation = self.right_animation

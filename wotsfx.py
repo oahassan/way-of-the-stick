@@ -123,12 +123,12 @@ class ClashEffect(Effect):
         effect_surface = pygame.Surface((big_width, big_height)).convert()
         effect_surface.fill((1,232,5))
         
-        effect_position_big = (.5 * big_width, .5 * big_height)
+        effect_position_big = (int(.5 * big_width), int(.5 * big_height))
         
         color_weights = [255]
         
         for i in range(1, int(.5 * big_width) - int(big_width * .01)):
-            color_weights.append(.9 * color_weights[i - 1])
+            color_weights.append(int(.9 * color_weights[i - 1]))
         color_weights = color_weights[::-1]
         
         for i in range(int(.5 * big_width),int(big_width * .01), -2):
