@@ -297,11 +297,15 @@ class AttackResultSoundMixer():
         else:
             hit_sound = self.get_hit_sound(attack_result_rendering_info)
             
-            if not self.hit_sound_is_playing(hit_sound):
+            if not self.hit_sound_is_playing(hit_sound) and hit_sound != None:
                 self.play_hit_sound(hit_sound)
     
     def get_hit_sound(self, attack_result_rendering_info):
         attack_type = attack_result_rendering_info.attack_type
+        
+        if attack_type == None:
+            return None
+        
         hit_sound = self.sound_library.hit_sounds[attack_type][0]
         
         return hit_sound
