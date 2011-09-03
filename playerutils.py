@@ -794,12 +794,12 @@ class JumpAttack(Attack):
         
         if player.get_player_state() == PlayerStates.STUNNED:
             return False
-        elif (player.get_player_state() == PlayerStates.TRANSITION and
-        player.action.grounded == False and
-        player.is_aerial()):
-            return player.action.next_action.test_change_to_action(self)
+        #elif (player.get_player_state() == PlayerStates.TRANSITION and
+        #player.action.grounded == False and
+        #player.is_aerial()):
+        #    return player.action.get_previous_action(player.action).action_state in [PlayerStates.JUMPING, PlayerStates.FLOATING]
         elif player.is_aerial():
-            return Action.test_state_change(self, player)
+            return player.action.get_previous_action(player.action).action_state in [PlayerStates.JUMPING, PlayerStates.FLOATING]
         else:
             return False
 

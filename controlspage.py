@@ -98,7 +98,7 @@ def load():
     add_bind_button_to_button_list(
         BindButton(
             controlsdata.InputActionTypes.WEAK_PUNCH, 
-            "Weak Punch", 
+            "Quick Punch", 
             font_size
         ),
         attack_buttons
@@ -106,7 +106,7 @@ def load():
     add_bind_button_to_button_list(
         BindButton(
             controlsdata.InputActionTypes.WEAK_KICK, 
-            "Weak Kick", 
+            "Quick Kick", 
             font_size
         ),
         attack_buttons
@@ -114,7 +114,7 @@ def load():
     add_bind_button_to_button_list(
         BindButton(
             controlsdata.InputActionTypes.MEDIUM_PUNCH, 
-            "Medium Punch", 
+            "Tricky Punch", 
             font_size
         ),
         attack_buttons
@@ -122,7 +122,7 @@ def load():
     add_bind_button_to_button_list(
         BindButton(
             controlsdata.InputActionTypes.MEDIUM_KICK, 
-            "Medium Kick", 
+            "Tricky Kick", 
             font_size
         ),
         attack_buttons

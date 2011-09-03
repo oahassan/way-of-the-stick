@@ -227,15 +227,15 @@ class KeyReferenceContainer(wotsui.UIObjectBase):
         label_list.append(up_label)
         down_label = button.Label((0,0), "DN - Move Down", (255,255,255), 15)
         label_list.append(down_label)
-        wk_label = button.Label((0,0), "WK - Weak Kick", (255,255,255), 15)
+        wk_label = button.Label((0,0), "QK - Quick Kick", (255,255,255), 15)
         label_list.append(wk_label)
-        mk_label = button.Label((0,0), "MK - Medium Kick", (255,255,255), 15)
+        mk_label = button.Label((0,0), "TK - Tricky Kick", (255,255,255), 15)
         label_list.append(mk_label)
         sk_label = button.Label((0,0), "SK - Strong Kick", (255,255,255), 15)
         label_list.append(sk_label)
-        wp_label = button.Label((0,0), "WP - Weak Punch", (255,255,255), 15)
+        wp_label = button.Label((0,0), "QP - Quick Punch", (255,255,255), 15)
         label_list.append(wp_label)
-        mp_label = button.Label((0,0), "MP - Medium Punch", (255,255,255), 15)
+        mp_label = button.Label((0,0), "TP - Tricky Punch", (255,255,255), 15)
         label_list.append(mp_label)
         sp_label = button.Label((0,0), "SP - Strong Punch", (255,255,255), 15)
         label_list.append(sp_label)
@@ -277,11 +277,11 @@ class KeySetContainer(BuilderContainer):
             ((0,0), "FW", 18, InputActionTypes.FORWARD),
             ((0,0), "UP", 18, InputActionTypes.MOVE_UP),
             ((0,0), "DN", 18, InputActionTypes.MOVE_DOWN),
-            ((0,0), "WK", 18, InputActionTypes.WEAK_KICK),
-            ((0,0), "MK", 18, InputActionTypes.MEDIUM_KICK),
+            ((0,0), "QK", 18, InputActionTypes.WEAK_KICK),
+            ((0,0), "TK", 18, InputActionTypes.MEDIUM_KICK),
             ((0,0), "SK", 18, InputActionTypes.STRONG_KICK),
-            ((0,0), "WP", 18, InputActionTypes.WEAK_PUNCH),
-            ((0,0), "MP", 18, InputActionTypes.MEDIUM_PUNCH),
+            ((0,0), "QP", 18, InputActionTypes.WEAK_PUNCH),
+            ((0,0), "TP", 18, InputActionTypes.MEDIUM_PUNCH),
             ((0,0), "SP", 18, InputActionTypes.STRONG_PUNCH),
             ((0,0), "JU", 18, InputActionTypes.JUMP)
         ]
@@ -432,19 +432,19 @@ class KeySetContainer(BuilderContainer):
             return "DN"
         
         elif action_type == InputActionTypes.WEAK_KICK:
-            return "WK"
+            return "QK"
         
         elif action_type == InputActionTypes.MEDIUM_KICK:
-            return "MK"
+            return "TK"
         
         elif action_type == InputActionTypes.STRONG_KICK:
             return "SK"
         
         elif action_type == InputActionTypes.WEAK_PUNCH:
-            return "WP"
+            return "QP"
         
         elif action_type == InputActionTypes.MEDIUM_PUNCH:
-            return "MP"
+            return "TP"
         
         elif action_type == InputActionTypes.STRONG_PUNCH:
             return "SP"
@@ -683,25 +683,25 @@ class AttackLabel(wotsui.SelectableObjectBase):
             return "DN"
         
         elif action_type == InputActionTypes.WEAK_KICK:
-            return "WK"
+            return "QK"
         
         elif action_type == InputActionTypes.MEDIUM_KICK:
-            return "MK"
+            return "TK"
         
         elif action_type == InputActionTypes.STRONG_KICK:
             return "SK"
         
         elif action_type == InputActionTypes.WEAK_PUNCH:
-            return "WP"
+            return "QP"
         
         elif action_type == InputActionTypes.MEDIUM_PUNCH:
-            return "MP"
+            return "TP"
         
         elif action_type == InputActionTypes.STRONG_PUNCH:
             return "SP"
         
         elif action_type == InputActionTypes.JUMP:
-            return "JP"
+            return "JU"
 
 class AttackNavigator(wotsuicontainers.ScrollableContainer):
 
