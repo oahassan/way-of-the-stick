@@ -64,17 +64,19 @@ class AttackResultRenderingInfo():
         knockback_vector,
         attack_damage,
         attack_type,
-        clash_indicator
+        clash_indicator,
+        clash_position
     ):
         self.attack_point = attack_point
         self.knockback_vector = knockback_vector
         self.attack_damage = attack_damage
         self.attack_type = attack_type
         self.clash_indicator = clash_indicator
+        self.clash_position = clash_position
     
     def _pack(self):
         return (self.attack_point, self.knockback_vector, self.attack_damage, 
-        attack_type, self.clash_indicator)
+        attack_type, self.clash_indicator, self.clash_position)
 
 class PlayerRenderingInfo():
     def __init__(
@@ -237,7 +239,8 @@ class MatchSimulation():
                     self.current_attack_result.knockback_vector,
                     self.current_attack_result.attacker.get_point_damage(attack_point.name),
                     None,
-                    self.current_attack_result.clash_indicator
+                    self.current_attack_result.clash_indicator,
+                    self.current_attack_result.clash_position
                 )
             else:
                 attack_type = None
@@ -258,7 +261,8 @@ class MatchSimulation():
                         attack_point.name
                     ),
                     attack_type,
-                    self.current_attack_result.clash_indicator
+                    self.current_attack_result.clash_indicator,
+                    self.current_attack_result.clash_position
                 )
         else:
             return None
@@ -503,7 +507,8 @@ class AttackResult():
         attack_point,
         receive_point,
         knockback_vector,
-        clash_indicator
+        clash_indicator,
+        clash_position
     ):
         self.attacker = attacker
         self.receiver = receiver
@@ -511,6 +516,7 @@ class AttackResult():
         self.receive_point = receive_point
         self.knockback_vector = knockback_vector
         self.clash_indicator = clash_indicator
+        self.clash_position = clash_position
 
 class AttackResolver():
     def __init__(self):
@@ -648,9 +654,11 @@ class AttackResolver():
             receiver,
             colliding_lines
         )
+        
         attack_point = interaction_points[0]
         receive_point = interaction_points[1]
         knockback_vector = self.get_knockback_vector(attacker, attack_point)
+        clash_position = (attack_point.pos[0],attack_point.pos[1])
         
         attack_result = AttackResult(
             attacker,
@@ -658,7 +666,8 @@ class AttackResolver():
             attack_point,
             receive_point,
             knockback_vector,
-            clash_indicator
+            clash_indicator,
+            clash_position
         )
         
         return attack_result

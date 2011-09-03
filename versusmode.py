@@ -1,6 +1,6 @@
 import multiprocessing
 import pygame
-from wotsfx import Effect
+from wotsfx import ClashEffect, HitEffect
 import wotsuievents
 import gamestate
 import player
@@ -328,7 +328,7 @@ class VersusModeState():
         
         for effect in self.point_effects.values():
             effect.update(gamestate.time_passed)
-            effect_position, effect_surface = effect.draw_ellipse_effect()
+            effect_position, effect_surface = effect.draw_effect()
             self.surface_renderer.draw_surface_to_screen(
                 effect_position, 
                 effect_surface
@@ -497,15 +497,26 @@ class VersusModeState():
         
         attack_point = attack_result_rendering_info.attack_point
         if not attack_point.id in self.point_effects:
-            self.point_effects[attack_point.id] = Effect(
-                attack_result_rendering_info.attack_point.pos,
-                angle_in_degrees,
-                effect_width,
-                effect_height,
-                .7,
-                fade_rate,
-                .6
-            )
+            if attack_result_rendering_info.clash_indicator:
+                self.point_effects[attack_point.id] = ClashEffect(
+                    attack_result_rendering_info.clash_position,
+                    angle_in_degrees,
+                    effect_width,
+                    effect_height,
+                    .7,
+                    fade_rate,
+                    1
+                )
+            else:
+                self.point_effects[attack_point.id] = HitEffect(
+                    attack_result_rendering_info.attack_point.pos,
+                    angle_in_degrees,
+                    effect_width,
+                    effect_height,
+                    .7,
+                    fade_rate,
+                    .6
+                )
 
 local_state = VersusModeState()
 

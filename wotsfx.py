@@ -24,6 +24,10 @@ class Effect():
         self.fade_rate = fade_rate
         self.time_multiplier = time_multiplier
     
+    def get_enclosing_rect(self):
+        return (self.position, (self.width, self.height))
+
+class HitEffect(Effect):
     def update(
         self,
         time_passed
@@ -46,18 +50,7 @@ class Effect():
             self.center[1] - (.5 * self.height)
         )
     
-    def get_enclosing_rect(self):
-        return (self.position, (self.width, self.height))
-    
-    def effect_over(self):
-        ratio = float(self.max_height) / float(self.max_width)
-        
-        small_height = (self.inner_circle_ratio * ratio) * self.time_passed
-        small_width = self.inner_circle_ratio * self.time_passed
-        
-        return (small_height > self.height + (ratio*2)) and (small_width > self.width + 2)
-    
-    def draw_ellipse_effect(self):
+    def draw_effect(self):
         
         ratio = float(self.max_height) / float(self.max_width)
         
@@ -89,3 +82,70 @@ class Effect():
         )
         
         return (final_position, effect_surface)
+    
+    def effect_over(self):
+        ratio = float(self.max_height) / float(self.max_width)
+        
+        small_height = (self.inner_circle_ratio * ratio) * self.time_passed
+        small_width = self.inner_circle_ratio * self.time_passed
+        
+        return (small_height > self.height + (ratio*2)) and (small_width > self.width + 2)
+
+class ClashEffect(Effect):
+    def update(
+        self,
+        time_passed
+    ):
+        
+        self.time_passed += (self.time_multiplier * time_passed)
+        
+        big_height = min(self.time_passed, self.max_height)
+        big_width = min(self.time_passed, self.max_width)
+        
+        effect_surface = pygame.Surface((big_width, big_height)).convert()
+        effect_surface = pygame.transform.rotate(effect_surface, self.angle)
+        effect_surface_rect = effect_surface.get_rect()
+        
+        self.height = effect_surface_rect.height
+        self.width = effect_surface_rect.width
+        self.position = (
+            self.center[0] - (.5 * self.width),
+            self.center[1] - (.5 * self.height)
+        )
+    
+    def draw_effect(self):
+        
+        #create effect dimensions by size
+        big_height = min(self.time_passed, self.max_height)
+        big_width = min(self.time_passed, self.max_width)
+        
+        #create effect surface
+        effect_surface = pygame.Surface((big_width, big_height)).convert()
+        effect_surface.fill((1,232,5))
+        
+        effect_position_big = (.5 * big_width, .5 * big_height)
+        
+        color_weights = [255]
+        
+        for i in range(1, int(.5 * big_width) - int(big_width * .01)):
+            color_weights.append(.9 * color_weights[i - 1])
+        color_weights = color_weights[::-1]
+        
+        for i in range(int(.5 * big_width),int(big_width * .01), -2):
+            weight_index = i - int(big_width * .01)
+            color = (color_weights[-weight_index], color_weights[-weight_index], color_weights[-weight_index])
+            pygame.draw.circle(effect_surface, color, effect_position_big, i)
+        
+        effect_surface.set_colorkey((1,232,5))
+        effect_surface.set_alpha((255 * ((100 - (self.fade_rate * self.time_passed)) / 100)))
+        effect_surface_rect = effect_surface.get_rect()
+        
+        final_position = (
+            self.center[0] - (.5 * effect_surface_rect.width),
+            self.center[1] - (.5 * effect_surface_rect.height)
+        )
+        
+        return (final_position, effect_surface)
+    
+    def effect_over(self):
+        return self.time_passed > 70
