@@ -312,14 +312,14 @@ class MatchSimulation():
             player2.get_enclosing_rect()
         ):
             if (player1.get_player_state() == PlayerStates.ATTACKING and
-            not player2.is_invincible):
+            (not player2.is_invincible or (player2.is_invincible and player2.get_player_state() == PlayerStates.STUNNED))):
                 attack_result = self.attack_resolver.get_attack_result(
                     player1, 
                     player2
                 )
                 
             elif (player2.get_player_state() == PlayerStates.ATTACKING and
-            not player1.is_invincible):
+            (not player1.is_invincible or (player1.is_invincible and player1.get_player_state() == PlayerStates.STUNNED))):
                 attack_result = self.attack_resolver.get_attack_result(
                     player2, 
                     player1
@@ -435,17 +435,29 @@ class CollisionHandler():
     ):
         attacker = attack_result.attacker
         receiver = attack_result.receiver
+        attack_type = attacker.action.attack_type
         
-        separation_vector = self.get_separation_vector(attacker,receiver)
-        receiver.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
+        if attack_type in InputActionTypes.STRONG_ATTACKS or attack_type in InputActionTypes.QUICK_ATTACKS:
+            separation_vector = self.get_separation_vector(attacker,receiver)
+            receiver.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
+        else:
+            separation_vector = self.get_separation_vector(attacker,receiver)
+            receiver.model.shift((0, .5 * separation_vector[0] + .5 * separation_vector[1]))
         
         receiver.knockback_vector = attack_result.knockback_vector
         receiver.interaction_point = attack_result.receive_point
         receiver.interaction_vector = self.get_pull_point_deltas(attack_result)
         receiver.pull_point(receiver.interaction_vector)
         receiver.model.velocity = (0,0)
-        receiver.model.accelerate(receiver.knockback_vector[0], \
-                                  receiver.knockback_vector[1])
+        
+        if attack_type in InputActionTypes.STRONG_ATTACKS:
+            receiver.model.accelerate(receiver.knockback_vector[0], \
+                                      receiver.knockback_vector[1])
+        elif attack_type in InputActionTypes.TRICKY_ATTACKS:
+            receiver.model.accelerate(0, \
+                                      receiver.knockback_vector[0] + receiver.knockback_vector[1])
+        else:
+            pass
     
     def get_separation_vector(
         self,
