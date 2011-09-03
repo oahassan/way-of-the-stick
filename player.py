@@ -106,6 +106,8 @@ class Player():
         self.point_name_to_point_damage = {} #Point name to PointDamage object
         self.previous_point_positions = {}
         self.handle_input_events = True
+        self.is_invincible = False
+        self.invincibility_timer = 0
     
     def set_player_stats(self, size):
         self.size = size
@@ -139,6 +141,18 @@ class Player():
         
         if self.stun_timer < self.stun_timeout:
             self.stun_timer += time_passed
+        
+        if self.invincibility_timer < INVINCIBILITY_TIMEOUT:
+            self.invincibility_timer += time_passed
+        
+        if (self.is_invincible and 
+        (self.get_player_state() == PlayerStates.ATTACKING or
+        self.invincibility_timer >= INVINCIBILITY_TIMEOUT)):
+            self.is_invincible = False
+    
+    def set_invincibility(self):
+        self.is_invincible = True
+        self.invincibility_timer = 0
     
     def set_outline_color(self):
         if self.get_player_state() == PlayerStates.STUNNED:

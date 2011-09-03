@@ -173,11 +173,13 @@ class MatchSimulation():
             player2 = self.player_dictionary[PlayerPositions.PLAYER2]
             player2.handle_input_events == False
             player2.set_stun_timeout(10000)
+            player2.is_invincible = False
             
         elif match_state == MatchStates.PLAYER2_WINS:
             player1 = self.player_dictionary[PlayerPositions.PLAYER1]
             player1.handle_input_events == False
             player1.set_stun_timeout(10000)
+            player1.is_invincible = False
             
     def get_rendering_info(self):
         return SimulationRenderingInfo(
@@ -309,13 +311,15 @@ class MatchSimulation():
             player1.get_enclosing_rect(), 
             player2.get_enclosing_rect()
         ):
-            if player1.get_player_state() == PlayerStates.ATTACKING:
+            if (player1.get_player_state() == PlayerStates.ATTACKING and
+            not player2.is_invincible):
                 attack_result = self.attack_resolver.get_attack_result(
                     player1, 
                     player2
                 )
                 
-            elif player2.get_player_state() == PlayerStates.ATTACKING:
+            elif (player2.get_player_state() == PlayerStates.ATTACKING and
+            not player1.is_invincible):
                 attack_result = self.attack_resolver.get_attack_result(
                     player2, 
                     player1
@@ -351,6 +355,9 @@ class CollisionHandler():
         attacker = attack_result.attacker
         receiver = attack_result.receiver
         
+        if attacker.action.attack_type in InputActionTypes.STRONG_ATTACKS:
+            receiver.set_invincibility()
+        
         attack_knockback_vector = attack_result.knockback_vector
         
         if receiver.get_player_state() == PlayerStates.STUNNED:
@@ -370,7 +377,7 @@ class CollisionHandler():
         else:
             self.apply_collision_physics(attack_result)
             
-            if receiver.get_player_state() == PlayerStates.ATTACKING:
+            if receiver.get_player_state() in PlayerStates.ATTACKING:
                 receiver.handle_attack_end()
             
             receiver.set_player_state(PlayerStates.STUNNED)
