@@ -865,10 +865,10 @@ class AttackPredictionEngine():
                 top_left_position = [hitbox.topleft[0], hitbox.topleft[1]]
             else:
                 if hitbox.topleft[0] < top_left_position[0]:
-                    top_left_position[0] = hitbox.topleft[0]
+                    top_left_position = (hitbox.topleft[0], top_left_position[1])
                 
                 if hitbox.topleft[1] < top_left_position[1]:
-                    top_left_position[1] = hitbox.topleft[1]
+                    top_left_position = (top_left_position[0], hitbox.topleft[1])
         
         position_delta = (
             attack_rect.topleft[0] - top_left_position[0],

@@ -144,7 +144,8 @@ class ControllerFactory():
         
         ground_movement_command_types = [command_type for command_type in CommandCollections.GROUND_MOVEMENTS]
         ground_movement_command_handler = CommandHandler(
-            ground_movement_command_types
+            ground_movement_command_types,
+            True
         )
         
         attack_command_handler = CommandHandler(

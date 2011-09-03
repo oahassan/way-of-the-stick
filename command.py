@@ -147,9 +147,12 @@ class CommandHandler:
     """This class keeps a history of pressed commands and can tell you what the
     currently active commands are"""
     
-    def __init__(self, command_types):
+    def __init__(self, command_types, allow_repeated_commands = False):
         #a list of valid command types
         self.command_types = command_types
+        
+        #indicate wheter commands can be repeated in the current command list
+        self.allow_repeated_commands = allow_repeated_commands
         
         #a dictionary mapping command types to tap commands
         self.tap_commands = self._create_command_dictionary(
@@ -275,7 +278,9 @@ class CommandHandler:
         and the list of current commands"""
         
         current_commands = self._get_input_commands(command_states)
-        current_commands.extend(self._get_repeated_commands(current_commands))
+        
+        if self.allow_repeated_commands:
+            current_commands.extend(self._get_repeated_commands(current_commands))
         
         self.current_commands = current_commands
     
@@ -318,8 +323,7 @@ class CommandHandler:
             previous_command_buffers = [self.command_buffer[i] for i in range(-previous_command_buffer_length, 0)]
             
             #order buffers from newest to oldest
-            reverse_buffers = list(previous_command_buffers)
-            reverse_buffers.reverse()
+            reverse_buffers = previous_command_buffers[::-1]
             
             for command in current_commands:
                 command_absent = False
