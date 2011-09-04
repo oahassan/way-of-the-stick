@@ -108,13 +108,14 @@ class VersusModeState():
         if self.simulation_process == None and self.exit_indicator == False:
             self.start_match_simulation()
         
-        self.fps_label.set_text(str(gamestate.clock.get_fps()))
-        self.fps_label.draw(gamestate.screen)
-        gamestate.new_dirty_rects.append(
-            pygame.Rect(
-                self.fps_label.position,
-                (self.fps_label.width, self.fps_label.height))
-        )
+        if gamestate.devmode:
+            self.fps_label.set_text(str(gamestate.clock.get_fps()))
+            self.fps_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(
+                pygame.Rect(
+                    self.fps_label.position,
+                    (self.fps_label.width, self.fps_label.height))
+            )
         
         if self.exit_indicator == False:
             simulation_rendering_info = None

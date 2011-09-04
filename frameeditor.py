@@ -53,15 +53,16 @@ class FrameStats():
         )
         enclosing_rect = frame.get_enclosing_rect()
         self.rect_label.set_text(
-            "Enclosing Rect: Top-" + str(enclosing_rect.top) + " Bottom-" + str(enclosing_rect.bottom) + 
+            "Enclosing Rectangle: Top-" + str(enclosing_rect.top) + " Bottom-" + str(enclosing_rect.bottom) + 
             " Left-" + str(enclosing_rect.left) + " Right-" + str(enclosing_rect.right)
         )
     
     def draw(self, surface):
         if self.visible:
-            self.frame_index_label.draw(surface)
-            self.reference_position_label.draw(surface)
-            self.bottom_position_label.draw(surface)
+            if gamestate.devmode:
+                self.frame_index_label.draw(surface)
+                self.reference_position_label.draw(surface)
+                self.bottom_position_label.draw(surface)
             self.rect_label.draw(surface)
     
     def hide(self):

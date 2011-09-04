@@ -44,6 +44,9 @@ if __name__ == "__main__":
     pygame.display.set_caption("Way of the Stick")
     music.init()
     
+    if len(sys.argv) >= 2 and sys.argv[1] == "dev":
+        gamestate.devmode = True
+    
     while 1:
         try:
             if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:

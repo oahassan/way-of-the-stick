@@ -39,6 +39,7 @@ animation = None
 
 screen = None
 clock = None
+devmode = False
 
 old_dirty_rects = []
 new_dirty_rects = []
