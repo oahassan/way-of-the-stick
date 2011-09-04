@@ -186,7 +186,11 @@ class Bot(Player):
         
         if (self.action.action_state != PlayerStates.ATTACKING
         and self.action.action_state != PlayerStates.STUNNED):
-            attack = self.attack_prediction_engine.get_in_range_attack(enemy)
+            if self.action.action_state == PlayerStates.TRANSITION:
+                if self.action.next_action.action_state != PlayerStates.ATTACKING:
+                    attack = self.attack_prediction_engine.get_in_range_attack(enemy)
+            else:
+                attack = self.attack_prediction_engine.get_in_range_attack(enemy)
         
         next_action = None
         
