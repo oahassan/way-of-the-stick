@@ -10,15 +10,29 @@ import stick
 import animation
 import actionwizard
 
+_HOME_DIR = ''
+
+if 'HOME' in os.environ:
+    _HOME_DIR = os.environ["HOME"]
+elif 'USERPROFILE' in os.environ:
+    _HOME_DIR = os.environ["USERPROFILE"]
+
 validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 
 #TODO - create new interface to data for just player created and unlocked movesets
 _MOVESET_DB_FILE_NM = "moveset_wots.dat"
-_EXPORTED_MOVESETS_DIR = os.path.join("sharing", "exported movesets")
-_IMPORTED_MOVESETS_DIR = os.path.join("sharing", "imported movesets")
-_SHARED_MOVESETS_DIR = os.path.join("sharing", "shared movesets")
+_SHARING_DIR = os.path.join(_HOME_DIR, "wots_sharing")
+_EXPORTED_MOVESETS_DIR = os.path.join(_SHARING_DIR, "exported")
+_IMPORTED_MOVESETS_DIR = os.path.join(_SHARING_DIR, "imported")
+_SHARED_MOVESETS_DIR = os.path.join(_SHARING_DIR, "new")
 _MOVESET_SUFFIX = "-mov.mvs"
 _SHARED_MOVESETS_GLOB_PATH = os.path.join(_SHARED_MOVESETS_DIR, "*" + _MOVESET_SUFFIX)
+
+if not os.path.exists(_SHARING_DIR):
+    os.mkdir(_SHARING_DIR)
+    os.mkdir(_EXPORTED_MOVESETS_DIR)
+    os.mkdir(_IMPORTED_MOVESETS_DIR)
+    os.mkdir(_SHARED_MOVESETS_DIR)
 
 def import_movesets():
     

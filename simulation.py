@@ -441,12 +441,12 @@ class CollisionHandler():
         receiver = attack_result.receiver
         attack_type = attacker.action.attack_type
         
-        if attack_type in InputActionTypes.STRONG_ATTACKS or attack_type in InputActionTypes.QUICK_ATTACKS:
-            separation_vector = self.get_separation_vector(attacker,receiver)
-            receiver.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
-        else:
-            separation_vector = self.get_separation_vector(attacker,receiver)
-            receiver.model.shift((0, -1 * abs(.5 * separation_vector[0]) + .5 * separation_vector[1]))
+        #if attack_type in InputActionTypes.STRONG_ATTACKS or attack_type in InputActionTypes.QUICK_ATTACKS:
+        separation_vector = self.get_separation_vector(attacker,receiver)
+        receiver.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
+        #else:
+        #    separation_vector = self.get_separation_vector(attacker,receiver)
+        #    receiver.model.shift((0, -1 * abs(.5 * separation_vector[0]) + .5 * separation_vector[1]))
         
         receiver.knockback_vector = attack_result.knockback_vector
         receiver.interaction_point = attack_result.receive_point
