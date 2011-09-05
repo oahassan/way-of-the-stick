@@ -907,9 +907,9 @@ class AttackNavigator(wotsuicontainers.ScrollableContainer):
                                 self.get_animation(label.attack_name)
                             )
                             self.selected_animation = None
-                            self.load_animation_data()
                             self.delete_animation_button.handle_deselected()
                             self.delete_animation_help_text.hide()
+                            self.reload_indicator = True
         
         if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
             if self.new_animation_button.contains(wotsuievents.mouse_pos):
