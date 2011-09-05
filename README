@@ -1,4 +1,9 @@
-Way of the stick is a pygame powered stick figure fighting game.  It is currently in alpha so only a moveset editor and a basic versus mode are currently in place.
+Way of the stick is a minimalistic fighting game.  Movement and hand to hand attacks are the only tools at your disposal.  Attacks follow rock-paper-scissors like style of precedence:
+    Quick Attacks beat Strong Attacks
+    Tricky Attacks beat Quick Attacks
+    Strong Attacks beat Tricky Attacks
+
+At the moment only a moveset editor and a basic versus mode are currently in place.
 
 Getting Started
 
@@ -14,11 +19,11 @@ Movment
  - Jump: space bar
 
 Attacks:
- - Weak Punch: q
- - Medium Punch: w
+ - Quick Punch: q
+ - Tricky Punch: w
  - Strong Punch: e
- - Weak Kick: a
- - Medium Kick: s
+ - Quick Kick: a
+ - Tricky Kick: s
  - Strong Kick: d
 
 
@@ -33,13 +38,13 @@ Press any button to get past the splash screen to the main menu.  On the main me
 
 To play a game select versus mode.  You will go to the character select screen and be presented with several choices.
 
-The first is to select which player is human and which is a bot.  The game doesn't support two human players, so if both are human both players will move according to one set of controls.
+The first is to select which player is human and which is a bot.
 
-The next choice is to select a moveset for each player.  Use the arrows to switch between selected movesets.
+The next choice is to select a moveset for each player.  Click the arrows to switch between movesets.
 
-The last choice is optional.  You can change the characteristics of your player for speed or power based on Size slider.
+The last choice is optional.  You can change the characteristics of your player for speed or power based on size slider.
 
-When you've made your choices The button to start the match will be active and you can play a game.
+When you've made your choices the button to start the match will be active and you can play a game.
 
 
 Using the Movset Editor (TODO)
