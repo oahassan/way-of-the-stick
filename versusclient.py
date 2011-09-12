@@ -53,7 +53,7 @@ class ClientConnectionListener(EndPoint):
         self.server_mode = None
         self.new_simulation_state_indicator = False
         self.new_player_inputs_indicator = False
-        self.new_player_input_inditicators = {
+        self.new_player_input_indicators = {
             PlayerPositions.PLAYER1 : False,
             PlayerPositions.PLAYER2 : False
         }
@@ -69,7 +69,8 @@ class ClientConnectionListener(EndPoint):
     
     def clear_callbacks(self, client_action):
         
-        del self.callbacks[client_action]
+        if client_action in self.callbacks:
+            del self.callbacks[client_action]
     
     def Close(self):
         EndPoint.Close(self)
@@ -163,7 +164,8 @@ class ClientConnectionListener(EndPoint):
             if player_to_remove_id == player_id:
                 self.player_positions[player_position] = None
                 self.player_positions_ready_dictionary[player_position] = False
-                self.player_states[player_position] = None
+                self.player_input[player_position] = None
+                self.player_movesets[player_position] = None
                 print("player deleted")
     
     def all_player_data_received(self):
@@ -197,10 +199,11 @@ class ClientConnectionListener(EndPoint):
             self.Send(data)
         
     def clear_player_states(self):
-        for player_position in self.player_states.keys():
-            self.player_states[player_position] = None
+        for player_position in self.player_positions.keys():
+            #self.player_states[player_position] = None
             self.player_movesets[player_position] = None
             self.player_input[player_position] = None
+            self.new_player_input_indicators[player_position] = False
         
         self.new_player_inputs_indicator = False
         self.new_simulation_state_indicator = False

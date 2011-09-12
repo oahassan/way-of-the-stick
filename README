@@ -47,6 +47,10 @@ The last choice is optional.  You can change the characteristics of your player 
 When you've made your choices the button to start the match will be active and you can play a game.
 
 
+Exporting and Importing Movesets
+
+Way of the Stick creates a sharing folder in your home folder (user folder on windows) for sharing called "wots_sharing".  When you export a moveset will be in the "wots_sharing/exported" folder.  To import a moveset move the .mvs file into "wots_sharing/new" folder.  Movesets that have been imported will move to the "wots_sharing/imported" folder.
+
 Using the Movset Editor (TODO)
 
-Exporting and Importing Movesets (TODO)
+

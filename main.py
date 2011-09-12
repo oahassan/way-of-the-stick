@@ -141,6 +141,5 @@ if __name__ == "__main__":
                     print("terminiating!")
                     onlineversusmode.local_state.simulation_process.terminate()
                     #onlineversusmode.local_state.simulation_process.join()
-                
-                print versusclient.listener.__dict__
+                    
             raise

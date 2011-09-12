@@ -98,7 +98,7 @@ class PlayerRenderingInfo():
         self.frame_index = frame_index
     
     def _pack(self):
-        return (self.player_point_positions, self.player_state,
+        return (self.player_model, self.player_state,
         self.player_outline_color, self.player_health_color, 
         self.health_percentage, self.animation_name, self.frame_index)
 
@@ -912,37 +912,54 @@ class GeneratedActionData(ActionData):
         self,
         action_state,
         direction,
-        animation
+        first_frame_point_positions,
+        last_frame_point_positions
     ):
         ActionData.__init__(self, action_state, direction)
-        self.animation = animation
+        self.first_frame_point_positions = first_frame_point_positions
+        self.last_frame_point_positions = last_frame_point_positions
     
     def _pack(self):
-        return self.action_state, self.direction, self.animation
+        return (self.action_state, self.direction, self.first_frame_point_positions,
+        self.last_frame_point_positions)
 
 class TransitionActionData(GeneratedActionData):
     def __init__(
         self,
         action_state,
         direction,
-        animation,
+        first_frame_point_positions,
+        last_frame_point_positions,
+        last_action_state,
+        last_action_animation_name,
         next_action_state,
         next_action_animation_name
     ):
-        GeneratedActionData.__init__(self, action_state, direction, animation)
+        GeneratedActionData.__init__(
+            self, 
+            action_state, 
+            direction, 
+            first_frame_point_positions,
+            last_frame_point_positions
+        )
+        self.last_action_state = last_action_state
+        self.last_action_animation_name = last_action_animation_name
         self.next_action_state = next_action_state
         self.next_action_animation_name = next_action_animation_name
     
     def _pack(self):
-        return (self.action_state, self.direction, self.animation,
-        self.next_action_state, self.next_action_animation_name)
+        return (self.action_state, self.direction, self.first_frame_point_positions,
+        self.last_frame_point_positions, self.last_action_state, 
+        self.last_action_animation_name, self.next_action_state,
+        self.next_action_animation_name)
 
 class StunActionData(GeneratedActionData, TimedActionData):
     def __init__(
         self,
         action_state,
         direction,
-        animation,
+        first_frame_point_positions,
+        last_frame_point_positions,
         timeout,
         timer
     ):
@@ -950,7 +967,8 @@ class StunActionData(GeneratedActionData, TimedActionData):
             self, 
             action_state,
             direction,
-            animation
+            first_frame_point_positions,
+            last_frame_point_positions
         )
         TimedActionData.__init__(
             self,
@@ -961,8 +979,8 @@ class StunActionData(GeneratedActionData, TimedActionData):
         )
     
     def _pack(self):
-        return (self.action_state, self.direction, self.animation, self.timeout,
-        self.timer)
+        return (self.action_state, self.direction, self.first_frame_point_positions,
+        self.last_frame_point_positions, self.timeout, self.timer)
 
 class ActionDataFactory():
     
@@ -974,7 +992,14 @@ class ActionDataFactory():
             return_data = StunActionData(
                 player.get_player_state(),
                 player.direction,
-                player.action.right_animation,
+                self.get_frame_point_positions(
+                    player.action.animation,
+                    player.action.animation.frames[0]
+                ),
+                self.get_frame_point_positions(
+                    player.action.animation,
+                    player.action.animation.frames[-1]
+                ),
                 player.stun_timeout,
                 player.stun_timer
             )
@@ -983,7 +1008,16 @@ class ActionDataFactory():
             return_data = TransitionActionData(
                 player.get_player_state(),
                 player.direction,
-                player.action.right_animation,
+                self.get_frame_point_positions(
+                    player.action.animation,
+                    player.action.animation.frames[0]
+                ),
+                self.get_frame_point_positions(
+                    player.action.animation,
+                    player.action.animation.frames[-1]
+                ),
+                player.action.last_action.action_state,
+                player.action.last_action.right_animation.name,
                 player.action.next_action.action_state,
                 player.action.next_action.right_animation.name
             )
@@ -1007,6 +1041,14 @@ class ActionDataFactory():
             return_data = ActionData(player.get_player_state(), player.direction)
         
         return return_data
+    
+    def get_frame_point_positions(self, animation, frame):
+        point_positions = {}
+        
+        for point_name, point_id in animation.point_names.iteritems():
+            point_positions[point_name] = frame.point_dictionary[point_id].pos
+        
+        return point_positions
 
 class PlayerState():
     def __init__(
@@ -1106,6 +1148,7 @@ class NetworkedSimulation(MatchSimulation):
             
             self.state_history.append(self.get_simulation_state())
             self.input_history.append(player_keys_pressed)
+            self.accumulator -= self.timestep
     
     def get_simulation_state(self):
         player_state_dictionary = dict(
@@ -1172,29 +1215,28 @@ class ServerSimulation(NetworkedSimulation):
                     raise Exception("Terminating Simulation Process!")
                     
                 elif action_type == SimulationActionTypes.STEP:
-                    
                     self.step(
                         data[SimulationDataKeys.KEYS_PRESSED], 
                         data[SimulationDataKeys.TIME_PASSED]
                     )
-                
                     self.pipe_connection.send(
                         {
                             SimulationDataKeys.ACTION : SimulationActionTypes.STEP,
                             SimulationDataKeys.RENDERING_INFO : self.get_rendering_info()
                         }
                     )
-                    
                     if self.match_time % 30 == 0:
+                        state = self.get_simulation_state()
+                        print([player_dat.action_data for player_dat in state.player_states.values()])
                         self.pipe_connection.send(
                             {
                                 SimulationDataKeys.ACTION : SimulationActionTypes.GET_STATE,
-                                SimulationDataKeys.SIMULATION_STATE : self.get_simulation_state()
+                                SimulationDataKeys.SIMULATION_STATE : state
                             }
                         )
-                    
+                        
                 elif action_type == SimulationActionTypes.UPDATE_INPUT:
-                    
+                    print("server got player data")
                     self.sync_to_client(
                         data[SimulationDataKeys.MATCH_TIME],
                         data[SimulationDataKeys.PLAYER_POSITION],
@@ -1202,6 +1244,7 @@ class ServerSimulation(NetworkedSimulation):
                     )
                 
                 elif action_type == SimulationActionTypes.UPDATE_STATE:
+                    print("update state")
                     pass #Since hosts are the authority they don't get checked against
                     #remote simulation states.
                 else:
@@ -1242,7 +1285,6 @@ class ClientSimulation(NetworkedSimulation):
                 action_type = data[SimulationDataKeys.ACTION]
                 
                 if action_type == SimulationActionTypes.STEP:
-                    
                     self.step(
                         data[SimulationDataKeys.KEYS_PRESSED], 
                         data[SimulationDataKeys.TIME_PASSED]
@@ -1269,13 +1311,13 @@ class ClientSimulation(NetworkedSimulation):
                                     SimulationDataKeys.MATCH_TIME : self.match_time
                                 }
                             )
-                
                 elif action_type == SimulationActionTypes.UPDATE_STATE:
                     self.sync_to_server_state(
                         data[SimulationDataKeys.SIMULATION_STATE]
                     )
                 
                 elif action_type == SimulationActionTypes.UPDATE_INPUT:
+                    print("update input")
                     pass #clients should only update against the player state of the
                     #host
                 else:

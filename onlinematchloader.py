@@ -8,7 +8,7 @@ import player
 import onlineversusmode
 import movesetdata
 from functools import reduce
-from enumerations import PlayerTypes
+from enumerations import PlayerTypes, PlayerStates
 
 LOADING_MATCH_TEXT = "Loading Match"
 
@@ -60,6 +60,7 @@ def handle_events():
         
         unload()
         onlineversusmode.init()
+        onlineversusmode.local_state.init_player_sounds()
         gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
     
     versusclient.get_network_messages()
@@ -90,9 +91,8 @@ def setup_remote_player(player_position, moveset_name):
     """creates a remote player in the online versus mode module"""
     
     remote_player = onlineversusmode.NetworkPlayer((0,0), player_position)
-    
-    set_player_initial_state(player_position, remote_player)
     remote_player.load_moveset(movesetdata.get_moveset(moveset_name))
+    set_player_initial_state(player_position, remote_player)
     
     onlineversusmode.set_player(player_position, remote_player)
 
@@ -123,7 +123,7 @@ def setup_local_player():
 
 def set_player_initial_state(player_position, player):
     player.init_state()
-    
+    player.actions[PlayerStates.STANDING].set_player_state(player)
     player.color = get_player_color(player_position)
     player.outline_color = player.color
     
@@ -133,10 +133,10 @@ def set_player_initial_state(player_position, player):
 
 def get_player_model_position(player_position):
     if player_position == versusserver.PlayerPositions.PLAYER1:
-        return ((200, 367))
+        return ((400, 967))
         
     elif player_position == versusserver.PlayerPositions.PLAYER2:
-        return ((600, 367))
+        return ((1200, 967))
 
 def get_player_model_direction(player_position):
     if player_position == versusserver.PlayerPositions.PLAYER1:

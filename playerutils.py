@@ -172,6 +172,7 @@ class Transition(Action):
         for point_name, point_id in player.action.animation.point_names.iteritems():
             position = player.model.points[point_name].pos
             first_frame.point_dictionary[point_id].pos = (position[0], position[1])
+            first_frame.point_dictionary[point_id].name = point_name
         
         return first_frame
     
@@ -184,6 +185,7 @@ class Transition(Action):
         for point_name, point_id in current_action.right_animation.point_names.iteritems():
             position = last_frame_point_positions[point_name]
             last_frame.point_dictionary[point_id].pos = position
+            last_frame.point_dictionary[point_id].name = point_name
         
         previous_action = self.get_previous_action(current_action)
         
@@ -475,6 +477,7 @@ class Stun(Action):
         for point_name, point_id in point_names.iteritems():
             position = self.toy_model.points[point_name].pos
             save_frame.point_dictionary[point_id].pos = (position[0], position[1])
+            save_frame.point_dictionary[point_id].name = point_name
         
         return save_frame
     
@@ -562,10 +565,6 @@ class Stun(Action):
         
         if player.model.time_passed > 0:
             self.move_player(player)
-    
-    def sync(self, direction, animation):
-        self.right_animation = animation
-        self.direction = direction
 
 class Attack(Action):
     PUNCH_LINE_NAMES = [

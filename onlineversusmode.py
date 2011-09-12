@@ -1,4 +1,5 @@
 import multiprocessing
+import copy
 import pygame
 
 import versusclient
@@ -11,6 +12,7 @@ import aiplayer
 import button
 import stage
 import stick
+import animation
 import mathfuncs
 import versusmode
 from versusmode import VersusModeState
@@ -18,7 +20,7 @@ from simulation import ServerSimulation, ClientSimulation
 from playerutils import Transition
 from playerconstants import TRANSITION_ACCELERATION, STUN_ACCELERATION
 from enumerations import InputActionTypes, MatchStates, SimulationDataKeys, \
-SimulationActionTypes, PlayerStates
+SimulationActionTypes, PlayerStates, PlayerPositions
 
 class NetworkPlayer(humanplayer.HumanPlayer):
     
@@ -46,57 +48,36 @@ class NetworkPlayer(humanplayer.HumanPlayer):
             
             action.set_player_state()
             
-            stun_animation = action_data.animation
-            stun_animation = action_data.animation
-            stun_animation.set_frame_deltas()
-            stun_animation.set_animation_deltas()
-            stun_animation.set_animation_point_path_data(STUN_ACCELERATION)
-            
-            action.animation = stun_animation
-            action.left_animation = stun_animation
-            action.right_animation = stun_animation
+            self.set_animation_from_frame_point_positions(
+                action,
+                action_data.first_frame_point_positions,
+                action_data.last_frame_point_positions,
+                STUN_ACCELERATION
+            )
             
             action.model.time_passed = player_state.animation_run_time
             action.move_player(self)
         
         elif action_state == PlayerStates.TRANSITION:
             action = Transition()
-            transition_animation = action_data.animation
-            transition_animation.set_frame_deltas()
-            transition_animation.set_animation_deltas()
-            transition_animation.set_animation_point_path_data(TRANSITION_ACCELERATION)
             
-            action.right_animation = transition.animation
-            action.left_animation = transition.animation
-            
-            next_action_state = action_data.next_action_state
-            
-            if next_action_state == PlayerStates.WALKING:
-                if self.direction == PlayerStates.FACING_LEFT:
-                    action.next_action = self.walk_left_action
-                    
-                elif self.direction == PlayerStates.FACING_RIGHT:
-                    action.next_action = self.walk_right_action
-                    
-                else:
-                    raise Exception("Invalid Direction: " + str(action_data.direction))
-                    
-            elif next_action_state == PlayerStates.RUNNING:
-                if self.direction == PlayerStates.FACING_LEFT:
-                    action.next_action = self.run_left_action
-                    
-                elif self.direction == PlayerStates.FACING_RIGHT:
-                    action.next_action = self.run_right_action
-                    
-                else:
-                    raise Exception("Invalid Direction: " + str(action_data.direction))
-            elif next_action_state == PlayerStates.ATTACKING:
-                action.next_action = self.actions[
-                    action_data.next_action_animation_name
-                ]
-            
-            else:
-                action.next_action = self.actions[action_data.next_action_state]
+            self.set_animation_from_frame_point_positions(
+                action,
+                action_data.first_frame_point_positions,
+                action_data.last_frame_point_positions,
+                TRANSITION_ACCELERATION
+            )
+            action.direction = action_data.direction
+            action.last_action = self.get_action(
+                action_data.dirction, 
+                action_data.last_action_state,
+                action_data.last_action_animation_name
+            )
+            next_action_state = self.get_action(
+                action_data.dirction, 
+                action_data.next_action_state,
+                action_data.next_action_animation_name
+            )
             
             action.set_player_state(self)
         
@@ -130,6 +111,87 @@ class NetworkPlayer(humanplayer.HumanPlayer):
                 
         else:
             self.actions[action_state].set_player_state(self)
+    
+    def get_action(self, direction, action_state, animation_name):
+        action = None
+        
+        if action_state == PlayerStates.WALKING:
+            if direction == PlayerStates.FACING_LEFT:
+                action = self.walk_left_action
+                
+            elif direction == PlayerStates.FACING_RIGHT:
+                action = self.walk_right_action
+                
+            else:
+                raise Exception("Invalid Direction: " + str(direction))
+                
+        elif action_state == PlayerStates.RUNNING:
+            if direction == PlayerStates.FACING_LEFT:
+                action = self.run_left_action
+                
+            elif direction == PlayerStates.FACING_RIGHT:
+                action = self.run_right_action
+                
+            else:
+                raise Exception("Invalid Direction: " + str(direction))
+        elif action_state == PlayerStates.ATTACKING:
+            action = self.actions[
+                animation_name
+            ]
+        
+        elif action_state == PlayerStates.TRANSITION:
+            action = Transition()
+        else:
+            action = self.actions[action_state]
+        
+        return action
+    
+    def set_animation_from_frame_point_positions(
+        self,
+        action,
+        first_frame_point_positions,
+        last_frame_point_positions,
+        acceleration
+    ):
+        action_animation = animation.Animation()
+        action_animation.frames = []
+        action_animation.point_names = self.action.animation.point_names
+        
+        action_animation.frames.append(
+            self.save_point_positions_to_frame(
+                self.action.animation.frames[0],
+                self.action.animation.point_names,
+                first_frame_point_positions
+            )
+        )
+        action_animation.frames.append(
+            self.save_point_positions_to_frame(
+                self.action.animation.frames[0],
+                self.action.animation.point_names,
+                last_frame_point_positions
+            )
+        )
+        
+        action_animation.set_frame_deltas()
+        action_animation.set_animation_deltas()
+        action_animation.set_animation_point_path_data(acceleration)
+        
+        action.right_animation = action_animation
+        action.left_animation = action_animation
+        action.animation = action_animation
+    
+    def save_point_positions_to_frame(self, frame, point_names, point_positions):
+        """Creates a frame with ids that match the given frame with points at the given
+        positions."""
+        
+        save_frame = copy.deepcopy(frame)
+        
+        for point_name, point_id in point_names.iteritems():
+            position = point_positions[point_name]
+            save_frame.point_dictionary[point_id].pos = (position[0], position[1])
+            save_frame.point_dictionary[point_id].name = point_name
+        
+        return save_frame
 
 class OnlineVersusModeState(VersusModeState):
     def __init__(self):
@@ -137,7 +199,7 @@ class OnlineVersusModeState(VersusModeState):
         chatting = False
     
     def init(self):
-    
+        print("hosting: " + str(gamestate.hosting))
         self.register_network_callbacks()
         self.init_match_state_variables()
         self.init_rendering_objects()
@@ -206,31 +268,27 @@ class OnlineVersusModeState(VersusModeState):
     def unregister_network_callbacks(self):
         if gamestate.hosting:
             versusclient.listener.clear_callbacks(
-                versusserver.ClientActions.UPDATE_SIMULATION_STATE
+                versusserver.ClientActions.UPDATE_INPUT_STATE
             )
         else:
             versusclient.listener.clear_callbacks(
-                versusserver.ClientActions.UPDATE_INPUT_STATE
+                versusserver.ClientActions.UPDATE_SIMULATION_STATE
             )
 
     def handle_events(self):
         
-        if self.exit_indicator == False:
-            if self.simulation_process == None:
-                self.start_match_simulation()
-            #else:
-            #    if not self.simulation_process.is_alive():
-            #        self.end_simulation()
-            #        raise Exception("Simulation Unexpectedly Failed!")
+        if self.exit_indicator == False and self.simulation_process == None:
+            self.start_match_simulation()
         
-        self.fps_label.set_text(str(gamestate.clock.get_fps()))
-        self.fps_label.draw(gamestate.screen)
-        gamestate.new_dirty_rects.append(
-            pygame.Rect(
-                self.fps_label.position,
-                (self.fps_label.width, self.fps_label.height)
+        if gamestate.devmode:
+            self.fps_label.set_text(str(gamestate.clock.get_fps()))
+            self.fps_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(
+                pygame.Rect(
+                    self.fps_label.position,
+                    (self.fps_label.width, self.fps_label.height)
+                )
             )
-        )
         
         if self.exit_indicator == False:
             simulation_rendering_info = None
@@ -238,8 +296,6 @@ class OnlineVersusModeState(VersusModeState):
             while self.simulation_connection.poll():
                 data = self.simulation_connection.recv()
                 action = data[SimulationDataKeys.ACTION]
-                
-                print("simulation: " + str(data))
                 
                 if action == SimulationActionTypes.STEP:
                     self.update_simulation_rendering(
@@ -282,7 +338,19 @@ class OnlineVersusModeState(VersusModeState):
                 SimulationDataKeys.TIME_PASSED : gamestate.time_passed
             }
         )
-
+    
+    def build_player_keys_pressed(self):
+        keys_pressed = {
+            PlayerPositions.PLAYER1 : [],
+            PlayerPositions.PLAYER2 : []
+        }
+        
+        if versusclient.local_player_is_in_match():
+            player_position = versusclient.get_local_player_position()
+            keys_pressed[player_position] = wotsuievents.keys_pressed
+        
+        return keys_pressed
+    
     def sync_simulation_state_to_server(self, server_data):
         
         simulation_data = {
@@ -302,7 +370,9 @@ class OnlineVersusModeState(VersusModeState):
 
     def handle_network_events(self):
         if versusclient.get_connection_status() != versusclient.ConnectionStatus.DISCONNECTED:
+            
             if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
+                print("match exited")
                 self.exit()
                 
                 #This must be called here to make sure that the player states get set to None. If
@@ -315,6 +385,7 @@ class OnlineVersusModeState(VersusModeState):
             versusclient.listener.Pump()
             
         else:
+            print("disconnected")
             self.exit()
             #This must be called here to make sure that the player states get set to None. If
             #not a new match cannot be joined

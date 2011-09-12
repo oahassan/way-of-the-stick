@@ -127,7 +127,7 @@ class ClientChannel(Channel):
         self._server.mode = ServerModes.MOVESET_SELECT
         
         for player_position in self._server.player_positions.keys():
-            self._server.set_initial_player_states_received(player_position, False)
+            self._server.set_all_movesets_loaded_indicator(player_position, False)
         
         self._server.send_to_all(data)
     
@@ -347,12 +347,12 @@ class WotsServer(Server):
         if player == self.player_positions[PlayerPositions.PLAYER1]:
             self.player_positions[PlayerPositions.PLAYER1] = None
             self.player_positions_ready[PlayerPositions.PLAYER1] = False
-            self.initial_remote_player_state_received[PlayerPositions.PLAYER1] = False
+            self.all_movesets_loaded_indicators[PlayerPositions.PLAYER1] = False
             
         elif player == self.player_positions[PlayerPositions.PLAYER2]:
             self.player_positions[PlayerPositions.PLAYER2] = None
             self.player_positions_ready[PlayerPositions.PLAYER2] = False
-            self.initial_remote_player_state_received[PlayerPositions.PLAYER2] = False
+            self.all_movesets_loaded_indicators[PlayerPositions.PLAYER2] = False
         
         if player in self.players:
             self.players.remove(player)
