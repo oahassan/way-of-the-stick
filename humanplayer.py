@@ -20,6 +20,10 @@ class HumanPlayer(player.Player):
         player.Player.__init__(self, position)
         self.player_type = player.PlayerTypes.HUMAN
         self.controller = None
+        self.walk_right_action = None
+        self.run_right_action = None
+        self.walk_left_action = None
+        self.run_left_action = None
     
     def load_moveset(self, moveset):
         controller_factory = ControllerFactory(self)
@@ -37,6 +41,10 @@ class HumanPlayer(player.Player):
         self.actions[PlayerStates.LANDING] = controller_factory.create_action(
             PlayerStates.LANDING,
             moveset.movement_animations[PlayerStates.LANDING]
+        )
+        self.actions[PlayerStates.JUMPING] = controller_factory.create_action(
+            PlayerStates.JUMPING,
+            moveset.movement_animations[PlayerStates.JUMPING]
         )
         self.controller = controller_factory.create_controller_from_moveset(
             moveset,

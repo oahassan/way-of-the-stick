@@ -933,12 +933,13 @@ class TransitionActionData(GeneratedActionData):
         last_action_state,
         last_action_animation_name,
         next_action_state,
-        next_action_animation_name
+        next_action_animation_name,
+        last_transition_action_data
     ):
         GeneratedActionData.__init__(
             self, 
             action_state, 
-            direction, 
+            direction,
             first_frame_point_positions,
             last_frame_point_positions
         )
@@ -946,12 +947,13 @@ class TransitionActionData(GeneratedActionData):
         self.last_action_animation_name = last_action_animation_name
         self.next_action_state = next_action_state
         self.next_action_animation_name = next_action_animation_name
+        self.last_transition_action_data = last_transition_action_data
     
     def _pack(self):
         return (self.action_state, self.direction, self.first_frame_point_positions,
         self.last_frame_point_positions, self.last_action_state, 
         self.last_action_animation_name, self.next_action_state,
-        self.next_action_animation_name)
+        self.next_action_animation_name, self.last_transition_action_data)
 
 class StunActionData(GeneratedActionData, TimedActionData):
     def __init__(
@@ -1005,22 +1007,7 @@ class ActionDataFactory():
             )
         
         elif action_state == PlayerStates.TRANSITION:
-            return_data = TransitionActionData(
-                player.get_player_state(),
-                player.direction,
-                self.get_frame_point_positions(
-                    player.action.animation,
-                    player.action.animation.frames[0]
-                ),
-                self.get_frame_point_positions(
-                    player.action.animation,
-                    player.action.animation.frames[-1]
-                ),
-                player.action.last_action.action_state,
-                player.action.last_action.right_animation.name,
-                player.action.next_action.action_state,
-                player.action.next_action.right_animation.name
-            )
+            return_data = self.create_transition_action_data(player.action)
         
         elif action_state == PlayerStates.JUMPING:
             return_data = TimedActionData(
@@ -1039,6 +1026,33 @@ class ActionDataFactory():
         
         else:
             return_data = ActionData(player.get_player_state(), player.direction)
+        
+        return return_data
+    
+    def create_transition_action_data(self, action):
+        last_transition_action_data = None
+        if action.last_action.action_state == PlayerStates.TRANSITION:
+            last_transition_action_data = self.create_transition_action_data(
+                action.last_action
+            )
+        
+        return_data = TransitionActionData(
+            PlayerStates.TRANSITION,
+            action.direction,
+            self.get_frame_point_positions(
+                action.animation,
+                action.animation.frames[0]
+            ),
+            self.get_frame_point_positions(
+                action.animation,
+                action.animation.frames[-1]
+            ),
+            action.last_action.action_state,
+            action.last_action.right_animation.name,
+            action.next_action.action_state,
+            action.next_action.right_animation.name,
+            last_transition_action_data
+        )
         
         return return_data
     
@@ -1227,7 +1241,7 @@ class ServerSimulation(NetworkedSimulation):
                     )
                     if self.match_time % 30 == 0:
                         state = self.get_simulation_state()
-                        print([player_dat.action_data for player_dat in state.player_states.values()])
+                        #print([player_dat.action_data for player_dat in state.player_states.values()])
                         self.pipe_connection.send(
                             {
                                 SimulationDataKeys.ACTION : SimulationActionTypes.GET_STATE,
