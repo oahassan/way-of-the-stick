@@ -1524,3 +1524,11 @@ class Animation:
             duration = int(float(displacement[0]) / initial_velocity[0])
         
         return duration
+
+def get_frame_point_positions(animation, frame):
+        point_positions = {}
+        
+        for point_name, point_id in animation.point_names.iteritems():
+            point_positions[point_name] = frame.point_dictionary[point_id].pos
+        
+        return point_positions

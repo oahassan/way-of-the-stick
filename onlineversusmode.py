@@ -43,20 +43,20 @@ class NetworkPlayer(humanplayer.HumanPlayer):
         action_state = action_data.action_state
         
         if action_state == PlayerStates.STUNNED:
-            action = self.actions[PlayerStates.STUNNED]
-            action.toy_model.time_passed = 0
-            
-            action.set_player_state()
-            
-            self.set_animation_from_frame_point_positions(
-                action,
-                action_data.first_frame_point_positions,
-                action_data.last_frame_point_positions,
-                STUN_ACCELERATION
+            #set data to generate knockback animation
+            self.model.set_absolute_point_positions(
+                action_data.first_frame_point_positions
             )
+            self.interaction_vector = action_data.interaction_vector
+            self.knockback_vector = action_data.knockback_vector
+            self.interaction_point = self.model.points[
+                action_data.interaction_point_name
+            ]
             
-            action.toy_model.time_passed = player_state.animation_run_time
-            action.move_player(self)
+            action = self.actions[action_state]
+            
+            action.set_animation(self)
+            action.set_player_state(self)
         
         elif action_state == PlayerStates.TRANSITION:
             
@@ -94,37 +94,29 @@ class NetworkPlayer(humanplayer.HumanPlayer):
         else:
             self.actions[action_state].set_player_state(self)
     
-    def create_transition(self, action_data, next_action=None):
+    def create_transition(self, action_data):
         action = Transition()
+        action.direction = action_data.direction
+        action.last_action = self.get_action(
+            action_data.direction, 
+            action_data.last_action_state,
+            action_data.last_action_animation_name
+        )
+        action.next_action = self.get_action(
+            action_data.direction, 
+            action_data.next_action_state,
+            action_data.next_action_animation_name
+        )
         
         self.set_animation_from_frame_point_positions(
             action,
             action_data.first_frame_point_positions,
-            action_data.last_frame_point_positions,
+            animation.get_frame_point_positions(
+                action.next_action.right_animation,
+                action.next_action.right_animation.frames[0]
+            ),
             TRANSITION_ACCELERATION
         )
-        action.direction = action_data.direction
-        
-        if action_data.last_action_state == PlayerStates.TRANSITION:
-            action.last_action = self.create_transition(
-                action_data.last_transition_action_data,
-                action
-            )
-        else:
-            action.last_action = self.get_action(
-                action_data.direction, 
-                action_data.last_action_state,
-                action_data.last_action_animation_name
-            )
-        
-        if next_action:
-            action.next_action = next_action
-        else:
-            action.next_action = self.get_action(
-                action_data.direction, 
-                action_data.next_action_state,
-                action_data.next_action_animation_name
-            )
         
         return action
     
@@ -155,10 +147,6 @@ class NetworkPlayer(humanplayer.HumanPlayer):
                 animation_name
             ]
         
-        elif action_state == PlayerStates.TRANSITION:
-            action = Transition()
-            action.next_action = new_action
-            action.last_action = new_action
         else:
             action = self.actions[action_state]
         

@@ -46,6 +46,10 @@ class HumanPlayer(player.Player):
             PlayerStates.JUMPING,
             moveset.movement_animations[PlayerStates.JUMPING]
         )
+        self.actions[PlayerStates.CROUCHING] = controller_factory.create_action(
+            PlayerStates.CROUCHING,
+            moveset.movement_animations[PlayerStates.CROUCHING]
+        )
         self.controller = controller_factory.create_controller_from_moveset(
             moveset,
             self

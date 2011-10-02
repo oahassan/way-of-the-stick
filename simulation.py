@@ -5,6 +5,7 @@ from functools import reduce
 from collections import deque
 import pygame
 import mathfuncs
+import animation
 from wotsprot.rencode import serializable
 from enumerations import MatchStates, PlayerTypes, ClashResults, \
 PlayerPositions, PlayerStates, LineNames, PointNames, SimulationDataKeys, \
@@ -929,31 +930,26 @@ class TransitionActionData(GeneratedActionData):
         action_state,
         direction,
         first_frame_point_positions,
-        last_frame_point_positions,
         last_action_state,
         last_action_animation_name,
         next_action_state,
-        next_action_animation_name,
-        last_transition_action_data
+        next_action_animation_name
     ):
-        GeneratedActionData.__init__(
+        ActionData.__init__(
             self, 
             action_state, 
-            direction,
-            first_frame_point_positions,
-            last_frame_point_positions
+            direction
         )
+        self.first_frame_point_positions = first_frame_point_positions
         self.last_action_state = last_action_state
         self.last_action_animation_name = last_action_animation_name
         self.next_action_state = next_action_state
         self.next_action_animation_name = next_action_animation_name
-        self.last_transition_action_data = last_transition_action_data
     
     def _pack(self):
         return (self.action_state, self.direction, self.first_frame_point_positions,
-        self.last_frame_point_positions, self.last_action_state, 
-        self.last_action_animation_name, self.next_action_state,
-        self.next_action_animation_name, self.last_transition_action_data)
+        self.last_action_state, self.last_action_animation_name, self.next_action_state,
+        self.next_action_animation_name)
 
 class StunActionData(GeneratedActionData, TimedActionData):
     def __init__(
@@ -961,16 +957,16 @@ class StunActionData(GeneratedActionData, TimedActionData):
         action_state,
         direction,
         first_frame_point_positions,
-        last_frame_point_positions,
+        knockback_vector,
+        interaction_vector,
+        interaction_point_name,
         timeout,
         timer
     ):
-        GeneratedActionData.__init__(
+        ActionData.__init__(
             self, 
             action_state,
-            direction,
-            first_frame_point_positions,
-            last_frame_point_positions
+            direction
         )
         TimedActionData.__init__(
             self,
@@ -979,10 +975,16 @@ class StunActionData(GeneratedActionData, TimedActionData):
             timeout,
             timer
         )
+        
+        self.first_frame_point_positions = first_frame_point_positions
+        self.knockback_vector = knockback_vector
+        self.interaction_vector = interaction_vector
+        self.interaction_point_name = interaction_point_name
     
     def _pack(self):
         return (self.action_state, self.direction, self.first_frame_point_positions,
-        self.last_frame_point_positions, self.timeout, self.timer)
+        self.knockback_vector, self.interaction_vector, self.interaction_point_name, 
+        self.timeout, self.timer)
 
 class ActionDataFactory():
     
@@ -994,14 +996,13 @@ class ActionDataFactory():
             return_data = StunActionData(
                 player.get_player_state(),
                 player.direction,
-                self.get_frame_point_positions(
+                animation.get_frame_point_positions(
                     player.action.animation,
                     player.action.animation.frames[0]
                 ),
-                self.get_frame_point_positions(
-                    player.action.animation,
-                    player.action.animation.frames[-1]
-                ),
+                player.knockback_vector,
+                player.interaction_vector,
+                player.interaction_point.name,
                 player.stun_timeout,
                 player.stun_timer
             )
@@ -1039,30 +1040,17 @@ class ActionDataFactory():
         return_data = TransitionActionData(
             PlayerStates.TRANSITION,
             action.direction,
-            self.get_frame_point_positions(
+            animation.get_frame_point_positions(
                 action.animation,
                 action.animation.frames[0]
             ),
-            self.get_frame_point_positions(
-                action.animation,
-                action.animation.frames[-1]
-            ),
-            action.last_action.action_state,
-            action.last_action.right_animation.name,
+            action.get_previous_action(action).action_state,
+            action.get_previous_action(action).right_animation.name,
             action.next_action.action_state,
-            action.next_action.right_animation.name,
-            last_transition_action_data
+            action.next_action.right_animation.name
         )
         
         return return_data
-    
-    def get_frame_point_positions(self, animation, frame):
-        point_positions = {}
-        
-        for point_name, point_id in animation.point_names.iteritems():
-            point_positions[point_name] = frame.point_dictionary[point_id].pos
-        
-        return point_positions
 
 class PlayerState():
     def __init__(
