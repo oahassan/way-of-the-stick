@@ -15,21 +15,19 @@ import stick
 import animation
 import mathfuncs
 import versusmode
-from versusmode import VersusModeState
+from versusmode import VersusModeState, KeyToCommandTypeConverter
 from simulation import ServerSimulation, ClientSimulation
 from playerutils import Transition
 from playerconstants import TRANSITION_ACCELERATION, STUN_ACCELERATION
 from enumerations import InputActionTypes, MatchStates, SimulationDataKeys, \
 SimulationActionTypes, PlayerStates, PlayerPositions
+from controlsdata import get_controls()
 
 class NetworkPlayer(humanplayer.HumanPlayer):
     
     def __init__(self, position, player_position):
         humanplayer.HumanPlayer.__init__(self, position)
         self.player_position = player_position
-    
-    def get_last_input(self):
-        return self.controller.get_last_input_command_types()
     
     def sync_to_server_state(self, player_state):
         """syncs a players state to that given from the server"""
@@ -234,6 +232,11 @@ class OnlineVersusModeState(VersusModeState):
             )
 
     def init_simulation_objects(self):
+        
+        for player_position in self.player_dictionary:
+            self.player_key_handlers[player_position] = KeyToCommandTypeConverter(
+                dict([(entry[1], entry[0]) for entry in get_controls().iteritems()])
+            )
         
         self.simulation_connection, input_connection = multiprocessing.Pipe()
         player_position = versusclient.get_local_player_position()

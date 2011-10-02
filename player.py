@@ -161,6 +161,9 @@ class Player():
         self.model.load_lines()
         self.init_point_damage_dictionary()
     
+    def get_last_input(self):
+        return self.controller.get_last_input_command_types()
+    
     def handle_events(self, time_passed):
         
         self.model.time_passed = time_passed

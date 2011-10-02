@@ -1143,8 +1143,18 @@ class NetworkedSimulation(MatchSimulation):
             self.update_simulation_state(player_keys_pressed)
             
             self.state_history.append(self.get_simulation_state())
-            self.input_history.append(player_keys_pressed)
+            self.input_history.append(
+                self.get_updated_player_keys_pressed(player_keys_pressed)
+            )
             self.accumulator -= self.timestep
+    
+    def get_updated_player_keys_pressed(self, player_keys_pressed):
+        """sync player keys pressed to ai decisions"""
+        
+        return dict([
+            (player_position, player.get_last_input())
+            for player_position, player in self.player_dictionary.iteritems()
+        ])
     
     def get_simulation_state(self):
         player_state_dictionary = dict(
