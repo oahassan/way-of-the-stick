@@ -251,7 +251,9 @@ class OnlineVersusModeState(VersusModeState):
             )
 
     def exit(self):
-        print("exiting")
+        if gamestate.devmode:
+            print("exiting")
+        
         self.unregister_network_callbacks()
         self.end_simulation()
         self.cleanup_rendering_objects()
