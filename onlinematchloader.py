@@ -61,6 +61,7 @@ def handle_events():
         unload()
         onlineversusmode.init()
         onlineversusmode.local_state.init_player_sounds()
+        onlineversusmode.local_state.init_player_health_bars()
         gamestate.mode = gamestate.Modes.ONLINEVERSUSMODE
     
     versusclient.get_network_messages()

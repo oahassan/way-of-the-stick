@@ -22,6 +22,7 @@ from playerconstants import TRANSITION_ACCELERATION, STUN_ACCELERATION
 from enumerations import InputActionTypes, MatchStates, SimulationDataKeys, \
 SimulationActionTypes, PlayerStates, PlayerPositions
 from controlsdata import get_controls
+from playercontroller import InputCommandTypes
 
 class NetworkPlayer(humanplayer.HumanPlayer):
     
@@ -218,7 +219,7 @@ class OnlineVersusModeState(VersusModeState):
         self.initialized = True
         self.exit_indicator = False
         self.chatting = False
-
+    
     def register_network_callbacks(self):
         if gamestate.hosting:
             versusclient.listener.register_callback(
@@ -349,20 +350,34 @@ class OnlineVersusModeState(VersusModeState):
         self.simulation_connection.send(
             {
                 SimulationDataKeys.ACTION : SimulationActionTypes.STEP,
-                SimulationDataKeys.KEYS_PRESSED : self.build_player_keys_pressed(), 
+                SimulationDataKeys.KEYS_PRESSED : self.build_player_command_types(), 
                 SimulationDataKeys.TIME_PASSED : gamestate.time_passed
             }
         )
     
-    def build_player_keys_pressed(self):
+    def build_player_command_types(self):
         keys_pressed = {
-            PlayerPositions.PLAYER1 : [],
-            PlayerPositions.PLAYER2 : []
+            PlayerPositions.PLAYER1 : InputCommandTypes(
+                [],
+                InputActionTypes.NO_MOVEMENT,
+                [],
+                [],
+                []
+            ),
+            PlayerPositions.PLAYER2 : InputCommandTypes(
+                [],
+                InputActionTypes.NO_MOVEMENT,
+                [],
+                [],
+                []
+            )
         }
         
         if versusclient.local_player_is_in_match():
             player_position = versusclient.get_local_player_position()
-            keys_pressed[player_position] = wotsuievents.keys_pressed
+            keys_pressed[player_position] = self.player_key_handlers[
+                player_position
+            ].get_command_data(wotsuievents.keys_pressed)
         
         return keys_pressed
     

@@ -20,6 +20,36 @@ class InputCommandTypes():
         self.aerial_action_command_types = aerial_action_command_types
         self.stun_movement_command_types = stun_movement_command_types
     
+    def __eq__(self, x):
+        if x == None:
+            return False
+        
+        if type(self) != type(x):
+            return False
+        
+        return (
+            self.attack_command_types == x.attack_command_types
+            and self.ground_movement_command_type == x.ground_movement_command_type
+            and self.aerial_movement_command_types == x.aerial_movement_command_types
+            and self.aerial_action_command_types == x.aerial_action_command_types
+            and self.stun_movement_command_types == x.stun_movement_command_types
+        )
+    
+    def __ne__(self, x):
+        if x == None:
+            return True
+        
+        if type(self) != type(x):
+            return True
+        
+        return (
+            self.attack_command_types != x.attack_command_types
+            or self.ground_movement_command_type != x.ground_movement_command_type
+            or self.aerial_movement_command_types != x.aerial_movement_command_types
+            or self.aerial_action_command_types != x.aerial_action_command_types
+            or self.stun_movement_command_types != x.stun_movement_command_types
+        )
+    
     def __str__(self):
         return("""
 attack:             {0}
@@ -88,6 +118,9 @@ class Controller():
         self._update_attack(input_command_types.attack_command_types)
         
         self.last_input_command_types = input_command_types
+    
+    def get_last_input_command_types(self):
+        return self.last_input_command_types
     
     def get_current_aerial_action(self):
         return_aerial_action = self.aerial_action_command_handler.get_current_command_sequence_value()

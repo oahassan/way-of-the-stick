@@ -1271,8 +1271,8 @@ class ServerSimulation(NetworkedSimulation):
             str(self.input_history[history_index][player_position])
         )
         print("client input: " + str(keys_pressed))
-        if self.input_history[history_index][player_position] != keys_pressed:
-            self.input_history[history_index][player_position] = keys_pressed
+        if self.input_history[history_index][player_position] != keys_pressed[player_position]:
+            self.input_history[history_index][player_position] = keys_pressed[player_position]
             self.replay(len(self.input_history) - len(self.state_history))
     
     def send_simulation_state(self):
@@ -1318,9 +1318,14 @@ class ClientSimulation(NetworkedSimulation):
                                 }
                             )
                 elif action_type == SimulationActionTypes.UPDATE_STATE:
-                    self.sync_to_server_state(
-                        data[SimulationDataKeys.SIMULATION_STATE]
-                    )
+                    try:
+                        self.sync_to_server_state(
+                            data[SimulationDataKeys.SIMULATION_STATE]
+                        )
+                    except:
+                       print(self.state_history)
+                       print(self.input_history)
+                       raise 
                 
                 elif action_type == SimulationActionTypes.UPDATE_INPUT:
                     print("update input")
