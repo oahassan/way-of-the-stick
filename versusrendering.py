@@ -223,6 +223,15 @@ class SurfaceRenderer():
                 (scaled_surface.get_width(), scaled_surface.get_height())
             )
         )
+    
+    def draw_surface_to_absolute_position(self, position, surface):
+        gamestate.screen.blit(surface, position)
+        gamestate.new_dirty_rects.append(
+            pygame.Rect(
+                position,
+                (surface.get_width(), surface.get_height())
+            )
+        )
 
 class PlayerColors():
     def __init__(

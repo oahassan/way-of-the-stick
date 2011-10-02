@@ -21,7 +21,7 @@ from playerutils import Transition
 from playerconstants import TRANSITION_ACCELERATION, STUN_ACCELERATION
 from enumerations import InputActionTypes, MatchStates, SimulationDataKeys, \
 SimulationActionTypes, PlayerStates, PlayerPositions
-from controlsdata import get_controls()
+from controlsdata import get_controls
 
 class NetworkPlayer(humanplayer.HumanPlayer):
     

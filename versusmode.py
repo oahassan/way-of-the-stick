@@ -13,6 +13,7 @@ import mathfuncs
 import math
 import settingsdata
 import versusrendering
+from versusmodeui import PlayerHealth
 from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
 from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults, \
@@ -182,15 +183,24 @@ class VersusModeState():
                     "No player type set for player position: " + str(player_position)
                 )
             
+            
             self.player_key_handlers[player_position] = KeyToCommandTypeConverter(
                 dict([(entry[1], entry[0]) for entry in get_controls().iteritems()])
             )
         
+        self.player_health_bars[PlayerPositions.PLAYER1] = PlayerHealth(
+            "Player 1", 
+            PlayerPositions.PLAYER1
+        )
         player1 = self.player_dictionary[PlayerPositions.PLAYER1]
         player1.direction = PlayerStates.FACING_RIGHT
         player1.init_state()
         player1.model.move_model((400, 967))
         
+        self.player_health_bars[PlayerPositions.PLAYER2] = PlayerHealth(
+            "Player 2",
+            PlayerPositions.PLAYER2
+        )
         player2 = self.player_dictionary[PlayerPositions.PLAYER2]
         player2.direction = PlayerStates.FACING_LEFT
         player2.init_state()
@@ -277,6 +287,7 @@ class VersusModeState():
     def cleanup_rendering_objects(self):
         
         self.point_effects = {}
+        self.player_health_bars = {}
         self.player_renderer_state = None
         self.surface_renderer = None
         self.fps_label = None
@@ -352,7 +363,13 @@ class VersusModeState():
             self.surface_renderer.draw_surface_to_screen(
                 effect_position, 
                 effect_surface
-        )
+            )
+        
+        for health_bar in self.player_health_bars.values():
+            self.surface_renderer.draw_surface_to_absolute_position(
+                health_bar.position, 
+                health_bar.draw()
+            )
 
     def update_simulation(self):
         self.simulation_connection.send(
@@ -371,6 +388,12 @@ class VersusModeState():
                 simulation_rendering_info.attack_result_rendering_info
             )
         
+        for player_position, player_rendering_info in simulation_rendering_info.player_rendering_info_dictionary.iteritems():
+            health_bar = self.player_health_bars[player_position]
+            health_bar.update(
+                gamestate.time_passed,
+                player_rendering_info.health_percentage
+            )
         self.player_renderer_state.update(
             simulation_rendering_info.player_rendering_info_dictionary, 
             1
