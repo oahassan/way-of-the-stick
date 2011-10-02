@@ -259,6 +259,7 @@ class OnlineVersusModeState(VersusModeState):
         self.reset_GUI_variables()
         self.initialized = False
         self.chatting = False
+        gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
     
     def end_simulation(self):
         
