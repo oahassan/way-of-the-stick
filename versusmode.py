@@ -44,6 +44,10 @@ class VersusModeState():
             PlayerPositions.PLAYER1 : None,
             PlayerPositions.PLAYER2 : None
         }
+        self.player_health_bars = {
+            PlayerPositions.PLAYER1 : None,
+            PlayerPositions.PLAYER2 : None
+        }
         self.fight_label = None
         self.ready_label = None
         self.player1_wins_label = None
