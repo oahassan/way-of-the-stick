@@ -114,6 +114,17 @@ class Action():
         if player.model.time_passed > 0:
             self.move_player(player)
 
+def Continue():
+    def test_state_change(self, player):
+        if player.model.animation_run_time >= player.action.animation.animation_length:
+            return True
+    
+    def test_change_to_action(self, action):
+        return True
+    
+    def set_player_state(self, player, direction):
+        player.action.set_player_state(player, direction)
+
 class Transition(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.TRANSITION)

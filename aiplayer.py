@@ -18,7 +18,6 @@ class Bot(Player):
     
     def __init__(self, position):
         Player.__init__(self, position)
-        self.actions = {}
         self.player_type = PlayerTypes.BOT
         
         #a dictionary mapping attacks to a list of rects for each frame

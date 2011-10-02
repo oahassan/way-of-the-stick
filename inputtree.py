@@ -131,6 +131,20 @@ class InputTree(InputNode):
             return_string += self.write_branch(branch_node, tabs)
         
         return return_string
+    
+    def get_distinct_values(self, node=None):
+        return_values = []
+        
+        if node == None:
+            node = self
+        
+        if node.value != None and node.value not in return_values:
+            return_values.append(self.value)
+            
+        for child_node in self.branches.values():
+            return_values.extend([self.get_distinct_value(node)])
+        
+        return return_values
 
 if __name__ == "__main__":
     tree = InputTree()
