@@ -34,9 +34,6 @@ class HumanPlayer(player.Player):
             if attack_action.action_state == PlayerStates.ATTACKING
         ]
     
-    def get_foot_actions(self):
-        return [self.walk_right_action, self.run_right_action]
-    
     def handle_events(self, keys_pressed, time_passed):
         
         if self.handle_input_events:

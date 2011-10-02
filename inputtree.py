@@ -139,10 +139,10 @@ class InputTree(InputNode):
             node = self
         
         if node.value != None and node.value not in return_values:
-            return_values.append(self.value)
+            return_values.append(node.value)
             
-        for child_node in self.branches.values():
-            return_values.extend([self.get_distinct_value(node)])
+        for child_node in node.branches.values():
+            return_values.extend(self.get_distinct_values(child_node))
         
         return return_values
 

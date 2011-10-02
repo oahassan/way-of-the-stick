@@ -11,6 +11,7 @@ from enumerations import PlayerStates, CommandDurations, InputActionTypes, Attac
 from playerutils import ActionFactory, Transition, Action, Attack
 from simulation import HitboxBuilder
 from playerconstants import *
+from playercontroller import InputCommandTypes
 import st_versusmode
 
 class Bot(Player):
@@ -28,83 +29,24 @@ class Bot(Player):
         self.approach_engine = None
         
     def load_moveset(self, moveset):
-        self.approach_engine = ApproachEngine()
-        self.approach_engine.init()
-        self.moveset = moveset
-        
-        factory = ActionFactory(self)
-        
-        #load rest animation
-        stand_animation = moveset.movement_animations[PlayerStates.STANDING]
-        stand_action = factory.create_stand(stand_animation)
-        self.actions[PlayerStates.STANDING] = stand_action
-        
-        #load walk animation
-        walk_animation = moveset.movement_animations[PlayerStates.WALKING]
-        walk_action = factory.create_walk(walk_animation)
-        self.actions[PlayerStates.WALKING] = walk_action
-        
-        #load run animation
-        run_animation = moveset.movement_animations[PlayerStates.RUNNING]
-        run_action = factory.create_run(run_animation)
-        self.actions[PlayerStates.RUNNING] = run_action
-        
-        #load jump animation
-        jump_animation = moveset.movement_animations[PlayerStates.JUMPING]
-        jump_action = factory.create_jump(jump_animation)
-        self.actions[PlayerStates.JUMPING] = jump_action
-        
-        #load land animation
-        land_animation = moveset.movement_animations[PlayerStates.LANDING]
-        self.actions[PlayerStates.LANDING] = factory.create_land(land_animation)
-        
-        #load float animation
-        float_animation = moveset.movement_animations[PlayerStates.FLOATING]
-        self.actions[PlayerStates.FLOATING] = factory.create_float(float_animation)
-        
-        #load stunned action
-        self.actions[PlayerStates.STUNNED] = factory.create_stun()
-        
-        #load transition action
-        self.actions[PlayerStates.TRANSITION] = Transition()
-                
-        #load crouch animation
-        crouch_animation = moveset.movement_animations[PlayerStates.CROUCHING]
-        crouch_action = factory.create_crouch(crouch_animation)
-        self.actions[PlayerStates.CROUCHING] = crouch_action
-        
-        self.actions[PlayerStates.ATTACKING] = []
-        
-        #load attack actions
-        for attack_name in moveset.get_attacks():
-            attack_action = None
-            if InputActionTypes.JUMP in moveset.attack_key_combinations[attack_name]:
-                attack_action = factory.create_jump_attack(
-                    moveset.get_attack_type(attack_name),
-                    moveset.attack_animations[attack_name],
-                    self.model
-                )
-            else:
-                attack_action = factory.create_attack(
-                    moveset.get_attack_type(attack_name),
-                    moveset.attack_animations[attack_name],
-                    self.model
-                )
-                
-            self.actions[PlayerStates.ATTACKING].append(attack_action)
+        Player.load_moveset(self, moveset)
         
         self.actions[PlayerStates.STANDING].set_player_state(self)
+        self.approach_engine = ApproachEngine()
+        self.approach_engine.init()
+        
+        self.actions[PlayerStates.ATTACKING] = self.controller.attack_command_handler.command_tree.get_distinct_values()
+        #add aerial attacks
+        self.actions[PlayerStates.ATTACKING].extend(
+            [action for action in self.controller.aerial_action_command_handler.command_tree.get_distinct_values()
+            if action.action_state == PlayerStates.ATTACKING]
+        )
         self.attack_prediction_engine = AttackPredictionEngine(
             200, 
             2000, 
             self
         )
-    
-    def get_foot_actions(self):
-        return [
-            self.actions[PlayerStates.WALKING],
-            self.actions[PlayerStates.RUNNING]
-        ]
+        self.current_attack = None
     
     def handle_attack_end(self):
         """update graph weights and attack data"""
@@ -155,10 +97,11 @@ class Bot(Player):
         self.attack_landed = True
     
     def handle_events(self, enemy, time_passed):
-        self.set_approach(enemy)
         
         if self.handle_input_events:
-            self.set_action(enemy)
+            self.set_approach(enemy)
+            self.update_controller(enemy)
+            self.set_action()
         
         Player.handle_events(self, time_passed)
     
@@ -179,46 +122,46 @@ class Bot(Player):
         
         return direction
     
-    def set_action(self, enemy):
-        
-        attack = None
-        
-        if (self.action.action_state != PlayerStates.ATTACKING
-        and self.action.action_state != PlayerStates.STUNNED):
-            if self.action.action_state == PlayerStates.TRANSITION:
-                if self.action.next_action.action_state != PlayerStates.ATTACKING:
-                    attack = self.attack_prediction_engine.get_in_range_attack(enemy)
-            else:
-                attack = self.attack_prediction_engine.get_in_range_attack(enemy)
-        
-        next_action = None
-        
-        if attack != None:
-            if attack.test_state_change(self):
-                next_action = attack
-                self.current_attack = attack
-        elif self.get_player_state() != PlayerStates.TRANSITION:
-            next_action = self.move_towards_enemy(self)
+    def update_controller(self, enemy):
         
         direction = self.get_direction(enemy)
         
-        if next_action != None:
-            if not self.is_aerial():
-                self.direction = direction
-                next_action.direction = direction
-            else:
-                next_action.direction = self.direction
-        else:
-            if (self.action.action_state != PlayerStates.ATTACKING 
-            and self.action.direction != direction):
-                next_action = self.action
-                
-                if not self.is_aerial():
-                    self.action.direction = direction
+        if (not self.is_aerial()
+        and self.action.action_state != PlayerStates.ATTACKING):
+            self.direction = direction
         
-        if (next_action != None
-        and next_action != self.action):
-            self.transition(next_action)
+        attack_command_types = []
+        attack = None
+        
+        if (self.action.action_state != PlayerStates.ATTACKING
+        and self.action.action_state != PlayerStates.STUNNED
+        and self.current_attack == None):
+            if self.action.action_state == PlayerStates.TRANSITION:
+                if self.action.next_action.action_state != PlayerStates.ATTACKING:
+                    attack = self.attack_prediction_engine.get_in_range_attack(enemy)
+                    self.current_attack = attack
+            else:
+                attack = self.attack_prediction_engine.get_in_range_attack(enemy)
+                self.current_attack = attack
+        
+        ground_command_type = InputActionTypes.NO_MOVEMENT
+        
+        if self.current_attack != None:
+            attack_command_types = self.moveset.attack_key_combinations[
+                self.current_attack.right_animation.name
+            ]
+        else:
+            ground_command_type = self.move_towards_enemy(self)
+        
+        self.controller.update(
+            InputCommandTypes(
+                attack_command_types,
+                ground_command_type,
+                [],
+                [],
+                []
+            )
+        )
     
     def move_towards_enemy(self, enemy):
         x_distance = abs(enemy.model.position[0] - self.model.position[0])
@@ -385,97 +328,54 @@ class ApproachEngine():
     
     def run(self, player):
         
-        movement = None
-        
-        if ((player.action.action_state == PlayerStates.STANDING) or
-            (player.action.action_state == PlayerStates.WALKING)):
-            movement = player.actions[PlayerStates.RUNNING]
-            player.dash_timer = 0
-        
-        if ((movement != None) and
-            (movement.test_state_change(player))):
-            return movement
+        if ((player.get_player_state() == PlayerStates.TRANSITION and
+        player.action.next_action.action_state == PlayerStates.STANDING) or
+        (player.get_player_state() == PlayerStates.TRANSITION and
+        player.action.next_action.action_state == PlayerStates.RUNNING) or
+        player.get_player_state() == PlayerStates.STANDING or
+        player.get_player_state() == PlayerStates.RUNNING):
+            if player.direction == PlayerStates.FACING_RIGHT:
+                return InputActionTypes.MOVE_RIGHT
+            else:
+                return InputActionTypes.MOVE_LEFT
         else:
-            return None
+            return InputActionTypes.NO_MOVEMENT
     
     def run_jump(self, player):
         
-        movement = None
-        
-        if ((player.action.action_state == PlayerStates.STANDING) or
-            (player.action.action_state == PlayerStates.WALKING)):
-            movement = player.actions[PlayerStates.RUNNING]
-            player.dash_timer = 0
-            
-        elif (player.action.action_state == PlayerStates.RUNNING and
-        abs(player.model.velocity[0]) >= player.run_speed - player.model.friction):
-            movement = player.actions[PlayerStates.JUMPING]
-        
-        if ((movement != None) and
-            (movement.test_state_change(player))):
-            return movement
+        if (abs(player.model.velocity[0]) < player.run_speed):
+            return self.run(player)
+        elif not player.is_aerial():
+            return InputActionTypes.JUMP
         else:
-            return None
+            return InputActionTypes.NO_MOVEMENT
     
     def walk(self, player):
-        movement = None
         
-        if ((player.action.action_state == PlayerStates.STANDING) or
-            (player.action.action_state == PlayerStates.RUNNING)):
-            movement = player.actions[PlayerStates.WALKING]
-        
-        if ((movement != None) and
-            (movement.test_state_change(player))):
-            return movement
+        if player.direction == PlayerStates.FACING_RIGHT:
+            return InputActionTypes.MOVE_RIGHT
         else:
-            return None
+            return InputActionTypes.MOVE_LEFT
     
     def walk_jump(self, player):
-        movement = None
-        
-        if ((player.action.action_state == PlayerStates.STANDING) or
-            (player.action.action_state == PlayerStates.RUNNING)):
-            movement = player.actions[PlayerStates.WALKING]
-            
-        elif (player.action.action_state == PlayerStates.WALKING and
-        abs(player.model.velocity[0]) >= player.walk_speed - player.model.friction):
-            movement = player.actions[PlayerStates.JUMPING]
-        
-        if ((movement != None) and
-            (movement.test_state_change(player))):
-            return movement
+    
+        if (abs(player.model.velocity[0]) < player.walk_speed):
+            return self.walk(player)
+        elif not player.is_aerial():
+            return InputActionTypes.JUMP
         else:
-            return None
+            return InputActionTypes.NO_MOVEMENT
     
     def stand_jump(self, player):
-        movement = None
         
-        if ((player.action.action_state == PlayerStates.WALKING) or
-            (player.action.action_state == PlayerStates.RUNNING)):
-            movement = player.actions[PlayerStates.STANDING]
-            
-        elif (player.action.action_state == PlayerStates.STANDING and 
-        player.model.velocity[0] == 0):
-            movement = player.actions[PlayerStates.JUMPING]
-        
-        if ((movement != None) and
-            (movement.test_state_change(player))):
-            return movement
+        if not player.is_aerial():
+            return InputActionTypes.JUMP
         else:
-            return None
+            return InputActionTypes.NO_MOVEMENT
     
     def stand(self, player):
-        movement = None
         
-        if ((player.action.action_state == PlayerStates.WALKING) or
-            (player.action.action_state == PlayerStates.RUNNING)):
-            movement = player.actions[PlayerStates.STANDING]
-        
-        if ((movement != None) and
-            (movement.test_state_change(player))):
-            return movement
-        else:
-            return None
+        return InputActionTypes.NO_MOVEMENT
     
     def set_move_towards_enemy(self, player, enemy):
         player.approach_selected = True

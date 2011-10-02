@@ -293,6 +293,9 @@ class Player():
         
         return motions
     
+    def get_foot_actions(self):
+        return [self.walk_right_action, self.run_right_action]
+    
     def handle_animation_end(self):
         self.action.last_frame_index = 0
         
