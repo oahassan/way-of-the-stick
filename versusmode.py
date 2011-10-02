@@ -92,6 +92,7 @@ class VersusModeState():
         gamestate.new_dirty_rects.append(
             pygame.Rect((0,0), (gamestate._WIDTH, gamestate._HEIGHT))
         )
+        gamestate.update_screen()
 
     def init_stage(self):
         gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
@@ -168,7 +169,17 @@ class VersusModeState():
             player_dictionary=self.player_dictionary,
             player_type_dictionary=self.player_type_dictionary
         )
-
+    
+    def init_player_health_bars(self):
+        self.player_health_bars[PlayerPositions.PLAYER1] = PlayerHealth(
+            self.player_dictionary[PlayerPositions.PLAYER1].moveset.name, 
+            PlayerPositions.PLAYER1
+        )
+        self.player_health_bars[PlayerPositions.PLAYER2] = PlayerHealth(
+            self.player_dictionary[PlayerPositions.PLAYER2].moveset.name,
+            PlayerPositions.PLAYER2
+        )
+    
     def init_player_data(self):
         
         for player_position in self.player_type_dictionary.keys():
@@ -188,19 +199,13 @@ class VersusModeState():
                 dict([(entry[1], entry[0]) for entry in get_controls().iteritems()])
             )
         
-        self.player_health_bars[PlayerPositions.PLAYER1] = PlayerHealth(
-            "Player 1", 
-            PlayerPositions.PLAYER1
-        )
+        
         player1 = self.player_dictionary[PlayerPositions.PLAYER1]
         player1.direction = PlayerStates.FACING_RIGHT
         player1.init_state()
         player1.model.move_model((400, 967))
         
-        self.player_health_bars[PlayerPositions.PLAYER2] = PlayerHealth(
-            "Player 2",
-            PlayerPositions.PLAYER2
-        )
+        
         player2 = self.player_dictionary[PlayerPositions.PLAYER2]
         player2.direction = PlayerStates.FACING_LEFT
         player2.init_state()
@@ -455,6 +460,7 @@ class VersusModeState():
     def handle_match_state(self):
         
         if self.match_state == MatchStates.READY:
+            
             self.ready_label.draw(gamestate.screen)
             gamestate.new_dirty_rects.append(
                 pygame.Rect(

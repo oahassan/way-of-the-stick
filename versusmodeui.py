@@ -5,11 +5,14 @@ from enumerations import PlayerPositions
 import gamestate
 
 LABEL_COLOR = (255,255,255)
-LABEL_FONT_SIZE = 32
-HEALTH_BAR_Y_PADDING_PX = 30
-HEALTH_BAR_X_PADDING_PX = 30
-HEALTH_BAR_PX_WIDTH = 300
-HEALTH_BAR_PX_HEIGHT = 20
+LABEL_FONT_SIZE = 20
+PLAYER_HEALTH_Y_PADDING_PX = 30
+PLAYER_HEALTH_X_PADDING_PX = 30
+HEALTH_BAR_Y_PADDING_PX = 20
+PLAYER_HEALTH_PX_WIDTH = 300
+PLAYER_HEALTH_PX_HEIGHT = 15
+HEALTH_BAR_BORDER_WIDTH_PX = 5
+HEALTH_BAR_BORDER_COLOR = (100,100,100)
 HEALTH_BAR_BKG_COLOR = (0,0,0)
 HEALTH_BAR_FG_COLOR = (0,255,0)
 DAMAGE_COLOR = (255,0,0)
@@ -20,7 +23,7 @@ DAMAGE_TRANSITION_RATE_PERCENT_PER_MS = .0005
 class PlayerHealth(wotsui.UIObjectBase):
     def __init__(self, label_text, player_position):
         wotsui.UIObjectBase.__init__(self)
-        
+        self.changed = True
         self.label = button.Label(
             (0,0), 
             label_text, 
@@ -40,20 +43,23 @@ class PlayerHealth(wotsui.UIObjectBase):
     
     def get_label_position(self, player_position):
         if player_position == PlayerPositions.PLAYER1:
-            return (HEALTH_BAR_X_PADDING_PX, HEALTH_BAR_Y_PADDING_PX)
+            return (PLAYER_HEALTH_X_PADDING_PX, PLAYER_HEALTH_Y_PADDING_PX)
         else:
             return (
-                gamestate._WIDTH - HEALTH_BAR_X_PADDING_PX - self.label.width, 
-                HEALTH_BAR_Y_PADDING_PX
+                gamestate._WIDTH - PLAYER_HEALTH_X_PADDING_PX - self.label.width, 
+                PLAYER_HEALTH_Y_PADDING_PX
             )
     
     def get_bar_position(self, player_position):
         if player_position == PlayerPositions.PLAYER1:
-            return (HEALTH_BAR_X_PADDING_PX, self.label.position[1] + self.label.height)
+            return (
+                PLAYER_HEALTH_X_PADDING_PX, 
+                self.label.position[1] + self.label.height + HEALTH_BAR_Y_PADDING_PX
+            )
         else:
             return (
-                gamestate._WIDTH - HEALTH_BAR_X_PADDING_PX - HEALTH_BAR_PX_WIDTH, 
-                self.label.position[1] + self.label.height
+                gamestate._WIDTH - PLAYER_HEALTH_X_PADDING_PX - PLAYER_HEALTH_PX_WIDTH, 
+                self.label.position[1] + self.label.height + HEALTH_BAR_Y_PADDING_PX
             )
     
     def draw(self):
@@ -65,7 +71,7 @@ class PlayerHealth(wotsui.UIObjectBase):
         
         return_surface.blit(
             self.health_bar.draw(),
-            (0,HEALTH_BAR_Y_PADDING_PX)
+            (0,PLAYER_HEALTH_Y_PADDING_PX)
         )
         
         return return_surface
@@ -74,6 +80,10 @@ class PlayerHealth(wotsui.UIObjectBase):
         damage_percent = self.health_bar.health_percent - player_health_percent
         if damage_percent > 0:
             self.health_bar.add_damage(damage_percent)
+            self.changed = True
+        
+        if self.health_bar.damage_delta == 0:
+            self.changed = False
         
         self.health_bar.update(time_passed)
 
@@ -84,8 +94,8 @@ class HealthBar(wotsui.UIObjectBase):
         self.player_position = position
         self.set_layout_data(
             position, 
-            HEALTH_BAR_PX_HEIGHT, 
-            HEALTH_BAR_PX_WIDTH
+            PLAYER_HEALTH_PX_HEIGHT, 
+            PLAYER_HEALTH_PX_WIDTH
         )
         self.health_percent = float(1)
         self.damage_delta = float(0)
@@ -145,4 +155,16 @@ class HealthBar(wotsui.UIObjectBase):
             health_rect
         )
         
+        border_rect = (
+            0,
+            0,
+            self.width,
+            self.height
+        )
+        pygame.draw.rect(
+            return_surface,
+            HEALTH_BAR_BORDER_COLOR,
+            border_rect,
+            HEALTH_BAR_BORDER_WIDTH_PX
+        )
         return return_surface
