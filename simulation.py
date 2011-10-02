@@ -1139,12 +1139,6 @@ class NetworkedSimulation(MatchSimulation):
         self.accumulator += time_passed
         
         while self.accumulator > self.timestep:
-            for player_position in player_keys_pressed:
-                #set the keys pressed to the last known keys pressed for any player
-                #that's not local
-                if (player_position != self.player_position and
-                len(self.input_history) > 0):
-                    player_keys_pressed[player_position] = self.input_history[-1][player_position]
             
             self.update_simulation_state(player_keys_pressed)
             

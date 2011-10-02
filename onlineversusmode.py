@@ -28,6 +28,9 @@ class NetworkPlayer(humanplayer.HumanPlayer):
         humanplayer.HumanPlayer.__init__(self, position)
         self.player_position = player_position
     
+    def get_last_input(self):
+        return self.controller.get_last_input_command_types()
+    
     def sync_to_server_state(self, player_state):
         """syncs a players state to that given from the server"""
         

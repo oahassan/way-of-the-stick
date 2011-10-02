@@ -20,6 +20,23 @@ class InputCommandTypes():
         self.aerial_action_command_types = aerial_action_command_types
         self.stun_movement_command_types = stun_movement_command_types
     
+    def __str__(self):
+        return("""
+attack:             {0}
+ground movement:    {1}
+aerial movement:    {2}
+aerial action:      {3}
+stun movement:      {4}
+""".format(
+                self.attack_command_types, self.ground_movement_command_type, 
+                self.aerial_movement_command_types, self.aerial_action_command_types,
+                self.stun_movement_command_types
+            )
+        )
+    
+    def __repr__(self):
+        return self.__str__()
+    
     def _pack(self):
         return (self.attack_command_types, self.ground_movement_command_type, 
         self.aerial_movement_command_types, self.aerial_action_command_types,
@@ -57,6 +74,9 @@ class Controller():
         
         #command handler that has attack Actions as values
         self.attack_command_handler = attack_command_handler
+        
+        #last set of command types passed to update function
+        self.last_input_command_types = None
     
     def update(self, input_command_types):
         """Updates each of the command handlers with given keys pressed."""
@@ -66,6 +86,8 @@ class Controller():
         self._update_ground_movement(input_command_types.ground_movement_command_type)
         self._update_stun_movement(input_command_types.stun_movement_command_types)
         self._update_attack(input_command_types.attack_command_types)
+        
+        self.last_input_command_types = input_command_types
     
     def get_current_aerial_action(self):
         return_aerial_action = self.aerial_action_command_handler.get_current_command_sequence_value()
