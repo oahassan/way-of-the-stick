@@ -394,16 +394,11 @@ def draw_health_line(line, health_percentage, health_color, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
-    health_point1 = point1
-    x_delta = health_percentage * (point2[0] - health_point1[0])
-    y_delta = health_percentage * (point2[1] - health_point1[1])
-    health_point2 = (int(point1[0] + x_delta), int(point1[1] + y_delta))
-    
     pygame.draw.line(
         surface,
         health_color,
-        health_point1,
-        health_point2,
+        point1,
+        point2,
         int(10)
     )
 

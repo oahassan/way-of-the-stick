@@ -1298,11 +1298,11 @@ class ClientSimulation(NetworkedSimulation):
                     )
                     
                     if self.player_position != PlayerPositions.NONE:
-                        if self.match_time % 30 == 0 and len(self.input_history) >= 1:
+                        if self.match_time % 60 == 0 and len(self.input_history) >= 1:
                             self.pipe_connection.send(
                                 {
                                     SimulationDataKeys.ACTION : SimulationActionTypes.UPDATE_INPUT,
-                                    SimulationDataKeys.KEYS_PRESSED : self.input_history[-3:-1],
+                                    SimulationDataKeys.KEYS_PRESSED : self.input_history[-6:-1],
                                     SimulationDataKeys.PLAYER_POSITION : self.player_position,
                                     SimulationDataKeys.MATCH_TIME : self.match_time
                                 }

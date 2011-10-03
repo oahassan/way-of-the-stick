@@ -1199,16 +1199,10 @@ def draw_health_line(line, player, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
-    health_point1 = point1
-    health_level = float(player.health_meter) / player.health_max
-    x_delta = health_level * (point2[0] - health_point1[0])
-    y_delta = health_level * (point2[1] - health_point1[1])
-    health_point2 = (point1[0] + x_delta, point1[1] + y_delta)
-    
     pygame.draw.line(surface, \
                     player.health_color, \
-                    health_point1, \
-                    health_point2, \
+                    point1, \
+                    point2, \
                     int(10))
 
 def draw_outline_line(line, color, surface):
