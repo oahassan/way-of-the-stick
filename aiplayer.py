@@ -102,6 +102,16 @@ class Bot(Player):
             self.set_approach(enemy)
             self.update_controller(enemy)
             self.set_action()
+        else:
+            self.controller.update(
+                InputCommandTypes(
+                    [],
+                    InputActionTypes.NO_MOVEMENT,
+                    [],
+                    [],
+                    []
+                )
+            )
         
         Player.handle_events(self, time_passed)
     

@@ -34,6 +34,16 @@ class HumanPlayer(player.Player):
         
         if self.handle_input_events:
             self.controller.update(input_command_types)
+        else:
+            self.controller.update(
+                InputCommandTypes(
+                    [],
+                    InputActionTypes.NO_MOVEMENT,
+                    [],
+                    [],
+                    []
+                )
+            )
         
         self.set_action()
         self.set_motion()

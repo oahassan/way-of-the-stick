@@ -378,6 +378,9 @@ class OnlineVersusModeState(VersusModeState):
             keys_pressed[player_position] = self.player_key_handlers[
                 player_position
             ].get_command_data(wotsuievents.keys_pressed)
+            
+            if keys_pressed[player_position] == None:
+                print(wotsuievents.keys_pressed)
         
         return keys_pressed
     

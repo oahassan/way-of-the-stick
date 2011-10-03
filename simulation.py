@@ -1242,7 +1242,6 @@ class ServerSimulation(NetworkedSimulation):
                         )
                         
                 elif action_type == SimulationActionTypes.UPDATE_INPUT:
-                    print("server got player data")
                     self.sync_to_client(
                         data[SimulationDataKeys.MATCH_TIME],
                         data[SimulationDataKeys.PLAYER_POSITION],
@@ -1264,16 +1263,11 @@ class ServerSimulation(NetworkedSimulation):
         history_index = self.get_history_index(match_time)
         
         self.state_history = self.state_history[:history_index]
-        print(match_time)
-        print(player_position)
-        print(
-            "server input: " + 
-            str(self.input_history[history_index][player_position])
-        )
-        print("client input: " + str(keys_pressed))
-        if self.input_history[history_index][player_position] != keys_pressed[player_position]:
-            self.input_history[history_index][player_position] = keys_pressed[player_position]
-            self.replay(len(self.input_history) - len(self.state_history))
+        
+        for member in keys_pressed:
+            if self.input_history[history_index][player_position] != member[player_position]:
+                self.input_history[history_index][player_position] = member[player_position]
+                self.replay(len(self.input_history) - len(self.state_history))
     
     def send_simulation_state(self):
         self.pipe_connection.send(self.get_simulation_state())
@@ -1304,15 +1298,11 @@ class ClientSimulation(NetworkedSimulation):
                     )
                     
                     if self.player_position != PlayerPositions.NONE:
-                        if (
-                            len(self.input_history) == 1 or
-                            (len(self.input_history) > 1 and
-                            self.input_history[-1] != self.input_history[-2])
-                        ):
+                        if self.match_time % 30 == 0 and len(self.input_history) >= 1:
                             self.pipe_connection.send(
                                 {
                                     SimulationDataKeys.ACTION : SimulationActionTypes.UPDATE_INPUT,
-                                    SimulationDataKeys.KEYS_PRESSED : self.input_history[-1],
+                                    SimulationDataKeys.KEYS_PRESSED : self.input_history[-3:-1],
                                     SimulationDataKeys.PLAYER_POSITION : self.player_position,
                                     SimulationDataKeys.MATCH_TIME : self.match_time
                                 }
