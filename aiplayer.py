@@ -163,12 +163,16 @@ class Bot(Player):
         else:
             ground_command_type = self.move_towards_enemy(self)
         
+        aerial_action_command_types = []
+        if self.is_aerial():
+            aerial_action_command_types = attack_command_types
+        
         self.controller.update(
             InputCommandTypes(
                 attack_command_types,
                 ground_command_type,
                 [],
-                [],
+                aerial_action_command_types,
                 []
             )
         )
@@ -236,18 +240,18 @@ class ApproachEngine():
         self.approach_timing_functions = {}
     
     def init(self):
-        self.approach_functions[ApproachTypes.RUN] = self.run
+        #self.approach_functions[ApproachTypes.RUN] = self.run
         self.approach_functions[ApproachTypes.WALK] = self.walk
-        self.approach_functions[ApproachTypes.STAND] = self.stand
-        self.approach_functions[ApproachTypes.RUN_JUMP] = self.run_jump
+        #self.approach_functions[ApproachTypes.STAND] = self.stand
+        #self.approach_functions[ApproachTypes.RUN_JUMP] = self.run_jump
         self.approach_functions[ApproachTypes.WALK_JUMP] = self.walk_jump
-        self.approach_functions[ApproachTypes.STAND_JUMP] = self.stand_jump
-        self.approach_timing_functions[ApproachTypes.RUN] = self.get_run_intersection
+        #self.approach_functions[ApproachTypes.STAND_JUMP] = self.stand_jump
+        #self.approach_timing_functions[ApproachTypes.RUN] = self.get_run_intersection
         self.approach_timing_functions[ApproachTypes.WALK] = self.get_walk_intersection
-        self.approach_timing_functions[ApproachTypes.STAND] = self.get_stand_intersection
-        self.approach_timing_functions[ApproachTypes.RUN_JUMP] = self.get_run_jump_intersection
+        #self.approach_timing_functions[ApproachTypes.STAND] = self.get_stand_intersection
+        #self.approach_timing_functions[ApproachTypes.RUN_JUMP] = self.get_run_jump_intersection
         self.approach_timing_functions[ApproachTypes.WALK_JUMP] = self.get_walk_jump_intersection
-        self.approach_timing_functions[ApproachTypes.STAND_JUMP] = self.get_stand_jump_intersection
+        #self.approach_timing_functions[ApproachTypes.STAND_JUMP] = self.get_stand_jump_intersection
     
     def get_run_intersection(self, player, enemy):
         
@@ -344,17 +348,18 @@ class ApproachEngine():
     def run(self, player):
         
         if ((player.get_player_state() == PlayerStates.TRANSITION and
-        player.action.next_action.action_state == PlayerStates.STANDING) or
-        (player.get_player_state() == PlayerStates.TRANSITION and
-        player.action.next_action.action_state == PlayerStates.RUNNING) or
-        player.get_player_state() == PlayerStates.STANDING or
-        player.get_player_state() == PlayerStates.RUNNING):
+        player.action.next_action.action_state != PlayerStates.RUNNING) or
+        player.get_player_state() != PlayerStates.RUNNING):
+            
+            if player.direction == PlayerStates.FACING_RIGHT:
+                return choice([InputActionTypes.MOVE_RIGHT, InputActionTypes.NO_MOVEMENT])
+            else:
+                return choice([InputActionTypes.MOVE_LEFT, InputActionTypes.NO_MOVEMENT])
+        else:
             if player.direction == PlayerStates.FACING_RIGHT:
                 return InputActionTypes.MOVE_RIGHT
             else:
                 return InputActionTypes.MOVE_LEFT
-        else:
-            return InputActionTypes.NO_MOVEMENT
     
     def run_jump(self, player):
         
@@ -367,10 +372,17 @@ class ApproachEngine():
     
     def walk(self, player):
         
-        if player.direction == PlayerStates.FACING_RIGHT:
-            return InputActionTypes.MOVE_RIGHT
+        if ((player.get_player_state() == PlayerStates.TRANSITION and
+        player.action.next_action.action_state == PlayerStates.WALKING) or
+        player.get_player_state() == PlayerStates.WALKING or
+        player.get_player_state() == PlayerStates.STANDING):
+            
+            if player.direction == PlayerStates.FACING_RIGHT:
+                return InputActionTypes.MOVE_RIGHT
+            else:
+                return InputActionTypes.MOVE_LEFT
         else:
-            return InputActionTypes.MOVE_LEFT
+            return InputActionTypes.NO_MOVEMENT
     
     def walk_jump(self, player):
     
@@ -409,7 +421,6 @@ class ApproachEngine():
                 self.approach_functions[approach_type]
                 for approach_type in approach_types
             ])
-
 
 class AttackPredictionEngine():
     def __init__(self, timestep, prediction_time_frame, player):
@@ -480,18 +491,28 @@ class AttackPredictionEngine():
         self.last_enemy_rect = enemy_rects[0]
         
         if player.is_aerial():
+            jump_attacks = [
+                jump_attack 
+                for jump_attack in player.actions[PlayerStates.ATTACKING] 
+                if jump_attack.is_jump_attack
+            ]
+            
             in_range_attacks = [
                 attack 
-                for attack in sample(player.actions[PlayerStates.ATTACKING], 4) 
+                for attack in sample(jump_attacks, 4) 
                 if attack.right_animation.name in self.attack_prediction_data
-                and attack.is_jump_attack
                 and self.aerial_attack_in_range(attack, enemy, enemy_rects)
             ]
-            pass
         else:
+            ground_attacks = [
+                ground_attack 
+                for ground_attack in player.actions[PlayerStates.ATTACKING] 
+                if not ground_attack.is_jump_attack
+            ]
+        
             in_range_attacks = [
                 attack 
-                for attack in sample(player.actions[PlayerStates.ATTACKING], 4) 
+                for attack in sample(ground_attacks, 4) 
                 if attack.right_animation.name in self.attack_prediction_data
                 and self.attack_in_range(attack, enemy, enemy_rects)
             ]
@@ -550,7 +571,7 @@ class AttackPredictionEngine():
         ]
         
         if len(attack_list) == 0:
-            return None
+            return choice(in_range_attacks)
         else:
             return choice(attack_list)
     
