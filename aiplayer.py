@@ -258,6 +258,8 @@ class ApproachEngine():
         return self.get_x_intersection(player, player.walk_speed, enemy)
     
     def get_stand_intersection(self, player, enemy):
+        if enemy.model.velocity[0] == 0:
+            return False
         
         return self.get_x_intersection(player, 0, enemy)
     
@@ -268,6 +270,9 @@ class ApproachEngine():
         return self.get_x_y_intersection(player, enemy)
     
     def get_stand_jump_intersection(self, player, enemy):
+        if enemy.model.velocity[0] == 0:
+            return False
+        
         return self.get_x_y_intersection(player, enemy)
     
     def get_x_intersection(self, player, player_v_x, enemy):
