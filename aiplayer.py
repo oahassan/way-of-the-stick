@@ -1,4 +1,4 @@
-from random import choice
+from random import choice, sample
 import copy
 import pygame
 import gamestate
@@ -482,7 +482,7 @@ class AttackPredictionEngine():
         if player.is_aerial():
             in_range_attacks = [
                 attack 
-                for attack in player.actions[PlayerStates.ATTACKING] 
+                for attack in sample(player.actions[PlayerStates.ATTACKING], 4) 
                 if attack.right_animation.name in self.attack_prediction_data
                 and attack.is_jump_attack
                 and self.aerial_attack_in_range(attack, enemy, enemy_rects)
@@ -491,7 +491,7 @@ class AttackPredictionEngine():
         else:
             in_range_attacks = [
                 attack 
-                for attack in player.actions[PlayerStates.ATTACKING] 
+                for attack in sample(player.actions[PlayerStates.ATTACKING], 4) 
                 if attack.right_animation.name in self.attack_prediction_data
                 and self.attack_in_range(attack, enemy, enemy_rects)
             ]
