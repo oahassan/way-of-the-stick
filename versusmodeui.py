@@ -37,6 +37,7 @@ class PlayerHealth(wotsui.UIObjectBase):
         )
         self.add_child(self.health_bar)
         self.evaluate_position()
+        self.set_dimensions()
     
     def get_health_percent(self):
         return self.health_bar.health_percent
