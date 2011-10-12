@@ -240,18 +240,18 @@ class ApproachEngine():
         self.approach_timing_functions = {}
     
     def init(self):
-        #self.approach_functions[ApproachTypes.RUN] = self.run
+        self.approach_functions[ApproachTypes.RUN] = self.run
         self.approach_functions[ApproachTypes.WALK] = self.walk
-        #self.approach_functions[ApproachTypes.STAND] = self.stand
-        #self.approach_functions[ApproachTypes.RUN_JUMP] = self.run_jump
+        self.approach_functions[ApproachTypes.STAND] = self.stand
+        self.approach_functions[ApproachTypes.RUN_JUMP] = self.run_jump
         self.approach_functions[ApproachTypes.WALK_JUMP] = self.walk_jump
-        #self.approach_functions[ApproachTypes.STAND_JUMP] = self.stand_jump
-        #self.approach_timing_functions[ApproachTypes.RUN] = self.get_run_intersection
+        self.approach_functions[ApproachTypes.STAND_JUMP] = self.stand_jump
+        self.approach_timing_functions[ApproachTypes.RUN] = self.get_run_intersection
         self.approach_timing_functions[ApproachTypes.WALK] = self.get_walk_intersection
-        #self.approach_timing_functions[ApproachTypes.STAND] = self.get_stand_intersection
-        #self.approach_timing_functions[ApproachTypes.RUN_JUMP] = self.get_run_jump_intersection
+        self.approach_timing_functions[ApproachTypes.STAND] = self.get_stand_intersection
+        self.approach_timing_functions[ApproachTypes.RUN_JUMP] = self.get_run_jump_intersection
         self.approach_timing_functions[ApproachTypes.WALK_JUMP] = self.get_walk_jump_intersection
-        #self.approach_timing_functions[ApproachTypes.STAND_JUMP] = self.get_stand_jump_intersection
+        self.approach_timing_functions[ApproachTypes.STAND_JUMP] = self.get_stand_jump_intersection
     
     def get_run_intersection(self, player, enemy):
         
@@ -499,7 +499,7 @@ class AttackPredictionEngine():
             
             in_range_attacks = [
                 attack 
-                for attack in sample(jump_attacks, 4) 
+                for attack in sample(jump_attacks, min(4, len(jump_attacks))) 
                 if attack.right_animation.name in self.attack_prediction_data
                 and self.aerial_attack_in_range(attack, enemy, enemy_rects)
             ]
@@ -512,7 +512,7 @@ class AttackPredictionEngine():
         
             in_range_attacks = [
                 attack 
-                for attack in sample(ground_attacks, 4) 
+                for attack in sample(ground_attacks, min(4, len(ground_attacks))) 
                 if attack.right_animation.name in self.attack_prediction_data
                 and self.attack_in_range(attack, enemy, enemy_rects)
             ]
