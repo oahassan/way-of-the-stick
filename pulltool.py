@@ -62,6 +62,9 @@ class PullTool(EditorTools.Tool):
         mousePos: position of mouse at time of events
         events: events to handle"""
         
+        if (self.frame != self.animation.frames[self.animation.frame_index]):
+            self.init_state(self.animation)
+        
         for event in events:
             if event.type == pygame.QUIT: 
                 sys.exit()

@@ -82,6 +82,7 @@ exit_state = gamestate.Modes.ANIMATIONEXPLORER
 exit_ind = False
 loaded = False
 frame_stats = None
+frame_navigator = None
 
 def load(animation_type, edit_animation, rtn_state):
     global animation
@@ -94,6 +95,7 @@ def load(animation_type, edit_animation, rtn_state):
     global loaded
     global play_tool
     global frame_stats
+    global frame_navigator
     
     animation = edit_animation
     animation.frame_index = 0
@@ -126,7 +128,7 @@ def load(animation_type, edit_animation, rtn_state):
     tools.append(save_tool)
     
     frame_stats = FrameStats()
-    
+    frame_navigator = framenavigator.FrameNavigator(animation)
     
     layout_tools()
     loaded = True
@@ -142,6 +144,7 @@ def unload():
     global loaded
     global play_tool
     global frame_stats
+    global frame_navigator
     
     play_tool = None
     animation = None
@@ -152,6 +155,7 @@ def unload():
     exit_state = None 
     tools = None
     frame_stats = None
+    frame_navigator = None
     loaded = False
 
 def layout_tools():
@@ -322,8 +326,9 @@ def handle_events(surface, mousePos, mouseButtonsPressed, events):
                 (800, 500),
                 1
             )
+            frame_navigator.handle_events()
         
-        animation.draw_frames(surface, (20, 540))
+        frame_navigator.draw(surface)
     
 def get_mouseover_tool(mousePos):
     """Returns the tool that was clicked.  If no tool was clicked

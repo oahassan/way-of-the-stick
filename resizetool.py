@@ -95,6 +95,9 @@ class ResizeTool(EditorTools.Tool):
         events: events to handle"""
         event_types = []
         
+        if (self.frame != self.animation.frames[self.animation.frame_index]):
+            self.init_state(self.animation)
+        
         for event in events:
             event_types.append(event.type)
         
