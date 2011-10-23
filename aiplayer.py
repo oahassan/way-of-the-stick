@@ -159,18 +159,19 @@ class Bot(Player):
                 attack = self.attack_prediction_engine.get_in_range_attack(enemy)
                 self.current_attack = attack
         
-        ground_command_type = InputActionTypes.NO_MOVEMENT
-        
         if self.current_attack != None:
             attack_command_types = self.moveset.attack_key_combinations[
                 self.current_attack.right_animation.name
             ]
-        else:
-            ground_command_type = self.move_towards_enemy(self)
+        #else:
+        ground_command_type = self.move_towards_enemy(self)
         
         aerial_action_command_types = []
         if self.is_aerial():
-            aerial_action_command_types = attack_command_types
+            aerial_action_command_types.extend([
+                command_type for command_type in attack_command_types
+                if command_type != InputActionTypes.JUMP
+            ])
         
         self.controller.update(
             InputCommandTypes(
@@ -427,7 +428,7 @@ class ApproachEngine():
         elif not player.is_aerial():
             return InputActionTypes.JUMP
         else:
-            return InputActionTypes.NO_MOVEMENT
+            return self.run(player) #return InputActionTypes.NO_MOVEMENT
     
     def walk(self, player):
         
@@ -466,20 +467,22 @@ class ApproachEngine():
     def set_move_towards_enemy(self, player, enemy):
         player.approach_selected = True
         
-        approach_types = [
-            approach_type
-            for approach_type, approach_timing_function
-            in self.approach_timing_functions.iteritems()
-            if approach_timing_function(player, enemy)
-        ]
+        player.move_towards_enemy = self.stand_jump
         
-        if len(approach_types) == 0:
-            player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
-        else:
-            player.move_towards_enemy = choice([
-                self.approach_functions[approach_type]
-                for approach_type in approach_types
-            ])
+        #approach_types = [
+        #    approach_type
+        #    for approach_type, approach_timing_function
+        #    in self.approach_timing_functions.iteritems()
+        #    if approach_timing_function(player, enemy)
+        #]
+        
+        #if len(approach_types) == 0:
+        #    player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
+        #else:
+        #    player.move_towards_enemy = choice([
+        #        self.approach_functions[approach_type]
+        #        for approach_type in approach_types
+        #    ])
 
 class AttackPredictionEngine():
     def __init__(self, timestep, prediction_time_frame, player):
@@ -798,7 +801,7 @@ class AttackPredictionEngine():
             prediction_time_frame -= self.timestep
             attack_rect_index += 1
         
-        ##debug code
+        #debug code
         #for attack_rect in return_rects:
         #    rect_surface = pygame.Surface(
         #        (attack_rect.width, attack_rect.height)
@@ -838,7 +841,7 @@ class AttackPredictionEngine():
                 enemy_hitboxes
             )
             
-            ##debugging code
+            #debugging code
             #for attack_rect in enemy_hitboxes:
             #    rect_surface = pygame.Surface(
             #        (attack_rect.width, attack_rect.height)
@@ -849,8 +852,8 @@ class AttackPredictionEngine():
             #        attack_rect.topleft, 
             #       rect_surface
             #    )
-            # 
-            ##debugging code
+             
+            #debugging code
             #for attack_rect in attack_hitboxes:
             #    rect_surface = pygame.Surface(
             #       (attack_rect.width, attack_rect.height)
@@ -861,6 +864,33 @@ class AttackPredictionEngine():
             #        attack_rect.topleft, 
             #        rect_surface
             #    )
+            
+            #if in_range:
+            #    #print(collision_index)
+            # 
+            #   #debugging code
+            #    attack_rect = attack_rects[collision_index]
+            #    rect_surface = pygame.Surface(
+            #        (attack_rect.width, attack_rect.height)
+            #    )
+            #    drawing_rect = pygame.Rect((0,0), attack_rect.size)
+            #    pygame.draw.rect(rect_surface, (0,255,0), drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        attack_rect.topleft, 
+            #        rect_surface
+            #    )
+            #     
+            #    #debugging code
+            #    enemy_rect = enemy_rects[collision_index]
+            #    rect_surface = pygame.Surface(
+            #        (enemy_rect.width, enemy_rect.height)
+            #   )
+            #    drawing_rect = pygame.Rect((0,0), enemy_rect.size)
+            #    pygame.draw.rect(rect_surface, (0,0,255), drawing_rect, 2)
+            #    st_versusmode.local_state.surface_renderer.draw_surface_to_screen(
+            #        enemy_rect.topleft, 
+            #        rect_surface
+            #    )     
             
         return in_range
     
