@@ -797,6 +797,10 @@ class ControllerFactory():
             [tap_jump_command],
             jump_action
         )
+        ground_movement_command_handler.add_command(
+            [hold_jump_command],
+            jump_action
+        )
         aerial_action_command_handler.add_command(
             [hold_jump_command],
             jump_action

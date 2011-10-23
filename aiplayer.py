@@ -93,6 +93,7 @@ class Bot(Player):
         self.pre_attack_state = None
         self.attack_landed = False
         self.current_attack = None
+        self.approach_selected = False
     
     def get_attack_actions(self):
         return self.actions[PlayerStates.ATTACKING]
@@ -159,12 +160,14 @@ class Bot(Player):
                 attack = self.attack_prediction_engine.get_in_range_attack(enemy)
                 self.current_attack = attack
         
-        if self.current_attack != None:
+        ground_command_type = InputActionTypes.NO_MOVEMENT
+        
+        if self.current_attack != None and self.action.action_state != PlayerStates.ATTACKING:
             attack_command_types = self.moveset.attack_key_combinations[
                 self.current_attack.right_animation.name
             ]
-        #else:
-        ground_command_type = self.move_towards_enemy(self)
+        else:
+            ground_command_type = self.move_towards_enemy(self)
         
         aerial_action_command_types = []
         if self.is_aerial():
@@ -467,22 +470,20 @@ class ApproachEngine():
     def set_move_towards_enemy(self, player, enemy):
         player.approach_selected = True
         
-        player.move_towards_enemy = self.stand_jump
+        approach_types = [
+            approach_type
+            for approach_type, approach_timing_function
+            in self.approach_timing_functions.iteritems()
+            if approach_timing_function(player, enemy)
+        ]
         
-        #approach_types = [
-        #    approach_type
-        #    for approach_type, approach_timing_function
-        #    in self.approach_timing_functions.iteritems()
-        #    if approach_timing_function(player, enemy)
-        #]
-        
-        #if len(approach_types) == 0:
-        #    player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
-        #else:
-        #    player.move_towards_enemy = choice([
-        #        self.approach_functions[approach_type]
-        #        for approach_type in approach_types
-        #    ])
+        if len(approach_types) == 0:
+            player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
+        else:
+            player.move_towards_enemy = choice([
+                self.approach_functions[approach_type]
+                for approach_type in approach_types
+            ])
 
 class AttackPredictionEngine():
     def __init__(self, timestep, prediction_time_frame, player):
