@@ -239,7 +239,7 @@ class ApproachEngine():
         self.approach_functions = {}
         self.approach_timing_functions = {}
     
-    def init(self):
+    def init(self, approach_types = None):
         self.approach_functions[ApproachTypes.RUN] = self.run
         self.approach_functions[ApproachTypes.WALK] = self.walk
         self.approach_functions[ApproachTypes.STAND] = self.stand
@@ -252,6 +252,12 @@ class ApproachEngine():
         self.approach_timing_functions[ApproachTypes.RUN_JUMP] = self.get_run_jump_intersection
         self.approach_timing_functions[ApproachTypes.WALK_JUMP] = self.get_walk_jump_intersection
         self.approach_timing_functions[ApproachTypes.STAND_JUMP] = self.get_stand_jump_intersection
+        
+        if approach_types != None:
+            for approach_type in ApproachTypes.APPROACH_TYPES:
+                if approach_type not in approach_types:
+                    del self.approach_functions[approach_type]
+                    del self.approach_timing_functions[approach_type]
     
     def get_run_intersection(self, player, enemy):
         
@@ -437,6 +443,8 @@ class AttackPredictionEngine():
         self.combo_weight_threshold = .9
         self.attack_weight_increment = .1
         self.last_enemy_rect = None
+        self.attack_pattern = None
+        self.pattern_index = 0
     
     def load_data(self):
         attack_prediction_data_factory = AttackPredictionDataFactory(self.timestep)
@@ -495,6 +503,8 @@ class AttackPredictionEngine():
                 jump_attack 
                 for jump_attack in player.actions[PlayerStates.ATTACKING] 
                 if jump_attack.is_jump_attack
+                and (self.attack_pattern == None or
+                    jump_attack.attack_type in self.attack_patterns[self.pattern_index])
             ]
             
             in_range_attacks = [
@@ -508,6 +518,8 @@ class AttackPredictionEngine():
                 ground_attack 
                 for ground_attack in player.actions[PlayerStates.ATTACKING] 
                 if not ground_attack.is_jump_attack
+                and (self.attack_pattern == None or
+                    jump_attack.attack_type in self.attack_patterns[self.pattern_index])
             ]
         
             in_range_attacks = [
@@ -516,6 +528,10 @@ class AttackPredictionEngine():
                 if attack.right_animation.name in self.attack_prediction_data
                 and self.attack_in_range(attack, enemy, enemy_rects)
             ]
+        
+        #Increment Attack Pattern Index
+        if self.attack_pattern != None:
+            self.pattern_index = (self.pattern_index + 1) % len(self.attack_patterns)
         
         if len(in_range_attacks) > 0:
             if self.last_attack_name is None:            

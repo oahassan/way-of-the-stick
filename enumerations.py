@@ -7,6 +7,8 @@ class ApproachTypes:
     RUN_JUMP = 3
     WALK_JUMP = 4
     STAND_JUMP = 5
+    
+    APPROACH_TYPES = [RUN, WALK, STAND, RUN_JUMP, WALK_JUMP, STAND_JUMP]
 
 # networking
 
