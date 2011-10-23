@@ -287,13 +287,18 @@ def handle_events():
 
 def init_players():
     global player1_type_select
+    global player1_difficulty_select
     global player1_moveset_select
     global player1_stats_widget
     global player2_type_select
+    global player2_difficulty_select
     global player2_moveset_select
     global player2_stats_widget
     
     player1 = versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1]
+    
+    if versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER1] == PlayerTypes.BOT:
+        player1.set_difficulty(player1_difficulty_select.selected_button.difficulty)
     
     player1.set_player_stats(
         player1_stats_widget.get_size()
@@ -308,6 +313,9 @@ def init_players():
     
     
     player2 = versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2]
+    
+    if versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] == PlayerTypes.BOT:
+        player2.set_difficulty(player2_difficulty_select.selected_button.difficulty)
     
     player2.set_player_stats(
         player2_stats_widget.get_size()

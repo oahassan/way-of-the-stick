@@ -7,7 +7,7 @@ import animationexplorer
 from mathfuncs import sign
 from player import Player, PlayerTypes
 from stick import LineNames
-from enumerations import PlayerStates, CommandDurations, InputActionTypes, AttackTypes, ApproachTypes
+from enumerations import PlayerStates, CommandDurations, InputActionTypes, AttackTypes, ApproachTypes, Difficulties
 from playerutils import ActionFactory, Transition, Action, Attack
 from simulation import HitboxBuilder
 from playerconstants import *
@@ -27,13 +27,17 @@ class Bot(Player):
         self.pre_attack_state = None
         self.approach_selected = False
         self.approach_engine = None
-        
+        self.difficulty = Difficulties.CHALLENGE
+    
+    def set_difficulty(self, difficulty):
+        self.difficulty = difficulty
+    
     def load_moveset(self, moveset):
         Player.load_moveset(self, moveset)
         
         self.actions[PlayerStates.STANDING].set_player_state(self)
         self.approach_engine = ApproachEngine()
-        self.approach_engine.init()
+        self.approach_engine.init(get_approach_types(self.difficulty))
         
         self.actions[PlayerStates.ATTACKING] = self.controller.attack_command_handler.command_tree.get_distinct_values()
         #add aerial attacks
@@ -46,6 +50,7 @@ class Bot(Player):
             2000, 
             self
         )
+        self.attack_prediction_engine.attack_pattern = get_attack_pattern(self.difficulty)
         self.current_attack = None
     
     def handle_attack_end(self):
@@ -233,6 +238,54 @@ class Bot(Player):
             return choice(in_range_attacks)
         else:
             return None
+
+def get_approach_types(difficulty):
+    if difficulty == Difficulties.EASY:
+        return [ApproachTypes.STAND, ApproachTypes.WALK]
+    elif difficulty == Difficulties.MEDIUM:
+        return [
+            ApproachTypes.STAND, 
+            ApproachTypes.STAND_JUMP, 
+            ApproachTypes.WALK, 
+            ApproachTypes.WALK_JUMP
+        ]
+    elif difficulty == Difficulties.HARD or difficulty == Difficulties.CHALLENGE:
+        return [
+            ApproachTypes.STAND, 
+            ApproachTypes.STAND_JUMP, 
+            ApproachTypes.WALK, 
+            ApproachTypes.WALK_JUMP,
+            ApproachTypes.RUN, 
+            ApproachTypes.RUN_JUMP
+        ]
+
+def get_attack_pattern(difficulty):
+    if difficulty == Difficulties.EASY:
+        return [choice([
+            InputActionTypes.QUICK_ATTACKS, 
+            InputActionTypes.TRICKY_ATTACKS,
+            InputActionTypes.STRONG_ATTACKS
+        ])]
+    elif difficulty == Difficulties.MEDIUM:
+        return [
+            choice([
+                InputActionTypes.QUICK_ATTACKS, 
+                InputActionTypes.TRICKY_ATTACKS,
+                InputActionTypes.STRONG_ATTACKS
+            ])
+            for i in range(3)
+        ]
+    elif difficulty == Difficulties.HARD:
+        [
+            choice([
+                InputActionTypes.QUICK_ATTACKS, 
+                InputActionTypes.TRICKY_ATTACKS,
+                InputActionTypes.STRONG_ATTACKS
+            ])
+            for i in range(9)
+        ]
+    elif difficulty == Difficulties.CHALLENGE:
+        return None
 
 class ApproachEngine():
     def __init__(self):
@@ -473,6 +526,9 @@ class AttackPredictionEngine():
         #    ])
         #)
     
+    def set_attack_pattern(self, attack_pattern):
+        self.attack_pattern = attack_pattern
+    
     def reduce_attack_weight(self, graph, node_name, attack_name):
         node = graph[node_name]
         edge = node.edge_dictionary[attack_name]
@@ -504,7 +560,7 @@ class AttackPredictionEngine():
                 for jump_attack in player.actions[PlayerStates.ATTACKING] 
                 if jump_attack.is_jump_attack
                 and (self.attack_pattern == None or
-                    jump_attack.attack_type in self.attack_patterns[self.pattern_index])
+                    jump_attack.attack_type in self.attack_pattern[self.pattern_index])
             ]
             
             in_range_attacks = [
@@ -519,7 +575,7 @@ class AttackPredictionEngine():
                 for ground_attack in player.actions[PlayerStates.ATTACKING] 
                 if not ground_attack.is_jump_attack
                 and (self.attack_pattern == None or
-                    jump_attack.attack_type in self.attack_patterns[self.pattern_index])
+                    ground_attack.attack_type in self.attack_pattern[self.pattern_index])
             ]
         
             in_range_attacks = [
@@ -531,7 +587,7 @@ class AttackPredictionEngine():
         
         #Increment Attack Pattern Index
         if self.attack_pattern != None:
-            self.pattern_index = (self.pattern_index + 1) % len(self.attack_patterns)
+            self.pattern_index = (self.pattern_index + 1) % len(self.attack_pattern)
         
         if len(in_range_attacks) > 0:
             if self.last_attack_name is None:            

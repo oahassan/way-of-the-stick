@@ -460,7 +460,6 @@ class VersusModeState():
     def handle_match_state(self):
         
         if self.match_state == MatchStates.READY:
-            
             self.ready_label.draw(gamestate.screen)
             gamestate.new_dirty_rects.append(
                 pygame.Rect(
