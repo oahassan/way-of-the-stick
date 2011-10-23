@@ -8,16 +8,18 @@ import versusmode
 import button
 import movesetselectui
 import wotsuicontainers
-from versusmovesetselectui import MovesetSelector, PlayerStatsWidget
-from enumerations import PlayerPositions, PlayerTypes, PlayerStates
+from versusmovesetselectui import MovesetSelector, PlayerStatsWidget, DifficultyLabel
+from enumerations import PlayerPositions, PlayerTypes, PlayerStates, Difficulties
 
 loaded = False
 exit_button = None
 start_match_label = None
 player1_type_select = None
+player1_difficulty_select = None
 player1_moveset_select = None
 player1_stats_widget = None
 player2_type_select = None
+player2_difficulty_select = None
 player2_moveset_select = None
 player2_stats_widget = None
 
@@ -32,9 +34,11 @@ def load():
     global exit_button
     global start_match_label
     global player1_type_select
+    global player1_difficulty_select
     global player1_moveset_select
     global player1_stats_widget
     global player2_type_select
+    global player2_difficulty_select
     global player2_moveset_select
     global player2_stats_widget
     
@@ -55,7 +59,26 @@ def load():
             [['Human',15], ['Bot',15]]
         )
         
-        player1_moveset_select_position = (50, 50 + player1_type_select.height + 30)
+        player1_difficulty_select_position = (50, 50 + player1_type_select.height + 10)
+        player1_difficulty_select = wotsuicontainers.ButtonContainer(
+            player1_difficulty_select_position,
+            100,
+            350,
+            'Select Difficulty',
+            DifficultyLabel,
+            [
+                ['Easy', Difficulties.EASY], 
+                ['Medium', Difficulties.MEDIUM],
+                ['Hard', Difficulties.HARD],
+                ['Challenge', Difficulties.CHALLENGE]
+            ]
+        )
+        player1_difficulty_select.inactivate()
+        
+        player1_moveset_select_position = (
+            50, 
+            player1_difficulty_select.position[1] + player1_type_select.height
+        )
         player1_moveset_select = MovesetSelector(
             player1_moveset_select_position,
             playable_movesets
@@ -77,9 +100,28 @@ def load():
         player2_type_select.buttons[0].handle_selected()
         player2_type_select.selected_button = player2_type_select.buttons[0]
         versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.BOT
+        
+        player2_difficulty_select_position = (450, 50 + player2_type_select.height + 10)
+        player2_difficulty_select = wotsuicontainers.ButtonContainer(
+            player2_difficulty_select_position,
+            100,
+            350,
+            'Select Difficulty',
+            DifficultyLabel,
+            [
+                ['Easy', Difficulties.EASY], 
+                ['Medium', Difficulties.MEDIUM],
+                ['Hard', Difficulties.HARD],
+                ['Challenge', Difficulties.CHALLENGE]
+            ]
+        )
+        player2_difficulty_select.activate()
+        player2_difficulty_select.buttons[0].handle_selected()
+        player2_difficulty_select.selected_button = player2_difficulty_select.buttons[0]
+        
         player2_moveset_select_position = (
             450, 
-            50 + player2_type_select.height + 30
+            player2_difficulty_select.position[1] + player2_type_select.height
         )
         player2_moveset_select = MovesetSelector(
             player2_moveset_select_position,
@@ -102,16 +144,20 @@ def unload():
 
 def clear_data():
     global player1_type_select
+    global player1_difficulty_select
     global player1_moveset_select
     global player1_stats_widget
     global player2_type_select
+    global player2_difficulty_select
     global player2_moveset_select
     global player2_stats_widget
     
     player1_type_select = None
+    player1_difficulty_select = None
     player1_moveset_select = None
     player1_stats_widget = None
     player2_type_select = None
+    player2_difficulty_select = None
     player2_moveset_select = None
     player2_stats_widget = None
 
@@ -120,9 +166,11 @@ def handle_events():
     global exit_button
     global start_match_label
     global player1_type_select
+    global player1_difficulty_select
     global player1_moveset_select
     global player1_stats_widget
     global player2_type_select
+    global player2_difficulty_select
     global player2_moveset_select
     global player2_stats_widget
     
@@ -146,7 +194,22 @@ def handle_events():
                     player1_type_select.selected_button.handle_deselected()
                 
                 player1_type_select.selected_button = button
+                
+                if button.text.text == "Bot":
+                    player1_difficulty_select.activate()
+                    
+                    if player1_difficulty_select.selected_button != None:
+                        player1_difficulty_select.selected_button.handle_selected()
+                    else:
+                        player1_difficulty_select.buttons[0].handle_selected()
+                        player1_difficulty_select.selected_button = player1_difficulty_select.buttons[0]
+                else:
+                    player1_difficulty_select.inactivate()
+                
                 break
+        
+        if player1_difficulty_select.active:
+            player1_difficulty_select.handle_events()
         
         for button in player2_type_select.buttons:
             if button.contains(wotsuievents.mouse_pos):
@@ -158,6 +221,9 @@ def handle_events():
                 
                 player2_type_select.selected_button = button
                 break
+        
+        if player2_difficulty_select.active:
+            player2_difficulty_select.handle_events()
         
     if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
         if exit_button.selected:
@@ -211,9 +277,11 @@ def handle_events():
         exit_button.draw(gamestate.screen)
         start_match_label.draw(gamestate.screen)
         player1_type_select.draw(gamestate.screen)
+        player1_difficulty_select.draw(gamestate.screen)
         player1_moveset_select.draw(gamestate.screen)
         player1_stats_widget.draw(gamestate.screen)
         player2_type_select.draw(gamestate.screen)
+        player2_difficulty_select.draw(gamestate.screen)
         player2_moveset_select.draw(gamestate.screen)
         player2_stats_widget.draw(gamestate.screen)
 

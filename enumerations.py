@@ -10,6 +10,12 @@ class ApproachTypes:
     
     APPROACH_TYPES = [RUN, WALK, STAND, RUN_JUMP, WALK_JUMP, STAND_JUMP]
 
+class Difficulties:
+    EASY = 1
+    MEDIUM = 2
+    HARD = 3
+    CHALLENGE = 4
+
 # networking
 
 class SimulationDataKeys:

@@ -9,6 +9,11 @@ from wotsui import UIObjectBase
 from wotsuicontainers import Slider, ScrollButton, SCROLL_LEFT, SCROLL_RIGHT
 from movesetselectui import MovesetLoader, MovesetThumbnail
 
+class DifficultyLabel(button.SelectableLabel):  
+    def __init__(self, text, difficulty):
+        button.SelectableLabel.__init__(self, (0,0), text, 20)
+        self.difficulty = difficulty
+
 class MovesetSelector(UIObjectBase, MovesetLoader):
     WIDTH = 300
     HEIGHT = 120
