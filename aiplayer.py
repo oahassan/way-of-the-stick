@@ -55,40 +55,42 @@ class Bot(Player):
     
     def handle_attack_end(self):
         """update graph weights and attack data"""
-        current_attack_name = self.current_attack.right_animation.name
-        if self.attack_landed == False:
-            if not self.attack_prediction_engine.last_attack_name is None:
-                self.attack_prediction_engine.reduce_attack_weight(
-                    self.attack_prediction_engine.combo_graph,
-                    self.attack_prediction_engine.last_attack_name,
-                    current_attack_name
-                )
-                
-            elif self.attack_prediction_engine.pre_attack_state != None:
-                self.attack_prediction_engine.reduce_attack_weight(
-                    self.attack_prediction_engine.initial_attack_graph,
-                    self.attack_prediction_engine.pre_attack_state,
-                    current_attack_name
-                )
-            
-            self.attack_prediction_engine.last_attack_name = None
         
-        else:
-            if not self.attack_prediction_engine.last_attack_name is None:
-                self.attack_prediction_engine.increase_attack_weight(
-                    self.attack_prediction_engine.combo_graph,
-                    self.attack_prediction_engine.last_attack_name,
-                    current_attack_name
-                )
+        if self.current_attack != None:
+            current_attack_name = self.current_attack.right_animation.name
+            if self.attack_landed == False:
+                if not self.attack_prediction_engine.last_attack_name is None:
+                    self.attack_prediction_engine.reduce_attack_weight(
+                        self.attack_prediction_engine.combo_graph,
+                        self.attack_prediction_engine.last_attack_name,
+                        current_attack_name
+                    )
+                    
+                elif self.attack_prediction_engine.pre_attack_state != None:
+                    self.attack_prediction_engine.reduce_attack_weight(
+                        self.attack_prediction_engine.initial_attack_graph,
+                        self.attack_prediction_engine.pre_attack_state,
+                        current_attack_name
+                    )
                 
-            elif self.attack_prediction_engine.pre_attack_state != None:
-                self.attack_prediction_engine.increase_attack_weight(
-                    self.attack_prediction_engine.initial_attack_graph,
-                    self.attack_prediction_engine.pre_attack_state,
-                    current_attack_name
-                )
+                self.attack_prediction_engine.last_attack_name = None
             
-            self.attack_prediction_engine.last_attack_name = current_attack_name
+            else:
+                if not self.attack_prediction_engine.last_attack_name is None:
+                    self.attack_prediction_engine.increase_attack_weight(
+                        self.attack_prediction_engine.combo_graph,
+                        self.attack_prediction_engine.last_attack_name,
+                        current_attack_name
+                    )
+                    
+                elif self.attack_prediction_engine.pre_attack_state != None:
+                    self.attack_prediction_engine.increase_attack_weight(
+                        self.attack_prediction_engine.initial_attack_graph,
+                        self.attack_prediction_engine.pre_attack_state,
+                        current_attack_name
+                    )
+                
+                self.attack_prediction_engine.last_attack_name = current_attack_name
         
         self.pre_attack_state = None
         self.attack_landed = False
@@ -140,11 +142,11 @@ class Bot(Player):
     
     def update_controller(self, enemy):
         
-        direction = self.get_direction(enemy)
-        
-        if (not self.is_aerial()
-        and self.action.action_state != PlayerStates.ATTACKING):
-            self.direction = direction
+        #direction = self.get_direction(enemy)
+        #
+        #if (not self.is_aerial()
+        #and self.action.action_state != PlayerStates.ATTACKING):
+        #    self.direction = direction
         
         attack_command_types = []
         attack = None
@@ -167,7 +169,7 @@ class Bot(Player):
                 self.current_attack.right_animation.name
             ]
         else:
-            ground_command_type = self.move_towards_enemy(self)
+            ground_command_type = self.move_towards_enemy(self, enemy)
         
         aerial_action_command_types = []
         if self.is_aerial():
@@ -408,64 +410,70 @@ class ApproachEngine():
         
         return does_intersect
     
-    def run(self, player):
+    def run(self, player, enemy):
         
         if ((player.get_player_state() == PlayerStates.TRANSITION and
         player.action.next_action.action_state != PlayerStates.RUNNING) or
         player.get_player_state() != PlayerStates.RUNNING):
             
-            if player.direction == PlayerStates.FACING_RIGHT:
+            if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
                 return choice([InputActionTypes.MOVE_RIGHT, InputActionTypes.NO_MOVEMENT])
             else:
                 return choice([InputActionTypes.MOVE_LEFT, InputActionTypes.NO_MOVEMENT])
         else:
-            if player.direction == PlayerStates.FACING_RIGHT:
+            if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
                 return InputActionTypes.MOVE_RIGHT
             else:
                 return InputActionTypes.MOVE_LEFT
     
-    def run_jump(self, player):
+    def run_jump(self, player, enemy):
         
         if (abs(player.model.velocity[0]) < player.run_speed):
-            return self.run(player)
+            return self.run(player, enemy)
         elif not player.is_aerial():
             return InputActionTypes.JUMP
         else:
-            return self.run(player) #return InputActionTypes.NO_MOVEMENT
+            return self.run(player, enemy) #return InputActionTypes.NO_MOVEMENT
     
-    def walk(self, player):
+    def walk(self, player, enemy):
         
         if ((player.get_player_state() == PlayerStates.TRANSITION and
         player.action.next_action.action_state == PlayerStates.WALKING) or
         player.get_player_state() == PlayerStates.WALKING or
         player.get_player_state() == PlayerStates.STANDING):
             
-            if player.direction == PlayerStates.FACING_RIGHT:
+            if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
                 return InputActionTypes.MOVE_RIGHT
             else:
                 return InputActionTypes.MOVE_LEFT
         else:
             return InputActionTypes.NO_MOVEMENT
     
-    def walk_jump(self, player):
+    def walk_jump(self, player, enemy):
     
         if (abs(player.model.velocity[0]) < player.walk_speed):
-            return self.walk(player)
+            return self.walk(player, enemy)
         elif not player.is_aerial():
             return InputActionTypes.JUMP
         else:
             return InputActionTypes.NO_MOVEMENT
     
-    def stand_jump(self, player):
+    def stand_jump(self, player, enemy):
         
         if not player.is_aerial():
             return InputActionTypes.JUMP
         else:
-            return InputActionTypes.NO_MOVEMENT
+            return self.stand(player, enemy)
     
-    def stand(self, player):
+    def stand(self, player, enemy):
         
-        return InputActionTypes.NO_MOVEMENT
+        if player.direction != player.get_direction(enemy):
+            if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
+                return InputActionTypes.MOVE_RIGHT
+            else:
+                return InputActionTypes.MOVE_LEFT
+        else:
+            return InputActionTypes.NO_MOVEMENT
     
     def set_move_towards_enemy(self, player, enemy):
         player.approach_selected = True
