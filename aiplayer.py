@@ -50,7 +50,8 @@ class Bot(Player):
             2000, 
             self
         )
-        self.attack_prediction_engine.attack_pattern = get_attack_pattern(self.difficulty)
+        self.attack_prediction_engine.set_attack_pattern(get_attack_pattern(self.difficulty))
+        
         self.current_attack = None
     
     def handle_attack_end(self):
@@ -282,7 +283,7 @@ def get_attack_pattern(difficulty):
             for i in range(3)
         ]
     elif difficulty == Difficulties.HARD:
-        [
+        return [
             choice([
                 InputActionTypes.QUICK_ATTACKS, 
                 InputActionTypes.TRICKY_ATTACKS,
@@ -598,32 +599,35 @@ class AttackPredictionEngine():
             ]
         
         #Increment Attack Pattern Index
-        if self.attack_pattern != None:
+        if len(in_range_attacks) > 0 and self.attack_pattern != None:
             self.pattern_index = (self.pattern_index + 1) % len(self.attack_pattern)
         
         if len(in_range_attacks) > 0:
-            if self.last_attack_name is None:            
-                player_state = self.player.get_player_state()
-                
-                if player_state in self.initial_attack_graph:
-                    self.pre_attack_state = player_state
+            if self.player.difficulty == Difficulties.CHALLENGE:
+                if self.last_attack_name is None:            
+                    player_state = self.player.get_player_state()
                     
-                    return self.get_weighted_attack(
-                        self.initial_attack_graph, 
-                        player_state, 
-                        in_range_attacks
-                    )
+                    if player_state in self.initial_attack_graph:
+                        self.pre_attack_state = player_state
+                        
+                        return self.get_weighted_attack(
+                            self.initial_attack_graph, 
+                            player_state, 
+                            in_range_attacks
+                        )
+                        
+                    else:
+                        return choice(in_range_attacks)
                     
                 else:
-                    return choice(in_range_attacks)
-                
+                    
+                    return self.get_weighted_attack(
+                        self.combo_graph, 
+                        self.last_attack_name,
+                        in_range_attacks
+                    )
             else:
-                
-                return self.get_weighted_attack(
-                    self.combo_graph, 
-                    self.last_attack_name,
-                    in_range_attacks
-                )
+                return choice(in_range_attacks)
                 
         else:
             return None
