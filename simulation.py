@@ -122,6 +122,7 @@ class MatchSimulation():
         self.collision_handler = CollisionHandler()
         self.match_time = 0
         self.match_state = MatchStates.READY
+        self.pause = False
     
     def run(self):
         while 1:
@@ -130,9 +131,14 @@ class MatchSimulation():
                 
                 if message == 'STOP':
                     raise Exception("Terminating Simulation Process!")
+                
+                elif message == 'PAUSE':
+                    self.pause = not self.pause
                 else:
-                    player_keys_pressed, time_passed = message
-                    self.step(player_keys_pressed, time_passed)
+                    if not self.pause:
+                        player_keys_pressed, time_passed = message
+                        self.step(player_keys_pressed, time_passed)
+                    
                     self.pipe_connection.send(self.get_rendering_info())
             
             self.clock.tick(100)

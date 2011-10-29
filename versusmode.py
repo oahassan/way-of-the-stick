@@ -71,6 +71,8 @@ class VersusModeState():
         self.match_simulation = None
         self.simulation_process = None
         self.simulation_connection = None
+        self.pause = False
+        self.pause_held = False
 
         self.attack_result_sound_mixer = AttackResultSoundMixer()
     
@@ -140,15 +142,32 @@ class VersusModeState():
             
             self.render_simulation()
             
-            self.clean_expired_effects()
+            self.handle_pause_events()
             
-            self.handle_match_state()
+            if not self.pause:
+                self.clean_expired_effects()
+                
+                self.handle_match_state()
         
         if self.simulation_connection != None:
             self.update_simulation()
         
         self.handle_exit_events()
-
+    
+    def handle_pause_events(self):
+        if ((
+        pygame.K_KP_ENTER in wotsuievents.keys_pressed or 
+        pygame.K_RETURN in wotsuievents.keys_pressed) and
+        not self.pause_held):
+            self.pause_held = True
+            self.simulation_connection.send('PAUSE')
+            self.pause = not self.pause
+        elif ((
+        pygame.K_KP_ENTER in wotsuievents.keys_released or 
+        pygame.K_RETURN in wotsuievents.keys_released) and 
+        self.pause_held):
+            self.pause_held = False
+    
     def build_player_command_types(self):
         
         return {
