@@ -6,6 +6,7 @@ from collections import deque
 import pygame
 import mathfuncs
 import animation
+import playerconstants
 from wotsprot.rencode import serializable
 from enumerations import MatchStates, PlayerTypes, ClashResults, \
 PlayerPositions, PlayerStates, LineNames, PointNames, SimulationDataKeys, \
@@ -405,7 +406,12 @@ class CollisionHandler():
         
         if receiver.health_meter > 0:
             receiver.health_meter = max(0, receiver.health_meter - damage)
-            receiver.set_stun_timeout(attacker.get_stun_timeout())
+            receiver.set_stun_timeout(
+                min(
+                    receiver.stun_timeout + attacker.get_stun_timeout(),
+                    playerconstants.STRONG_STUN_TIMEOUT
+                )
+            )
 
     def attacker_is_recoiling(
         self,
