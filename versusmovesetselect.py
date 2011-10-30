@@ -255,6 +255,7 @@ def handle_events():
                 
                 versusmode.local_state.init_player_sounds()
                 versusmode.local_state.init_player_health_bars()
+                versusmode.local_state.init_attack_lists()
                 
                 unload()
                 gamestate.mode = gamestate.Modes.VERSUSMODE

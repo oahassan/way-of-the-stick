@@ -13,7 +13,7 @@ import mathfuncs
 import math
 import settingsdata
 import versusrendering
-from versusmodeui import PlayerHealth
+from versusmodeui import PlayerHealth, AttackList, PAUSE_MENU_WIDTH, PAUSE_MENU_HEIGHT
 from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
 from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults, \
@@ -73,6 +73,10 @@ class VersusModeState():
         self.simulation_connection = None
         self.pause = False
         self.pause_held = False
+        self.attack_lists = {
+            PlayerPositions.PLAYER1 : None,
+            PlayerPositions.PLAYER2 : None
+        }
 
         self.attack_result_sound_mixer = AttackResultSoundMixer()
     
@@ -167,6 +171,10 @@ class VersusModeState():
         pygame.K_RETURN in wotsuievents.keys_released) and 
         self.pause_held):
             self.pause_held = False
+        
+        if self.pause:
+            for attack_list in self.attack_lists.values():
+                attack_list.handle_events()
     
     def build_player_command_types(self):
         
@@ -197,6 +205,22 @@ class VersusModeState():
         self.player_health_bars[PlayerPositions.PLAYER2] = PlayerHealth(
             self.player_dictionary[PlayerPositions.PLAYER2].moveset.name,
             PlayerPositions.PLAYER2
+        )
+    
+    def init_attack_lists(self):
+        self.attack_lists[PlayerPositions.PLAYER1] = AttackList(
+            self.player_dictionary[PlayerPositions.PLAYER1].moveset,
+            (
+                int((gamestate._WIDTH / 2) - PAUSE_MENU_WIDTH),
+                int((gamestate._HEIGHT / 2) - (PAUSE_MENU_HEIGHT / 2))
+            )
+        )
+        self.attack_lists[PlayerPositions.PLAYER2] = AttackList(
+            self.player_dictionary[PlayerPositions.PLAYER2].moveset,
+            (
+                int((gamestate._WIDTH / 2)),
+                int((gamestate._HEIGHT / 2) - (PAUSE_MENU_HEIGHT / 2))
+            )
         )
     
     def init_player_data(self):
@@ -382,7 +406,9 @@ class VersusModeState():
         )
         
         for effect in self.point_effects.values():
-            effect.update(gamestate.time_passed)
+            if not self.pause:
+                effect.update(gamestate.time_passed)
+            
             effect_position, effect_surface = effect.draw_effect()
             self.surface_renderer.draw_surface_to_screen(
                 effect_position, 
@@ -394,6 +420,10 @@ class VersusModeState():
                 health_bar.position, 
                 health_bar.draw()
             )
+        
+        if self.pause:
+            for attack_list in self.attack_lists.values():
+                attack_list.draw(gamestate.screen)
 
     def update_simulation(self):
         self.simulation_connection.send(

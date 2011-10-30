@@ -2,8 +2,11 @@ import pygame
 import wotsui
 import button
 from enumerations import PlayerPositions
+from wotsuicontainers import ButtonContainer, ScrollableContainer
+from attackbuilderui import AttackLabel
 import gamestate
 
+#Health Bar Constants
 LABEL_COLOR = (255,255,255)
 LABEL_FONT_SIZE = 20
 PLAYER_HEALTH_Y_PADDING_PX = 30
@@ -19,6 +22,81 @@ DAMAGE_COLOR = (255,0,0)
 DAMAGE_TIMEOUT = 300
 DAMAGE_TRANSITION_RATE_PERCENT_PER_MS = .0005
 
+#Pause menu constants
+PAUSE_MENU_HEIGHT = 400
+PAUSE_MENU_WIDTH = 300
+
+class AttackList(ButtonContainer):
+    def __init__(self, moveset, position):
+        ButtonContainer.__init__(
+            self,
+            position,
+            PAUSE_MENU_HEIGHT,
+            PAUSE_MENU_WIDTH,
+            moveset.name + " Move List",
+            AttackLabel,
+            self.get_button_args(moveset)
+        )
+        self.init_button_text()
+        self.set_dimensions()
+        self.layout_buttons()
+        self.reset_scroll()
+    
+    def layout_buttons(self):
+        current_position = (
+            self.scrollable_area.position[0] + 10,
+            self.scrollable_area.position[1] + self.title.height
+        )
+        attack_labels = self.buttons
+        
+        attack_labels[0].set_position(current_position)
+        
+        for i in range(1,len(attack_labels)):
+            previous_label = attack_labels[i - 1]
+            current_position = (
+                previous_label.position[0], 
+                previous_label.position[1] + previous_label.height + 3
+            )
+            attack_labels[i].set_position(current_position)
+    
+    def draw(self, surface):
+        #return_surface = pygame.Surface((PAUSE_MENU_HEIGHT, PAUSE_MENU_WIDTH))
+        rect = pygame.Rect(
+            self.position,
+            (self.width, self.height)
+        )
+        gamestate.new_dirty_rects.append(rect)
+        
+        pygame.draw.rect(
+            surface, 
+            (50,50,50), 
+            rect,
+            1
+        )
+        
+        ButtonContainer.draw(self, surface)
+        
+        pygame.draw.rect(
+            surface, 
+            (255,255,255), 
+            rect,
+            1
+        )
+    
+    def get_button_args(self, moveset):
+        button_args = []
+        
+        for attack_name, attack_commands in moveset.attack_key_combinations.iteritems():
+            button_args.append([attack_name, attack_commands])
+        
+        return button_args
+    
+    def init_button_text(self):
+        for button in self.buttons:
+            button.set_key_combination(button.key_combination)
+        
+    def handle_events(self):
+        ScrollableContainer.handle_events(self)
 
 class PlayerHealth(wotsui.UIObjectBase):
     def __init__(self, label_text, player_position):
