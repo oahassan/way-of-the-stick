@@ -55,8 +55,8 @@ def load():
             100,
             300,
             'Select Player Type',
-            button.TextButton,
-            [['Human',15], ['Bot',15]]
+            button.SelectableLabel,
+            [[(0,0), 'Human',20], [(0,0), 'Bot',20]]
         )
         
         player1_difficulty_select_position = (50, 50 + player1_type_select.height + 10)
@@ -94,8 +94,8 @@ def load():
             100,
             300,
             'Select Enemy Type',
-            button.TextButton,
-            [['Bot',15]]
+            button.SelectableLabel,
+            [[(0,0), 'Bot',20]]
         )
         player2_type_select.buttons[0].handle_selected()
         player2_type_select.selected_button = player2_type_select.buttons[0]
@@ -195,7 +195,7 @@ def handle_events():
                 
                 player1_type_select.selected_button = button
                 
-                if button.text.text == "Bot":
+                if button.text == "Bot":
                     player1_difficulty_select.activate()
                     
                     if player1_difficulty_select.selected_button != None:
@@ -238,15 +238,15 @@ def handle_events():
             if start_match_label.contains(wotsuievents.mouse_pos):
                 
                 if player1_type_select.selected_button != None:
-                    if player1_type_select.selected_button.text.text == 'Human':
+                    if player1_type_select.selected_button.text == 'Human':
                         versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER1] = PlayerTypes.HUMAN
-                    elif player1_type_select.selected_button.text.text == 'Bot':
+                    elif player1_type_select.selected_button.text == 'Bot':
                         versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER1] = PlayerTypes.BOT
                 
                 if player2_type_select.selected_button != None:
-                    if player2_type_select.selected_button.text.text == 'Human':
+                    if player2_type_select.selected_button.text == 'Human':
                         versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.HUMAN
-                    elif player2_type_select.selected_button.text.text == 'Bot':
+                    elif player2_type_select.selected_button.text == 'Bot':
                         versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.BOT
                 
                 versusmode.init()

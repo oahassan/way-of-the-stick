@@ -1,3 +1,4 @@
+import math
 import pygame
 
 import movesetdata
@@ -5,9 +6,171 @@ import gamestate
 
 import button
 import wotsuievents
-from wotsui import UIObjectBase
+import playerconstants
+from mathfuncs import distance
+from wotsui import UIObjectBase, SelectableObjectBase
 from wotsuicontainers import Slider, ScrollButton, SCROLL_LEFT, SCROLL_RIGHT
 from movesetselectui import MovesetLoader, MovesetThumbnail
+
+#Color Select Constants
+angle_increment = 2.0 * math.pi / len(playerconstants.COLORS)
+radius = 40
+side_length = 20
+
+class ColorWheel(UIObjectBase):
+    def __init__(self, center, radius, swatch_radius, selected_index):
+        wotsui.UIObjectBase.__init__(self)
+        
+        self.swatch_center = center
+        self.color_swatches = []
+        self.swatch_radius = swatch_radius
+        self.selected_swatch = None
+        
+        for i in range(len(playerconstants.COLORS)):
+            angle = angle_increment * i
+            swatch_center = (
+                int(center[0] + (math.cos(angle) * radius)),  
+                int(center[1] + (math.sin(angle) * radius))
+            )
+            self.color_swatches.append(
+                ColorSwatchCircle(playerconstants.COLORS[i], swatch_center, swatch_radius)
+            )
+        
+        self.color_swatches.append(
+            ColorSwatchRect(
+                (255, 255, 255),
+                (0, 0, 0),
+                (
+                    int(center[0] - radius - swatch_radius), 
+                    int(center[1] + radius + swatch_radius)
+                ),
+                int(radius + swatch_radius), 
+                int(.333 * (radius + swatch_radius))
+            )
+        )
+        
+        self.color_swatches.append(
+            ColorSwatchRect(
+                (0, 0, 0),
+                (255, 255, 255),
+                (
+                    center[0], 
+                    int(center[1] + radius + swatch_radius)
+                ),
+                int(radius + swatch_radius), 
+                int(.333 * (radius + swatch_radius))
+            )
+        )
+        
+        self.add_children(self.color_swatches)
+        self.evaluate_position()
+        self.set_dimensions()
+        
+        self.color_swatches[selected_index].handle_selected()
+        self.selected_swatch = self.color_swatches[selected_index]
+    
+    def draw(self, surface):
+        for swatch in self.color_swatches:
+            swatch.draw(surface)
+        
+        pygame.draw.circle(
+            screen, 
+            self.selected_swatch.color, 
+            self.swatch_center, 
+            self.swatch_radius
+        )
+    
+    def handle_events(self):
+        if wotsuievents.mousebutton_pressed():
+            for swatch in self.color_swatches:
+                if swatch.contains(wotsuievents.mouse_pos):
+                    self.selected_swatch.handle_deselected()
+                    swatch.handle_selected()
+                    self.selected_swatch = swatch
+
+class ColorSwatchCircle(SelectableObjectBase):
+    def __init__(self, color, center, radius):
+        wotsui.SelectableObjectBase.__init__(self)
+        self.color = color
+        self.active_color = color
+        self.selected_color = color
+        self.center = center
+        self.position = (center[0] - radius, center[1] - radius)
+        self.height = radius
+        self.width = radius
+        self.radius = radius
+    
+    def contains(self, position):
+        if distance(position, self.center) <= self.radius:
+            return True
+        else:
+            return False
+    
+    def draw(self, surface):
+        pygame.draw.circle(
+            screen, 
+            self.color, 
+            self.center, 
+            self.radius
+        )
+        
+        if self.selected:
+            pygame.draw.circle(
+                screen, 
+                (255,255,255), 
+                self.center, 
+                self.radius,
+                3
+            )
+            
+            pygame.draw.circle(
+                screen, 
+                (0,0,0), 
+                self.center, 
+                self.radius,
+                1
+            )
+
+class ColorSwatchRect(SelectableObjectBase):
+    def __init__(self, color, border_outer_line_color, position, width, height):
+        wotsui.SelectableObjectBase.__init__(self)
+        self.color = color
+        self.active_color = color
+        self.selected_color = color
+        self.border_outer_line_color = border_outer_line_color
+        self.position = position
+        self.height = height
+        self.width = width
+    
+    def draw(self, surface):
+        pygame.draw.rect(
+            surface,
+            self.color,
+            (self.position, (self.width, self.height))
+        )
+        
+        if self.selected:
+            pygame.draw.rect(
+                surface,
+                self.border_outer_line_color,
+                (self.position, (self.width, self.height)),
+                4
+            )
+            
+            pygame.draw.rect(
+                surface,
+                self.color,
+                (self.position, (self.width, self.height)),
+                2
+            )
+        
+        else:
+            pygame.draw.rect(
+                surface,
+                self.border_outer_line_color,
+                (self.position, (self.width, self.height)),
+                1
+            )
 
 class DifficultyLabel(button.SelectableLabel):  
     def __init__(self, text, difficulty):

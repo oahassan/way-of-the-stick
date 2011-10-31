@@ -172,7 +172,7 @@ class SelectableObjectBase(UIObjectBase):
         UIObjectBase.__init__(self)
         self.selected = False
         self.active = True
-        self.color = None
+        self.color = (255,255,255)
         self.selected_color = (255,0,0)
         self.active_color = (255,255,255)
         self.inactive_color = (100,100,100)
