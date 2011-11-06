@@ -8,7 +8,7 @@ import versusmode
 import button
 import movesetselectui
 import wotsuicontainers
-from versusmovesetselectui import MovesetSelector, PlayerStatsWidget, DifficultyLabel
+from versusmovesetselectui import MovesetSelector, PlayerStatsWidget, DifficultyLabel, ColorWheel
 from enumerations import PlayerPositions, PlayerTypes, PlayerStates, Difficulties
 
 loaded = False
@@ -18,10 +18,12 @@ player1_type_select = None
 player1_difficulty_select = None
 player1_moveset_select = None
 player1_stats_widget = None
+player1_color_select = None
 player2_type_select = None
 player2_difficulty_select = None
 player2_moveset_select = None
 player2_stats_widget = None
+player2_color_select = None
 
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
@@ -37,10 +39,12 @@ def load():
     global player1_difficulty_select
     global player1_moveset_select
     global player1_stats_widget
+    global player1_color_select
     global player2_type_select
     global player2_difficulty_select
     global player2_moveset_select
     global player2_stats_widget
+    global player2_color_select
     
     exit_button = button.ExitButton()
     loaded = True
@@ -52,14 +56,14 @@ def load():
         
         player1_type_select = wotsuicontainers.ButtonContainer(
             (50,50),
-            100,
+            120,
             300,
             'Select Player Type',
             button.SelectableLabel,
             [[(0,0), 'Human',20], [(0,0), 'Bot',20]]
         )
         
-        player1_difficulty_select_position = (50, 50 + player1_type_select.height + 10)
+        player1_difficulty_select_position = (50, player1_type_select.height + 10)
         player1_difficulty_select = wotsuicontainers.ButtonContainer(
             player1_difficulty_select_position,
             100,
@@ -89,9 +93,15 @@ def load():
         )
         player1_stats_widget = PlayerStatsWidget(player1_widget_position)
         
+        player1_color_select_position = (
+            player1_widget_position[0] + player1_stats_widget.width + 100,
+            player1_widget_position[1] + 50
+        )
+        player1_color_select = ColorWheel(player1_color_select_position, 0)
+        
         player2_type_select = wotsuicontainers.ButtonContainer(
             (450,50),
-            100,
+            120,
             300,
             'Select Enemy Type',
             button.SelectableLabel,
@@ -101,7 +111,7 @@ def load():
         player2_type_select.selected_button = player2_type_select.buttons[0]
         versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.BOT
         
-        player2_difficulty_select_position = (450, 50 + player2_type_select.height + 10)
+        player2_difficulty_select_position = (450, player2_type_select.height + 10)
         player2_difficulty_select = wotsuicontainers.ButtonContainer(
             player2_difficulty_select_position,
             100,
@@ -132,6 +142,12 @@ def load():
             player2_moveset_select.position[1] + player2_moveset_select.height + 10
         )
         player2_stats_widget = PlayerStatsWidget(player2_widget_position)
+        
+        player2_color_select_position = (
+            player2_widget_position[0] + player2_stats_widget.width + 100,
+            player2_widget_position[1] + 50
+        )
+        player2_color_select = ColorWheel(player2_color_select_position, 3)
     
 def unload():
     global loaded
@@ -147,19 +163,23 @@ def clear_data():
     global player1_difficulty_select
     global player1_moveset_select
     global player1_stats_widget
+    global player1_color_select
     global player2_type_select
     global player2_difficulty_select
     global player2_moveset_select
     global player2_stats_widget
+    global player2_color_select
     
     player1_type_select = None
     player1_difficulty_select = None
     player1_moveset_select = None
     player1_stats_widget = None
+    player1_color_select = None
     player2_type_select = None
     player2_difficulty_select = None
     player2_moveset_select = None
     player2_stats_widget = None
+    player2_color_select = None
 
 def handle_events():
     global loaded
@@ -169,10 +189,12 @@ def handle_events():
     global player1_difficulty_select
     global player1_moveset_select
     global player1_stats_widget
+    global player1_color_select
     global player2_type_select
     global player2_difficulty_select
     global player2_moveset_select
     global player2_stats_widget
+    global player2_color_select
     
     if loaded == False:
         load()
@@ -264,6 +286,8 @@ def handle_events():
         player2_moveset_select.handle_events()
         player1_stats_widget.handle_events()
         player2_stats_widget.handle_events()
+        player1_color_select.handle_events()
+        player2_color_select.handle_events()
         
         if ((player1_moveset_select.selected_moveset != None) and
             (player1_type_select.selected_button != None) and
@@ -281,20 +305,24 @@ def handle_events():
         player1_difficulty_select.draw(gamestate.screen)
         player1_moveset_select.draw(gamestate.screen)
         player1_stats_widget.draw(gamestate.screen)
+        player1_color_select.draw(gamestate.screen)
         player2_type_select.draw(gamestate.screen)
         player2_difficulty_select.draw(gamestate.screen)
         player2_moveset_select.draw(gamestate.screen)
         player2_stats_widget.draw(gamestate.screen)
+        player2_color_select.draw(gamestate.screen)
 
 def init_players():
     global player1_type_select
     global player1_difficulty_select
     global player1_moveset_select
     global player1_stats_widget
+    global player1_color_select
     global player2_type_select
     global player2_difficulty_select
     global player2_moveset_select
     global player2_stats_widget
+    global player2_color_select
     
     player1 = versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1]
     
@@ -311,7 +339,7 @@ def init_players():
     player1.direction = PlayerStates.FACING_RIGHT
     player1.model.move_model((400, 967))
     player1.actions[PlayerStates.STANDING].set_player_state(player1)
-    
+    player1.health_color = player1_color_select.selected_swatch.color
     
     player2 = versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2]
     
@@ -328,4 +356,5 @@ def init_players():
     player2.model.velocity = (0,0)
     player2.model.move_model((1200, 967))
     player2.actions[PlayerStates.STANDING].set_player_state(player2)
+    player2.health_color = player2_color_select.selected_swatch.color
     

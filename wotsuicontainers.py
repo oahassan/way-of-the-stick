@@ -957,7 +957,7 @@ class Slider(HorizontalScrollBar):
         
         self.scroll_left_button.set_layout_data(position)
         
-        scroll_right_button_position = (position[0] + width - SCROLL_BUTTON_WIDTH, \
+        scroll_right_button_position = (position[0] + width - SCROLL_BUTTON_WIDTH + 5, \
                                         position[1])
         self.scroll_right_button.set_layout_data(scroll_right_button_position)
         

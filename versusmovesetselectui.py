@@ -15,11 +15,15 @@ from movesetselectui import MovesetLoader, MovesetThumbnail
 #Color Select Constants
 angle_increment = 2.0 * math.pi / len(playerconstants.COLORS)
 radius = 40
-side_length = 20
+swatch_radius = 20
 
 class ColorWheel(UIObjectBase):
-    def __init__(self, center, radius, swatch_radius, selected_index):
-        wotsui.UIObjectBase.__init__(self)
+    def __init__(self, center, selected_index):
+        global radius
+        global swatch_radius
+        global angle_increment
+        
+        UIObjectBase.__init__(self)
         
         self.swatch_center = center
         self.color_swatches = []
@@ -74,7 +78,7 @@ class ColorWheel(UIObjectBase):
             swatch.draw(surface)
         
         pygame.draw.circle(
-            screen, 
+            surface, 
             self.selected_swatch.color, 
             self.swatch_center, 
             self.swatch_radius
@@ -90,7 +94,7 @@ class ColorWheel(UIObjectBase):
 
 class ColorSwatchCircle(SelectableObjectBase):
     def __init__(self, color, center, radius):
-        wotsui.SelectableObjectBase.__init__(self)
+        SelectableObjectBase.__init__(self)
         self.color = color
         self.active_color = color
         self.selected_color = color
@@ -108,7 +112,7 @@ class ColorSwatchCircle(SelectableObjectBase):
     
     def draw(self, surface):
         pygame.draw.circle(
-            screen, 
+            surface, 
             self.color, 
             self.center, 
             self.radius
@@ -116,7 +120,7 @@ class ColorSwatchCircle(SelectableObjectBase):
         
         if self.selected:
             pygame.draw.circle(
-                screen, 
+                surface, 
                 (255,255,255), 
                 self.center, 
                 self.radius,
@@ -124,7 +128,7 @@ class ColorSwatchCircle(SelectableObjectBase):
             )
             
             pygame.draw.circle(
-                screen, 
+                surface, 
                 (0,0,0), 
                 self.center, 
                 self.radius,
@@ -133,7 +137,7 @@ class ColorSwatchCircle(SelectableObjectBase):
 
 class ColorSwatchRect(SelectableObjectBase):
     def __init__(self, color, border_outer_line_color, position, width, height):
-        wotsui.SelectableObjectBase.__init__(self)
+        SelectableObjectBase.__init__(self)
         self.color = color
         self.active_color = color
         self.selected_color = color
@@ -376,7 +380,7 @@ class PlayerSettingControl(Slider):
         y_delta = self.center()[1] - self.value_label.center()[1]
         x_delta = self.position[0] + self.width - self.value_label.position[0]
         y_position = self.center()[1] - (.5 * self.value_label.height)
-        self.value_label.shift(x_delta + 7, y_delta + 4)
+        self.value_label.shift(x_delta + 10, y_delta + 4)
         
         self.set_dimensions()
     
@@ -398,21 +402,21 @@ class PlayerStatsWidget(UIObjectBase):
     def __init__(self, position):
         UIObjectBase.__init__(self)
         
-        self.size_control = PlayerSettingControl(position, 200, "Size")
+        self.size_control = PlayerSettingControl(position, 100, "Size")
         self.add_child(self.size_control)
         
         power_control_position = (
             position[0],
             self.size_control.position[1] + self.size_control.height + 10
         )
-        self.power_control = PlayerSettingControl(power_control_position, 200, "Power")
+        self.power_control = PlayerSettingControl(power_control_position, 100, "Power")
         self.add_child(self.power_control)
         
         speed_control_position = (
             position[0],
             self.power_control.position[1] + self.power_control.height + 10
         )
-        self.speed_control = PlayerSettingControl(speed_control_position, 200, "Speed")
+        self.speed_control = PlayerSettingControl(speed_control_position, 100, "Speed")
         self.add_child(self.speed_control)
         
         weight_control_position = (
@@ -425,6 +429,8 @@ class PlayerStatsWidget(UIObjectBase):
             "Weight"
         )
         #self.add_child(self.weight_control)
+        self.evaluate_position()
+        self.set_dimensions()
     
     def get_size(self): 
         return self.size_control.get_value()

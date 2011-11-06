@@ -201,19 +201,22 @@ start = (300,200)
 end = (600, 400)
 thickness = 30
 
-while 1:
-    screen.fill((0,0,0))
-    wotsuievents.get_events()
-    
-    #angle_label.set_text(str(input_angle))
-    #angle_label.draw(screen)
-    
-    if pygame.QUIT in wotsuievents.event_types:
-        sys.exit()
-    
-    wheel.handle_events()
-    wheel.draw(screen)
-    
-    pygame.display.flip()
-    
-    clock.tick(20)
+if __name__ == '__main__':
+
+
+    while 1:
+        screen.fill((0,0,0))
+        wotsuievents.get_events()
+        
+        #angle_label.set_text(str(input_angle))
+        #angle_label.draw(screen)
+        
+        if pygame.QUIT in wotsuievents.event_types:
+            sys.exit()
+        
+        wheel.handle_events()
+        wheel.draw(screen)
+        
+        pygame.display.flip()
+        
+        clock.tick(20)

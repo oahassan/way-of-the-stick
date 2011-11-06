@@ -253,8 +253,6 @@ class VersusModeState():
         player2.direction = PlayerStates.FACING_LEFT
         player2.init_state()
         player2.model.move_model((1200, 967))
-        player2.color = (100,100,100)
-        player2.health_color = (200,200,200)
     
     def init_player_sounds(self):
         player1 = self.player_dictionary[PlayerPositions.PLAYER1]
