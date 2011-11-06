@@ -1,3 +1,4 @@
+from random import choice
 import pygame
 import gamestate
 import mathfuncs
@@ -7,6 +8,7 @@ from physics import Model, Orientations
 
 PAN_RATE = 10
 SCALE_RATE = .01
+SHAKE_MAX_DELTA = 40
 
 class ViewportCamera():
     def __init__(
@@ -25,8 +27,42 @@ class ViewportCamera():
         self.zoom_count = 3
         self.zoom_threshold = 20
         self.pan_threshold = 10
+        self.shake_delta_timer = 0
+        self.shake_hold_duration = 100
+        self.shake_delta = [0,0]
+        self.shake_indicator = False
+        self.shake_decay = .7
+    
+    def start_shaking(self, shake_delta):
+        self.shake_delta_timer = 0
+        self.set_shake_delta(shake_delta)
+        self.shake_indicator = True
+    
+    def set_shake_delta(self, shake_delta):
+        delta = min(10, shake_delta)
+        self.shake_delta[0] = choice((delta, -delta))
+        self.shake_delta[1] = choice((delta, -delta))
+    
+    def shake(self):
+        self.viewport_position = (
+            self.viewport_position[0] + self.shake_delta[0],
+            self.viewport_position[1] + self.shake_delta[1]
+        )
+        
+        self.shake_delta_timer += gamestate.time_passed
+        
+        if self.shake_delta_timer > self.shake_hold_duration:
+            self.shake_delta[0] = -float(self.shake_delta[0] * self.shake_decay)
+            self.shake_delta[1] = -float(self.shake_delta[1] * self.shake_decay)
+            self.shake_delta_timer = 0
+        
+        if self.shake_delta < 5:
+            self.shake_indicator = False
     
     def update(self, constraining_rect):
+        if self.shake_indicator:
+            self.shake()
+        
         scale = self.get_viewport_scale(constraining_rect)
         
         if not self.can_zoom(constraining_rect):

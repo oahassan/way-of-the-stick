@@ -66,6 +66,7 @@ class VersusModeState():
         self.fps_label = None
         self.command_label = None
         self.point_effects = {}
+        self.camera = None
         self.player_renderer_state = None
         self.surface_renderer = None
         self.match_simulation = None
@@ -273,18 +274,18 @@ class VersusModeState():
         
         self.point_effects = {}
         
-        camera = versusrendering.ViewportCamera(
+        self.camera = versusrendering.ViewportCamera(
             gamestate.stage.width,
             gamestate.stage.height,
             gamestate._WIDTH,
             gamestate._HEIGHT
         )
         self.player_renderer_state = versusrendering.PlayerRendererState(
-            camera,
+            self.camera,
             [PlayerPositions.PLAYER1, PlayerPositions.PLAYER2]
         )
         
-        self.surface_renderer = versusrendering.SurfaceRenderer(camera)
+        self.surface_renderer = versusrendering.SurfaceRenderer(self.camera)
         
         self.fps_label = button.Label(
             (20,20), 
@@ -439,6 +440,11 @@ class VersusModeState():
             self.attack_result_sound_mixer.handle_hit_sounds(
                 simulation_rendering_info.attack_result_rendering_info
             )
+            
+            if simulation_rendering_info.attack_result_rendering_info.attack_type in InputActionTypes.STRONG_ATTACKS:
+                self.camera.start_shaking(
+                    simulation_rendering_info.attack_result_rendering_info.attack_damage
+                )
         
         for player_position, player_rendering_info in simulation_rendering_info.player_rendering_info_dictionary.iteritems():
             health_bar = self.player_health_bars[player_position]
