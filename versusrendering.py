@@ -31,7 +31,7 @@ class ViewportCamera():
         self.shake_hold_duration = 100
         self.shake_delta = [0,0]
         self.shake_indicator = False
-        self.shake_decay = .7
+        self.shake_decay = .5
     
     def start_shaking(self, shake_delta):
         self.shake_delta_timer = 0
