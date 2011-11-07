@@ -89,7 +89,8 @@ class PlayerRenderingInfo():
         player_health_color,
         health_percentage,
         animation_name,
-        frame_index
+        frame_index,
+        attack_type
     ):
         self.player_model = player_model
         self.player_state = player_state
@@ -98,11 +99,13 @@ class PlayerRenderingInfo():
         self.health_percentage = health_percentage
         self.animation_name = animation_name
         self.frame_index = frame_index
+        self.attack_type = attack_type
     
     def _pack(self):
         return (self.player_model, self.player_state,
         self.player_outline_color, self.player_health_color, 
-        self.health_percentage, self.animation_name, self.frame_index)
+        self.health_percentage, self.animation_name, self.frame_index,
+        self.attack_type)
 
 class MatchSimulation():
     def __init__(
@@ -224,6 +227,11 @@ class MatchSimulation():
         return_rendering_dictionary = {}
         
         for player_position, player in self.player_dictionary.iteritems():
+            attack_type = None
+            
+            if player.action.action_state == PlayerStates.ATTACKING:
+                attack_type = player.action.attack_type
+            
             return_rendering_dictionary[player_position] = PlayerRenderingInfo(
                 player.model,
                 player.get_player_state(),
@@ -231,7 +239,8 @@ class MatchSimulation():
                 player.health_color,
                 player.health_meter / player.health_max,
                 player.action.animation.name,
-                player.action.last_frame_index
+                player.action.last_frame_index,
+                attack_type
             )
         
         return return_rendering_dictionary

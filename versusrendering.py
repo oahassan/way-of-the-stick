@@ -238,6 +238,37 @@ class SurfaceRenderer():
     ):
         self.viewport_camera = viewport_camera
     
+    def draw_polygon(self, points, color):
+        
+        polygon_points = [
+            self.viewport_camera.get_position_in_viewport(point)
+            for point in points
+        ]
+        
+        if len(points) == 3:
+            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points))
+            pygame.draw.polygon(gamestate.screen, color, polygon_points)
+        else:
+            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[0:3]))
+            pygame.draw.polygon(gamestate.screen, color, polygon_points[0:3])
+            
+            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[-3:]))
+            pygame.draw.polygon(gamestate.screen, color, polygon_points[-3:])
+        
+    def get_enclosing_rect(self, points):
+        min_position = map(min, zip(*points))
+        max_position = map(max, zip(*points))
+        
+        min_position[0] -= 2
+        min_position[1] -= 2
+        max_position[0] += 2
+        max_position[1] += 2
+        
+        width = max_position[0] - min_position[0]
+        height = max_position[1] - min_position[1]
+        
+        return pygame.Rect(min_position, (width, height))
+    
     def draw_surface_to_screen(self, position, surface):
         
         surface_viewport_position = self.viewport_camera.get_position_in_viewport(

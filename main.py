@@ -122,12 +122,14 @@ if __name__ == "__main__":
         
             gamestate.clock.tick(gamestate.frame_rate)
         
-        except:
+        except Exception as err:
+            print("Unexpected error:", str(err))
+            
             if (versusmode.local_state != None and
             versusmode.local_state.simulation_process != None):
                 
                 if versusmode.local_state.simulation_process.is_alive():
-                    print("terminiating!")
+                    print("terminating!")
                     if versusmode.local_state.simulation_connection != None:
                         versusmode.local_state.simulation_connection.send('STOP')
                     else:
@@ -138,7 +140,7 @@ if __name__ == "__main__":
             onlineversusmode.local_state.simulation_process != None):
                 
                 if onlineversusmode.local_state.simulation_process.is_alive():
-                    print("terminiating!")
+                    print("terminating!")
                     onlineversusmode.local_state.simulation_process.terminate()
                     #onlineversusmode.local_state.simulation_process.join()
                     

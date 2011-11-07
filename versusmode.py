@@ -1,6 +1,6 @@
 import multiprocessing
 import pygame
-from wotsfx import ClashEffect, HitEffect
+
 import wotsuievents
 import gamestate
 import player
@@ -13,11 +13,12 @@ import mathfuncs
 import math
 import settingsdata
 import versusrendering
+from wotsfx import ClashEffect, HitEffect, TrailEffect
 from versusmodeui import PlayerHealth, AttackList, PAUSE_MENU_WIDTH, PAUSE_MENU_HEIGHT
 from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
 from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults, \
-PlayerStates, CommandCollections, InputActionTypes
+PlayerStates, CommandCollections, InputActionTypes, PointNames
 from versussound import AttackResultSoundMixer, PlayerSoundMixer
 from controlsdata import get_controls
 from playercontroller import InputCommandTypes
@@ -66,6 +67,10 @@ class VersusModeState():
         self.fps_label = None
         self.command_label = None
         self.point_effects = {}
+        self.trail_effects = {
+            PlayerPositions.PLAYER1 : {},
+            PlayerPositions.PLAYER2 : {}
+        }
         self.camera = None
         self.player_renderer_state = None
         self.surface_renderer = None
@@ -273,6 +278,10 @@ class VersusModeState():
     def init_rendering_objects(self):
         
         self.point_effects = {}
+        self.trail_effects = {
+            PlayerPositions.PLAYER1 : {},
+            PlayerPositions.PLAYER2 : {}
+        }
         
         self.camera = versusrendering.ViewportCamera(
             gamestate.stage.width,
@@ -335,6 +344,7 @@ class VersusModeState():
         
         self.point_effects = {}
         self.player_health_bars = {}
+        self.trail_effects = None
         self.player_renderer_state = None
         self.surface_renderer = None
         self.fps_label = None
@@ -405,14 +415,22 @@ class VersusModeState():
         )
         
         for effect in self.point_effects.values():
-            if not self.pause:
-                effect.update(gamestate.time_passed)
             
             effect_position, effect_surface = effect.draw_effect()
             self.surface_renderer.draw_surface_to_screen(
                 effect_position, 
                 effect_surface
             )
+        
+        for player_trail_effects in self.trail_effects.values():
+            for point_effects in player_trail_effects.values():
+                for trail_effect in point_effects.values():
+                    if trail_effect.is_renderable():
+                        for polygon_positions in trail_effect.get_polygons():
+                            self.surface_renderer.draw_polygon(
+                                polygon_positions,
+                                trail_effect.color
+                            )
         
         for health_bar in self.player_health_bars.values():
             self.surface_renderer.draw_surface_to_absolute_position(
@@ -433,6 +451,10 @@ class VersusModeState():
         
         self.set_outline_color(simulation_rendering_info)
         
+        for effect in self.point_effects.values():
+            if not self.pause:
+                effect.update(gamestate.time_passed)
+        
         if simulation_rendering_info.attack_result_rendering_info != None:
             self.create_collision_effects(
                 simulation_rendering_info.attack_result_rendering_info
@@ -446,12 +468,19 @@ class VersusModeState():
                     simulation_rendering_info.attack_result_rendering_info.attack_damage
                 )
         
+        if not self.pause:
+            self.update_trail_effects(
+                simulation_rendering_info.player_rendering_info_dictionary
+            )
+        
         for player_position, player_rendering_info in simulation_rendering_info.player_rendering_info_dictionary.iteritems():
+            
             health_bar = self.player_health_bars[player_position]
             health_bar.update(
                 gamestate.time_passed,
                 player_rendering_info.health_percentage
             )
+        
         self.player_renderer_state.update(
             simulation_rendering_info.player_rendering_info_dictionary, 
             1
@@ -460,6 +489,56 @@ class VersusModeState():
         self.play_player_sounds(simulation_rendering_info, PlayerPositions.PLAYER2)
         self.match_state = simulation_rendering_info.match_state
         self.match_time = simulation_rendering_info.match_time
+    
+    def update_trail_effects(self, player_rendering_info): 
+        
+        for player_position in self.trail_effects.keys():
+            player_info = player_rendering_info[player_position]
+            attack_type = player_info.attack_type
+            player_trail_effects = self.trail_effects[player_position]
+            
+            if attack_type != None: #and attack_type in InputActionTypes.QUICK_ATTACKS:
+                
+                player_model = player_info.player_model
+                
+                if player_info.animation_name in player_trail_effects:
+                    #update pointeffects
+                    for point_name, effect in player_trail_effects[player_info.animation_name].iteritems():
+                        effect.update(player_model.points[point_name].pos)
+                
+                else:
+                    #create point effects
+                    point_effects = player_trail_effects[player_info.animation_name] = {}
+                    
+                    if attack_type in InputActionTypes.PUNCHES:
+                        point_effects[PointNames.RIGHT_HAND] = TrailEffect(
+                            player_model.points[PointNames.RIGHT_HAND].pos,
+                            10,
+                            50,
+                            player_info.player_health_color
+                        )
+                        point_effects[PointNames.LEFT_HAND] = TrailEffect(
+                            player_model.points[PointNames.LEFT_HAND].pos,
+                            10,
+                            50,
+                            player_info.player_health_color
+                        )
+                    else:
+                        point_effects[PointNames.RIGHT_FOOT] = TrailEffect(
+                            player_model.points[PointNames.RIGHT_FOOT].pos,
+                            10,
+                            50,
+                            player_info.player_health_color
+                        )
+                        point_effects[PointNames.LEFT_FOOT] = TrailEffect(
+                            player_model.points[PointNames.LEFT_FOOT].pos,
+                            10,
+                            50,
+                            player_info.player_health_color
+                        )
+            else:
+                if len(player_trail_effects.keys()) > 0:
+                    self.trail_effects[player_position] = {}
     
     def play_player_sounds(self, simulation_rendering_info, player_position):
         player_rendering_info = simulation_rendering_info.player_rendering_info_dictionary[player_position]

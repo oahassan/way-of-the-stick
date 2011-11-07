@@ -1,4 +1,74 @@
 import pygame
+import mathfuncs
+
+class TrailEffect():
+    def __init__(
+        self,
+        start_position,
+        max_width,
+        max_length,
+        color
+    ):
+        self.positions = [start_position]
+        self.widths = []
+        self.length = 0
+        self.max_length = max_length
+        self.max_width = float(max_width)
+        self.color = color
+    
+    def update(self, position):
+        self.length += mathfuncs.distance(self.positions[-1], position)
+        self.positions.append(position)
+        
+        if self.length > self.max_length:
+            self.length -= mathfuncs.distance(self.positions[0], self.positions[1])
+            self.positions = self.positions[1:]
+        elif self.length > 0:
+            self.widths = [1]
+            width_delta = float(self.max_width / len(self.positions))
+            
+            for i in range(len(self.positions)):
+                self.widths.append(min(self.max_width, self.widths[i] * 1.5))
+    
+    def is_renderable(self):
+        return self.length > 0
+    
+    def get_polygons(self):
+        polygon_positions = [[self.positions[0]]]
+        polygon_positions[0].extend(self.get_line_positions(1))
+        
+        for i in range(2,len(self.positions)):
+            new_positions = polygon_positions[i - 2][-2:]
+            new_positions.extend(self.get_line_positions(i))
+            
+            polygon_positions.append(new_positions)
+        
+        return polygon_positions
+    
+    def get_line_positions(self, end_position_index):
+        start_position = self.positions[end_position_index - 1]
+        end_position = self.positions[end_position_index]
+        
+        l1 = mathfuncs.distance(end_position, start_position)
+        
+        if l1 > 0:
+            #YAY FOR SIMILAR TRIANGLES!
+            x1 = end_position[0] - start_position[0]
+            y1 = end_position[1] - start_position[1]
+            l2 = self.widths[end_position_index] / 2.0
+            
+            position1 = (
+                end_position[0] + (y1 / l1 * l2),
+                end_position[1] - (x1 / l1 * l2)
+            )
+            position2 = (
+                end_position[0] - (y1 / l1 * l2),
+                end_position[1] + (x1 / l1 * l2)
+            )
+            
+            return (position1, position2)
+        else:
+            return (end_position, end_position)
 
 class Effect():
     def __init__(
