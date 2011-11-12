@@ -10,6 +10,10 @@ import wotsuievents
 from button import Label
 from mathfuncs import distance, sign
 
+POINT_RADIUS = 2
+PARTICLE_RADIUS = 20
+COLOR_KEY = (3,233,1)
+
 pygame.init()
 pygame.font.init()
 
@@ -26,13 +30,11 @@ class ForceField():
         reference_position,
         height,
         width,
-        tile_height,
-        tile_width
     ):
         self.height = height
         self.width = width
-        self.tile_height = tile_height
-        self.tile_width = tile_width
+        self.tile_height = 0
+        self.tile_width = 0
         self.tiles = []
         self.gravity_tiles = []
         self.reference_position = reference_position
@@ -125,25 +127,37 @@ class ForceField():
         tile.acceleration[0] = x_acceleration
         tile.acceleration[1] = y_acceleration
     
+    def get_enclosing_rect(self):
+        return (
+            (self.reference_position[0] + 1,self.reference_position[1] + 1),
+            (self.width, self.height)
+        )
+    
     def draw(self, surface):
-        for row in self.tiles:
-            for tile in row:
-                start_position = (
-                    self.reference_position[0] + tile.position[0],
-                    self.reference_position[1] + tile.position[1]
-                )
-                end_position = (
-                    start_position[0] + (100 * tile.acceleration[0]),
-                    start_position[1] + (100 * tile.acceleration[1])
-                )
-                
-                pygame.draw.line(
-                    surface,
-                    (255,0,0),
-                    start_position,
-                    end_position,
-                    1
-                )
+        pygame.draw.rect(
+            surface,
+            (255,0,0),
+            self.get_enclosing_rect(),
+            1
+        )
+        #for row in self.tiles:
+        #    for tile in row:
+        #        start_position = (
+        #            self.reference_position[0] + tile.position[0],
+        #            self.reference_position[1] + tile.position[1]
+        #        )
+        #        end_position = (
+        #            start_position[0] + (100 * tile.acceleration[0]),
+        #            start_position[1] + (100 * tile.acceleration[1])
+        #        )
+        #        
+        #        pygame.draw.line(
+        #            surface,
+        #            (255,0,0),
+        #            start_position,
+        #            end_position,
+        #            1
+        #        )
                     
 
 class ForceTile():
@@ -183,9 +197,9 @@ class Particle():
         self.points = []
         
         for i in range(25):
-            angle = 2 * random() * math.pi
-            x_position = int(30 * random() * math.cos(angle)) + 30
-            y_position = int(min(0, 30 * random() * math.sin(angle))) + 30
+            angle = -random() * math.pi
+            x_position = int(PARTICLE_RADIUS * random() * math.cos(angle)) + PARTICLE_RADIUS + POINT_RADIUS
+            y_position = int(PARTICLE_RADIUS * random() * math.sin(angle)) + PARTICLE_RADIUS + POINT_RADIUS
             self.points.append((x_position, y_position))
     
     def reset(self, duration, position):
@@ -201,8 +215,6 @@ class Particle():
         self.position[0] += self.velocity[0] * time_passed
         self.position[1] += self.velocity[1] * time_passed
         
-        if self.position[1] > 300:
-            self.position[1] = 300
         self.duration -= time_passed
     
     def draw_relative(self, surface, reference_position):
@@ -268,12 +280,12 @@ class Particle():
     def get_enclosing_rect(self):
         min_position = map(min, zip(*self.points))
         max_position = map(max, zip(*self.points))
-        height = 170
-        width = 170
+        height = 2 * (PARTICLE_RADIUS + POINT_RADIUS)
+        width = 2 * (PARTICLE_RADIUS + POINT_RADIUS)
         
         position = (
-            self.position[0] - 15, 
-            self.position[1] - 15
+            self.position[0] - (PARTICLE_RADIUS + POINT_RADIUS), 
+            self.position[1] - (PARTICLE_RADIUS + POINT_RADIUS)
         )
         
         return (position, (height, width))
@@ -281,17 +293,21 @@ class Particle():
 class ParticleSystem():
     def __init__(self, particle_count, particle_class, drag_coefficient):
         
-        self.emit_position = (0,0)
+        self.emit_position = [0,0]
         self.emit_rate = 0
         self.particle_duration = 0
         self.particle_max_velocity = 0
         self.particle_angle_range = [0, 2 * math.pi]
         self.particle_color = (255,255,255)
         
+        self.duration = 0
         self.drag_coefficient = drag_coefficient
+        self.force_fields = []
         
+        self.particles = [particle_class() for i in range(particle_count)]
         self.live_particles = []
-        self.dead_particles = [particle_class() for i in range(particle_count)]
+        self.dead_particles = []
+        self.dead_particles.extend(self.particles)
     
     def init(
         self, 
@@ -302,14 +318,19 @@ class ParticleSystem():
         duration,
         color
     ):
-        self.emit_position = emit_position
+        self.emit_position[0] = emit_position[0]
+        self.emit_position[1] = emit_position[1]
         self.emit_rate = emit_rate
         self.particle_duration = duration
         self.particle_max_velocity = max_velocity
         self.particle_angle_range[0] = angle_range[0]
         self.particle_angle_range[1] = angle_range[1]
         self.particle_color = color
-        self.force_fields = []
+        self.duration = duration
+        self.cycle = False
+    
+    def active(self):
+        return self.duration > 0
     
     def add_force_field(self, force_field):
         self.force_fields.append(force_field)
@@ -331,8 +352,8 @@ class ParticleSystem():
             if tile != None:
                 particle.accelerate(tile.acceleration)
     
-    def update(self, time_passed):
-        step_size = 10
+    def update(self, time_passed, step_size):
+        
         while time_passed > 0:
             time_passed = time_passed - step_size
             
@@ -371,9 +392,12 @@ class ParticleSystem():
             
             for particle in dead_particles:
                 self.live_particles.remove(particle)
-                self.dead_particles.append(particle)
+                
+                if self.cycle:
+                    self.dead_particles.append(particle)
     
     def draw(self, surface):
+        
         rect = self.get_enclosing_rects()
         particle_surface = pygame.Surface(rect[1])
         
@@ -410,8 +434,142 @@ class ParticleSystem():
         else:
             return ((0,0), (0, 0))
 
+class RunSmoke(ParticleSystem):
+    def __init__(self, floor_height, direction):
+        ParticleSystem.__init__(self, 20, Particle, .04)
+        
+        self.floor_height = floor_height
+        
+        self.particle_buffer = pygame.Surface(
+            (2 * (PARTICLE_RADIUS + POINT_RADIUS), 2 * (PARTICLE_RADIUS + POINT_RADIUS))
+        ).convert()
+        self.particle_buffer.set_colorkey(COLOR_KEY)
+        
+        self.direction = direction
+        field = None
+        
+        if direction < 0:
+            field = ForceField(
+                [self.emit_position[0] + 100, self.emit_position[1] - 100],
+                75,
+                100
+            )
+        else:
+            field = ForceField(
+                [self.emit_position[0] - 500 + 10, self.emit_position[1] - 100],
+                75,
+                100
+            )
+        field.set_tiles(1,1)
+        self.field = field
+        self.add_force_field(field)
+        
+        for row in self.field.tiles:
+            for tile in row:
+                tile.acceleration[0] = direction * .015
+                tile.acceleration[1] = random() / 80
+    
+    def start(self, emit_position):
+        self.emit_position[0] = emit_position[0]
+        self.emit_position[1] = emit_position[1]
+        
+        if self.direction > 0:
+            self.field.reference_position[0] = self.emit_position[0] - 50
+            self.field.reference_position[1] = self.emit_position[1] - self.field.height + 10
+        else:
+            self.field.reference_position[0] = self.emit_position[0] - self.field.width + 50
+            self.field.reference_position[1] = self.emit_position[1] - self.field.height + 10
+        
+        angle_range = None
+        
+        if self.direction > 0:
+            angle_range = [-math.pi/3, -math.pi]
+        else:
+            angle_range = [0, -2*math.pi/3]
+        
+        self.init(
+            emit_position, 
+            10,
+            .3,
+            angle_range, 
+            1000,
+            (255, 255, 255)
+        )
+        self.duration = 1000
+        
+        self.live_particles = []
+        self.dead_particles = []
+        self.dead_particles.extend(self.particles)
+        
+        for particle in self.particles:
+                        
+            particle.init(
+                self.particle_duration, 
+                self.emit_position, 
+                self.get_particle_init_velocity(), 
+                self.particle_color)
+    
+    def update(self, time_passed):
+        if self.duration > 0:
+            self.duration -= time_passed
+            
+            ParticleSystem.update(self, time_passed, 10)
+            for particle in self.particles:
+                if particle.position[1] > self.floor_height:
+                    particle.position[1] = self.floor_height + 1
+    
+    def draw(self, surface):
+        rect = self.get_enclosing_rects()
+        system_surface = pygame.Surface(rect[1])
+        system_surface.set_colorkey((0,0,0))
+        system_surface.fill((0,0,0))
+        
+        particle_surface = self.particle_buffer
+        
+        for particle in self.live_particles:
+            
+            alpha = min(100, int(255 * float(particle.duration) / particle.total_duration))
+            particle_surface.fill(COLOR_KEY)
+            particle_surface.set_alpha(alpha)
+            
+            surface_position = (
+                int(particle.position[0] - PARTICLE_RADIUS - POINT_RADIUS),
+                int(particle.position[1] - PARTICLE_RADIUS - POINT_RADIUS)
+            )
+            
+            for point in particle.points:
+                if particle.position[1] + point[1] < self.floor_height:
+                    pygame.draw.circle(
+                        particle_surface,
+                        particle.color,
+                        (int(point[0]), 
+                        int(point[1])),
+                        POINT_RADIUS
+                    )
+            
+            surface.blit(
+                particle_surface,
+                surface_position
+            )
+            
+            #system_surface.blit(
+            #    particle_surface,
+            #    surface_position
+            #)
+        
+        #scaled_width = int(.5 * rect[1][0])
+        #scaled_height = int(.5 * rect[1][1])
+        
+        #scaled_surface = pygame.transform.scale(
+        #    system_surface, 
+        #    (scaled_width, scaled_height)
+        #)
+        #scaled_position = (rect[0][0], rect[0][1] + scaled_height)
+        #surface.blit(scaled_surface, scaled_position)
+        
+
 system = ParticleSystem(100, Particle, .04)
-field = ForceField((350,200), 100, 150, 1, 1)
+field = ForceField((350,200), 100, 150)
 field.set_tiles(1,1)
 system.init(
     (400,300),
@@ -422,14 +580,22 @@ system.init(
     (255, 255, 255)
 )
 system.add_force_field(field)
+
 mouse_position_label = Label((0,0),"", (255,255,255), 20)
 tile_position_label = Label((0,20),"", (255,255,255), 20)
 acceleration_label = Label((0,40),"",(255,255,255), 20)
 gravity_label = Label((0,60),"",(255,255,255), 20)
 frame_rate_label = Label((0,80),"",(255,255,255), 20)
 
+run_smoke = RunSmoke(500, 1)
+run_smoke2 = RunSmoke(500, -1)
+run_smoke3 = RunSmoke(500, 1)
+run_smoke4 = RunSmoke(500, -1)
+
 new_rects = []
 dirty_rects = []
+
+start_runsmoke = False
 
 while 1:
     screen.fill((0,0,0))
@@ -441,7 +607,14 @@ while 1:
     if pygame.QUIT in wotsuievents.event_types:
         sys.exit()
     if wotsuievents.mouse_buttons_pressed[0] == 1:
-        field.increase_gravity(wotsuievents.mouse_pos, .01)
+        start_runsmoke = True
+    elif wotsuievents.mouse_buttons_pressed[0] == 0:
+        if start_runsmoke:
+            run_smoke.start(wotsuievents.mouse_pos)
+            run_smoke2.start(wotsuievents.mouse_pos)
+            run_smoke3.start([wotsuievents.mouse_pos[0], wotsuievents.mouse_pos[1] - 300])
+            run_smoke4.start([wotsuievents.mouse_pos[0], wotsuievents.mouse_pos[1] - 300])
+            start_runsmoke = False
     elif wotsuievents.mouse_buttons_pressed[2] == 1:
         field.increase_gravity(wotsuievents.mouse_pos, -.01)
     elif pygame.K_UP in wotsuievents.keys_pressed:
@@ -480,10 +653,39 @@ while 1:
         acceleration_label.set_text("tile acceleration:")
         gravity_label.set_text("tile gravity:")
     
-    
-    system.update(min(100, clock.get_time()))
+    time_passed = min(100, clock.get_time())
+    #system.update(time_passed, 10)
     #field.draw(screen)
-    system.draw(screen)
+    #system.draw(screen)
+    #new_rects.append(system.get_enclosing_rects())
+    
+    if run_smoke.active:
+        run_smoke.update(time_passed)
+        run_smoke.draw(screen)
+        #run_smoke.force_fields[0].draw(screen)
+        #new_rects.append(run_smoke.field.get_enclosing_rect())
+        new_rects.append(run_smoke.get_enclosing_rects())
+    
+    if run_smoke2.active:
+        run_smoke2.update(time_passed)
+        run_smoke2.draw(screen)
+        #run_smoke.force_fields[0].draw(screen)
+        #new_rects.append(run_smoke.field.get_enclosing_rect())
+        new_rects.append(run_smoke2.get_enclosing_rects())
+    
+    if run_smoke3.active:
+        run_smoke3.update(time_passed)
+        run_smoke3.draw(screen)
+        #run_smoke.force_fields[0].draw(screen)
+        #new_rects.append(run_smoke.field.get_enclosing_rect())
+        new_rects.append(run_smoke3.get_enclosing_rects())
+    
+    if run_smoke4.active:
+        run_smoke4.update(time_passed)
+        run_smoke4.draw(screen)
+        #run_smoke.force_fields[0].draw(screen)
+        #new_rects.append(run_smoke.field.get_enclosing_rect())
+        new_rects.append(run_smoke4.get_enclosing_rects())
     
     #mouse_position_label.draw(screen)
     #tile_position_label.draw(screen)
@@ -492,7 +694,6 @@ while 1:
     frame_rate_label.draw(screen)
     
     
-    new_rects.append(system.get_enclosing_rects())
     pygame.display.update(dirty_rects)
     pygame.display.update(new_rects)
     
