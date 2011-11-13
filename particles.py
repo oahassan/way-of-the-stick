@@ -12,7 +12,7 @@ from button import Label
 from mathfuncs import distance, sign
 
 POINT_COUNT = 20
-POINT_RADIUS = 2
+POINT_RADIUS = 5
 PARTICLE_RADIUS = 20
 COLOR_KEY = (0,0,0)
 
