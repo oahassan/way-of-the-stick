@@ -22,7 +22,7 @@ PlayerStates, CommandCollections, InputActionTypes, PointNames, EffectTypes, Eve
 from versussound import AttackResultSoundMixer, PlayerSoundMixer
 from controlsdata import get_controls
 from playercontroller import InputCommandTypes
-from particles import RunSmoke
+from particles import RunSmoke, JumpSmoke
 from physics import Orientations
 
 gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
@@ -191,17 +191,6 @@ class VersusModeState():
                 self.clean_expired_effects()
                 
                 self.handle_match_state()
-                
-                if simulation_rendering_info != None:
-                    player_rendering_info_dictionary = simulation_rendering_info.player_rendering_info_dictionary
-                    for player_position, event_handler in self.player_event_handlers.iteritems():
-                        rendering_info = player_rendering_info_dictionary[player_position]
-                        
-                        for event in rendering_info.events:
-                            event_handler.fire_event_handlers(
-                                event, 
-                                (player_position, rendering_info)
-                            )
         
         if self.simulation_connection != None:
             self.update_simulation()
@@ -322,7 +311,7 @@ class VersusModeState():
     def start_run_start_particle_effect(self, player_position, player_rendering_info):
         model = player_rendering_info.player_model
         orientation = model.orientation
-        emit_position = (model.center()[0], model.bottom())
+        emit_position = (model.center()[0], gamestate.stage.floor_height)
         
         if orientation == Orientations.FACING_RIGHT:
             self.particle_effects[player_position][EffectTypes.RIGHT_RUN_SMOKE].start(
@@ -333,10 +322,20 @@ class VersusModeState():
                 emit_position
             )
     
+    def start_jump_particle_effect(self, player_position, player_rendering_info):
+        model = player_rendering_info.player_model
+        
+        
+        if model.bottom() > gamestate.stage.floor_height - 50:
+            emit_position = (model.center()[0], gamestate.stage.floor_height)    
+            self.particle_effects[player_position][EffectTypes.JUMP_SMOKE].start(
+                emit_position
+            )
+    
     def start_run_stop_particle_effect(self, player_position, player_rendering_info):
         model = player_rendering_info.player_model
         orientation = model.orientation
-        emit_position = (model.position[0], model.bottom())
+        emit_position = (model.position[0], gamestate.stage.floor_height)
         
         if orientation == Orientations.FACING_RIGHT:
             self.particle_effects[player_position][EffectTypes.LEFT_RUN_SMOKE].start(
@@ -362,6 +361,10 @@ class VersusModeState():
             (EventTypes.STOP, PlayerStates.RUNNING),
             self.start_run_stop_particle_effect
         )
+        self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
+            (EventTypes.START, PlayerStates.JUMPING),
+            self.start_jump_particle_effect
+        )
         self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
             (EventTypes.START, PlayerStates.RUNNING),
             self.start_run_start_particle_effect
@@ -370,15 +373,21 @@ class VersusModeState():
             (EventTypes.STOP, PlayerStates.RUNNING),
             self.start_run_stop_particle_effect
         )
+        self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
+            (EventTypes.START, PlayerStates.JUMPING),
+            self.start_jump_particle_effect
+        )
         
         self.particle_effects = {
             PlayerPositions.PLAYER1 : {
                 EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1100, 1),
                 EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1100, -1),
+                EffectTypes.JUMP_SMOKE : JumpSmoke(1100)
             },
             PlayerPositions.PLAYER2 : {
                 EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1100, 1),
                 EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1100, -1),
+                EffectTypes.JUMP_SMOKE : JumpSmoke(1100)
             }
         }
         
@@ -590,6 +599,13 @@ class VersusModeState():
             self.update_particle_effects()
         
         for player_position, player_rendering_info in simulation_rendering_info.player_rendering_info_dictionary.iteritems():
+            event_handler = self.player_event_handlers[player_position]
+            
+            for event in player_rendering_info.events:
+                event_handler.fire_event_handlers(
+                    event, 
+                    (player_position, player_rendering_info)
+                )
             
             health_bar = self.player_health_bars[player_position]
             health_bar.update(

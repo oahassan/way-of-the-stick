@@ -150,6 +150,7 @@ class AnimationModes():
 class EffectTypes:
     LEFT_RUN_SMOKE = 0
     RIGHT_RUN_SMOKE = 1
+    JUMP_SMOKE = 2
 
 # player state
 

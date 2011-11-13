@@ -1,5 +1,6 @@
 import sys
-from random import random, choice
+from random import random, choice, uniform
+from functools import partial
 import math
 import pygame
 
@@ -13,7 +14,7 @@ from mathfuncs import distance, sign
 POINT_COUNT = 20
 POINT_RADIUS = 2
 PARTICLE_RADIUS = 20
-COLOR_KEY = (3,233,1)
+COLOR_KEY = (0,0,0)
 
 class ForceField():
     def __init__(
@@ -165,13 +166,16 @@ class ForceTile():
         self.gravity = 0
 
 class Particle():
-    def __init__(self):
+    def __init__(self, point_count, point_radius, particle_radius):
         self.position = [0.0,0.0]
         self.velocity = [0.0,0.0]
         self.duration = 0
         self.total_duration = 0
         self.color = (255,255,255)
         self.points = []
+        self.point_count = point_count
+        self.point_radius = point_radius
+        self.particle_radius = particle_radius
     
     def init(self, duration, position, velocity, color):
         self.time_passed = 0
@@ -187,10 +191,10 @@ class Particle():
     def set_points(self):
         self.points = []
         
-        for i in range(POINT_COUNT):
+        for i in range(self.point_count):
             angle = -random() * math.pi
-            x_position = int(PARTICLE_RADIUS * random() * math.cos(angle)) + PARTICLE_RADIUS + POINT_RADIUS
-            y_position = int(PARTICLE_RADIUS * random() * math.sin(angle)) + PARTICLE_RADIUS + POINT_RADIUS
+            x_position = int(self.particle_radius * random() * math.cos(angle)) + self.particle_radius + self.point_radius
+            y_position = int(self.particle_radius * random() * math.sin(angle)) + self.particle_radius + self.point_radius
             self.points.append((x_position, y_position))
     
     def reset(self, duration, position):
@@ -427,7 +431,11 @@ class ParticleSystem():
 
 class RunSmoke(ParticleSystem):
     def __init__(self, floor_height, direction):
-        ParticleSystem.__init__(self, 20, Particle, .04)
+        ParticleSystem.__init__(
+            self, 
+            20, 
+            partial(Particle, *(POINT_COUNT, POINT_RADIUS, PARTICLE_RADIUS)), 
+            .04)
         
         self.floor_height = floor_height
         
@@ -483,10 +491,10 @@ class RunSmoke(ParticleSystem):
             10,
             .3,
             angle_range, 
-            1000,
+            500,
             (255, 255, 255)
         )
-        self.duration = 1000
+        self.duration = 500
         
         self.live_particles = []
         self.dead_particles = []
@@ -542,10 +550,125 @@ class RunSmoke(ParticleSystem):
                         POINT_RADIUS
                     )
             
-            #surface.blit(
-            #    particle_surface,
-            #    surface_position
-            #)
+            system_surface.blit(
+                particle_surface,
+                surface_position
+            )
+        
+        #scaled_width = int(.5 * rect[1][0])
+        #scaled_height = int(.5 * rect[1][1])
+        
+        #scaled_surface = pygame.transform.scale(
+        #    system_surface, 
+        #    (scaled_width, scaled_height)
+        #)
+        #scaled_position = (rect[0][0], rect[0][1] + scaled_height)
+        return system_surface, rect[0]
+
+
+class JumpSmoke(ParticleSystem):
+    def __init__(self, floor_height):
+        ParticleSystem.__init__(
+            self, 
+            20, 
+            partial(Particle, *(POINT_COUNT, POINT_RADIUS, PARTICLE_RADIUS)), 
+            .08)
+        
+        self.floor_height = floor_height
+        
+        self.particle_buffer = pygame.Surface(
+            (2 * (PARTICLE_RADIUS + POINT_RADIUS), 2 * (PARTICLE_RADIUS + POINT_RADIUS))
+        ).convert()
+        self.particle_buffer.set_colorkey(COLOR_KEY)
+    
+    def get_particle_init_velocity(self):
+        
+        x = choice([1,-1]) * choice(
+            [uniform(self.particle_max_velocity, .9), 
+            uniform(.1, 1./self.particle_max_velocity)]
+        )
+        if x == 0:
+            x = choice(-.0001,0.0001)
+        
+        y = min(1/x, .1*self.particle_max_velocity)
+        
+        if y > 0:
+            y *= -1
+        
+        return (
+            x/(10),
+            y/(10)
+        )
+    
+    def start(self, emit_position):
+        self.emit_position[0] = emit_position[0]
+        self.emit_position[1] = emit_position[1]
+        
+        angle_range = [0, -math.pi]
+        
+        self.init(
+            emit_position, 
+            10,
+            .4,
+            angle_range, 
+            300,
+            (255, 255, 255)
+        )
+        self.duration = 300
+        
+        self.live_particles = []
+        self.dead_particles = []
+        self.dead_particles.extend(self.particles)
+        
+        for particle in self.particles:
+                        
+            particle.init(
+                self.particle_duration, 
+                self.emit_position, 
+                self.get_particle_init_velocity(), 
+                self.particle_color)
+    
+    def update(self, time_passed):
+        if self.duration > 0:
+            self.duration -= time_passed
+            
+            ParticleSystem.update(self, time_passed, 10)
+            for particle in self.particles:
+                if particle.position[1] > self.floor_height:
+                    particle.position[1] = self.floor_height + 1
+    
+    def draw2(self, surface):
+        temp_surface, position = self.draw()
+        surface.blit(temp_surface, position)
+    
+    def draw(self):
+        rect = self.get_enclosing_rects()
+        system_surface = pygame.Surface(rect[1])
+        system_surface.set_colorkey((0,0,0))
+        system_surface.fill((0,0,0))
+        
+        particle_surface = self.particle_buffer
+        
+        for particle in self.live_particles:
+            
+            alpha = int(100 * float(particle.duration) / particle.total_duration)
+            particle_surface.fill(COLOR_KEY)
+            particle_surface.set_alpha(alpha)
+            
+            surface_position = (
+                int(particle.position[0] - rect[0][0] - PARTICLE_RADIUS - POINT_RADIUS),
+                int(particle.position[1] - rect[0][1] - PARTICLE_RADIUS - POINT_RADIUS)
+            )
+            
+            for point in particle.points:
+                if particle.position[1] + point[1] < self.floor_height:
+                    pygame.draw.circle(
+                        particle_surface,
+                        particle.color,
+                        (int(point[0]), 
+                        int(point[1])),
+                        POINT_RADIUS
+                    )
             
             system_surface.blit(
                 particle_surface,
@@ -561,16 +684,19 @@ class RunSmoke(ParticleSystem):
         #)
         #scaled_position = (rect[0][0], rect[0][1] + scaled_height)
         return system_surface, rect[0]
-        
 
 if __name__ == "__main__":
     pygame.init()
     pygame.font.init()
 
-    screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN, 32)
+    screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE, 32)
     clock = pygame.time.Clock()
 
-    system = ParticleSystem(100, Particle, .04)
+    system = ParticleSystem(
+        100, 
+        partial(Particle, *(POINT_COUNT, POINT_RADIUS, PARTICLE_RADIUS)), 
+        .04
+    )
     field = ForceField((350,200), 100, 150)
     field.set_tiles(1,1)
     system.init(
@@ -589,7 +715,7 @@ if __name__ == "__main__":
     gravity_label = Label((0,60),"",(255,255,255), 20)
     frame_rate_label = Label((0,80),"",(255,255,255), 20)
 
-    run_smoke = RunSmoke(500, 1)
+    run_smoke = JumpSmoke(500)
     run_smoke2 = RunSmoke(500, -1)
     run_smoke3 = RunSmoke(500, 1)
     run_smoke4 = RunSmoke(500, -1)
@@ -616,9 +742,9 @@ if __name__ == "__main__":
         elif wotsuievents.mouse_buttons_pressed[0] == 0:
             if start_runsmoke:
                 run_smoke.start(wotsuievents.mouse_pos)
-                run_smoke2.start([wotsuievents.mouse_pos[0] - 50, wotsuievents.mouse_pos[1]])
-                run_smoke3.start([wotsuievents.mouse_pos[0], wotsuievents.mouse_pos[1] - 100])
-                run_smoke4.start([wotsuievents.mouse_pos[0] - 50, wotsuievents.mouse_pos[1] - 100])
+                #run_smoke2.start([wotsuievents.mouse_pos[0] - 50, wotsuievents.mouse_pos[1]])
+                #run_smoke3.start([wotsuievents.mouse_pos[0], wotsuievents.mouse_pos[1] - 100])
+                #run_smoke4.start([wotsuievents.mouse_pos[0] - 50, wotsuievents.mouse_pos[1] - 100])
                 start_runsmoke = False
         elif wotsuievents.mouse_buttons_pressed[2] == 1:
             field.increase_gravity(wotsuievents.mouse_pos, -.01)
@@ -671,26 +797,26 @@ if __name__ == "__main__":
             #new_rects.append(run_smoke.field.get_enclosing_rect())
             new_rects.append(run_smoke.get_enclosing_rects())
         
-        if run_smoke2.active:
-            run_smoke2.update(time_passed)
-            run_smoke2.draw2(screen)
-            #run_smoke.force_fields[0].draw(screen)
-            #new_rects.append(run_smoke.field.get_enclosing_rect())
-            new_rects.append(run_smoke2.get_enclosing_rects())
+        #if run_smoke2.active:
+        #    run_smoke2.update(time_passed)
+        #    run_smoke2.draw2(screen)
+        #    #run_smoke.force_fields[0].draw(screen)
+        #    #new_rects.append(run_smoke.field.get_enclosing_rect())
+        #    new_rects.append(run_smoke2.get_enclosing_rects())
         
-        if run_smoke3.active:
-            run_smoke3.update(time_passed)
-            run_smoke3.draw2(screen)
-            #run_smoke.force_fields[0].draw(screen)
-            #new_rects.append(run_smoke.field.get_enclosing_rect())
-            new_rects.append(run_smoke3.get_enclosing_rects())
+        #if run_smoke3.active:
+        #    run_smoke3.update(time_passed)
+        #    run_smoke3.draw2(screen)
+        #    #run_smoke.force_fields[0].draw(screen)
+        #    #new_rects.append(run_smoke.field.get_enclosing_rect())
+        #    new_rects.append(run_smoke3.get_enclosing_rects())
         
-        if run_smoke4.active:
-            run_smoke4.update(time_passed)
-            run_smoke4.draw2(screen)
-            #run_smoke.force_fields[0].draw(screen)
-            #new_rects.append(run_smoke.field.get_enclosing_rect())
-            new_rects.append(run_smoke4.get_enclosing_rects())
+        #if run_smoke4.active:
+        #    run_smoke4.update(time_passed)
+        #    run_smoke4.draw2(screen)
+        #    #run_smoke.force_fields[0].draw(screen)
+        #    #new_rects.append(run_smoke.field.get_enclosing_rect())
+        #    new_rects.append(run_smoke4.get_enclosing_rects())
         
         #mouse_position_label.draw(screen)
         #tile_position_label.draw(screen)

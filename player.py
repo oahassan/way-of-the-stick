@@ -103,7 +103,7 @@ class Player():
         self.interaction_vector = (0,0)
         self.interaction_point = None
         self.knockback_multiplier = 4
-        self.health_max = 2000
+        self.health_max = 4000
         self.health_meter = self.health_max
         self.health_color = (0,0,100)
         self.moveset = None

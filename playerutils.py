@@ -72,11 +72,13 @@ class Action():
             return action
     
     def set_player_state(self, player, direction):
+        
+        if player.action.action_state != self.action_state:
+            player.events.append((EventTypes.START, self.action_state))
+        
         player.action = self
         player.direction = direction
         player.model.animation_run_time = 0     
-        
-        player.events.append((EventTypes.START, self.action_state))
         
         if direction == PlayerStates.FACING_LEFT:
             self.animation = self.right_animation
@@ -752,11 +754,10 @@ class Attack(Action):
             
             x_velocity = self.animation.get_lateral_velocity(displacement_start_time,frame_index)
             y_velocity = self.animation.get_jump_velocity(displacement_start_time,frame_index)
-            #print(
-            #    (y_velocity, 
-            #    pygame.Rect(*player.model.get_enclosing_rect()).bottom, 
-            #    displacement_start_time)
-            #)
+            
+            if player.is_aerial() == False and y_velocity < 0:
+                player.events.append((EventTypes.START, PlayerStates.JUMPING))
+            
             if player.model.orientation == physics.Orientations.FACING_RIGHT:
                 player.model.velocity = (x_velocity, y_velocity)
             elif player.model.orientation == physics.Orientations.FACING_LEFT:
