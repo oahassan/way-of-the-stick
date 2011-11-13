@@ -243,7 +243,7 @@ class Transition(Action):
     def set_player_state(self, player):
         #set friction so that stun friction doesn't remain
         player.model.friction = physics.FRICTION
-        
+        player.events.append((EventTypes.STOP, self.last_action.action_state))
         if player.is_aerial() == False:
             self.grounded = True
         

@@ -319,7 +319,7 @@ class VersusModeState():
         self.versus_mode_start_timer = 0
         self.fight_start_timer = 0
     
-    def start_particle_effect(self, player_position, player_rendering_info):
+    def start_run_start_particle_effect(self, player_position, player_rendering_info):
         model = player_rendering_info.player_model
         orientation = model.orientation
         emit_position = (model.center()[0], model.bottom())
@@ -333,6 +333,20 @@ class VersusModeState():
                 emit_position
             )
     
+    def start_run_stop_particle_effect(self, player_position, player_rendering_info):
+        model = player_rendering_info.player_model
+        orientation = model.orientation
+        emit_position = (model.position[0], model.bottom())
+        
+        if orientation == Orientations.FACING_RIGHT:
+            self.particle_effects[player_position][EffectTypes.LEFT_RUN_SMOKE].start(
+                emit_position
+            )
+        else:
+            self.particle_effects[player_position][EffectTypes.RIGHT_RUN_SMOKE].start(
+                emit_position
+            )
+    
     def init_rendering_objects(self):
         
         self.player_event_handlers = {
@@ -342,21 +356,29 @@ class VersusModeState():
         
         self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
             (EventTypes.START, PlayerStates.RUNNING),
-            self.start_particle_effect
+            self.start_run_start_particle_effect
+        )
+        self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
+            (EventTypes.STOP, PlayerStates.RUNNING),
+            self.start_run_stop_particle_effect
         )
         self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
             (EventTypes.START, PlayerStates.RUNNING),
-            self.start_particle_effect
+            self.start_run_start_particle_effect
+        )
+        self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
+            (EventTypes.STOP, PlayerStates.RUNNING),
+            self.start_run_stop_particle_effect
         )
         
         self.particle_effects = {
             PlayerPositions.PLAYER1 : {
-                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1047, 1),
-                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1047, -1),
+                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1100, 1),
+                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1100, -1),
             },
             PlayerPositions.PLAYER2 : {
-                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1047, 1),
-                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1047, -1),
+                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1100, 1),
+                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1100, -1),
             }
         }
         

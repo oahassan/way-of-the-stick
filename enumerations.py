@@ -155,6 +155,7 @@ class EffectTypes:
 
 class EventTypes():
     START = 0
+    STOP = 1
 
 class PlayerStates():
     FACING_RIGHT = 'FACING_RIGHT'

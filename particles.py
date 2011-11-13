@@ -10,7 +10,7 @@ import wotsuievents
 from button import Label
 from mathfuncs import distance, sign
 
-POINT_COUNT = 10
+POINT_COUNT = 20
 POINT_RADIUS = 2
 PARTICLE_RADIUS = 20
 COLOR_KEY = (3,233,1)
