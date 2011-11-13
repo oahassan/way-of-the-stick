@@ -90,7 +90,8 @@ class PlayerRenderingInfo():
         health_percentage,
         animation_name,
         frame_index,
-        attack_type
+        attack_type,
+        player_events
     ):
         self.player_model = player_model
         self.player_state = player_state
@@ -100,12 +101,13 @@ class PlayerRenderingInfo():
         self.animation_name = animation_name
         self.frame_index = frame_index
         self.attack_type = attack_type
+        self.events = player_events
     
     def _pack(self):
         return (self.player_model, self.player_state,
         self.player_outline_color, self.player_health_color, 
         self.health_percentage, self.animation_name, self.frame_index,
-        self.attack_type)
+        self.attack_type, self.events)
 
 class MatchSimulation():
     def __init__(
@@ -144,6 +146,9 @@ class MatchSimulation():
                         self.step(player_keys_pressed, time_passed)
                     
                     self.pipe_connection.send(self.get_rendering_info())
+                    
+                    for player in self.player_dictionary.values():
+                        player.clear_events() 
             
             self.clock.tick(100)
     
@@ -154,7 +159,7 @@ class MatchSimulation():
         
         while self.accumulator > self.timestep:
             self.update_simulation_state(player_keys_pressed)
-            self.accumulator -= self.timestep    
+            self.accumulator -= self.timestep
     
     def update_simulation_state(self, player_keys_pressed):
         self.update_match_state()
@@ -240,7 +245,8 @@ class MatchSimulation():
                 player.health_meter / player.health_max,
                 player.action.animation.name,
                 player.action.last_frame_index,
-                attack_type
+                attack_type,
+                player.events
             )
         
         return return_rendering_dictionary

@@ -64,6 +64,8 @@ if __name__ == "__main__":
             
             if pygame.QUIT in event_types:
                 sys.exit()
+            elif pygame.K_ESCAPE in wotsuievents.keys_pressed:
+                sys.exit()
             elif gamestate.mode == gamestate.Modes.FRAMEEDITOR:
                 frameeditor.handle_events(screen, \
                                           mousePos, \

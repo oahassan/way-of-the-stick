@@ -18,13 +18,38 @@ from versusmodeui import PlayerHealth, AttackList, PAUSE_MENU_WIDTH, PAUSE_MENU_
 from simulation import MatchSimulation
 from attackbuilderui import AttackLabel
 from enumerations import PlayerPositions, MatchStates, PlayerTypes, ClashResults, \
-PlayerStates, CommandCollections, InputActionTypes, PointNames
+PlayerStates, CommandCollections, InputActionTypes, PointNames, EffectTypes, EventTypes
 from versussound import AttackResultSoundMixer, PlayerSoundMixer
 from controlsdata import get_controls
 from playercontroller import InputCommandTypes
+from particles import RunSmoke
+from physics import Orientations
 
 gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
 step_number = 0
+
+class EventRegistry():
+    def __init__(self):
+        self.events = {}
+    
+    def add_event_handler(self, event, func):
+        if event in self.events:
+            self.events[event].append(func)
+        else:
+            self.events[event] = [func]
+    
+    def remove_event_handler(self, event, func):
+        if event in self.events:
+            if func in self.events[event]:
+                self.events[event].remove(func)
+    
+    def clear_events(self):
+        self.events = {}
+    
+    def fire_event_handlers(self, event, args):
+        if event in self.events:
+            for func in self.events[event]:
+                func(*args)
 
 class VersusModeState():
     def __init__(self):
@@ -37,6 +62,10 @@ class VersusModeState():
         self.player_key_handlers = {
             PlayerPositions.PLAYER1 : None,
             PlayerPositions.PLAYER2 : None
+        }
+        self.player_event_handlers = {
+            PlayerPositions.PLAYER1 : EventRegistry(),
+            PlayerPositions.PLAYER2 : EventRegistry()
         }
         self.player_type_dictionary = {
             PlayerPositions.PLAYER1 : None,
@@ -68,6 +97,10 @@ class VersusModeState():
         self.command_label = None
         self.point_effects = {}
         self.trail_effects = {
+            PlayerPositions.PLAYER1 : {},
+            PlayerPositions.PLAYER2 : {}
+        }
+        self.particle_effects = {
             PlayerPositions.PLAYER1 : {},
             PlayerPositions.PLAYER2 : {}
         }
@@ -158,6 +191,17 @@ class VersusModeState():
                 self.clean_expired_effects()
                 
                 self.handle_match_state()
+                
+                if simulation_rendering_info != None:
+                    player_rendering_info_dictionary = simulation_rendering_info.player_rendering_info_dictionary
+                    for player_position, event_handler in self.player_event_handlers.iteritems():
+                        rendering_info = player_rendering_info_dictionary[player_position]
+                        
+                        for event in rendering_info.events:
+                            event_handler.fire_event_handlers(
+                                event, 
+                                (player_position, rendering_info)
+                            )
         
         if self.simulation_connection != None:
             self.update_simulation()
@@ -274,8 +318,47 @@ class VersusModeState():
         self.fight_end_timer = 0
         self.versus_mode_start_timer = 0
         self.fight_start_timer = 0
-
+    
+    def start_particle_effect(self, player_position, player_rendering_info):
+        model = player_rendering_info.player_model
+        orientation = model.orientation
+        emit_position = (model.center()[0], model.bottom())
+        
+        if orientation == Orientations.FACING_RIGHT:
+            self.particle_effects[player_position][EffectTypes.RIGHT_RUN_SMOKE].start(
+                emit_position
+            )
+        else:
+            self.particle_effects[player_position][EffectTypes.LEFT_RUN_SMOKE].start(
+                emit_position
+            )
+    
     def init_rendering_objects(self):
+        
+        self.player_event_handlers = {
+            PlayerPositions.PLAYER1 : EventRegistry(),
+            PlayerPositions.PLAYER2 : EventRegistry()
+        }
+        
+        self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
+            (EventTypes.START, PlayerStates.RUNNING),
+            self.start_particle_effect
+        )
+        self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
+            (EventTypes.START, PlayerStates.RUNNING),
+            self.start_particle_effect
+        )
+        
+        self.particle_effects = {
+            PlayerPositions.PLAYER1 : {
+                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1047, 1),
+                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1047, -1),
+            },
+            PlayerPositions.PLAYER2 : {
+                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1047, 1),
+                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1047, -1),
+            }
+        }
         
         self.point_effects = {}
         self.trail_effects = {
@@ -432,6 +515,16 @@ class VersusModeState():
                                 trail_effect.color
                             )
         
+        for player_particle_effects in self.particle_effects.values():
+            for effect in player_particle_effects.values():
+                if effect.active():
+                    
+                    surface, position = effect.draw()
+                    self.surface_renderer.draw_surface_to_screen(
+                        position, 
+                        surface
+                    )
+        
         for health_bar in self.player_health_bars.values():
             self.surface_renderer.draw_surface_to_absolute_position(
                 health_bar.position, 
@@ -472,6 +565,7 @@ class VersusModeState():
             self.update_trail_effects(
                 simulation_rendering_info.player_rendering_info_dictionary
             )
+            self.update_particle_effects()
         
         for player_position, player_rendering_info in simulation_rendering_info.player_rendering_info_dictionary.iteritems():
             
@@ -489,6 +583,12 @@ class VersusModeState():
         self.play_player_sounds(simulation_rendering_info, PlayerPositions.PLAYER2)
         self.match_state = simulation_rendering_info.match_state
         self.match_time = simulation_rendering_info.match_time
+    
+    def update_particle_effects(self):
+        for player_particle_effects in self.particle_effects.values():
+            for effect in player_particle_effects.values():
+                if effect.active():
+                    effect.update(gamestate.time_passed)
     
     def update_trail_effects(self, player_rendering_info): 
         

@@ -9,7 +9,7 @@ import stick
 import animation
 import physics
 import mathfuncs
-from enumerations import PlayerStates, AttackTypes, Elevations, InputActionTypes
+from enumerations import PlayerStates, AttackTypes, Elevations, InputActionTypes, EventTypes
 from playerconstants import *
 
 class Action():
@@ -75,6 +75,8 @@ class Action():
         player.action = self
         player.direction = direction
         player.model.animation_run_time = 0     
+        
+        player.events.append((EventTypes.START, self.action_state))
         
         if direction == PlayerStates.FACING_LEFT:
             self.animation = self.right_animation

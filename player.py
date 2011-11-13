@@ -117,6 +117,11 @@ class Player():
         self.run_right_action = None
         self.walk_left_action = None
         self.run_left_action = None
+        self.events = []
+    
+    def clear_events(self):
+        for i in xrange(len(self.events)):
+            self.events.pop()
     
     def load_moveset(self, moveset):
         controller_factory = ControllerFactory(self)

@@ -145,7 +145,16 @@ class AnimationModes():
     KEYFRAME = "KEYFRAME"
     HYBRID = "HYBRID"
 
+# rendering
+
+class EffectTypes:
+    LEFT_RUN_SMOKE = 0
+    RIGHT_RUN_SMOKE = 1
+
 # player state
+
+class EventTypes():
+    START = 0
 
 class PlayerStates():
     FACING_RIGHT = 'FACING_RIGHT'

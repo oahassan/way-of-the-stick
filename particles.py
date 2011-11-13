@@ -10,19 +10,10 @@ import wotsuievents
 from button import Label
 from mathfuncs import distance, sign
 
+POINT_COUNT = 10
 POINT_RADIUS = 2
 PARTICLE_RADIUS = 20
 COLOR_KEY = (3,233,1)
-
-pygame.init()
-pygame.font.init()
-
-text_box = TextBox('text', 700, (50,50))
-
-message_entry = MessageEntryBox((10,400), 400)
-
-screen = pygame.display.set_mode((800, 600))
-clock = pygame.time.Clock()
 
 class ForceField():
     def __init__(
@@ -196,7 +187,7 @@ class Particle():
     def set_points(self):
         self.points = []
         
-        for i in range(25):
+        for i in range(POINT_COUNT):
             angle = -random() * math.pi
             x_position = int(PARTICLE_RADIUS * random() * math.cos(angle)) + PARTICLE_RADIUS + POINT_RADIUS
             y_position = int(PARTICLE_RADIUS * random() * math.sin(angle)) + PARTICLE_RADIUS + POINT_RADIUS
@@ -518,7 +509,11 @@ class RunSmoke(ParticleSystem):
                 if particle.position[1] > self.floor_height:
                     particle.position[1] = self.floor_height + 1
     
-    def draw(self, surface):
+    def draw2(self, surface):
+        temp_surface, position = self.draw()
+        surface.blit(temp_surface, position)
+    
+    def draw(self):
         rect = self.get_enclosing_rects()
         system_surface = pygame.Surface(rect[1])
         system_surface.set_colorkey((0,0,0))
@@ -533,8 +528,8 @@ class RunSmoke(ParticleSystem):
             particle_surface.set_alpha(alpha)
             
             surface_position = (
-                int(particle.position[0] - PARTICLE_RADIUS - POINT_RADIUS),
-                int(particle.position[1] - PARTICLE_RADIUS - POINT_RADIUS)
+                int(particle.position[0] - rect[0][0] - PARTICLE_RADIUS - POINT_RADIUS),
+                int(particle.position[1] - rect[0][1] - PARTICLE_RADIUS - POINT_RADIUS)
             )
             
             for point in particle.points:
@@ -547,15 +542,15 @@ class RunSmoke(ParticleSystem):
                         POINT_RADIUS
                     )
             
-            surface.blit(
-                particle_surface,
-                surface_position
-            )
-            
-            #system_surface.blit(
+            #surface.blit(
             #    particle_surface,
             #    surface_position
             #)
+            
+            system_surface.blit(
+                particle_surface,
+                surface_position
+            )
         
         #scaled_width = int(.5 * rect[1][0])
         #scaled_height = int(.5 * rect[1][1])
@@ -565,142 +560,152 @@ class RunSmoke(ParticleSystem):
         #    (scaled_width, scaled_height)
         #)
         #scaled_position = (rect[0][0], rect[0][1] + scaled_height)
-        #surface.blit(scaled_surface, scaled_position)
+        return system_surface, rect[0]
         
 
-system = ParticleSystem(100, Particle, .04)
-field = ForceField((350,200), 100, 150)
-field.set_tiles(1,1)
-system.init(
-    (400,300),
-    300,
-    0.4, 
-    [-math.pi/3, -math.pi], 
-    1000,
-    (255, 255, 255)
-)
-system.add_force_field(field)
+if __name__ == "__main__":
+    pygame.init()
+    pygame.font.init()
 
-mouse_position_label = Label((0,0),"", (255,255,255), 20)
-tile_position_label = Label((0,20),"", (255,255,255), 20)
-acceleration_label = Label((0,40),"",(255,255,255), 20)
-gravity_label = Label((0,60),"",(255,255,255), 20)
-frame_rate_label = Label((0,80),"",(255,255,255), 20)
+    screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN, 32)
+    clock = pygame.time.Clock()
 
-run_smoke = RunSmoke(500, 1)
-run_smoke2 = RunSmoke(500, -1)
-run_smoke3 = RunSmoke(500, 1)
-run_smoke4 = RunSmoke(500, -1)
+    system = ParticleSystem(100, Particle, .04)
+    field = ForceField((350,200), 100, 150)
+    field.set_tiles(1,1)
+    system.init(
+        (400,300),
+        300,
+        0.4, 
+        [-math.pi/3, -math.pi], 
+        1000,
+        (255, 255, 255)
+    )
+    system.add_force_field(field)
 
-new_rects = []
-dirty_rects = []
+    mouse_position_label = Label((0,0),"", (255,255,255), 20)
+    tile_position_label = Label((0,20),"", (255,255,255), 20)
+    acceleration_label = Label((0,40),"",(255,255,255), 20)
+    gravity_label = Label((0,60),"",(255,255,255), 20)
+    frame_rate_label = Label((0,80),"",(255,255,255), 20)
 
-start_runsmoke = False
+    run_smoke = RunSmoke(500, 1)
+    run_smoke2 = RunSmoke(500, -1)
+    run_smoke3 = RunSmoke(500, 1)
+    run_smoke4 = RunSmoke(500, -1)
 
-while 1:
-    screen.fill((0,0,0))
-    wotsuievents.get_events()
-    
-    #angle_label.set_text(str(input_angle))
-    #angle_label.draw(screen)
-    
-    if pygame.QUIT in wotsuievents.event_types:
-        sys.exit()
-    if wotsuievents.mouse_buttons_pressed[0] == 1:
-        start_runsmoke = True
-    elif wotsuievents.mouse_buttons_pressed[0] == 0:
-        if start_runsmoke:
-            run_smoke.start(wotsuievents.mouse_pos)
-            run_smoke2.start(wotsuievents.mouse_pos)
-            run_smoke3.start([wotsuievents.mouse_pos[0], wotsuievents.mouse_pos[1] - 300])
-            run_smoke4.start([wotsuievents.mouse_pos[0], wotsuievents.mouse_pos[1] - 300])
-            start_runsmoke = False
-    elif wotsuievents.mouse_buttons_pressed[2] == 1:
-        field.increase_gravity(wotsuievents.mouse_pos, -.01)
-    elif pygame.K_UP in wotsuievents.keys_pressed:
-        system.particle_angle_range[1] -= .1 * math.pi
-    elif pygame.K_DOWN in wotsuievents.keys_pressed:
-        system.particle_angle_range[1] += .1 * math.pi
-    elif pygame.K_SPACE in wotsuievents.keys_pressed:
-        field.gravity_tiles = []
-        for row in field.tiles:
-            for tile in row:
-                tile.acceleration[0] = 0
-                tile.acceleration[1] = 0
-                tile.gravity = 0
-                
-    elif pygame.K_e in wotsuievents.keys_pressed:
-        field.gravity_tiles = []
-        for row in field.tiles:
-            for tile in row:
-                tile.acceleration[0] = .015
-                tile.acceleration[1] = random() / 80
-                tile.gravity = 0
-    
-    frame_rate_label.set_text("frame rate: " + str(clock.get_fps()))
-    new_rects.append((frame_rate_label.position, (frame_rate_label.width, frame_rate_label.height)))
-    
-    if field.contains(wotsuievents.mouse_pos):
-        mouse_position_label.set_text("mouse position: " + str(wotsuievents.mouse_pos))
-        tile = field.get_tile(wotsuievents.mouse_pos)
-        tile_position_label.set_text("tile position: " + str(field.get_absolute_position(tile.position)))
-        acceleration_label.set_text("tile acceleration: " + str(tile.acceleration))
-        gravity_label.set_text("tile gravity: " + str(tile.gravity))
-    else:
-        mouse_position_label.set_text("mouse position: " + str(wotsuievents.mouse_pos))
-        tile = field.get_tile(wotsuievents.mouse_pos)
-        tile_position_label.set_text("tile position:")
-        acceleration_label.set_text("tile acceleration:")
-        gravity_label.set_text("tile gravity:")
-    
-    time_passed = min(100, clock.get_time())
-    #system.update(time_passed, 10)
-    #field.draw(screen)
-    #system.draw(screen)
-    #new_rects.append(system.get_enclosing_rects())
-    
-    if run_smoke.active:
-        run_smoke.update(time_passed)
-        run_smoke.draw(screen)
-        #run_smoke.force_fields[0].draw(screen)
-        #new_rects.append(run_smoke.field.get_enclosing_rect())
-        new_rects.append(run_smoke.get_enclosing_rects())
-    
-    if run_smoke2.active:
-        run_smoke2.update(time_passed)
-        run_smoke2.draw(screen)
-        #run_smoke.force_fields[0].draw(screen)
-        #new_rects.append(run_smoke.field.get_enclosing_rect())
-        new_rects.append(run_smoke2.get_enclosing_rects())
-    
-    if run_smoke3.active:
-        run_smoke3.update(time_passed)
-        run_smoke3.draw(screen)
-        #run_smoke.force_fields[0].draw(screen)
-        #new_rects.append(run_smoke.field.get_enclosing_rect())
-        new_rects.append(run_smoke3.get_enclosing_rects())
-    
-    if run_smoke4.active:
-        run_smoke4.update(time_passed)
-        run_smoke4.draw(screen)
-        #run_smoke.force_fields[0].draw(screen)
-        #new_rects.append(run_smoke.field.get_enclosing_rect())
-        new_rects.append(run_smoke4.get_enclosing_rects())
-    
-    #mouse_position_label.draw(screen)
-    #tile_position_label.draw(screen)
-    #acceleration_label.draw(screen)
-    #gravity_label.draw(screen)
-    frame_rate_label.draw(screen)
-    
-    
-    pygame.display.update(dirty_rects)
-    pygame.display.update(new_rects)
-    
-    dirty_rects = new_rects
     new_rects = []
-    
-    for old_rect in dirty_rects:
-        screen.fill((0,0,0), old_rect)
-    
-    clock.tick(100)
+    dirty_rects = []
+
+    start_runsmoke = False
+
+    while 1:
+        screen.fill((0,0,0))
+        wotsuievents.get_events()
+        
+        #angle_label.set_text(str(input_angle))
+        #angle_label.draw(screen)
+        
+        if pygame.QUIT in wotsuievents.event_types:
+            sys.exit()
+        elif len(wotsuievents.keys_pressed) > 0:
+            sys.exit()
+        
+        if wotsuievents.mouse_buttons_pressed[0] == 1:
+            start_runsmoke = True
+        elif wotsuievents.mouse_buttons_pressed[0] == 0:
+            if start_runsmoke:
+                run_smoke.start(wotsuievents.mouse_pos)
+                run_smoke2.start([wotsuievents.mouse_pos[0] - 50, wotsuievents.mouse_pos[1]])
+                run_smoke3.start([wotsuievents.mouse_pos[0], wotsuievents.mouse_pos[1] - 100])
+                run_smoke4.start([wotsuievents.mouse_pos[0] - 50, wotsuievents.mouse_pos[1] - 100])
+                start_runsmoke = False
+        elif wotsuievents.mouse_buttons_pressed[2] == 1:
+            field.increase_gravity(wotsuievents.mouse_pos, -.01)
+        elif pygame.K_UP in wotsuievents.keys_pressed:
+            system.particle_angle_range[1] -= .1 * math.pi
+        elif pygame.K_DOWN in wotsuievents.keys_pressed:
+            system.particle_angle_range[1] += .1 * math.pi
+        elif pygame.K_SPACE in wotsuievents.keys_pressed:
+            field.gravity_tiles = []
+            for row in field.tiles:
+                for tile in row:
+                    tile.acceleration[0] = 0
+                    tile.acceleration[1] = 0
+                    tile.gravity = 0
+                    
+        elif pygame.K_e in wotsuievents.keys_pressed:
+            field.gravity_tiles = []
+            for row in field.tiles:
+                for tile in row:
+                    tile.acceleration[0] = .015
+                    tile.acceleration[1] = random() / 80
+                    tile.gravity = 0
+        
+        frame_rate_label.set_text("frame rate: " + str(clock.get_fps()))
+        new_rects.append((frame_rate_label.position, (frame_rate_label.width, frame_rate_label.height)))
+        
+        if field.contains(wotsuievents.mouse_pos):
+            mouse_position_label.set_text("mouse position: " + str(wotsuievents.mouse_pos))
+            tile = field.get_tile(wotsuievents.mouse_pos)
+            tile_position_label.set_text("tile position: " + str(field.get_absolute_position(tile.position)))
+            acceleration_label.set_text("tile acceleration: " + str(tile.acceleration))
+            gravity_label.set_text("tile gravity: " + str(tile.gravity))
+        else:
+            mouse_position_label.set_text("mouse position: " + str(wotsuievents.mouse_pos))
+            tile = field.get_tile(wotsuievents.mouse_pos)
+            tile_position_label.set_text("tile position:")
+            acceleration_label.set_text("tile acceleration:")
+            gravity_label.set_text("tile gravity:")
+        
+        time_passed = min(100, clock.get_time())
+        #system.update(time_passed, 10)
+        #field.draw(screen)
+        #system.draw(screen)
+        #new_rects.append(system.get_enclosing_rects())
+        
+        if run_smoke.active:
+            run_smoke.update(time_passed)
+            run_smoke.draw2(screen)
+            #run_smoke.force_fields[0].draw(screen)
+            #new_rects.append(run_smoke.field.get_enclosing_rect())
+            new_rects.append(run_smoke.get_enclosing_rects())
+        
+        if run_smoke2.active:
+            run_smoke2.update(time_passed)
+            run_smoke2.draw2(screen)
+            #run_smoke.force_fields[0].draw(screen)
+            #new_rects.append(run_smoke.field.get_enclosing_rect())
+            new_rects.append(run_smoke2.get_enclosing_rects())
+        
+        if run_smoke3.active:
+            run_smoke3.update(time_passed)
+            run_smoke3.draw2(screen)
+            #run_smoke.force_fields[0].draw(screen)
+            #new_rects.append(run_smoke.field.get_enclosing_rect())
+            new_rects.append(run_smoke3.get_enclosing_rects())
+        
+        if run_smoke4.active:
+            run_smoke4.update(time_passed)
+            run_smoke4.draw2(screen)
+            #run_smoke.force_fields[0].draw(screen)
+            #new_rects.append(run_smoke.field.get_enclosing_rect())
+            new_rects.append(run_smoke4.get_enclosing_rects())
+        
+        #mouse_position_label.draw(screen)
+        #tile_position_label.draw(screen)
+        #acceleration_label.draw(screen)
+        #gravity_label.draw(screen)
+        frame_rate_label.draw(screen)
+        
+        
+        pygame.display.update(dirty_rects)
+        pygame.display.update(new_rects)
+        
+        dirty_rects = new_rects
+        new_rects = []
+        
+        for old_rect in dirty_rects:
+            screen.fill((0,0,0), old_rect)
+        
+        clock.tick(100)

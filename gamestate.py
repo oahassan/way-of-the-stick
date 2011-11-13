@@ -52,7 +52,7 @@ def init_pygame_vars():
     global screen
     global clock
     
-    screen = pygame.display.set_mode((_WIDTH, _HEIGHT))
+    screen = pygame.display.set_mode((_WIDTH, _HEIGHT), pygame.RESIZABLE)
     clock = pygame.time.Clock()
 
 def update_time():
