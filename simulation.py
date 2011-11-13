@@ -10,7 +10,7 @@ import playerconstants
 from wotsprot.rencode import serializable
 from enumerations import MatchStates, PlayerTypes, ClashResults, \
 PlayerPositions, PlayerStates, LineNames, PointNames, SimulationDataKeys, \
-SimulationActionTypes, InputActionTypes
+SimulationActionTypes, InputActionTypes, EventTypes, EventStates
 
 class SimulationClock():
     """A pickleable clock"""
@@ -388,6 +388,9 @@ class CollisionHandler():
         attack_knockback_vector = attack_result.knockback_vector
         
         if receiver.get_player_state() == PlayerStates.STUNNED:
+            
+            if receiver.action.grounded:
+                receiver.events.append((EventTypes.START, EventStates.STUN_GROUND))
             
             stun_knockback_vector = receiver.knockback_vector
             

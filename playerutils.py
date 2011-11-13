@@ -9,7 +9,7 @@ import stick
 import animation
 import physics
 import mathfuncs
-from enumerations import PlayerStates, AttackTypes, Elevations, InputActionTypes, EventTypes
+from enumerations import PlayerStates, AttackTypes, Elevations, InputActionTypes, EventTypes, EventStates
 from playerconstants import *
 
 class Action():
@@ -546,6 +546,8 @@ class Stun(Action):
         player.apply_physics(player.model.time_passed)
         
         if player.is_aerial() == False:
+            if self.grounded == False:
+                player.events.append((EventTypes.START, EventStates.STUN_GROUND))
             self.grounded = True
         else:
             self.aerial = True
