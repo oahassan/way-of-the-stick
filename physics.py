@@ -3,7 +3,7 @@ import mathfuncs
 import stick
 import pygame
 
-GRAVITY = .001
+GRAVITY = .0017
 FRICTION = .003
 STUN_FRICTION = .001
 

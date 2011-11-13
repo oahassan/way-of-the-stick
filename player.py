@@ -87,8 +87,8 @@ class Player():
         self.model = physics.Model(position)
         self.walk_speed = .4
         self.run_speed = .75
-        self.jump_speed = -.5
-        self.high_jump_speed = -.75
+        self.jump_speed = JUMP_SPEED
+        self.high_jump_speed = HIGH_JUMP_SPEED
         self.size = 5
         self.power = 5
         self.speed = 5
