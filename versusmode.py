@@ -352,13 +352,14 @@ class VersusModeState():
     def start_run_stop_particle_effect(self, player_position, player_rendering_info):
         model = player_rendering_info.player_model
         orientation = model.orientation
-        emit_position = (model.position[0], model.bottom() + 10)
         
         if orientation == Orientations.FACING_RIGHT:
+            emit_position = (model.position[0] + model.width, model.bottom() + 10)
             self.particle_effects[player_position][EffectTypes.LEFT_RUN_SMOKE].start(
                 emit_position
             )
         else:
+            emit_position = (model.position[0] - model.width, model.bottom() + 10)
             self.particle_effects[player_position][EffectTypes.RIGHT_RUN_SMOKE].start(
                 emit_position
             )
