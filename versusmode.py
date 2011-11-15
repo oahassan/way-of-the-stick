@@ -267,10 +267,14 @@ class VersusModeState():
         
         for player_position in self.player_type_dictionary.keys():
             if self.player_type_dictionary[player_position] == PlayerTypes.BOT:
-                self.player_dictionary[player_position] = aiplayer.Bot((0, 0))
+                self.player_dictionary[player_position] = aiplayer.Bot(
+                    (0, 0),
+                    player_position
+                )
             elif self.player_type_dictionary[player_position] == PlayerTypes.HUMAN:
                 self.player_dictionary[player_position] = humanplayer.HumanPlayer(
-                    (0, 0)
+                    (0, 0),
+                    player_position
                 )
             else:
                 raise Exception(
@@ -279,7 +283,8 @@ class VersusModeState():
             
             
             self.player_key_handlers[player_position] = KeyToCommandTypeConverter(
-                dict([(entry[1], entry[0]) for entry in get_controls().iteritems()])
+                dict([(entry[1], entry[0]) 
+                for entry in get_controls()[player_position].iteritems()])
             )
         
         

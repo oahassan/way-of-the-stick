@@ -14,8 +14,8 @@ from playercontroller import Controller, InputCommandTypes
 from playerutils import ActionFactory, Transition, Action, Attack, JumpAttack, Continue
 
 class HumanPlayer(player.Player):
-    def __init__(self, position):
-        player.Player.__init__(self, position)
+    def __init__(self, position, player_position):
+        player.Player.__init__(self, position, player_position)
         self.player_type = player.PlayerTypes.HUMAN
     
     def load_moveset(self, moveset):

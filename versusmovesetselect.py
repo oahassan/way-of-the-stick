@@ -58,10 +58,13 @@ def load():
             (50,50),
             120,
             300,
-            'Select Player Type',
+            'Player 1',
             button.SelectableLabel,
             [[(0,0), 'Human',20], [(0,0), 'Bot',20]]
         )
+        player1_type_select.buttons[0].handle_selected()
+        player1_type_select.selected_button = player1_type_select.buttons[0]
+        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.HUMAN
         
         player1_difficulty_select_position = (50, player1_type_select.height + 10)
         player1_difficulty_select = wotsuicontainers.ButtonContainer(
@@ -103,12 +106,12 @@ def load():
             (450,50),
             120,
             300,
-            'Select Enemy Type',
+            'Player 2',
             button.SelectableLabel,
-            [[(0,0), 'Bot',20]]
+            [[(0,0), 'Human',20], [(0,0), 'Bot',20]]
         )
-        player2_type_select.buttons[0].handle_selected()
-        player2_type_select.selected_button = player2_type_select.buttons[0]
+        player2_type_select.buttons[1].handle_selected()
+        player2_type_select.selected_button = player2_type_select.buttons[1]
         versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.BOT
         
         player2_difficulty_select_position = (450, player2_type_select.height + 10)
@@ -242,6 +245,18 @@ def handle_events():
                     player2_type_select.selected_button.handle_deselected()
                 
                 player2_type_select.selected_button = button
+                
+                if button.text == "Bot":
+                    player2_difficulty_select.activate()
+                    
+                    if player2_difficulty_select.selected_button != None:
+                        player2_difficulty_select.selected_button.handle_selected()
+                    else:
+                        player2_difficulty_select.buttons[0].handle_selected()
+                        player2_difficulty_select.selected_button = player1_difficulty_select.buttons[0]
+                else:
+                    player2_difficulty_select.inactivate()
+                
                 break
         
         if player2_difficulty_select.active:

@@ -12,7 +12,7 @@ import mathfuncs
 import stick
 import pulltool
 from controlsdata import get_control_key
-from enumerations import InputActionTypes, CommandCollections, CommandDurations
+from enumerations import InputActionTypes, CommandCollections, CommandDurations, PlayerPositions
 from motion import AerialMotion, StunMotion
 from command import Command, CommandHandler
 import settingsdata
@@ -69,8 +69,9 @@ class PlayerStates():
 
 class Player():
     
-    def __init__(self, position):
+    def __init__(self, position, player_position = PlayerPositions.PLAYER1):
         self.player_type = None
+        self.player_position = player_position
         self.current_attack = None
         self.action = None
         self.color = (255,255,255)
@@ -738,11 +739,13 @@ class ControllerFactory():
         
         #create the key to command mappings for the controller
         movement_key_to_command_type = dict(
-            [(get_control_key(action_type), action_type) for action_type in InputActionTypes.MOVEMENTS]
+            [(get_control_key(input_player.player_position, action_type), action_type) 
+            for action_type in InputActionTypes.MOVEMENTS]
         )
         
         attack_key_to_command_type = dict(
-            [(get_control_key(action_type), action_type) for action_type in CommandCollections.ATTACK_ACTIONS if action_type != InputActionTypes.FORWARD]
+            [(get_control_key(input_player.player_position, action_type), action_type) 
+            for action_type in CommandCollections.ATTACK_ACTIONS if action_type != InputActionTypes.FORWARD]
         )
         
         #Set aerial no movement actions

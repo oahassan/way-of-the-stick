@@ -17,8 +17,8 @@ import st_versusmode
 class Bot(Player):
     """an algorithm controlled player"""
     
-    def __init__(self, position):
-        Player.__init__(self, position)
+    def __init__(self, position, player_position):
+        Player.__init__(self, position, player_position)
         self.player_type = PlayerTypes.BOT
         
         #a dictionary mapping attacks to a list of rects for each frame

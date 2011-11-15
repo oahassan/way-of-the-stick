@@ -3,9 +3,10 @@ import pygame
 import wotsuievents
 import gamestate
 import controlsdata
-from button import Label, ExitButton
+from button import Label, ExitButton, SelectableLabel
 from movesetbuilderui import BindButton
 from wotsuicontainers import ButtonContainer
+from enumerations import PlayerPositions
 
 loaded = False
 exit_button = None
@@ -16,6 +17,9 @@ attack_buttons = None
 active_button = None
 press_key_label = None
 bind_buttons = None
+player1_label = None
+player2_label = None
+player_position = None
 
 def load():
     global loaded
@@ -27,29 +31,49 @@ def load():
     global active_button
     global press_key_label
     global bind_buttons
+    global player1_label
+    global player2_label
+    global player_position
     
     exit_button = ExitButton()
     loaded = True
-    press_key_label = \
-        Label(
-            (60, 15),
-            "Select an action, then press a key to bind the action to that key",
-            (255, 0, 0),
-            22
-        )
+    
+    press_key_label = Label(
+        (60, 15),
+        "Select an action, then press a key to bind the action to that key",
+        (255, 0, 0),
+        18
+    )
+    
+    player1_label = SelectableLabel(
+        (20, 50),
+        "Player 1",
+        24
+    )
+    player1_label.handle_selected()
+    player_position = PlayerPositions.PLAYER1
+    
+    player2_label = SelectableLabel(
+        (260, 50),
+        "Player 2",
+        24
+    )
+    
     set_movement_keys_label = Label(
-        (20, 60), 
+        (20, 100), 
         "Set Movement Keys", 
-        (255, 255, 255)
+        (255, 255, 255),
+        22
     )
     set_attack_keys_label = Label(
-        (20, 320), 
+        (20, 340), 
         "Set Attack Keys", 
-        (255, 255, 255)
+        (255, 255, 255),
+        22
     )
     
     movement_buttons = []
-    font_size = 28
+    font_size = 20
     
     add_bind_button_to_button_list(
         BindButton(
@@ -165,6 +189,9 @@ def unload():
     global active_button
     global press_key_label
     global bind_buttons
+    global player1_label
+    global player2_label
+    global player_position
     
     exit_button = None
     loaded = False
@@ -175,6 +202,9 @@ def unload():
     active_button = None
     press_key_label = None
     bind_buttons = None
+    player1_label = None
+    player2_label = None
+    player_position = None
 
 def handle_events():
     global loaded
@@ -186,6 +216,9 @@ def handle_events():
     global active_button
     global press_key_label
     global bind_buttons
+    global player1_label
+    global player2_label
+    global player_position
     
     if loaded == False:
         load()
@@ -203,6 +236,20 @@ def handle_events():
                 bind_button.handle_selected()
                 active_button = bind_button
         
+        if player2_label.contains(wotsuievents.mouse_pos):
+            if not player2_label.selected:
+                player2_label.handle_selected()
+                player1_label.handle_deselected()
+                player_position = PlayerPositions.PLAYER2
+                reset_keys()
+        
+        if player1_label.contains(wotsuievents.mouse_pos):
+            if not player1_label.selected:
+                player1_label.handle_selected()
+                player2_label.handle_deselected()
+                player_position = PlayerPositions.PLAYER1
+                reset_keys()
+        
     if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
         if exit_button.selected:
             exit_button.handle_deselected()
@@ -215,6 +262,7 @@ def handle_events():
     active_button != None):
         active_button.set_key(wotsuievents.keys_pressed[0])
         controlsdata.set_control_key(
+            player_position,
             active_button.move_type,
             wotsuievents.keys_pressed[0]
         )
@@ -227,6 +275,8 @@ def handle_events():
         set_movement_keys_label.draw(gamestate.screen)
         set_attack_keys_label.draw(gamestate.screen)
         press_key_label.draw(gamestate.screen)
+        player1_label.draw(gamestate.screen)
+        player2_label.draw(gamestate.screen)
         
         for attack_button in attack_buttons:
             attack_button.draw(gamestate.screen)
@@ -235,9 +285,35 @@ def handle_events():
             movement_button.draw(gamestate.screen)
 
 def add_bind_button_to_button_list(bind_button, button_list,):
+    global player_position
     
-    bind_button.set_key(controlsdata.get_control_key(bind_button.move_type))
+    bind_button.set_key(controlsdata.get_control_key(
+        player_position,
+        bind_button.move_type
+    ))
     button_list.append(bind_button)
+
+def reset_keys():
+    global movement_buttons
+    global attack_buttons
+    global player_position
+    global active_button
+    
+    for button in movement_buttons:
+        button.set_key(controlsdata.get_control_key(
+            player_position,
+            button.move_type
+        ))
+    
+    for button in attack_buttons:
+        button.set_key(controlsdata.get_control_key(
+            player_position,
+            button.move_type
+        ))
+    
+    if active_button != None:
+        active_button.handle_deselected()
+        active_button = None
 
 def layout_buttons(start_position, buttons):
     
@@ -251,7 +327,7 @@ def layout_buttons(start_position, buttons):
         next_y_position = button_position[1]
         
         if ((button_index + 1) % 2) == 1:
-            next_x_position = start_position[0] + 400
+            next_x_position = start_position[0] + 300
         
         else:
             next_x_position = start_position[0]
