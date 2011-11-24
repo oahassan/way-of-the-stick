@@ -101,22 +101,43 @@ class FrameNavigator():
     def update_reference_frames(self):
         #remove or add any deleted or added frames
         if len(self.animation.frames) != len(self.reference_frames):
-            index = 0
             
-            while self.animation.frames[index] == self.reference_frames[index].frame:
-                index += 1
-        
-            start_position = self.reference_frames[index].position
+            start_position = None
+            start_frame_index = None
             
-            if len(self.animation.frames) < len(self.reference_frames):
-                del self.reference_frames[index]
+            if len(self.animation.frames) > len(self.reference_frames):
+                
+                if self.animation.frame_index == len(self.animation.frames) - 1:
+                    self.reference_frames.append(
+                        ReferenceFrame(
+                            (0,0),
+                            self.animation.frames[self.animation.frame_index]
+                        )
+                    )
+                    
+                    start_frame_index = self.animation.frame_index - 1
+                    start_position = self.reference_frames[start_frame_index].position
+                    
+                else:
+                    
+                    self.reference_frames.insert(
+                        self.animation.frame_index, 
+                        ReferenceFrame(
+                            (0,0),
+                            self.animation.frames[self.animation.frame_index]
+                        )
+                    )
+                    
+                    start_frame_index = self.animation.frame_index - 1
+                    start_position = self.reference_frames[start_frame_index].position
+                    
             else:
-                self.reference_frames.insert(
-                    index, 
-                    ReferenceFrame((0,0),self.animation.frames[index])
-                )
+                start_frame_index = self.animation.frame_index
+                start_position = self.reference_frames[start_frame_index].position
+                
+                del self.reference_frames[self.animation.frame_index]
             
-            self.layout_reference_frames(start_position, index)
+            self.layout_reference_frames(start_position, start_frame_index)
     
     def update_active_reference_frame(self, frame_index):
         self.reference_frame_index = frame_index
@@ -164,11 +185,11 @@ class FrameNavigator():
     
     def handle_events(self):
         
-        if self.reference_frame_index != self.animation.frame_index:
-            self.update_active_reference_frame(self.animation.frame_index)
-        
         self.update_reference_frames()
         self.update_reference_frame_positions()
+        
+        if self.reference_frame_index != self.animation.frame_index:
+            self.update_active_reference_frame(self.animation.frame_index)
         
         for i in range(len(self.reference_frames)):
             reference_frame = self.reference_frames[i]

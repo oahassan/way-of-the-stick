@@ -3,25 +3,17 @@ import shutil
 import shelve
 from glob import glob
 import enumerations
-from wotsprot.rencode import dumps, loads, serializable
+from wotsprot.rencode import dumps, loads
 import string
 import unicodedata
 import stick
 import animation
 import actionwizard
-
-_HOME_DIR = ''
-
-if 'HOME' in os.environ:
-    _HOME_DIR = os.environ["HOME"]
-elif 'USERPROFILE' in os.environ:
-    _HOME_DIR = os.environ["USERPROFILE"]
-
-validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+from files import _WOTS_DIR, removeDisallowedFilenameChars
 
 #TODO - create new interface to data for just player created and unlocked movesets
 _MOVESET_DB_FILE_NM = "moveset_wots.dat"
-_SHARING_DIR = os.path.join(_HOME_DIR, "wots_sharing")
+_SHARING_DIR = os.path.join(_WOTS_DIR, "wots_sharing")
 _EXPORTED_MOVESETS_DIR = os.path.join(_SHARING_DIR, "exported")
 _IMPORTED_MOVESETS_DIR = os.path.join(_SHARING_DIR, "imported")
 _SHARED_MOVESETS_DIR = os.path.join(_SHARING_DIR, "new")
@@ -110,10 +102,6 @@ def export_moveset(moveset):
     
     with open(os.path.join(_EXPORTED_MOVESETS_DIR, file_name),'wb') as f:
         f.write(moveset_data)
-
-def removeDisallowedFilenameChars(filename):
-    
-    return ''.join(c for c in filename if c in validFilenameChars)
 
 def get_movesets():
     movesets = shelve.open(_MOVESET_DB_FILE_NM, "c")
@@ -306,10 +294,3 @@ class Moveset():
                 break
         
         return action_found_indicator
-
-serializable.register(stick.Point)
-serializable.register(stick.Line)
-serializable.register(stick.Circle)
-serializable.register(animation.Animation)
-serializable.register(animation.Frame)
-serializable.register(Moveset)

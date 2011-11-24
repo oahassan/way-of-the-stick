@@ -25,9 +25,11 @@ from controlsdata import get_controls
 from playercontroller import InputCommandTypes
 from particles import RunSmoke, JumpSmoke, FallSmoke
 from physics import Orientations
+import record
 
 gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
 step_number = 0
+SIMULATION_FPS = 100
 
 class EventRegistry():
     def __init__(self):
@@ -117,6 +119,8 @@ class VersusModeState():
             PlayerPositions.PLAYER1 : None,
             PlayerPositions.PLAYER2 : None
         }
+        self.recording_indicator = True
+        self.recording = None
 
         self.attack_result_sound_mixer = AttackResultSoundMixer()
     
@@ -132,7 +136,14 @@ class VersusModeState():
         
         self.initialized = True
         self.exit_indicator = False
-
+    
+    def init_recording(self, moveset1_name, moveset2_name):
+        self.recording = record.Recording(
+            self.match_simulation.timestep, 
+            moveset1_name, 
+            moveset2_name
+        )
+    
     def init_screen(self):
         gamestate.screen.blit(gamestate.stage.background_image, (0,0))
         gamestate.new_dirty_rects.append(
@@ -154,8 +165,14 @@ class VersusModeState():
         self.cleanup_rendering_objects()
         self.cleanup_match_state_variables()
         self.reset_GUI_variables()
+        self.flush_recording()
         self.initialized = False
-
+    
+    def flush_recording(self):
+        if self.recording_indicator:
+            record.save(self.recording)
+            self.recording = None
+    
     def reset_GUI_variables(self):
         wotsuievents.key_repeat = wotsuievents.KeyRepeat.NONE
         gamestate.drawing_mode = gamestate.DrawingModes.UPDATE_ALL
@@ -180,6 +197,9 @@ class VersusModeState():
             
             while self.simulation_connection.poll():
                 simulation_rendering_info = self.simulation_connection.recv()
+                
+                if self.recording_indicator:
+                    self.recording.simulation_snapshots.append(simulation_rendering_info)
                 
                 if simulation_rendering_info.match_time > self.match_time:
                     self.update_simulation_rendering(simulation_rendering_info)

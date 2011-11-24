@@ -78,7 +78,7 @@ class AttackResultRenderingInfo():
     
     def _pack(self):
         return (self.attack_point, self.knockback_vector, self.attack_damage, 
-        attack_type, self.clash_indicator, self.clash_position)
+        self.attack_type, self.clash_indicator, self.clash_position)
 
 class PlayerRenderingInfo():
     def __init__(

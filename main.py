@@ -36,6 +36,7 @@ import music
 import versusclient
 
 import gamestate
+import serializability
 
 if __name__ == "__main__":
     multiprocessing.freeze_support()
