@@ -101,43 +101,20 @@ class FrameNavigator():
     def update_reference_frames(self):
         #remove or add any deleted or added frames
         if len(self.animation.frames) != len(self.reference_frames):
+            #clear and recreate reference frames
+            self.reference_frames = []
+            self.create_reference_frames()
             
-            start_position = None
-            start_frame_index = None
+            self.active_reference_frame = self.reference_frames[self.animation.frame_index]
+            self.active_reference_frame.handle_selected()
+            self.layout_reference_frames(
+                (
+                    REFERENCE_FRAME_PADDING, 
+                    gamestate._HEIGHT - (animation.Animation._ThumbnailHeight + REFERENCE_FRAME_PADDING)
+                ),
+                0
+            )
             
-            if len(self.animation.frames) > len(self.reference_frames):
-                
-                if self.animation.frame_index == len(self.animation.frames) - 1:
-                    self.reference_frames.append(
-                        ReferenceFrame(
-                            (0,0),
-                            self.animation.frames[self.animation.frame_index]
-                        )
-                    )
-                    
-                    start_frame_index = self.animation.frame_index - 1
-                    start_position = self.reference_frames[start_frame_index].position
-                    
-                else:
-                    
-                    self.reference_frames.insert(
-                        self.animation.frame_index, 
-                        ReferenceFrame(
-                            (0,0),
-                            self.animation.frames[self.animation.frame_index]
-                        )
-                    )
-                    
-                    start_frame_index = self.animation.frame_index - 1
-                    start_position = self.reference_frames[start_frame_index].position
-                    
-            else:
-                start_frame_index = self.animation.frame_index
-                start_position = self.reference_frames[start_frame_index].position
-                
-                del self.reference_frames[self.animation.frame_index]
-            
-            self.layout_reference_frames(start_position, start_frame_index)
     
     def update_active_reference_frame(self, frame_index):
         self.reference_frame_index = frame_index
