@@ -311,6 +311,11 @@ class MovesetSelector(UIObjectBase, MovesetLoader):
                 
                 if self.selected_thumbnail_index < len(self.thumbnails) - 1:
                     self.select_next_moveset(self.selected_thumbnail_index + 1)
+            
+            elif self.contains(wotsuievents.mouse_pos):
+                for i in range(len(self.thumbnails)):
+                    if self.thumbnails[i].contains(wotsuievents.mouse_pos):
+                        self.select_next_moveset(i)
         
         elif pygame.MOUSEBUTTONUP in wotsuievents.event_types:
             if self.left_scroll_button.selected:
