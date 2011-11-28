@@ -192,6 +192,13 @@ class VersusModeState():
                     (self.fps_label.width, self.fps_label.height))
             )
         
+        self.command_label.draw(gamestate.screen)
+        gamestate.new_dirty_rects.append(
+            pygame.Rect(
+                self.command_label.position,
+                (self.command_label.width, self.command_label.height))
+        )
+        
         if self.exit_indicator == False:
             simulation_rendering_info = None
             
@@ -463,8 +470,8 @@ class VersusModeState():
             str(gamestate.clock.get_fps()),(0,0,255),
             30
         )
-        #command_label = AttackLabel("", [])
-        #command_label.key_combination_label.set_position((20,50))
+        self.command_label = AttackLabel("", [])
+        self.command_label.key_combination_label.set_position((20,200))
         
         self.ready_label = button.Label((0,0),'READY...',(0,0,255),80)
         ready_label_position = (
@@ -621,6 +628,9 @@ class VersusModeState():
 
     def update_simulation_rendering(self, simulation_rendering_info):
         
+        self.command_label.set_key_combination(
+            self.build_player_command_types()[PlayerPositions.PLAYER1].attack_command_types
+        )
         self.set_outline_color(simulation_rendering_info)
         
         for effect in self.point_effects.values():

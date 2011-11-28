@@ -324,11 +324,19 @@ class Player():
         elif self.action.action_state == PlayerStates.FLOATING:
             self.action.set_player_state(self)
         elif self.action.action_state == PlayerStates.CROUCHING:
-            self.action.set_player_state(self)
+            #self.action.set_player_state(self)
+            self.continue_ground_movement()
         elif self.action.action_state == PlayerStates.WALKING:
             self.action.set_player_state(self)
         elif self.action.action_state == PlayerStates.RUNNING:
             self.action.set_player_state(self)
+    
+    def continue_ground_movement(self):
+        current_ground_movement = self.controller.get_current_ground_movement()
+        if current_ground_movement.action_state == self.action.action_state:
+            self.action.set_player_state(self)
+        else:
+            self.transition(self.get_neutral_state())
     
     def transition(self, next_state):
         transition = Transition()
@@ -928,7 +936,7 @@ class ControllerFactory():
         )
         ground_movement_command_handler.add_command(
             [hold_right_command],
-            Continue()
+            input_player.walk_right_action
         )
         
         aerial_movement_command_handler.add_command(
@@ -996,7 +1004,7 @@ class ControllerFactory():
         )
         ground_movement_command_handler.add_command(
             [hold_left_command],
-            Continue()
+            input_player.walk_left_action
         )
         
         aerial_movement_command_handler.add_command(

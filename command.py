@@ -244,6 +244,7 @@ class CommandHandler:
             self.command_buffer.popleft()
         self.command_buffer.append(self.current_commands)
         
+        #TODO - update this independently of calls to update
         self.command_sequence += 1
     
     def replace_current_commands(self, command_states):
