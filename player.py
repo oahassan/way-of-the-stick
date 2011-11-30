@@ -1062,9 +1062,10 @@ class ControllerFactory():
             
             if InputActionTypes.JUMP in moveset.attack_key_combinations[attack_name]:
                 short_command_list = [
-                command 
-                for command in moveset.attack_key_combinations[attack_name]
-                if command != InputActionTypes.JUMP]
+                    command_type 
+                    for command_type in moveset.attack_key_combinations[attack_name]
+                    if command_type != InputActionTypes.JUMP
+                ]
                 
                 tap_commands = []
                 
@@ -1079,7 +1080,11 @@ class ControllerFactory():
                 hold_commands = []
                 
                 for command_type in short_command_list:
-                    hold_commands.append(Command(command_type, CommandDurations.HOLD))
+                    if (command_type in InputActionTypes.MOVEMENTS or 
+                    command_type == InputActionTypes.FORWARD):
+                        hold_commands.append(Command(command_type, CommandDurations.HOLD))
+                    else:
+                        hold_commands.append(Command(command_type, CommandDurations.TAP))
                 
                 aerial_action_command_handler.add_command(
                     hold_commands,
@@ -1099,13 +1104,16 @@ class ControllerFactory():
                 hold_commands = []
                 
                 for command_type in moveset.attack_key_combinations[attack_name]:
-                    hold_commands.append(Command(command_type, CommandDurations.HOLD))
+                    if (command_type in InputActionTypes.MOVEMENTS or 
+                    command_type == InputActionTypes.FORWARD):
+                        hold_commands.append(Command(command_type, CommandDurations.HOLD))
+                    else:
+                        hold_commands.append(Command(command_type, CommandDurations.TAP))
                 
                 aerial_action_command_handler.add_command(
                     hold_commands,
                     attack_action
                 )
-                
                 
                 
             else:
@@ -1122,7 +1130,11 @@ class ControllerFactory():
                 hold_commands = []
                 
                 for command_type in moveset.attack_key_combinations[attack_name]:
-                    hold_commands.append(Command(command_type, CommandDurations.HOLD))
+                    if (command_type in InputActionTypes.MOVEMENTS or 
+                    command_type == InputActionTypes.FORWARD):
+                        hold_commands.append(Command(command_type, CommandDurations.TAP))
+                    else:
+                        hold_commands.append(Command(command_type, CommandDurations.TAP))
                 
                 attack_command_handler.add_command(
                     hold_commands,
