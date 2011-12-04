@@ -274,29 +274,31 @@ def handle_events():
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):
                 
-                if player1_type_select.selected_button != None:
-                    if player1_type_select.selected_button.text == 'Human':
-                        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER1] = PlayerTypes.HUMAN
-                    elif player1_type_select.selected_button.text == 'Bot':
-                        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER1] = PlayerTypes.BOT
+                player_data = [
+                    versusmode.PlayerData(
+                        PlayerPositions.PLAYER1,
+                        get_player_type(player1_type_select),
+                        player1_moveset_select.selected_moveset,
+                        player1_stats_widget.get_size(),
+                        player1_color_select.selected_swatch.color,
+                        get_player_difficulty(player1_difficulty_select)
+                    ),
+                    versusmode.PlayerData(
+                        PlayerPositions.PLAYER2,
+                        get_player_type(player2_type_select),
+                        player2_moveset_select.selected_moveset,
+                        player2_stats_widget.get_size(),
+                        player2_color_select.selected_swatch.color,
+                        get_player_difficulty(player2_difficulty_select)
+                    )
+                ]
                 
-                if player2_type_select.selected_button != None:
-                    if player2_type_select.selected_button.text == 'Human':
-                        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.HUMAN
-                    elif player2_type_select.selected_button.text == 'Bot':
-                        versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] = PlayerTypes.BOT
+                versusmode.init(player_data)
                 
-                versusmode.init()
-                
-                init_players()
-                
-                versusmode.local_state.init_player_sounds()
-                versusmode.local_state.init_player_health_bars()
-                versusmode.local_state.init_attack_lists()
-                versusmode.local_state.init_recording(
-                    player1_moveset_select.selected_moveset.name,
-                    player2_moveset_select.selected_moveset.name
-                )
+                #versusmode.local_state.init_recording(
+                #    player1_moveset_select.selected_moveset.name,
+                #    player2_moveset_select.selected_moveset.name
+                #)
                 
                 unload()
                 gamestate.mode = gamestate.Modes.VERSUSMODE
@@ -331,49 +333,17 @@ def handle_events():
         player2_stats_widget.draw(gamestate.screen)
         player2_color_select.draw(gamestate.screen)
 
-def init_players():
-    global player1_type_select
-    global player1_difficulty_select
-    global player1_moveset_select
-    global player1_stats_widget
-    global player1_color_select
-    global player2_type_select
-    global player2_difficulty_select
-    global player2_moveset_select
-    global player2_stats_widget
-    global player2_color_select
-    
-    player1 = versusmode.local_state.player_dictionary[PlayerPositions.PLAYER1]
-    
-    if versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER1] == PlayerTypes.BOT:
-        player1.set_difficulty(player1_difficulty_select.selected_button.difficulty)
-    
-    player1.set_player_stats(
-        player1_stats_widget.get_size()
-    )
-    player1.load_moveset(
-        player1_moveset_select.selected_moveset
-    )
-    player1.model.velocity = (0,0)
-    player1.direction = PlayerStates.FACING_RIGHT
-    player1.model.move_model((400, 967))
-    player1.actions[PlayerStates.STANDING].set_player_state(player1)
-    player1.health_color = player1_color_select.selected_swatch.color
-    
-    player2 = versusmode.local_state.player_dictionary[PlayerPositions.PLAYER2]
-    
-    if versusmode.local_state.player_type_dictionary[PlayerPositions.PLAYER2] == PlayerTypes.BOT:
-        player2.set_difficulty(player2_difficulty_select.selected_button.difficulty)
-    
-    player2.set_player_stats(
-        player2_stats_widget.get_size()
-    )
-    player2.load_moveset(
-        player2_moveset_select.selected_moveset
-    )
-    player2.direction = PlayerStates.FACING_LEFT
-    player2.model.velocity = (0,0)
-    player2.model.move_model((1200, 967))
-    player2.actions[PlayerStates.STANDING].set_player_state(player2)
-    player2.health_color = player2_color_select.selected_swatch.color
-    
+def get_player_type(player_type_select):
+    if player_type_select.selected_button != None:
+        if player_type_select.selected_button.text == 'Human':
+            return PlayerTypes.HUMAN
+        elif player_type_select.selected_button.text == 'Bot':
+            return PlayerTypes.BOT
+    else:
+        return 'Human'
+
+def get_player_difficulty(player_difficulty_select):
+    if player_difficulty_select.selected_button != None:
+        return player_difficulty_select.selected_button.difficulty
+    else:
+        return None

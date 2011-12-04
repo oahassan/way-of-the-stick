@@ -58,6 +58,7 @@ class VersusModeState():
     def __init__(self):
         
         self.initialized = False
+        self.player_positions = []
         self.player_dictionary = {
             PlayerPositions.PLAYER1 : None,
             PlayerPositions.PLAYER2 : None
@@ -119,16 +120,16 @@ class VersusModeState():
             PlayerPositions.PLAYER1 : None,
             PlayerPositions.PLAYER2 : None
         }
-        self.recording_indicator = True
+        self.recording_indicator = False
         self.recording = None
 
         self.attack_result_sound_mixer = AttackResultSoundMixer()
     
-    def init(self):
+    def init(self, player_data):
         
         self.init_match_state_variables()
+        self.init_player_data(player_data)
         self.init_rendering_objects()
-        self.init_player_data()
         self.init_simulation_objects()
         self.set_GUI_module_variables()
         self.init_stage()
@@ -142,6 +143,34 @@ class VersusModeState():
             self.match_simulation.timestep, 
             moveset1_name, 
             moveset2_name
+        )
+    
+    def init_player_data(self, player_data):
+        for player_datum in player_data:
+            self.add_player(player_datum)
+    
+    def add_player(self, player_data):
+        player = create_player(player_data)
+        player_position = player_data.player_position
+        self.player_positions.append(player_position)
+        self.player_dictionary[player_position] = player
+        self.player_key_handlers[player_position] = KeyToCommandTypeConverter(
+            dict([(entry[1], entry[0]) 
+            for entry in get_controls()[player_position].iteritems()])
+        )
+        self.player_event_handlers[player_position] = EventRegistry()
+        self.player_type_dictionary[player_position] = player_data.player_type
+        self.player_sound_mixer_dictionary[player_position] = PlayerSoundMixer(player)
+        self.player_health_bars[player_position] = PlayerHealth(
+            player_data.moveset.name, 
+            player_position
+        )
+        self.attack_lists[player_position] = AttackList(
+            player_data.moveset,
+            (
+                int((gamestate._WIDTH / 2) - PAUSE_MENU_WIDTH),
+                int((gamestate._HEIGHT / 2) - (PAUSE_MENU_HEIGHT / 2))
+            )
         )
     
     def init_screen(self):
@@ -263,75 +292,6 @@ class VersusModeState():
             player_dictionary=self.player_dictionary,
             player_type_dictionary=self.player_type_dictionary
         )
-    
-    def init_player_health_bars(self):
-        self.player_health_bars[PlayerPositions.PLAYER1] = PlayerHealth(
-            self.player_dictionary[PlayerPositions.PLAYER1].moveset.name, 
-            PlayerPositions.PLAYER1
-        )
-        self.player_health_bars[PlayerPositions.PLAYER2] = PlayerHealth(
-            self.player_dictionary[PlayerPositions.PLAYER2].moveset.name,
-            PlayerPositions.PLAYER2
-        )
-    
-    def init_attack_lists(self):
-        self.attack_lists[PlayerPositions.PLAYER1] = AttackList(
-            self.player_dictionary[PlayerPositions.PLAYER1].moveset,
-            (
-                int((gamestate._WIDTH / 2) - PAUSE_MENU_WIDTH),
-                int((gamestate._HEIGHT / 2) - (PAUSE_MENU_HEIGHT / 2))
-            )
-        )
-        self.attack_lists[PlayerPositions.PLAYER2] = AttackList(
-            self.player_dictionary[PlayerPositions.PLAYER2].moveset,
-            (
-                int((gamestate._WIDTH / 2)),
-                int((gamestate._HEIGHT / 2) - (PAUSE_MENU_HEIGHT / 2))
-            )
-        )
-    
-    def init_player_data(self):
-        
-        for player_position in self.player_type_dictionary.keys():
-            if self.player_type_dictionary[player_position] == PlayerTypes.BOT:
-                self.player_dictionary[player_position] = aiplayer.Bot(
-                    (0, 0),
-                    player_position
-                )
-            elif self.player_type_dictionary[player_position] == PlayerTypes.HUMAN:
-                self.player_dictionary[player_position] = humanplayer.HumanPlayer(
-                    (0, 0),
-                    player_position
-                )
-            else:
-                raise Exception(
-                    "No player type set for player position: " + str(player_position)
-                )
-            
-            
-            self.player_key_handlers[player_position] = KeyToCommandTypeConverter(
-                dict([(entry[1], entry[0]) 
-                for entry in get_controls()[player_position].iteritems()])
-            )
-        
-        
-        player1 = self.player_dictionary[PlayerPositions.PLAYER1]
-        player1.direction = PlayerStates.FACING_RIGHT
-        player1.init_state()
-        player1.model.move_model((400, 967))
-        
-        
-        player2 = self.player_dictionary[PlayerPositions.PLAYER2]
-        player2.direction = PlayerStates.FACING_LEFT
-        player2.init_state()
-        player2.model.move_model((1200, 967))
-    
-    def init_player_sounds(self):
-        player1 = self.player_dictionary[PlayerPositions.PLAYER1]
-        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1] = PlayerSoundMixer(player1)
-        
-        player2 = self.player_dictionary[PlayerPositions.PLAYER2]
-        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER2] = PlayerSoundMixer(player2)
     
     def init_match_state_variables(self):
         
@@ -896,14 +856,71 @@ class VersusModeState():
 
 local_state = VersusModeState()
 
-def init():
-    local_state.init()
+def init(player_data):
+    local_state.init(player_data)
 
 def handle_events():
     local_state.handle_events()
 
 def initialized():
     return local_state.initialized
+
+class PlayerData():
+    def __init__(
+        self,
+        player_position,
+        player_type,
+        moveset,
+        size,
+        color,
+        difficulty = None
+    ):
+        self.player_position = player_position
+        self.player_type = player_type
+        self.moveset = moveset
+        self.size = size
+        self.color = color
+        self.difficulty = difficulty
+
+def create_player(player_data) :   
+    player = None
+    
+    #Create Player
+    if player_data.player_type == PlayerTypes.BOT:
+        player = aiplayer.Bot(
+            (0, 0),
+            player_data.player_position
+        )
+    elif player_data.player_type == PlayerTypes.HUMAN:
+        player = humanplayer.HumanPlayer(
+            (0, 0),
+            player_data.player_position
+        )
+    else:
+        raise Exception(
+            "No player type set for player position: " + str(player_data.player_position)
+        )
+    
+    player.init_state()
+    
+    if player_data.player_type == PlayerTypes.BOT:
+        player.set_difficulty(player_data.difficulty)
+    
+    player.set_player_stats(player_data.size)
+    player.load_moveset(player_data.moveset)
+    player.model.velocity = (0,0)
+    player.health_color = player_data.color
+    
+    if player_data.player_position == PlayerPositions.PLAYER1:
+        player.direction = PlayerStates.FACING_RIGHT
+        player.model.move_model((400, 967))
+    else:
+        player.direction = PlayerStates.FACING_LEFT
+        player.model.move_model((1200, 967))
+    
+    player.actions[PlayerStates.STANDING].set_player_state(player)
+    
+    return player
 
 class KeyToCommandTypeConverter():
     def __init__(self, key_to_command_type):
