@@ -166,9 +166,9 @@ class Bot(Player):
         ground_command_type = InputActionTypes.NO_MOVEMENT
         
         if self.current_attack != None and self.action.action_state != PlayerStates.ATTACKING:
-            attack_command_types = self.moveset.attack_key_combinations[
+            attack_command_types = choice([self.moveset.attack_key_combinations[
                 self.current_attack.right_animation.name
-            ]
+            ], []])
         else:
             ground_command_type = self.move_towards_enemy(self, enemy)
         
