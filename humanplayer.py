@@ -11,7 +11,7 @@ import actionwizard
 from controlsdata import get_controls
 from enumerations import PlayerStates, CommandDurations, InputActionTypes, CommandCollections
 from playercontroller import Controller, InputCommandTypes
-from playerutils import ActionFactory, Transition, Action, Attack, JumpAttack, Continue
+from playerutils import ActionFactory, Transition, Action, Attack, JumpAttack
 
 class HumanPlayer(player.Player):
     def __init__(self, position, player_position):

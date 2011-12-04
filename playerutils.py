@@ -408,6 +408,7 @@ class Stand(Action):
             self.animation.animation_deltas[0]
         )
         player.move_to_ground()
+        self.start_position = (player.model.position[0], player.model.position[1])
         
         if player.model.time_passed > 0:
             self.move_player(player)
