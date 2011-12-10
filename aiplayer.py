@@ -12,7 +12,7 @@ from playerutils import ActionFactory, Transition, Action, Attack
 from simulation import HitboxBuilder
 from playerconstants import *
 from playercontroller import InputCommandTypes
-import st_versusmode
+#import st_versusmode
 
 class Bot(Player):
     """an algorithm controlled player"""

@@ -9,6 +9,8 @@ import stick
 import animation
 import physics
 import mathfuncs
+import animationmanipulator
+from animationexplorer import create_WOTS_animation
 from enumerations import PlayerStates, AttackTypes, Elevations, InputActionTypes, EventTypes, EventStates
 from playerconstants import *
 
@@ -434,43 +436,48 @@ class Float(Action):
 class Stun(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.STUNNED)
-        self.physics_vector = (0,0)
-        self.toy_model = physics.Model((0,0))
+        self.physics_vector = [0,0]
+        self.toy_model = physics.Model([0,0])
         self.toy_model.init_stick_data()
         self.grounded = False
         self.aerial = False
+        self.init_animation()
     
-    def set_animation(self, player):
-        """creates a stun animation from the player model."""
-        stun_animation = animation.Animation()
-        stun_animation.frames = []
-        stun_animation.point_names = player.action.animation.point_names
-        
-        first_frame = copy.deepcopy(player.action.animation.frames[0])
-        
-        self.init_toy_model_point_positions(player)
-        self.physics_vector = (0,0)
-        
-        new_frame = self.save_model_point_positions_to_frame(first_frame, stun_animation.point_names)
-        
-        stun_animation.frames.append(new_frame)
-        
-        for i in range(10):
-            self.pull_toy_model(player)
-        
-        new_frame = self.save_model_point_positions_to_frame(first_frame, stun_animation.point_names)
-        stun_animation.frames.append(new_frame)
-        
-        if player.model.orientation == physics.Orientations.FACING_LEFT:
-            stun_animation = stun_animation.flip()
-        
-        stun_animation.set_frame_deltas()
-        stun_animation.set_animation_deltas()
-        stun_animation.set_animation_point_path_data(STUN_ACCELERATION)
+    def init_animation(self):
+        stun_animation = create_WOTS_animation()
+        stun_animation.frames.append(copy.deepcopy(stun_animation.frames[0]))
         
         self.right_animation = stun_animation
         self.left_animation = stun_animation
         self.animation = stun_animation
+    
+    def set_animation(self, player):
+        """creates a stun animation from the player model."""
+        stun_animation = self.animation
+        self.init_toy_model_point_positions(player)
+        self.physics_vector[0] = 0
+        self.physics_vector[1] = 0
+        
+        self.save_model_point_positions_to_frame(
+            stun_animation.frames[0],
+            stun_animation.point_names,
+            player.model
+        )
+        
+        self.pull_toy_model(player)
+        
+        self.save_model_point_positions_to_frame(
+            stun_animation.frames[1], 
+            stun_animation.point_names,
+            self.toy_model
+        )
+        
+        if player.model.orientation == physics.Orientations.FACING_LEFT:
+            animationmanipulator.flip_animation(stun_animation)
+        
+        stun_animation.set_frame_deltas()
+        stun_animation.set_animation_deltas()
+        stun_animation.set_animation_point_path_data(STUN_ACCELERATION)
     
     def init_toy_model_point_positions(self, player):
         """makes the stun action's model match the player model"""
@@ -485,21 +492,20 @@ class Stun(Action):
         self.toy_model.position = self.toy_model.get_reference_position()
         self.toy_model.set_dimensions()
     
-    def save_model_point_positions_to_frame(self, frame, point_names):
+    def save_model_point_positions_to_frame(self, frame, point_names, model):
         """Creates a frame with ids that match the first frame"""
         
-        save_frame = copy.deepcopy(frame)
-        
         for point_name, point_id in point_names.iteritems():
-            position = self.toy_model.points[point_name].pos
-            save_frame.point_dictionary[point_id].pos = (position[0], position[1])
-            save_frame.point_dictionary[point_id].name = point_name
-        
-        return save_frame
+            position = model.points[point_name].pos
+            frame.point_dictionary[point_id].pos = (position[0], position[1])
+            frame.point_dictionary[point_id].name = point_name
     
     def pull_toy_model(self, player):
         
-        self.pull_toy_point(self.toy_model.points[player.interaction_point.name], player.interaction_vector)
+        self.pull_toy_point(
+            self.toy_model.points[player.interaction_point.name],
+            (10*player.interaction_vector[0],10*player.interaction_vector[1])
+        )
         
         #self.toy_model.position = self.toy_model.get_reference_position()
         #self.toy_model.set_dimensions()
