@@ -53,8 +53,12 @@ class Action():
     def test_state_change(self, player):
         change_state = False
         
-        if self.action_state in PlayerStates.PRESSED_KEY_STATE_TRANSITIONS[player.action.action_state]:
-            change_state = True
+        if player.action.action_state == PlayerStates.TRANSITION:
+            if self.action_state in PlayerStates.PRESSED_KEY_STATE_TRANSITIONS[player.action.next_action.action_state]:
+                change_state = True
+        else:
+            if self.action_state in PlayerStates.PRESSED_KEY_STATE_TRANSITIONS[player.action.action_state]:
+                change_state = True
         
         return change_state
     
@@ -260,15 +264,15 @@ class Transition(Action):
         if self.grounded:
             player.move_to_ground()
     
-    def test_state_change(self, player):
-        change_state = False
-        
-        if self.next_action.action_state == PlayerStates.ATTACKING:
-            pass
-        elif self.action_state in PlayerStates.PRESSED_KEY_STATE_TRANSITIONS[player.action.action_state]:
-            change_state = True
-        
-        return change_state
+    #def test_state_change(self, player):
+    #    change_state = False
+    #    
+    #    if self.next_action.action_state == PlayerStates.ATTACKING:
+    #        pass
+    #    elif self.action_state in PlayerStates.PRESSED_KEY_STATE_TRANSITIONS[player.action.action_state]:
+    #        change_state = True
+    #    
+    #    return change_state
     
     def sync(self, direction, animation):
         self.right_animation = animation
