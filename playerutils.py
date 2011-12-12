@@ -135,6 +135,26 @@ def Continue():
     def set_player_state(self, player, direction):
         player.action.set_player_state(player, direction)
 
+class GeneratedAction():
+    def __init__(self):
+        pass
+    
+    def init_animation(self):
+        stun_animation = create_WOTS_animation()
+        stun_animation.frames.append(copy.deepcopy(stun_animation.frames[0]))
+        
+        self.right_animation = stun_animation
+        self.left_animation = stun_animation
+        self.animation = stun_animation
+    
+    def save_model_point_positions_to_frame(self, frame, point_names, model):
+        """Creates a frame with ids that match the first frame"""
+        
+        for point_name, point_id in point_names.iteritems():
+            position = model.points[point_name].pos
+            frame.point_dictionary[point_id].pos = (position[0], position[1])
+            frame.point_dictionary[point_id].name = point_name
+
 class Transition(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.TRANSITION)
@@ -437,23 +457,16 @@ class Float(Action):
     def set_player_state(self, player):
         Action.set_player_state(self, player, player.direction)
 
-class Stun(Action):
+class Stun(Action, GeneratedAction):
     def __init__(self):
         Action.__init__(self, PlayerStates.STUNNED)
+        GeneratedAction.__init__(self)
         self.physics_vector = [0,0]
         self.toy_model = physics.Model([0,0])
         self.toy_model.init_stick_data()
         self.grounded = False
         self.aerial = False
         self.init_animation()
-    
-    def init_animation(self):
-        stun_animation = create_WOTS_animation()
-        stun_animation.frames.append(copy.deepcopy(stun_animation.frames[0]))
-        
-        self.right_animation = stun_animation
-        self.left_animation = stun_animation
-        self.animation = stun_animation
     
     def set_animation(self, player):
         """creates a stun animation from the player model."""
@@ -495,14 +508,6 @@ class Stun(Action):
         
         self.toy_model.position = self.toy_model.get_reference_position()
         self.toy_model.set_dimensions()
-    
-    def save_model_point_positions_to_frame(self, frame, point_names, model):
-        """Creates a frame with ids that match the first frame"""
-        
-        for point_name, point_id in point_names.iteritems():
-            position = model.points[point_name].pos
-            frame.point_dictionary[point_id].pos = (position[0], position[1])
-            frame.point_dictionary[point_id].name = point_name
     
     def pull_toy_model(self, player):
         
