@@ -265,6 +265,8 @@ class Player():
         action.test_state_change(self)): #self.action.test_change_to_action(action)):
             if type(Continue) == type(Action):
                 action.set_player_state(self)
+            elif action.action_state == PlayerStates.ATTACKING:
+                action.set_player_state(self)
             else:
                 self.transition(action)
     
