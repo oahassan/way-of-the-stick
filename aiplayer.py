@@ -324,31 +324,31 @@ class ApproachEngine():
     
     def get_run_intersection(self, player, enemy):
         
-        return self.get_x_intersection(player, player.run_speed, enemy)
+        return self.get_x_y_intersection(player, player.run_speed, 0, enemy)
     
     def get_walk_intersection(self, player, enemy):
         
-        return self.get_x_intersection(player, player.walk_speed, enemy)
+        return self.get_x_y_intersection(player, player.walk_speed, 0, enemy)
     
     def get_stand_intersection(self, player, enemy):
         if enemy.model.velocity[0] == 0:
             return False
         
-        return self.get_x_intersection(player, 0, enemy)
+        return self.get_x_y_intersection(player, 0, 0, enemy)
     
     def get_run_jump_intersection(self, player, enemy):
-        return self.get_x_y_intersection(player, enemy)
+        return self.get_x_y_intersection(player, player.run_speed, player.jump_speed, enemy)
         
     def get_walk_jump_intersection(self, player, enemy):
-        return self.get_x_y_intersection(player, enemy)
+        return self.get_x_y_intersection(player, player.walk_speed, player.jump_speed, enemy)
     
     def get_stand_jump_intersection(self, player, enemy):
         if enemy.model.velocity[0] == 0:
             return False
         
-        return self.get_x_y_intersection(player, enemy)
+        return self.get_x_y_intersection(player, 0, player.jump_speed, enemy)
     
-    def get_x_intersection(self, player, player_v_x, enemy):
+    def get_x_y_intersection(self, player, player_v_x, player_v_y, enemy):
         player_x = player.model.position[0]
         player_width = player.model.width
         enemy_x = enemy.model.position[0]
@@ -359,35 +359,15 @@ class ApproachEngine():
         
         does_intersect = False
         
-        for delta_t in range(APPROACH_PREDICTION_DELTA, APPROACH_PREDICTION_INTERVAL, APPROACH_PREDICTION_DELTA):
-            if abs((player_x + (player_v_x*delta_t)) - (enemy_x + (enemy_v_x*delta_t))) < (1.5*player_width):
+        for delta_t in xrange(APPROACH_PREDICTION_DELTA, APPROACH_PREDICTION_INTERVAL, APPROACH_PREDICTION_DELTA):
+            if abs((player_x + (player_v_x*delta_t)) - (enemy_x + (enemy_v_x*delta_t))) < (1.5*player_width) and self.get_y_intersection_at_t(player, player_v_y, enemy, delta_t):
                 does_intersect = True
                 break
         
         return does_intersect
     
-    def get_x_y_intersection(self, player, enemy):
-        player_x = player.model.position[0]
-        player_v_x = player.model.velocity[0]
-        player_width = player.model.width
-        enemy_x = enemy.model.position[0]
-        enemy_v_x = enemy.model.velocity[0]
-        
-        if player_x > enemy_x:
-            player_v_x = -1 * player_v_x
-        
-        does_intersect = False
-        
-        for delta_t in range(APPROACH_PREDICTION_DELTA, APPROACH_PREDICTION_INTERVAL, APPROACH_PREDICTION_DELTA):
-            if abs((player_x + (player_v_x*delta_t)) - (enemy_x + (enemy_v_x*delta_t))) < (1.5*player_width) and self.get_y_intersection_at_t(player, enemy, delta_t):
-                does_intersect = True
-                break
-        
-        return does_intersect
-    
-    def get_y_intersection_at_t(self, player, enemy, delta_t):
+    def get_y_intersection_at_t(self, player, player_v_y, enemy, delta_t):
         player_y = player.model.position[1]
-        player_v_y = player.model.velocity[1]
         player_gravity = player.model.gravity
         
         enemy_y = enemy.model.position[1]
@@ -396,34 +376,12 @@ class ApproachEngine():
         
         return abs((player_y + (player_v_y*delta_t) + (player_gravity*(delta_t**2))) - (enemy_y + (enemy_v_y*delta_t) + (enemy_gravity*(delta_t**2)))) < player.model.height
     
-    def get_y_intersection(self, player, enemy):
-        player_y = player.model.position[1]
-        player_v_y = player.model.velocity[1]
-        player_gravity = player.model.gravity
-        
-        enemy_y = enemy.model.position[1]
-        enemy_v_y = enemy.model.velocity[1]
-        enemy_gravity = enemy.model.gravity
-        
-        does_intersect = False
-        
-        for delta_t in range(APPROACH_PREDICTION_DELTA, APPROACH_PREDICTION_INTERVAL, APPROACH_PREDICTION_DELTA):
-            if abs((player_y + (player_v_y*delta_t) + (player_gravity*(delta_t**2))) - (enemy_y + (enemy_v_y*delta_t) + (enemy_gravity*(delta_t**2)))) < player.model.height:
-                does_intersect = True
-                break
-        
-        return does_intersect
-    
     def run(self, player, enemy):
         
-        if ((player.get_player_state() == PlayerStates.TRANSITION and
-        player.action.next_action.action_state != PlayerStates.RUNNING) or
-        player.get_player_state() != PlayerStates.RUNNING):
-            
-            if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
-                return choice([InputActionTypes.MOVE_RIGHT, InputActionTypes.NO_MOVEMENT])
-            else:
-                return choice([InputActionTypes.MOVE_LEFT, InputActionTypes.NO_MOVEMENT])
+        if (player.get_player_state() == PlayerStates.TRANSITION and
+        player.action.next_action.action_state != PlayerStates.RUNNING and
+        player.action.next_action.action_state != PlayerStates.STANDING):
+            return InputActionTypes.NO_MOVEMENT
         else:
             if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
                 return InputActionTypes.MOVE_RIGHT
@@ -441,17 +399,15 @@ class ApproachEngine():
     
     def walk(self, player, enemy):
         
-        if ((player.get_player_state() == PlayerStates.TRANSITION and
-        player.action.next_action.action_state == PlayerStates.WALKING) or
-        player.get_player_state() == PlayerStates.WALKING or
-        player.get_player_state() == PlayerStates.STANDING):
+        if (player.get_player_state() == PlayerStates.TRANSITION and
+        player.action.next_action.action_state != PlayerStates.WALKING):
+            return InputActionTypes.NO_MOVEMENT
             
+        else:
             if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
                 return InputActionTypes.MOVE_RIGHT
             else:
                 return InputActionTypes.MOVE_LEFT
-        else:
-            return InputActionTypes.NO_MOVEMENT
     
     def walk_jump(self, player, enemy):
     
@@ -490,7 +446,7 @@ class ApproachEngine():
         ]
         
         if len(approach_types) == 0:
-            player.move_towards_enemy = choice([self.run, self.run_jump, self.walk, self.walk_jump])
+            player.move_towards_enemy = choice([self.run_jump, self.walk_jump])
         else:
             player.move_towards_enemy = choice([
                 self.approach_functions[approach_type]

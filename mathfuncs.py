@@ -37,3 +37,18 @@ def sign(number):
         return_sign = int(number / abs(number))
     
     return return_sign
+
+def test_overlap(self, rect1, rect2):
+        """a fast test if two players could possibly be attacking each other"""
+        
+        overlap = True
+        rect1_pos = (rect1.left, rect1.top)
+        rect2_pos = (rect2.left, rect2.top)
+        
+        if ((rect1_pos[0] > (rect2_pos[0] + rect2.width)) or
+            ((rect1_pos[0] + rect1.width) < rect2_pos[0]) or
+            (rect1_pos[1] > (rect2_pos[1] + rect2.height)) or
+            ((rect1_pos[1] + rect1.height) < rect2_pos[1])):
+            overlap = False
+        
+        return overlap
