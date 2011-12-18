@@ -78,6 +78,12 @@ class Point:
 
         self.name = name
     
+    def __str__(self):
+        return self.name + str(self.pos)
+    
+    def __repr__(self):
+        return self.name + str(self.pos)
+    
     def _pack(self):
         return (self.pos, self.color, self.id, self.radius, self.name)
     

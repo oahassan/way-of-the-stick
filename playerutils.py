@@ -140,12 +140,17 @@ class GeneratedAction():
         pass
     
     def init_animation(self):
-        stun_animation = create_WOTS_animation()
-        stun_animation.frames.append(copy.deepcopy(stun_animation.frames[0]))
+        animation = self.get_new_animation()
         
-        self.right_animation = stun_animation
-        self.left_animation = stun_animation
-        self.animation = stun_animation
+        self.right_animation = animation
+        self.left_animation = animation
+        self.animation = animation
+    
+    def get_new_animation(self):
+        animation = create_WOTS_animation()
+        animation.frames.append(copy.deepcopy(animation.frames[0]))
+        
+        return animation
     
     def save_model_point_positions_to_frame(self, frame, point_names, model):
         """Creates a frame with ids that match the first frame"""
@@ -155,89 +160,81 @@ class GeneratedAction():
             frame.point_dictionary[point_id].pos = (position[0], position[1])
             frame.point_dictionary[point_id].name = point_name
 
-class Transition(Action):
+class Transition(Action, GeneratedAction):
     def __init__(self):
         Action.__init__(self, PlayerStates.TRANSITION)
+        GeneratedAction.__init__(self)
         self.next_action = None
         self.last_action = None
         self.grounded = False
+        self.init_animation()
     
     def init_transition(self, player, next_action):
-        self.set_animation(player, next_action)
+        self.grounded = not player.is_aerial()
+        self.direction = PlayerStates.FACING_RIGHT
+        self.last_frame_index = 0
         self.next_action = next_action
         self.last_action = player.action
+        #self.init_animation()
+        self.set_animation(player, next_action)
     
     def set_animation(self, player, next_action):
-        last_frame_index = len(player.action.animation.frames) - 1
-        first_frame = self.create_first_frame(player)
         
-        last_frame = self.create_last_frame(player, first_frame, player.action, next_action)
+        transition_animation = self.set_animation_frames(
+            self.animation, 
+            player, 
+            next_action
+        )
+        transition_animation.set_frame_deltas()
+        transition_animation.set_animation_deltas()
+        transition_animation.set_animation_point_path_data(TRANSITION_ACCELERATION)
+    
+    def set_animation_frames(self, animation, player, next_action):
+        first_frame = animation.frames[0]
+        self.save_model_point_positions_to_frame(
+            first_frame, 
+            animation.point_names,
+            player.model
+        )
+        last_frame = self.init_last_frame(animation, player.action, next_action)
         
         #when running or walking is the next action state the reference 
         #position may change. So special logic is here to handle correctly
         #orienting the transition animations
-        if next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING]:
+        if next_action.action_state in PlayerStates.LATERAL_MOVEMENTS:
             if (player.model.orientation == physics.Orientations.FACING_RIGHT and
             next_action.direction == PlayerStates.FACING_LEFT):
                 first_frame.flip()
-            elif (player.model.orientation == physics.Orientations.FACING_LEFT):
-                if (next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING] and
-                    next_action.direction == PlayerStates.FACING_RIGHT):
+            elif player.model.orientation == physics.Orientations.FACING_LEFT:
+                if next_action.direction == PlayerStates.FACING_RIGHT:
                     pass
                 else:
                     first_frame.flip()
         elif player.model.orientation == physics.Orientations.FACING_LEFT:
             first_frame.flip()
         
-        last_frame.set_position(first_frame.get_reference_position())
-        
-        transition_animation = animation.Animation()
-        
-        transition_animation.point_names = player.action.right_animation.point_names
-        transition_animation.frames = [first_frame, last_frame]
-        transition_animation.set_frame_deltas()
-        transition_animation.set_animation_deltas()
-        transition_animation.set_animation_point_path_data(TRANSITION_ACCELERATION)
-        
-        self.right_animation = transition_animation
-        self.left_animation = transition_animation
+        return animation
     
-    def create_first_frame(self, player):
-        """creates a frame from the model of the player"""
-        
-        first_frame = \
-            copy.deepcopy(
-                player.action.animation.frames[0]
-            )
-        
-        for point_name, point_id in player.action.animation.point_names.iteritems():
-            position = player.model.points[point_name].pos
-            first_frame.point_dictionary[point_id].pos = (position[0], position[1])
-            first_frame.point_dictionary[point_id].name = point_name
-        
-        return first_frame
-    
-    def create_last_frame(self, player, first_frame, current_action, next_action):
+    def init_last_frame(self, animation, current_action, next_action):
         """Creates a frame with ids that match the first frame"""
         
-        last_frame = copy.deepcopy(first_frame)
+        first_frame = animation.frames[0]
+        last_frame = animation.frames[1]
         last_frame_point_positions = next_action.right_animation.frame_deltas[0]
         
-        for point_name, point_id in current_action.right_animation.point_names.iteritems():
+        for point_name, point_id in animation.point_names.iteritems():
             position = last_frame_point_positions[point_name]
             last_frame.point_dictionary[point_id].pos = position
-            last_frame.point_dictionary[point_id].name = point_name
         
-        previous_action = self.get_previous_action(current_action)
+        last_frame.set_position(first_frame.get_reference_position())
         
-        if (current_action.action_state in PlayerStates.GROUND_STATES
-        or player.is_aerial() == False):
+        if self.grounded:
             frame_bottom_diff = (
                 first_frame.get_enclosing_rect().bottom - 
                 last_frame.get_enclosing_rect().bottom
             )
             
-            if frame_bottom_diff > 0:
+            if frame_bottom_diff != 0:
                 last_frame.move((0,frame_bottom_diff))
         
         return last_frame
@@ -272,17 +269,12 @@ class Transition(Action):
         #set friction so that stun friction doesn't remain
         player.model.friction = physics.FRICTION
         player.events.append((EventTypes.STOP, self.last_action.action_state))
-        if player.is_aerial() == False:
-            self.grounded = True
         
-        if self.next_action.action_state in [PlayerStates.WALKING, PlayerStates.RUNNING]:
+        if self.next_action.action_state in PlayerStates.LATERAL_MOVEMENTS:
             Action.set_player_state(self, player, self.next_action.direction)
             
         else:
             Action.set_player_state(self, player, player.direction)
-        
-        if self.grounded:
-            player.move_to_ground()
     
     #def test_state_change(self, player):
     #    change_state = False

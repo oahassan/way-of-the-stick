@@ -132,6 +132,8 @@ class Player():
         )
         self.moveset = moveset
         
+        self.actions[PlayerStates.TRANSITION] = Transition()
+        
         self.actions[PlayerStates.STUNNED] = controller_factory.create_action(
             PlayerStates.STUNNED
         )
@@ -341,7 +343,7 @@ class Player():
             self.transition(self.get_neutral_state())
     
     def transition(self, next_state):
-        transition = Transition()
+        transition = self.actions[PlayerStates.TRANSITION]
         transition.init_transition(self, next_state)
         transition.set_player_state(self)
     

@@ -688,6 +688,8 @@ class Animation:
     def set_frame_deltas(self):
         """populates the dictionary of distances between a frames reference position and
         the position of each point keyed by the point names"""
+        self.frame_deltas = []
+        
         for frame in self.frames:
             frame_deltas = {}
             reference_pos = frame.get_reference_position()
@@ -701,6 +703,7 @@ class Animation:
     def set_animation_deltas(self):
         """populates the dictionary of distances between the position of the points in
         each frame"""
+        self.animation_deltas = []
         id_delta_dictionaires = self.bld_animation_delta_dctnry()
         
         for frame_index, dictionary in id_delta_dictionaires.iteritems():
