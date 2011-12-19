@@ -21,7 +21,7 @@ class Action():
         self.left_animation = None
         self.animation = None
         self.direction = PlayerStates.FACING_RIGHT
-        self.last_frame_index = 0
+        self.last_frame_index = -1
     
     def move_player(self, player):
         """place holder for function that sets the new position of the model"""
@@ -39,7 +39,8 @@ class Action():
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
         
-        player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
+        if frame_index != self.last_frame_index:
+            player.model.set_frame_point_pos(self.animation.frame_deltas[frame_index])
         
         #point_deltas = self.animation.build_point_time_delta_dictionary(start_time, end_time)
         #player.model.set_point_position_in_place(point_deltas)
@@ -83,8 +84,6 @@ class Action():
             player.events.append((EventTypes.START, self.action_state))
         
         player.action = self
-        player.direction = direction
-        player.model.animation_run_time = 0     
         
         if direction == PlayerStates.FACING_LEFT:
             self.animation = self.right_animation
@@ -93,6 +92,14 @@ class Action():
         elif direction == PlayerStates.FACING_RIGHT:
             self.animation = self.right_animation
             player.model.orientation = physics.Orientations.FACING_RIGHT
+        
+        if player.direction != direction:
+            player.direction = direction
+            player.model.position = player.model.get_reference_position()
+        else:
+            player.direction = direction
+        
+        player.model.animation_run_time = 0     
         
         #Check if the player is in the air.  If not, shift back to the gRound after
         #changing to the new animation.
@@ -118,8 +125,6 @@ class Action():
             # print(current_x_position)
             # print("end position")
             # print(player.model.position[0])
-        
-        
         
         if player.model.time_passed > 0:
             self.move_player(player)
@@ -383,21 +388,14 @@ class Stand(Action):
         #if the player was in a grounded state shift back to the ground after 
         #setting the initial point positions
         if frame_index != self.frame_index:
-            for i in range(self.frame_index, frame_index + 1):
+            #for i in range(self.frame_index, frame_index + 1):
             
-                if self.animation.get_matching_jump_interval(frame_index) == None:
-                    player.model.set_relative_point_positions(
-                        self.start_position, 
-                        self.animation.animation_deltas[i]
-                    )
-                    
-                else:
-                    player.model.set_relative_point_positions(
-                        self.start_position, 
-                        self.animation.animation_deltas[i]
-                    )
+            player.model.set_relative_point_positions(
+                self.start_position, 
+                self.animation.animation_deltas[frame_index]
+            )
             
-            self.frame_index = i
+            self.frame_index = frame_index
         
         #apply physics after rendering
         player.apply_physics(end_time - start_time, gravity = False)
@@ -408,10 +406,8 @@ class Stand(Action):
     def set_player_state(self, player):
         self.last_frame_index = 0
         self.frame_index = 0
-        self.start_position = (player.model.position[0], player.model.position[1])
         
-        player.action = self
-        player.model.animation_run_time = 0     
+        player.model.animation_run_time = 0
         
         if player.direction == PlayerStates.FACING_LEFT:
             self.animation = self.right_animation
@@ -421,12 +417,20 @@ class Stand(Action):
             self.animation = self.right_animation
             player.model.orientation = physics.Orientations.FACING_RIGHT
         
-        player.model.set_relative_point_positions(
-            self.start_position, 
-            self.animation.animation_deltas[0]
-        )
-        player.move_to_ground()
-        self.start_position = (player.model.position[0], player.model.position[1])
+        if player.action == None or player.action.action_state != PlayerStates.STANDING:
+            self.start_position = (player.model.position[0], player.model.position[1])
+        
+            player.model.set_relative_point_positions(
+                self.start_position, 
+                self.animation.animation_deltas[0]
+            )
+            player.move_to_ground()
+            
+            self.start_position = (player.model.position[0], player.model.position[1])
+        else:
+            player.model.move_model(self.start_position)
+        
+        player.action = self
         
         if player.model.time_passed > 0:
             self.move_player(player)

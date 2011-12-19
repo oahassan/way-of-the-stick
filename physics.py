@@ -2,6 +2,7 @@ import math
 import mathfuncs
 import stick
 import pygame
+from enumerations import LineNames
 
 GRAVITY = .0017
 FRICTION = .003
@@ -221,34 +222,19 @@ class Model(Object):
     def get_reference_position(self):
         """Calculates the position of the top left corner of a rectangle
         enclosing the points of the model"""
-        min_x_pos = 99999999
-        max_x_pos = 0
-        min_y_pos = 99999999
+        min_x_pos, min_y_pos = map(
+            min, 
+            zip(*[point.pos for point in self.points.values()])
+        )
+        max_x_pos, max_y_pos = map(
+            max, 
+            zip(*[point.pos for point in self.points.values()])
+        )
         
-        for line in self.lines.values():
-            reference_position = line.get_reference_position()
-            top_right_reference_position = line.get_top_right_reference_position()
-            
-            if top_right_reference_position[0] > max_x_pos:
-                max_x_pos = reference_position[0]
-            
-            if reference_position[0] < min_x_pos:
-                min_x_pos = reference_position[0]
-            
-            if reference_position[1] < min_y_pos:
-                min_y_pos = reference_position[1]
+        head_position = self.lines[LineNames.HEAD].get_reference_position()
         
-        for point in self.points.values():
-            reference_position = point.pixel_pos()
-            
-            if reference_position[0] > max_x_pos:
-                max_x_pos = reference_position[0]
-            
-            if reference_position[0] < min_x_pos:
-                min_x_pos = reference_position[0]
-            
-            if reference_position[1] < min_y_pos:
-                min_y_pos = reference_position[1]
+        if head_position[1] < min_y_pos:
+            min_y_pos = head_position[1]
         
         if self.orientation == Orientations.FACING_RIGHT:
             return min_x_pos, min_y_pos
@@ -278,7 +264,7 @@ class Model(Object):
     def get_point_relative_position(self, point_name):
         """gets the position of a point relative to the reference point"""
         point_position = self.points[point_name].pos
-        reference_position = self.get_reference_position()
+        reference_position = self.position
         
         if self.orientation == Orientations.FACING_RIGHT:
             return point_position[0] - reference_position[0], point_position[1] - reference_position[1]
@@ -322,7 +308,7 @@ class Model(Object):
     
     def set_dimensions(self):
         """sets the height and width of the model"""
-        position = self.get_reference_position()
+        position = self.position
         
         if self.orientation == Orientations.FACING_RIGHT:
             bottom_right_x, bottom_right_y = position
@@ -358,8 +344,8 @@ class Model(Object):
         for point_name, position in point_position_dictionary.iteritems():
             self.points[point_name].pos = position
         
-        self.set_dimensions()
         self.position = self.get_reference_position()
+        self.set_dimensions()
     
     def set_relative_point_positions(self, reference_position, deltas):
         """sets the position of each point in the model by name from the
@@ -377,12 +363,12 @@ class Model(Object):
                     reference_position[1] + pos_delta[1]
                 )
         
-        self.set_dimensions()
         self.position = self.get_reference_position()
+        self.set_dimensions()
     
     def set_frame_point_pos(self, deltas):
         """Sets the position of each point with respect to the reference point"""
-        current_position = self.get_reference_position() #(self.position[0],self.position[1])
+        current_position = self.position
         
         for point_name, pos_delta in deltas.iteritems():
             if self.orientation == Orientations.FACING_RIGHT:
@@ -396,7 +382,9 @@ class Model(Object):
                     self.position[1] + pos_delta[1]
                 )
         
+        self.position = self.get_reference_position()
         self.move_model(current_position)
+        self.set_dimensions()
     
     def set_point_position(self, deltas):
         """Changes the position of each point by point specific deltas"""
@@ -422,7 +410,7 @@ class Model(Object):
         """Incerements the position of each point by point specific deltas without 
         changing the reference point"""
         
-        current_position = self.get_reference_position() #(self.position[0],self.position[1])
+        current_position = self.position
         
         for point_name, pos_delta in deltas.iteritems():
             
@@ -439,33 +427,40 @@ class Model(Object):
                     point_position[1] + deltas[point_name][1]
                 )
         
+        self.position = self.get_reference_position()
         self.move_model(current_position)
+        self.set_dimensions()
     
     def move_model(self, new_position):
         """moves model to the new reference position"""
-        position = self.get_reference_position()
-        pos_delta = (new_position[0] - position[0], \
-                     new_position[1] - position[1])
+        position = self.position
+        pos_delta = (
+            new_position[0] - position[0],
+            new_position[1] - position[1]
+        )
         
         for point in self.points.values():
             current_position = (point.pos[0], point.pos[1])
-            point.pos = (current_position[0] + pos_delta[0], \
-                         current_position[1] + pos_delta[1])
+            point.pos = (
+                current_position[0] + pos_delta[0],
+                current_position[1] + pos_delta[1]
+            )
         
-        self.position = self.get_reference_position()
-        self.set_dimensions()
+        self.position = (new_position[0], new_position[1])
     
     def shift(self, deltas):
-        position = self.get_reference_position() #self.position
-        self.position = (position[0] + deltas[0], \
-                         position[1] + deltas[1])
+        position = self.position
+        self.position = (
+            position[0] + deltas[0],
+            position[1] + deltas[1]
+        )
         
         for point in self.points.values():
             current_pos = point.pos
-            point.pos = (current_pos[0] + deltas[0], \
-                         current_pos[1] + deltas[1])
-        
-        self.set_dimensions()
+            point.pos = (
+                current_pos[0] + deltas[0],
+                current_pos[1] + deltas[1]
+            )
     
     def scale_in_place(self, scale):
         """scales the lines in a frame by the given ratio while maintaining the
