@@ -18,7 +18,7 @@ class Object():
                 velocity = (0,0)):
         self.gravity = gravity
         self.friction = friction
-        self.position = position
+        self.position = [position[0], position[1]]
         self.height = height
         self.width = width
         self.velocity = (0,0)
@@ -34,7 +34,8 @@ class Object():
         self.velocity = velocity
     
     def shift(self, deltas):
-        self.position = (self.position[0] + deltas[0], self.position[1] + deltas[1])
+        self.position[0] = self.position[0] + deltas[0]
+        self.position[1] = self.position[1] + deltas[1]
     
     def collide(self, object, duration):
         pass
@@ -135,12 +136,15 @@ class Model(Object):
     """A representation of the stick figure used to keep tack of its position"""
     def __init__(self, position):
         Object.__init__(self, position)
+        self.point_radius = 3
         self.points = {}
         self.lines = {}
         self.init_stick_data()
         self.animation_run_time = 0
         self.time_passed = 0
         self.orientation = Orientations.FACING_RIGHT
+        self.rendering_rect = [[0,0],[0,0]]
+        self.position_rect = [[0,0],[0,0]]
     
     def _pack(self):
         return (self.position,)
@@ -171,7 +175,7 @@ class Model(Object):
         for point_name in stick.PointNames.POINT_NAMES:
             self.points[point_name] = stick.Point((0,0))
             self.points[point_name].name = point_name
-            self.points[point_name].radius = 3
+            self.points[point_name].radius = self.point_radius
     
     def load_lines(self):
         """creates the lines of the body of the model"""
@@ -219,9 +223,8 @@ class Model(Object):
         for line in self.lines.values():
             line.thickness = 7
     
-    def get_reference_position(self):
-        """Calculates the position of the top left corner of a rectangle
-        enclosing the points of the model"""
+    def set_spatial_data(self):
+        """reset the position_rect and rendering_rect of the model"""
         min_x_pos, min_y_pos = map(
             min, 
             zip(*[point.pos for point in self.points.values()])
@@ -235,31 +238,38 @@ class Model(Object):
         
         if head_position[1] < min_y_pos:
             min_y_pos = head_position[1]
+        elif head_position[1] > max_y_pos:
+            max_y_pos = head_position[1]
+        
+        if head_position[0] < min_x_pos:
+            min_x_pos = head_position[0]
+        elif head_position[0] > max_x_pos:
+            max_x_pos = head_position[0]
+        
+        self.position_rect[0][0] = min_x_pos
+        self.position_rect[0][1] = min_y_pos
+        self.position_rect[1][0] = max_x_pos - min_x_pos
+        self.position_rect[1][1] = max_y_pos - min_y_pos
+        self.width = self.position_rect[1][0]
+        self.height = self.position_rect[1][1]
+        
+        self.rendering_rect[0][0] = min_x_pos - 9
+        self.rendering_rect[0][1] = min_y_pos - 9
+        self.rendering_rect[1][0] = self.width + 27
+        self.rendering_rect[1][1] = self.height + 27
         
         if self.orientation == Orientations.FACING_RIGHT:
-            return min_x_pos, min_y_pos
+            self.position[0] = self.position_rect[0][0]
+            self.position[1] = self.position_rect[0][1]
         elif self.orientation == Orientations.FACING_LEFT:
-            return max_x_pos, min_y_pos
+            self.position[0] = self.position_rect[0][0] + self.position_rect[1][0]
+            self.position[1] = self.position_rect[0][1]
     
     def get_enclosing_rect(self):
-        """returns a tuple for the enclosing rect as a pygame rect"""
-        top_left_x = self.position[0]
-        top_left_y = self.position[1]
-        bottom_right_x = self.position[0]
-        bottom_right_y = self.position[1]
-        
-        for line in self.lines.values():
-            top_left, bottom_right = line.get_top_left_and_bottom_right()
-
-            top_left_x = min(top_left_x,top_left[0])
-            top_left_y = min(top_left_y,top_left[1])
-            bottom_right_x = max(bottom_right_x,bottom_right[0])
-            bottom_right_y = max(bottom_right_y,bottom_right[1])
-        
-        width = bottom_right_x - top_left_x
-        height = bottom_right_y - top_left_y
-        
-        return ((int(top_left_x) - 5, int(top_left_y) - 5), (int(width) + 10, int(height) + 10))
+        return self.rendering_rect
+    
+    def get_top_left_and_Bottom_right(self):
+        return self.rendering_rect
     
     def get_point_relative_position(self, point_name):
         """gets the position of a point relative to the reference point"""
@@ -272,30 +282,6 @@ class Model(Object):
         elif self.orientation == Orientations.FACING_LEFT:
             return reference_position[0] - point_position[0], point_position[1] - reference_position[1]
     
-    def get_top_left_and_bottom_right(self):
-        """Finds the top left and bottom right containers of a rectangle containg the
-        points and lines of the frame"""
-        top_left_x = self.position[0]
-        top_left_y = self.position[1]
-        bottom_right_x = self.position[0]
-        bottom_right_y = self.position[1]
-        
-        for line in self.lines.values():
-            top_left, bottom_right = line.get_top_left_and_bottom_right()
-            
-            if top_left_x == None:
-                top_left_x = top_left[0]
-                top_left_y = top_left[1]
-                bottom_right_x = bottom_right[0]
-                bottom_right_y = bottom_right[1]
-            else:
-                top_left_x = min(top_left_x,top_left[0])
-                top_left_y = min(top_left_y,top_left[1])
-                bottom_right_x = max(bottom_right_x,bottom_right[0])
-                bottom_right_y = max(bottom_right_y,bottom_right[1])
-        
-        return ((top_left_x, top_left_y), (bottom_right_x, bottom_right_y))
-    
     def get_point_positions(self):
         """returns a dictionary mapping point names to point positions"""
         
@@ -304,38 +290,7 @@ class Model(Object):
                 (point_name, point.pos)
                 for point_name, point in self.points.iteritems()
             ]
-        )
-    
-    def set_dimensions(self):
-        """sets the height and width of the model"""
-        position = self.position
-        
-        if self.orientation == Orientations.FACING_RIGHT:
-            bottom_right_x, bottom_right_y = position
-            
-            for point in self.points.values():
-                if point.pixel_pos()[0] > bottom_right_x:
-                    bottom_right_x = point.pixel_pos()[0]
-                
-                if point.pixel_pos()[1] > bottom_right_y:
-                    bottom_right_y = point.pixel_pos()[1]
-            
-            self.height = bottom_right_y - position[1]
-            self.width = bottom_right_x - position[0]
-
-        elif self.orientation == Orientations.FACING_LEFT:
-            bottom_left_x, bottom_right_y = position
-            
-            for point in self.points.values():
-                if point.pixel_pos()[0] < bottom_left_x:
-                    bottom_left_x = point.pixel_pos()[0]
-                
-                if point.pos[1] > bottom_right_y:
-                    bottom_right_y = point.pixel_pos()[1]
-            
-            self.height = bottom_right_y - position[1]
-            self.width = position[0] - bottom_left_x
-            
+        )   
     
     def set_absolute_point_positions(self, point_position_dictionary):
         """sets the position of each point in the model by name from the
@@ -344,8 +299,7 @@ class Model(Object):
         for point_name, position in point_position_dictionary.iteritems():
             self.points[point_name].pos = position
         
-        self.position = self.get_reference_position()
-        self.set_dimensions()
+        self.set_spatial_data()
     
     def set_relative_point_positions(self, reference_position, deltas):
         """sets the position of each point in the model by name from the
@@ -363,8 +317,7 @@ class Model(Object):
                     reference_position[1] + pos_delta[1]
                 )
         
-        self.position = self.get_reference_position()
-        self.set_dimensions()
+        self.set_spatial_data()
     
     def set_frame_point_pos(self, deltas):
         """Sets the position of each point with respect to the reference point"""
@@ -382,9 +335,8 @@ class Model(Object):
                     self.position[1] + pos_delta[1]
                 )
         
-        self.position = self.get_reference_position()
+        self.set_spatial_data()
         self.move_model(current_position)
-        self.set_dimensions()
     
     def set_point_position(self, deltas):
         """Changes the position of each point by point specific deltas"""
@@ -403,8 +355,7 @@ class Model(Object):
                     point_position[1] + deltas[point_name][1]
                 )
         
-        self.position = self.get_reference_position()
-        self.set_dimensions()
+        self.set_spatial_data()
     
     def set_point_position_in_place(self, deltas):
         """Incerements the position of each point by point specific deltas without 
@@ -427,9 +378,8 @@ class Model(Object):
                     point_position[1] + deltas[point_name][1]
                 )
         
-        self.position = self.get_reference_position()
+        self.set_spatial_data()
         self.move_model(current_position)
-        self.set_dimensions()
     
     def move_model(self, new_position):
         """moves model to the new reference position"""
@@ -446,14 +396,21 @@ class Model(Object):
                 current_position[1] + pos_delta[1]
             )
         
-        self.position = (new_position[0], new_position[1])
+        self.position[0] += pos_delta[0]
+        self.position[1] += pos_delta[1]
+        self.rendering_rect[0][0] += pos_delta[0]
+        self.rendering_rect[0][1] += pos_delta[1]
+        self.position_rect[0][0] += pos_delta[0]
+        self.position_rect[0][1] += pos_delta[1]
     
     def shift(self, deltas):
         position = self.position
-        self.position = (
-            position[0] + deltas[0],
-            position[1] + deltas[1]
-        )
+        self.position[0] += deltas[0]
+        self.position[1] += deltas[1]
+        self.rendering_rect[0][0] += deltas[0]
+        self.rendering_rect[0][1] += deltas[1]
+        self.position_rect[0][0] += deltas[0]
+        self.position_rect[0][1] += deltas[1]
         
         for point in self.points.values():
             current_pos = point.pos
@@ -468,7 +425,7 @@ class Model(Object):
         
         scale: a floating point number to multiply the size of the model by"""
         reference_position = self.position
-        center = pygame.Rect(*self.get_enclosing_rect()).center
+        center = self.center()
         
         for point in self.points.values():
             x_delta = point.pos[0] - reference_position[0]
@@ -479,7 +436,7 @@ class Model(Object):
             
             point.pos = (new_x, new_y)
         
-        self.set_dimensions()
+        self.set_spatial_data()
     
     def scale(self, scale):
         """scales the lines in a frame by the given ratio while maintaing the 
@@ -498,16 +455,13 @@ class Model(Object):
             
             point.pos = (new_x, new_y)
         
-        new_center = pygame.Rect(*self.get_enclosing_rect()).center
+        self.set_spatial_data()
+        
+        new_center = self.center()
         
         x_delta = new_center[0] - center[0]
         y_delta = new_center[1] - center[1]
-        
-        self.position = (
-            reference_position[0] + x_delta,
-            reference_position[1] + y_delta
-        )
-        self.set_dimensions()
+        self.shift((x_delta, y_delta))
     
     def pull_point(self, 
                   point,

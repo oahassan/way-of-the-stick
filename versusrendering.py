@@ -372,11 +372,10 @@ class PlayerRendererState():
             player_model.get_point_positions()
         )
         
-        rendering_model.scale_in_place(self.viewport_camera.viewport_scale)
-        
-        position = rendering_model.get_reference_position()
+        position = rendering_model.position
         position = self.viewport_camera.get_position_in_viewport(position)
         
+        rendering_model.scale_in_place(self.viewport_camera.viewport_scale)
         rendering_model.move_model(position)
 
 def draw_player_renderer_state(player_renderer_state, surface):
@@ -411,7 +410,8 @@ def draw_player(
     
     gamestate.new_dirty_rects.append(enclosing_rect)
     
-    #pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)
+    if gamestate.devmode:
+        pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)
     
     for name, point in model.points.iteritems():
         if name != PointNames.HEAD_TOP:

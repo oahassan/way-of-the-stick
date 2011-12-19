@@ -430,8 +430,6 @@ class Player():
         
         current_point_positions_dictionary = self.get_player_point_positions()
         
-        
-        
         for point_name in self.point_name_to_point_damage.keys():
             
             current_relative_position = \
@@ -645,8 +643,7 @@ class Player():
             point_to_lines
         )
         
-        self.model.position = self.model.get_reference_position()
-        self.model.set_dimensions()
+        self.model.set_spatial_data()
     
     def set_health(self, health_value):
         

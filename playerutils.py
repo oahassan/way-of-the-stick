@@ -95,7 +95,7 @@ class Action():
         
         if player.direction != direction:
             player.direction = direction
-            player.model.position = player.model.get_reference_position()
+            player.model.set_spatial_data()
         else:
             player.direction = direction
         
@@ -501,9 +501,6 @@ class Stun(Action, GeneratedAction):
         
         for line in self.toy_model.lines.values():
             line.set_length()
-        
-        self.toy_model.position = self.toy_model.get_reference_position()
-        self.toy_model.set_dimensions()
     
     def pull_toy_model(self, player):
         
@@ -511,9 +508,6 @@ class Stun(Action, GeneratedAction):
             self.toy_model.points[player.interaction_point.name],
             (10*player.interaction_vector[0],10*player.interaction_vector[1])
         )
-        
-        #self.toy_model.position = self.toy_model.get_reference_position()
-        #self.toy_model.set_dimensions()
     
     def pull_toy_point(self, point, deltas):
         pull_point_pos = point.pos

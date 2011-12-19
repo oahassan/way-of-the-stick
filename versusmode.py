@@ -882,7 +882,7 @@ class PlayerData():
         self.color = color
         self.difficulty = difficulty
 
-def create_player(player_data) :   
+def create_player(player_data):   
     player = None
     
     #Create Player

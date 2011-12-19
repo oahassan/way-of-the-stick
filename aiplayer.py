@@ -438,20 +438,20 @@ class ApproachEngine():
     def set_move_towards_enemy(self, player, enemy):
         player.approach_selected = True
         
-        approach_types = [
-            approach_type
-            for approach_type, approach_timing_function
-            in self.approach_timing_functions.iteritems()
-            if approach_timing_function(player, enemy)
-        ]
+        #approach_types = [
+        #    approach_type
+        #    for approach_type, approach_timing_function
+        #    in self.approach_timing_functions.iteritems()
+        #    if approach_timing_function(player, enemy)
+        #]
         
-        if len(approach_types) == 0:
-            player.move_towards_enemy = choice([self.run_jump, self.walk_jump])
-        else:
-            player.move_towards_enemy = choice([
-                self.approach_functions[approach_type]
-                for approach_type in approach_types
-            ])
+        #if len(approach_types) == 0:
+        player.move_towards_enemy = choice([self.run, self.walk, self.run_jump, self.walk_jump])
+        #else:
+        #    player.move_towards_enemy = choice([
+        #        self.approach_functions[approach_type]
+        #        for approach_type in approach_types
+        #    ])
 
 class AttackPredictionEngine():
     def __init__(self, timestep, prediction_time_frame, player):
