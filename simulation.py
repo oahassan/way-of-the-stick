@@ -451,6 +451,9 @@ class CollisionHandler():
         attacker, 
         receiver
     ):
+        
+        attacker.handle_attack_end()
+        attacker.handle_attack_end()
         attacker.set_neutral_state()
         receiver.set_neutral_state()
         

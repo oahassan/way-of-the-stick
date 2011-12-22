@@ -427,8 +427,8 @@ def draw_player(
     
     gamestate.new_dirty_rects.append(enclosing_rect)
     
-    if gamestate.devmode:
-        pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)
+    #if gamestate.devmode:
+    #    pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)
     
     for name, point in model.points.iteritems():
         if name != PointNames.HEAD_TOP:
