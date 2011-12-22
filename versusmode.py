@@ -426,9 +426,9 @@ class VersusModeState():
         self.surface_renderer = versusrendering.SurfaceRenderer(self.camera)
         
         self.fps_label = button.Label(
-            (20,20), 
+            (5,5), 
             str(gamestate.clock.get_fps()),(0,0,255),
-            30
+            10
         )
         self.command_label = AttackLabel("", [])
         self.command_label.key_combination_label.set_position((20,200))
@@ -555,6 +555,12 @@ class VersusModeState():
             for point_effects in player_trail_effects.values():
                 for trail_effect in point_effects.values():
                     if trail_effect.is_renderable():
+                        for polygon_positions in trail_effect.get_polygons():
+                            self.surface_renderer.draw_polygon_outline(
+                                polygon_positions,
+                                (255,255,255)
+                            )
+                        
                         for polygon_positions in trail_effect.get_polygons():
                             self.surface_renderer.draw_polygon(
                                 polygon_positions,
