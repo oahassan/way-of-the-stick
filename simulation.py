@@ -504,8 +504,8 @@ class CollisionHandler():
     ):
         """Get the relative position between the attack and receiver.  The y 
         delta is always to negative to make sure the receiver moves up"""
-        y_delta = receiver.model.position[1] - attacker.model.position[1]
-        x_delta = receiver.model.position[0] - attacker.model.position[0]
+        y_delta = receiver.model.center()[1] - attacker.model.center()[1]
+        x_delta = receiver.model.center()[0] - attacker.model.center()[0]
         
         if y_delta > 0:
             y_delta = -1 * y_delta
