@@ -321,7 +321,7 @@ class Model(Object):
     
     def set_frame_point_pos(self, deltas):
         """Sets the position of each point with respect to the reference point"""
-        current_position = self.position
+        current_position = (self.position[0], self.position[1])
         
         for point_name, pos_delta in deltas.iteritems():
             if self.orientation == Orientations.FACING_RIGHT:
@@ -361,7 +361,7 @@ class Model(Object):
         """Incerements the position of each point by point specific deltas without 
         changing the reference point"""
         
-        current_position = self.position
+        current_position = (self.position[0], self.position[1])
         
         for point_name, pos_delta in deltas.iteritems():
             
@@ -383,7 +383,7 @@ class Model(Object):
     
     def move_model(self, new_position):
         """moves model to the new reference position"""
-        position = self.position
+        position = (self.position[0], self.position[1])
         pos_delta = (
             new_position[0] - position[0],
             new_position[1] - position[1]
@@ -404,7 +404,7 @@ class Model(Object):
         self.position_rect[0][1] += pos_delta[1]
     
     def shift(self, deltas):
-        position = self.position
+        position = (self.position[0], self.position[1])
         self.position[0] += deltas[0]
         self.position[1] += deltas[1]
         self.rendering_rect[0][0] += deltas[0]
