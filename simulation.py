@@ -394,15 +394,15 @@ class CollisionHandler():
             
             stun_knockback_vector = receiver.knockback_vector
             
-            if self.attacker_is_recoiling(
-                attack_knockback_vector, 
-                stun_knockback_vector
-            ):
-                pass
-            else:
-                self.apply_collision_physics(attack_result)
-                self.apply_attack_damage(attack_result)
-                attacker.update_attack_data()
+            #if self.attacker_is_recoiling(
+            #    attack_knockback_vector, 
+            #    stun_knockback_vector
+            #):
+            #    pass
+            #else:
+            self.apply_collision_physics(attack_result)
+            self.apply_attack_damage(attack_result)
+            attacker.update_attack_data()
                 
         else:
             self.apply_collision_physics(attack_result)

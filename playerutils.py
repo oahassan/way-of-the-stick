@@ -548,6 +548,10 @@ class Stun(Action, GeneratedAction):
         else:
             self.set_animation(player)
             player.model.animation_run_time = 0
+        
+        if self.grounded and self.aerial:
+            player.move_to_ground()
+            player.model.velocity = (0, player.model.velocity[1])
             
         player.apply_physics(player.model.time_passed)
         
@@ -557,9 +561,6 @@ class Stun(Action, GeneratedAction):
             self.grounded = True
         else:
             self.aerial = True
-        
-        if self.grounded and self.aerial:
-            player.move_to_ground()
         
         if player.stun_timer >= player.stun_timeout:
             
