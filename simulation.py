@@ -489,13 +489,20 @@ class CollisionHandler():
         receiver.model.velocity = (0,0)
         
         if attack_type in InputActionTypes.STRONG_ATTACKS:
-            receiver.model.accelerate(receiver.knockback_vector[0], \
-                                      receiver.knockback_vector[1])
+            receiver.model.accelerate(
+                receiver.knockback_vector[0],
+                receiver.knockback_vector[1]
+            )
         elif attack_type in InputActionTypes.TRICKY_ATTACKS:
-            receiver.model.accelerate(0, \
-                                      -1 * abs(receiver.knockback_vector[0]) + receiver.knockback_vector[1])
+            receiver.model.accelerate(
+                0,
+                -1 * abs(receiver.knockback_vector[0]) + receiver.knockback_vector[1]
+            )
         else:
-            pass
+            receiver.model.accelerate(
+                .25 * receiver.knockback_vector[0],
+                .25 * receiver.knockback_vector[1]
+            )
     
     def get_separation_vector(
         self,
