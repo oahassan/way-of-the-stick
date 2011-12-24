@@ -698,7 +698,7 @@ class AttackResolver():
         
         attack_point = interaction_points[0]
         receive_point = interaction_points[1]
-        knockback_vector = self.get_knockback_vector(attacker, attack_point)
+        knockback_vector = self.get_knockback_vector(receiver, attacker, attack_point)
         clash_position = (attack_point.pos[0],attack_point.pos[1])
         
         attack_result = AttackResult(
@@ -794,10 +794,19 @@ class AttackResolver():
         
         return colliding_line_names
 
-    def get_knockback_vector(self, attacker, attack_point):
+    def get_knockback_vector(self, receiver, attacker, attack_point):
         """get the direction and magnitude of the knockback"""
         
-        return self.scale_knockback(attacker.get_point_position_change(attack_point.name))
+        vector = attacker.get_point_position_change(attack_point.name)
+        
+        if (receiver.model.center()[0] > attacker.model.center()[0] and
+        vector[0] < 0):
+            vector[0] *= -1
+        elif (receiver.model.center()[0] < attacker.model.center()[0] and
+        vector[0] > 0):
+            vector[0] *= -1
+        
+        return self.scale_knockback(vector)
     
     def scale_knockback(self, knockback_vector):
         """binds the scale of a knockback vector to control stun animation"""

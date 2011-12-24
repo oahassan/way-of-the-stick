@@ -256,8 +256,8 @@ class Player():
         previous_position = self.get_previous_point_position(point_name)
         
         return \
-            current_position[0] - previous_position[0], \
-            current_position[1] - previous_position[1]
+            [current_position[0] - previous_position[0], \
+            current_position[1] - previous_position[1]]
     
     def set_action(self):
         
