@@ -535,6 +535,7 @@ class VersusModeState():
         
         ground_surface = gamestate.stage.draw_ground()
         self.surface_renderer.draw_surface_to_screen(
+            1,
             (0, gamestate.stage.floor_height - 20), 
             ground_surface
         )
@@ -547,6 +548,7 @@ class VersusModeState():
             
             effect_position, effect_surface = effect.draw_effect()
             self.surface_renderer.draw_surface_to_screen(
+                1,
                 effect_position, 
                 effect_surface
             )
@@ -557,12 +559,14 @@ class VersusModeState():
                     if trail_effect.is_renderable():
                         for polygon_positions in trail_effect.get_polygons():
                             self.surface_renderer.draw_polygon_outline(
+                                1,
                                 polygon_positions,
                                 (255,255,255)
                             )
                         
                         for polygon_positions in trail_effect.get_polygons():
                             self.surface_renderer.draw_polygon(
+                                1,
                                 polygon_positions,
                                 trail_effect.color
                             )
@@ -573,12 +577,14 @@ class VersusModeState():
                     
                     surface, position = effect.draw()
                     self.surface_renderer.draw_surface_to_screen(
+                        1,
                         position, 
                         surface
                     )
         
         for health_bar in self.player_health_bars.values():
             self.surface_renderer.draw_surface_to_absolute_position(
+                1,
                 health_bar.position, 
                 health_bar.draw()
             )

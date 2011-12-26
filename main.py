@@ -13,6 +13,7 @@ pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=4096)
 pygame.init()
 pygame.font.init()
 
+import wotsrendering
 import wotsuievents
 import animationexplorer
 import actionwizard
@@ -85,6 +86,7 @@ if __name__ == "__main__":
                     versusmode.init()
                     
                 versusmode.handle_events()
+                wotsrendering.flush()
             elif gamestate.mode == gamestate.Modes.SETTINGSMODE:
                 volume.handle_events()
             elif gamestate.mode == gamestate.Modes.MOVEBUILDER:

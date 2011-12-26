@@ -1,6 +1,7 @@
 from random import choice
 import pygame
 import gamestate
+import wotsrendering
 import mathfuncs
 from wotsprot.rencode import serializable
 from enumerations import PlayerPositions, PointNames, LineNames
@@ -238,7 +239,7 @@ class SurfaceRenderer():
     ):
         self.viewport_camera = viewport_camera
     
-    def draw_polygon_outline(self, points, color):
+    def draw_polygon_outline(self, layer, points, color):
         
         polygon_points = [
             self.viewport_camera.get_position_in_viewport(point)
@@ -247,15 +248,15 @@ class SurfaceRenderer():
         
         if len(points) == 3:
             gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points))
-            pygame.draw.polygon(gamestate.screen, color, polygon_points, 5)
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points, 5)
         else:
             gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[0:3]))
-            pygame.draw.polygon(gamestate.screen, color, polygon_points[0:3], 5)
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[0:3], 5)
             
             gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[-3:]))
-            pygame.draw.polygon(gamestate.screen, color, polygon_points[-3:], 5)
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[-3:], 5)
     
-    def draw_polygon(self, points, color):
+    def draw_polygon(self, layer, points, color):
         
         polygon_points = [
             self.viewport_camera.get_position_in_viewport(point)
@@ -264,13 +265,13 @@ class SurfaceRenderer():
         
         if len(points) == 3:
             gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points))
-            pygame.draw.polygon(gamestate.screen, color, polygon_points)
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points)
         else:
             gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[0:3]))
-            pygame.draw.polygon(gamestate.screen, color, polygon_points[0:3])
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[0:3])
             
             gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[-3:]))
-            pygame.draw.polygon(gamestate.screen, color, polygon_points[-3:])
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[-3:])
         
     def get_enclosing_rect(self, points):
         min_position = map(min, zip(*points))
@@ -286,7 +287,7 @@ class SurfaceRenderer():
         
         return pygame.Rect(min_position, (width, height))
     
-    def draw_surface_to_screen(self, position, surface):
+    def draw_surface_to_screen(self, layer, position, surface):
         
         surface_viewport_position = self.viewport_camera.get_position_in_viewport(
             position
@@ -300,7 +301,7 @@ class SurfaceRenderer():
             )
         )
         
-        gamestate.screen.blit(scaled_surface, surface_viewport_position)
+        wotsrendering.queue_surface(layer, gamestate.screen, scaled_surface, surface_viewport_position)
         gamestate.new_dirty_rects.append(
             pygame.Rect(
                 surface_viewport_position,
@@ -308,8 +309,8 @@ class SurfaceRenderer():
             )
         )
     
-    def draw_surface_to_absolute_position(self, position, surface):
-        gamestate.screen.blit(surface, position)
+    def draw_surface_to_absolute_position(self, layer, position, surface):
+        wotsrendering.queue_surface(layer, gamestate.screen, surface, position)
         gamestate.new_dirty_rects.append(
             pygame.Rect(
                 position,
@@ -478,7 +479,8 @@ def draw_health_line(line, health_percentage, health_color, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
-    pygame.draw.line(
+    wotsrendering.queue_line(
+        1,
         surface,
         health_color,
         point1,
@@ -490,41 +492,53 @@ def draw_outline_line(line, color, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
-    pygame.draw.line(surface, \
-                    color, \
-                    point1, \
-                    point2, \
-                    int(18))
+    wotsrendering.queue_line(
+        1,
+        surface,
+        color,
+        point1,
+        point2,
+        int(18)
+    )
 
 def draw_outer_line(line, color, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
-    pygame.draw.line(surface, \
-                    color, \
-                    point1, \
-                    point2, \
-                    int(14))
+    wotsrendering.queue_line(
+        1,
+        surface,
+        color,
+        point1,
+        point2,
+        int(14)
+    )
 
 def draw_outline_circle(circle, color, surface):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
     
-    pygame.draw.circle(surface, \
-                      color, \
-                      (int(pos[0]), int(pos[1])), \
-                      int(radius) + 2)
+    wotsrendering.queue_circle(
+        1,
+        surface,
+        color,
+        (int(pos[0]), int(pos[1])),
+        int(radius) + 2
+    )
 
 def draw_outer_circle(circle, color, surface):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
     
-    pygame.draw.circle(surface, \
-                      color, \
-                      (int(pos[0]), int(pos[1])), \
-                      int(radius))
+    wotsrendering.queue_circle(
+        1,
+        surface,
+        color,
+        (int(pos[0]), int(pos[1])),
+        int(radius)
+    )
 
 def draw_inner_circle(circle, color, surface):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
@@ -534,27 +548,36 @@ def draw_inner_circle(circle, color, surface):
     if radius <= 2:
         radius = 3
     
-    pygame.draw.circle(surface, \
-                      color, \
-                      (int(pos[0]), int(pos[1])), \
-                      int(radius - 2))
+    wotsrendering.queue_circle(
+        1,
+        surface,
+        color,
+        (int(pos[0]), int(pos[1])),
+        int(radius - 2)
+    )
 
 
 def draw_outline_point(point, color, surface):
     position = point.pixel_pos()
     
-    pygame.draw.circle(surface, \
-                       color, \
-                       position, \
-                       int(9))
+    wotsrendering.queue_circle(
+        1,
+        surface,
+        color,
+        position,
+        int(9)
+    )
 
 def draw_outer_point(point, color, surface):
     position = point.pixel_pos()
     
-    pygame.draw.circle(surface, \
-                       color, \
-                       position, \
-                       int(7))
+    wotsrendering.queue_circle(
+        1,
+        surface,
+        color,
+        position,
+        int(7)
+    )
 
 def draw_inner_point(point, color, surface):
     """Draws a point on a surface
@@ -563,10 +586,13 @@ def draw_inner_point(point, color, surface):
     
     position = point.pixel_pos()
     
-    pygame.draw.circle(surface, \
-                       color, \
-                       position, \
-                       int(5))
+    wotsrendering.queue_circle(
+        1,
+        surface,
+        color,
+        position,
+        int(5)
+    )
 
 def draw_reflection(
     model,
@@ -623,7 +649,7 @@ def draw_reflection(
         player_rect.left,
         ((gamestate.stage.floor_height- 3) - camera.viewport_position[1]) * camera.viewport_scale
     )
-    surface.blit(reflection_surface, reflection_position)
+    wotsrendering.queue_surface(1, surface, reflection_surface, reflection_position)
     
     gamestate.new_dirty_rects.append(
         pygame.Rect(
