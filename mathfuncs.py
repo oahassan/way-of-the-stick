@@ -7,7 +7,14 @@ def distance(pos1, pos2):
     
     return math.sqrt(math.fsum([(pos1[i] - pos2[i])**2 \
                     for i in range(len(pos1))]))
-                    
+
+def squared_distance(pos1, pos2):
+    """Finds the squared distance between to points"""
+    if len(pos1) != len(pos2):
+        raise Exception('position tuples have different lengths!')
+    
+    return math.fsum([(pos1[i] - pos2[i])**2 for i in range(len(pos1))])
+
 def slope(pos1, pos2):
     """Finds the slope of the line between two-dimensional points"""
     if len(pos1) != len(pos2):
