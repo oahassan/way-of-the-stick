@@ -470,17 +470,16 @@ def draw_player(
         else:
             draw_health_line(
                 line,
-                health_percentage,
                 health_color,
                 surface
             )
 
-def draw_health_line(line, health_percentage, health_color, surface):
+def draw_health_line(line, health_color, surface):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
     wotsrendering.queue_line(
-        1,
+        2,
         surface,
         health_color,
         point1,
@@ -549,7 +548,7 @@ def draw_inner_circle(circle, color, surface):
         radius = 3
     
     wotsrendering.queue_circle(
-        1,
+        2,
         surface,
         color,
         (int(pos[0]), int(pos[1])),
@@ -587,7 +586,7 @@ def draw_inner_point(point, color, surface):
     position = point.pixel_pos()
     
     wotsrendering.queue_circle(
-        1,
+        2,
         surface,
         color,
         position,

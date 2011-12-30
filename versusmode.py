@@ -548,7 +548,7 @@ class VersusModeState():
             
             effect_position, effect_surface = effect.draw_effect()
             self.surface_renderer.draw_surface_to_screen(
-                1,
+                3,
                 effect_position, 
                 effect_surface
             )
@@ -566,7 +566,7 @@ class VersusModeState():
                         
                         for polygon_positions in trail_effect.get_polygons():
                             self.surface_renderer.draw_polygon(
-                                1,
+                                2,
                                 polygon_positions,
                                 trail_effect.color
                             )
@@ -577,7 +577,7 @@ class VersusModeState():
                     
                     surface, position = effect.draw()
                     self.surface_renderer.draw_surface_to_screen(
-                        1,
+                        3,
                         position, 
                         surface
                     )
