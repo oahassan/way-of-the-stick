@@ -27,7 +27,7 @@ from particles import RunSmoke, JumpSmoke, FallSmoke
 from physics import Orientations
 import record
 
-gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
+gamestate.stage = stage.ScrollableStage(1147, 0, gamestate._WIDTH)
 step_number = 0
 SIMULATION_FPS = 100
 
@@ -181,7 +181,7 @@ class VersusModeState():
         gamestate.update_screen()
 
     def init_stage(self):
-        gamestate.stage = stage.ScrollableStage(1047, 0, gamestate._WIDTH)
+        gamestate.stage = stage.ScrollableStage(1147, 0, gamestate._WIDTH)
 
     def set_GUI_module_variables(self):
         wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH
@@ -393,16 +393,16 @@ class VersusModeState():
         
         self.particle_effects = {
             PlayerPositions.PLAYER1 : {
-                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1100, 1),
-                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1100, -1),
-                EffectTypes.JUMP_SMOKE : JumpSmoke(1100),
-                EffectTypes.FALL_SMOKE : FallSmoke(1100)
+                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(gamestate.stage.floor_height + 50, 1),
+                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(gamestate.stage.floor_height + 50, -1),
+                EffectTypes.JUMP_SMOKE : JumpSmoke(gamestate.stage.floor_height + 50),
+                EffectTypes.FALL_SMOKE : FallSmoke(gamestate.stage.floor_height + 50)
             },
             PlayerPositions.PLAYER2 : {
-                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(1100, 1),
-                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(1100, -1),
-                EffectTypes.JUMP_SMOKE : JumpSmoke(1100),
-                EffectTypes.FALL_SMOKE : FallSmoke(1100)
+                EffectTypes.LEFT_RUN_SMOKE : RunSmoke(gamestate.stage.floor_height + 50, 1),
+                EffectTypes.RIGHT_RUN_SMOKE : RunSmoke(gamestate.stage.floor_height + 50, -1),
+                EffectTypes.JUMP_SMOKE : JumpSmoke(gamestate.stage.floor_height + 50),
+                EffectTypes.FALL_SMOKE : FallSmoke(gamestate.stage.floor_height + 50)
             }
         }
         
