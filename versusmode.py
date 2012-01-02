@@ -558,10 +558,19 @@ class VersusModeState():
                 for trail_effect in point_effects.values():
                     if trail_effect.is_renderable():
                         for polygon_positions in trail_effect.get_polygons():
-                            self.surface_renderer.draw_polygon_outline(
+                            self.surface_renderer.draw_polygon(
+                                0,
+                                polygon_positions,
+                                (0,0,0),
+                                8
+                            )
+                        
+                        for polygon_positions in trail_effect.get_polygons():
+                            self.surface_renderer.draw_polygon(
                                 1,
                                 polygon_positions,
-                                (255,255,255)
+                                (255,255,255),
+                                5
                             )
                         
                         for polygon_positions in trail_effect.get_polygons():

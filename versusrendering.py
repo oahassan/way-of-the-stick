@@ -239,7 +239,7 @@ class SurfaceRenderer():
     ):
         self.viewport_camera = viewport_camera
     
-    def draw_polygon_outline(self, layer, points, color):
+    def draw_polygon(self, layer, points, color, line_width=0):
         
         polygon_points = [
             self.viewport_camera.get_position_in_viewport(point)
@@ -247,40 +247,23 @@ class SurfaceRenderer():
         ]
         
         if len(points) == 3:
-            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points))
-            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points, 5)
+            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points, line_width))
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points, line_width)
         else:
-            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[0:3]))
-            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[0:3], 5)
+            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[0:3], line_width))
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[0:3], line_width)
             
-            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[-3:]))
-            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[-3:], 5)
-    
-    def draw_polygon(self, layer, points, color):
+            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[-3:], line_width))
+            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[-3:], line_width)
         
-        polygon_points = [
-            self.viewport_camera.get_position_in_viewport(point)
-            for point in points
-        ]
-        
-        if len(points) == 3:
-            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points))
-            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points)
-        else:
-            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[0:3]))
-            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[0:3])
-            
-            gamestate.new_dirty_rects.append(self.get_enclosing_rect(polygon_points[-3:]))
-            wotsrendering.queue_polygon(layer, gamestate.screen, color, polygon_points[-3:])
-        
-    def get_enclosing_rect(self, points):
+    def get_enclosing_rect(self, points, line_width):
         min_position = map(min, zip(*points))
         max_position = map(max, zip(*points))
         
-        min_position[0] -= 4
-        min_position[1] -= 4
-        max_position[0] += 4
-        max_position[1] += 4
+        min_position[0] -= line_width
+        min_position[1] -= line_width
+        max_position[0] += line_width
+        max_position[1] += line_width
         
         width = max_position[0] - min_position[0]
         height = max_position[1] - min_position[1]
