@@ -136,7 +136,7 @@ class MatchSimulation():
                 message = self.pipe_connection.recv()
                 
                 if message == 'STOP':
-                    raise Exception("Terminating Simulation Process!")
+                    return
                 
                 elif message == 'PAUSE':
                     self.pause = not self.pause

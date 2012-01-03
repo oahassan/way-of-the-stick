@@ -65,8 +65,30 @@ if __name__ == "__main__":
             music.update()
             
             if pygame.QUIT in event_types:
+                if (versusmode.local_state != None and
+                versusmode.local_state.simulation_process != None):
+                    
+                    if versusmode.local_state.simulation_process.is_alive():
+                        print("terminating!")
+                        if versusmode.local_state.simulation_connection != None:
+                            versusmode.local_state.simulation_connection.send('STOP')
+                        else:
+                            versusmode.local_state.simulation_process.terminate()
+                        versusmode.local_state.simulation_process.join()
+                
                 sys.exit()
             elif pygame.K_ESCAPE in wotsuievents.keys_pressed:
+                if (versusmode.local_state != None and
+                versusmode.local_state.simulation_process != None):
+                    
+                    if versusmode.local_state.simulation_process.is_alive():
+                        print("terminating!")
+                        if versusmode.local_state.simulation_connection != None:
+                            versusmode.local_state.simulation_connection.send('STOP')
+                        else:
+                            versusmode.local_state.simulation_process.terminate()
+                        versusmode.local_state.simulation_process.join()
+                
                 sys.exit()
             elif gamestate.mode == gamestate.Modes.FRAMEEDITOR:
                 frameeditor.handle_events(screen, \
