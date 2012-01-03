@@ -2,7 +2,6 @@ import math
 import pygame
 import physics
 import button
-import actionwizard
 import player
 import gamestate
 import wotsuievents
@@ -90,6 +89,17 @@ stick_surface_current_delta = 0
 
 title_label = button.Label((50,50), "Way of the Stick", (255,255,255), 90)
 credits_label = button.Label((20, 550), "Powered by Pygame.", (255,255,255), 32)
+loading_label = button.Label((185, 50), "Loading...", (255,255,255), 90)
+
+def draw_title_splash():
+    title_label.draw(gamestate.screen)
+    credits_label.draw(gamestate.screen)
+    draw_model(model, gamestate.screen)
+
+def draw_loading_splash():
+    loading_label.draw(gamestate.screen)
+    draw_model(model, gamestate.screen)
+    pygame.display.flip()
 
 def handle_events():
     global model
@@ -99,10 +109,7 @@ def handle_events():
     global title_label
     global credits_label
     
-    title_label.draw(gamestate.screen)
-    credits_label.draw(gamestate.screen)
-    draw_model(model, gamestate.screen)
-    
+    draw_title_splash()
     stick_surface_path_count = (stick_surface_path_count + 1) % 360
     
     if (pygame.KEYDOWN in wotsuievents.event_types or

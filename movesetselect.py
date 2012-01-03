@@ -8,6 +8,7 @@ import gamestate
 import movesetdata
 import movesetbuilder
 import movesetselectui
+import splash
 
 loaded = False
 exit_button = None
@@ -135,6 +136,7 @@ def handle_events():
                 create_new_moveset_label.handle_deselected()
                 
                 if create_new_moveset_label.contains(wotsuievents.mouse_pos):
+                    splash.draw_loading_splash()
                     movesetbuilder.load(movesetdata.Moveset())
                     gamestate.mode = gamestate.Modes.MOVESETBUILDER
                     unload()
@@ -152,6 +154,7 @@ def handle_events():
                 edit_moveset_label.handle_deselected()
                 
                 if edit_moveset_label.contains(wotsuievents.mouse_pos):
+                    splash.draw_loading_splash()
                     movesetbuilder.load(
                         moveset_select_container.selected_moveset
                     )

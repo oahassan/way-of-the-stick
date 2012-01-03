@@ -3,6 +3,7 @@ import pygame
 import button
 import gamestate
 import wotsuievents
+import splash
 
 class MenuButton(button.TextButton):
     def __init__(self, text, gamestate_mode, font_size=32):
@@ -25,8 +26,10 @@ class MenuButton(button.TextButton):
             if ((pygame.MOUSEBUTTONUP in wotsuievents.event_types) and 
                 (self.contains(wotsuievents.mouse_pos))):
                 gamestate.mode = self.gamestate_mode
+                splash.draw_loading_splash()
             elif pygame.K_RETURN in wotsuievents.keys_released:
                 gamestate.mode = self.gamestate_mode
+                splash.draw_loading_splash()
 
 def draw(surface):
     """draws the menu on to the given surface"""

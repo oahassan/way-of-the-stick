@@ -4,7 +4,7 @@ import wotsuievents
 import movesetdata
 import gamestate
 import versusmode
-
+import splash
 import button
 import movesetselectui
 import wotsuicontainers
@@ -273,6 +273,8 @@ def handle_events():
         
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):
+                
+                splash.draw_loading_splash()
                 
                 player_data = [
                     versusmode.PlayerData(
