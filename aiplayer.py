@@ -1366,7 +1366,6 @@ class AttackPredictionDataFactory():
     
     #################### common building functions
     def reset_player(self, player):
-        player.model.move_model((100,100))
         player.model.time_passed = 0
         player.model.animation_run_time = 0
         player.direction = PlayerStates.FACING_RIGHT

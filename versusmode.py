@@ -135,7 +135,6 @@ class VersusModeState():
         self.set_GUI_module_variables()
         self.init_stage()
         self.init_screen()
-        
         self.initialized = True
         self.exit_indicator = False
         self.exiting = False
@@ -936,11 +935,12 @@ def create_player(player_data):
     
     if player_data.player_position == PlayerPositions.PLAYER1:
         player.direction = PlayerStates.FACING_RIGHT
-        player.model.move_model((400, 967))
+        player.model.move_model((460, 1017))
     else:
         player.direction = PlayerStates.FACING_LEFT
-        player.model.move_model((1200, 967))
+        player.model.move_model((1140, 1017))
     
+    player.action = None
     player.actions[PlayerStates.STANDING].set_player_state(player)
     
     return player
