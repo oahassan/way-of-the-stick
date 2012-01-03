@@ -91,6 +91,7 @@ class VersusModeState():
         self.match_time = None
         self.exit_button = button.ExitButton()
         self.exit_indicator = False
+        self.exiting = False
         self.versus_mode_start_time = None
         self.fight_start_time = None
         self.fight_end_time = None
@@ -137,6 +138,7 @@ class VersusModeState():
         
         self.initialized = True
         self.exit_indicator = False
+        self.exiting = False
     
     def init_recording(self, moveset1_name, moveset2_name):
         self.recording = record.Recording(
@@ -209,7 +211,7 @@ class VersusModeState():
 
     def handle_events(self):
         
-        if self.simulation_process == None and self.exit_indicator == False:
+        if self.simulation_process == None and self.exiting == False:
             self.start_match_simulation()
         
         if gamestate.devmode:
@@ -228,7 +230,7 @@ class VersusModeState():
                 (self.command_label.width, self.command_label.height))
         )
         
-        if self.exit_indicator == False:
+        if self.exiting == False:
             simulation_rendering_info = None
             
             while self.simulation_connection.poll():
@@ -486,9 +488,8 @@ class VersusModeState():
     def end_simulation(self):
         
         self.simulation_connection.send('STOP')
-        self.simulation_connection.close()
-        self.simulation_process.terminate()
         self.simulation_process.join()
+        self.simulation_connection.close()
         self.simulation_connection = None
         gamestate.processes.remove(self.simulation_process)
         self.simulation_process = None
@@ -517,6 +518,7 @@ class VersusModeState():
                 self.exit_button.symbol.color = button.Button._InactiveColor
                 
                 if self.exit_button.contains(wotsuievents.mouse_pos):
+                    self.exiting = True
                     gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
                     self.exit()
 
