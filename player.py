@@ -212,7 +212,6 @@ class Player():
                 self.outline_color = (0, 255, 255)
             else:
                 self.outline_color = (255, 255, 255)
-            self.outline_color = (0,255,255)
         elif self.get_player_state() == PlayerStates.STUNNED:
             if (self.stun_timer % 30) >= 15:
                 self.outline_color = (255, 255, 0)

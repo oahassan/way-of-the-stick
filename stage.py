@@ -1,7 +1,153 @@
+import os
+import json
 import pygame
 import physics
 import gamestate
 import mathfuncs
+
+class BkgSprite():
+    
+    def __init__(
+        self,
+        position,
+        width,
+        height,
+        image,
+        layer
+    ):
+        self.position = position
+        self.width = width
+        self.height = height
+        self.image = image
+        self.surface = pygame.Surface((width, height))
+        self.layer = layer
+
+def load_from_JSON(path):    
+    stage_data = None
+    
+    with open(path,'r') as stage_file:
+        stage_data = json.load(stage_file)
+    
+    draw_reflections = False
+    
+    if "reflections" in stage_data:
+        draw_reflections = stage_data["reflections"]
+    
+    if "shadows" in stage_data:
+        draw_shadows = stage_data["shadows"]
+    
+    stage = ScrollableStage(
+        stage_data["world-width"],
+        stage_data["world-height"],
+        stage_data["floor-height"], 
+        pygame.image.load(
+            os.path.join(".", "stages", stage_data["bkg-image"])
+        ),
+        draw_reflections,
+        draw_shadows
+    )
+    
+    for sprite_data in stage_data["sprites"]:
+        stage.sprites.append(
+            BkgSprite(
+                sprite_data["position"],
+                sprite_data["width"],
+                sprite_data["height"],
+                create_sprite_image(sprite_data),
+                sprite_data["layer"]
+            )
+        )
+    
+    return stage
+
+def create_sprite_image(sprite_data):
+    image_width = sprite_data["width"]
+    image_height = sprite_data["height"]
+    image = pygame.Surface((image_width, image_height))
+    
+    sprite_image = pygame.image.load(
+        os.path.join(".", "stages", sprite_data["image"])
+    )
+    
+    sprite_image_width = sprite_image.get_width()
+    sprite_image_height = sprite_image.get_height()
+    
+    repeat_x = False
+    
+    if "image-x-repeat" in sprite_data:
+        repeat_x = sprite_data["image-x-repeat"]
+    
+    x_offset = 0
+    
+    if "image-x-offset" in sprite_data:
+        x_offset = sprite_data["image-x-offset"]
+    
+    repeat_y = False
+    
+    if "image-y-repeat" in sprite_data:
+        repeat_y = sprite_data["image-y-repeat"]
+    
+    y_offset = 0
+    
+    if "image-y-offset" in sprite_data:
+        y_offset = sprite_data["image-y-offset"]
+    
+    next_x_position = 0
+    next_y_position = 0
+    
+    for j in xrange(int(image_height / sprite_image_height)):
+        for i in xrange(int(image_width / sprite_image_width) + 1):
+            image.blit(sprite_image, (next_x_position, next_y_position))
+            
+            if repeat_x:
+                next_x_position += sprite_image_width + x_offset
+        
+        if repeat_y:
+            next_y_position += sprite_image_height + y_offset
+    
+    return image
+
+def load_default_stage():
+    stage = ScrollableStage(
+        1800,
+        1200,
+        1147, 
+        create_background(),
+        True,
+        False
+    )
+    
+    stage.sprites.append(
+        BkgSprite(
+            (-50, 1127),
+            1900,
+            20,
+            draw_ground(1900),
+            -1
+        )
+    )
+    
+    return stage
+
+def create_background():
+    background_surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
+    background_surface.fill((0,0,0))
+    
+    return background_surface
+
+def draw_ground(width):
+    ground_surface = pygame.Surface((width, 20))
+    
+    for i in range(20):
+        pygame.draw.line(
+            ground_surface,
+            (int(100 * (20 - i)/20), int(100 * (20 - i)/20), int(100 * (20 - i)/20)),
+            (0, i),
+            (width, i),
+            3,
+        )
+    
+    return ground_surface
 
 class Stage():
     """A stage is the enviornment a match takes place in. the bkg_image
@@ -24,85 +170,44 @@ class Stage():
         surface.blit(self.background_image, (0,0))
 
 class ScrollableStage():
-    """A collection a sprites used to draw the background of a match"""
+    """A stage is the enviornment a match takes place in. the bkg_image
+    is a pygame image object and the floor_height is the y pixel position
+    of the floor of the map."""
 
-    def __init__(self, floor_height, left_wall_position, right_wall_position):
+    def __init__(
+        self, 
+        world_width,
+        world_height,
+        floor_height,
+        bkg_image,
+        draw_reflections,
+        draw_shadows
+    ):
         
         self.floor_height = floor_height
         self.left_screen_position = 0
         self.right_screen_position = gamestate._WIDTH
-        self.width = 1800
-        self.height = 1200
+        self.width = world_width
+        self.height = world_height
         
         self.left_wall = physics.Wall(
             position = (0,0),
-            height = 1600,
+            height = world_height,
             direction = physics.Wall.RIGHT_FACING
         )
         self.right_wall = physics.Wall(
-            position = (1800, 0),
-            height = 1600,
+            position = (world_width, 0),
+            height = world_height,
             direction = physics.Wall.LEFT_FACING
         )
         self.ground = physics.Ground(
             position = (0, floor_height),
-            width = 1800)
-        self.background_image = self.create_black_background()
-        
+            width = world_width)
+        self.background_image = bkg_image
+        self.sprites = []
         self.scroll_threshold = 0
-    
-    def create_background(self):
-        background_surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
-        background_surface.fill((255,255,255))
-        
-        for i in range(80, 100):
-            pygame.draw.line(
-                background_surface,
-                (int(255 * i / 100), int(255 * i / 100), int(255 * i / 100)),
-                (self.left_wall.position[0], self.floor_height + i - 80),
-                (self.right_wall.position[0], self.floor_height + i - 80),
-                3
-            )
-        
-        return background_surface
-    
-    def draw_ground(self):
-        ground_surface = pygame.Surface((self.width, 20))
-        
-        for i in range(20):
-            pygame.draw.line(
-                ground_surface,
-                (int(100 * (20 - i)/20), int(100 * (20 - i)/20), int(100 * (20 - i)/20)),
-                (0, i),
-                (self.width, i),
-                3
-            )
-        
-        return ground_surface
-    
-    def create_black_background(self):
-        background_surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
-        background_surface.fill((0,0,0))
-        
-        #for i in range(20):
-        #    pygame.draw.line(
-        #        background_surface,
-        #        (int(100 * (20 - i)/20), int(100 * (20 - i)/20), int(100 * (20 - i)/20)),
-        #        (self.left_wall.position[0], self.floor_height + i - 20),
-        #        (self.right_wall.position[0], self.floor_height + i - 20),
-        #        3
-        #    )
-        
-        #debugging code
-        #pygame.draw.line(
-        #    background_surface,
-        #    (255, 0, 0),
-        #    (self.left_wall.position[0], self.floor_height),
-        #    (self.right_wall.position[0], self.floor_height),
-        #    1
-        #)
-        
-        return background_surface
+        self.draw_reflections = draw_reflections
+        self.draw_shadows = draw_shadows
     
     def scroll_background(self, player_models):
         """Move the players and background so that it appears that the background is

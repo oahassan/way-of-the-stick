@@ -7,6 +7,7 @@ from wotsprot.rencode import serializable
 from enumerations import PlayerPositions, PointNames, LineNames
 from physics import Model, Orientations
 
+Y_PAN_RATE = 5000
 PAN_RATE = 10
 SCALE_RATE = .01
 SHAKE_MAX_DELTA = 40
@@ -178,12 +179,12 @@ class ViewportCamera():
         if abs(self.viewport_position[1] - y_position)*scale > self.pan_threshold:
             if y_position > self.viewport_position[1]:
                 y_pan_delta = max(
-                    min(y_position - self.viewport_position[1], PAN_RATE),
+                    min(y_position - self.viewport_position[1], Y_PAN_RATE),
                     max_y_position - (self.viewport_position[1] + (self.viewport_height / self.viewport_scale))
                 )
             else:
                 y_pan_delta = min(
-                    max(y_position - self.viewport_position[1], -PAN_RATE),
+                    max(y_position - self.viewport_position[1], -Y_PAN_RATE),
                     min_y_position - self.viewport_position[1]
                 )
         
@@ -389,14 +390,16 @@ def draw_player_renderer_state(player_renderer_state, surface):
             player_renderer_state.player_health_color_dictionary[player_position],
             surface
         )
-        draw_reflection(
-            player_renderer_state.player_model_dictionary[player_position],
-            player_renderer_state.player_health_percentage_dictionary[player_position],
-            player_renderer_state.player_outline_color_dictionary[player_position],
-            player_renderer_state.player_health_color_dictionary[player_position],
-            player_renderer_state.viewport_camera,
-            surface
-        )
+        
+        if gamestate.stage.draw_reflections:
+            draw_reflection(
+                player_renderer_state.player_model_dictionary[player_position],
+                player_renderer_state.player_health_percentage_dictionary[player_position],
+                player_renderer_state.player_outline_color_dictionary[player_position],
+                player_renderer_state.player_health_color_dictionary[player_position],
+                player_renderer_state.viewport_camera,
+                surface
+            )
 
 def draw_player(
     model, 

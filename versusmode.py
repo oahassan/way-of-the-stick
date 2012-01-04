@@ -1,3 +1,4 @@
+import os
 import multiprocessing
 import pygame
 
@@ -27,7 +28,7 @@ from particles import RunSmoke, JumpSmoke, FallSmoke
 from physics import Orientations
 import record
 
-gamestate.stage = stage.ScrollableStage(1147, 0, gamestate._WIDTH)
+gamestate.stage = stage.load_default_stage()
 step_number = 0
 SIMULATION_FPS = 100
 
@@ -182,7 +183,9 @@ class VersusModeState():
         gamestate.update_screen()
 
     def init_stage(self):
-        gamestate.stage = stage.ScrollableStage(1147, 0, gamestate._WIDTH)
+        gamestate.stage = stage.load_from_JSON(
+            os.path.join(".","stages","mountain.stg")
+        )
 
     def set_GUI_module_variables(self):
         wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH
@@ -534,12 +537,13 @@ class VersusModeState():
 
     def render_simulation(self):
         
-        ground_surface = gamestate.stage.draw_ground()
-        self.surface_renderer.draw_surface_to_screen(
-            1,
-            (0, gamestate.stage.floor_height - 20), 
-            ground_surface
-        )
+        for sprite in gamestate.stage.sprites:
+            self.surface_renderer.draw_surface_to_screen(
+                1,
+                sprite.position, 
+                sprite.image
+            )
+        
         versusrendering.draw_player_renderer_state(
             self.player_renderer_state, 
             gamestate.screen
