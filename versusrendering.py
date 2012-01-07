@@ -7,7 +7,7 @@ from wotsprot.rencode import serializable
 from enumerations import PlayerPositions, PointNames, LineNames
 from physics import Model, Orientations
 
-Y_PAN_RATE = 5000
+Y_PAN_RATE = 10
 PAN_RATE = 10
 SCALE_RATE = .01
 SHAKE_MAX_DELTA = 40
@@ -65,14 +65,15 @@ class ViewportCamera():
         if self.shake_indicator:
             self.shake()
         
-        scale = self.get_viewport_scale(constraining_rect)
+        target_rect = self.get_target_rect(constraining_rect)
+        scale = self.get_viewport_scale(target_rect)
         
-        if not self.can_zoom(constraining_rect):
-            scale = self.viewport_scale
+        #if not self.can_zoom(target_rect):
+        #    scale = self.viewport_scale
         
         pan_deltas = self.get_pan_deltas(
             scale,
-            constraining_rect
+            target_rect
         )
         
         self.viewport_scale = scale
@@ -81,7 +82,25 @@ class ViewportCamera():
             self.viewport_position[1] + pan_deltas[1]
         )
     
-    def can_zoom(self, constraining_rect):
+    def get_target_rect(self, constraining_rect):
+        
+        containing_rects = [    
+            camera_rect
+            for camera_rect in gamestate.stage.camera_rects
+            if camera_rect.contains(constraining_rect)
+        ]
+        
+        def squared_distance(containing_rect):
+            return mathfuncs.squared_distance(containing_rect.center, constraining_rect.center)
+        
+        if len(containing_rects) > 0:
+            target_rect = min(containing_rects, key=squared_distance)
+        else:
+            target_rect = gamestate.stage.camera_rects[0]
+        
+        return target_rect
+    
+    def can_zoom(self, target_rect):
         """Determine whether a zoom should be allowed.  This is in place to
         stabilize the camera.  Without it the screen shakes when because the
         width of the fighter sprites changes in their rest positions"""
@@ -90,14 +109,14 @@ class ViewportCamera():
         scaled_viewport_height = self.viewport_height / viewport_scale
         
         scale_up_indicator = (
-            constraining_rect.width > scaled_viewport_width or
-            constraining_rect.height > scaled_viewport_height
+            target_rect.width > scaled_viewport_width or
+            target_rect.height > scaled_viewport_height
         )
         
         scale_down_indicator = (
-            (scaled_viewport_width - constraining_rect.width)*viewport_scale > 
+            (scaled_viewport_width - target_rect.width)*viewport_scale > 
             self.zoom_threshold and
-            (scaled_viewport_height - constraining_rect.height)*viewport_scale > 
+            (scaled_viewport_height - target_rect.height)*viewport_scale > 
             self.zoom_threshold
         )
         
@@ -106,7 +125,7 @@ class ViewportCamera():
     def get_position_in_viewport(self, position):
         return (
             (position[0] - self.viewport_position[0]) * self.viewport_scale,
-            (position[1] - self.viewport_position[1]) * self.viewport_scale
+            ((position[1] - self.viewport_position[1]) * self.viewport_scale)
         )
     
     def get_viewport_scale(self, constraining_rect):
@@ -126,8 +145,8 @@ class ViewportCamera():
         
         x_dist = max_x_position - min_x_position
         y_dist = max_y_position - min_y_position
-        x_diff = x_dist - self.viewport_width
-        y_diff = y_dist - self.viewport_height
+        x_diff = max_x_position - min_x_position#x_dist - self.viewport_width
+        y_diff = max_y_position - min_y_position#y_dist - self.viewport_height
         
         if x_diff > 0 and y_diff > 0:
             if x_diff > y_diff:
@@ -149,22 +168,22 @@ class ViewportCamera():
     def get_pan_deltas(
         self,
         scale,
-        constraining_rect
+        target_rect
     ):
         """determine the distance to move from the current viewport position"""
-        min_x_position = constraining_rect.left
-        min_y_position = constraining_rect.top
-        max_x_position = constraining_rect.right
-        max_y_position = constraining_rect.bottom
+        min_x_position = target_rect.left
+        min_y_position = target_rect.top
+        max_x_position = target_rect.right
+        max_y_position = target_rect.bottom
         
-        target_position = self.get_target_position(scale, constraining_rect)
+        target_position = target_rect.topleft #self.get_target_position(scale, target_rect)
         x_position = target_position[0]
         y_position = target_position[1]
         
         x_pan_delta = 0
         y_pan_delta = 0
         
-        if abs(self.viewport_position[0] - x_position)*scale > self.pan_threshold:
+        if abs(self.viewport_position[0] - x_position) > self.pan_threshold:
             if x_position > self.viewport_position[0]:
                 x_pan_delta = max(
                     min(x_position - self.viewport_position[0], PAN_RATE),
@@ -176,7 +195,7 @@ class ViewportCamera():
                     min_x_position - self.viewport_position[0]
                 )
         
-        if abs(self.viewport_position[1] - y_position)*scale > self.pan_threshold:
+        if abs(self.viewport_position[1] - y_position) > self.pan_threshold:
             if y_position > self.viewport_position[1]:
                 y_pan_delta = max(
                     min(y_position - self.viewport_position[1], Y_PAN_RATE),

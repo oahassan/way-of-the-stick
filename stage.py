@@ -36,6 +36,11 @@ def load_from_JSON(path):
     if "shadows" in stage_data:
         draw_shadows = stage_data["shadows"]
     
+    camera_rects = [get_default_camera_rect(stage_data["world-width"], stage_data["world-height"])]
+    
+    for rect_data in stage_data["camera-rects"]:
+        camera_rects.append(pygame.Rect(*rect_data))
+    
     stage = ScrollableStage(
         stage_data["world-width"],
         stage_data["world-height"],
@@ -44,7 +49,8 @@ def load_from_JSON(path):
             os.path.join(".", "stages", stage_data["bkg-image"])
         ),
         draw_reflections,
-        draw_shadows
+        draw_shadows,
+        camera_rects
     )
     
     for sprite_data in stage_data["sprites"]:
@@ -59,6 +65,20 @@ def load_from_JSON(path):
         )
     
     return stage
+
+def get_default_camera_rect(world_width, world_height):
+    
+    rect_width, rect_height = (world_width, world_height)
+    
+    aspect_ratio = gamestate._WIDTH / float(gamestate._HEIGHT)
+    
+    if world_width > world_height:
+        rect_height = int(world_width / aspect_ratio)
+    
+    if world_width < world_height:
+        rect_width = int(world_height * aspect_ratio)
+    
+    return pygame.Rect((0,0), (rect_width, rect_height))
 
 def create_sprite_image(sprite_data):
     image_width = sprite_data["width"]
@@ -114,7 +134,8 @@ def load_default_stage():
         1147, 
         create_background(),
         True,
-        False
+        False,
+        [get_default_camera_rect(1800, 1200)]
     )
     
     stage.sprites.append(
@@ -181,7 +202,8 @@ class ScrollableStage():
         floor_height,
         bkg_image,
         draw_reflections,
-        draw_shadows
+        draw_shadows,
+        camera_rects
     ):
         
         self.floor_height = floor_height
@@ -208,6 +230,7 @@ class ScrollableStage():
         self.scroll_threshold = 0
         self.draw_reflections = draw_reflections
         self.draw_shadows = draw_shadows
+        self.camera_rects = camera_rects
     
     def scroll_background(self, player_models):
         """Move the players and background so that it appears that the background is
