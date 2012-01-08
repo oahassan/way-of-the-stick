@@ -10,7 +10,7 @@ from physics import Model, Orientations
 Y_PAN_RATE = 10
 PAN_RATE = 10
 SCALE_RATE = .01
-SHAKE_MAX_DELTA = 40
+SHAKE_MAX_DELTA = 20
 
 class ViewportCamera():
     def __init__(
@@ -66,13 +66,14 @@ class ViewportCamera():
             self.shake()
         
         target_rect = self.get_target_rect(constraining_rect)
-        scale = self.get_viewport_scale(target_rect)
+        scale = self.get_viewport_scale(constraining_rect, target_rect)
         
         #if not self.can_zoom(target_rect):
         #    scale = self.viewport_scale
         
         pan_deltas = self.get_pan_deltas(
             scale,
+            constraining_rect,
             target_rect
         )
         
@@ -128,7 +129,7 @@ class ViewportCamera():
             ((position[1] - self.viewport_position[1]) * self.viewport_scale)
         )
     
-    def get_viewport_scale(self, constraining_rect):
+    def get_viewport_scale(self, constraining_rect, target_rect):
         """determine the scale of world objects on the viewport by forcing the
         viewport to include all rects in the constraining_rects.
         
@@ -136,12 +137,14 @@ class ViewportCamera():
         must appear in the viewport. The rect should be at world scale and 
         positioned in world coordinates.
         """
-        scale = 1
+        scale = self.viewport_scale
+        target_scale = 1
+        constraining_scale = 1
         
-        min_x_position = constraining_rect.left
-        min_y_position = constraining_rect.top
-        max_x_position = constraining_rect.right
-        max_y_position = constraining_rect.bottom
+        min_x_position = target_rect.left
+        min_y_position = target_rect.top
+        max_x_position = target_rect.right
+        max_y_position = target_rect.bottom
         
         x_dist = max_x_position - min_x_position
         y_dist = max_y_position - min_y_position
@@ -150,31 +153,42 @@ class ViewportCamera():
         
         if x_diff > 0 and y_diff > 0:
             if x_diff > y_diff:
-                scale = float(self.viewport_width) / x_dist
+                target_scale = float(self.viewport_width) / target_rect.width
+                constraining_scale = float(self.viewport_width) / constraining_rect.width
             else:
-                scale = float(self.viewport_height) / y_dist
+                target_scale = float(self.viewport_height) / target_rect.height
+                constraining_scale = float(self.viewport_height) / constraining_rect.height
         elif x_diff > 0:
-            scale = float(self.viewport_width) / x_dist
+            target_scale = float(self.viewport_width) / target_rect.width
+            constraining_scale = float(self.viewport_width) / constraining_rect.width
         elif y_diff > 0:
-            scale = float(self.viewport_height) / y_dist
+            target_scale = float(self.viewport_height) / target_rect.height
+            constraining_scale = float(self.viewport_height) / constraining_rect.height
         else:
             pass #no scaling is required.
         
-        if scale > self.viewport_scale:
-            scale = min(scale, self.viewport_scale + SCALE_RATE)
+        if target_scale > self.viewport_scale:
+            scale = min(target_scale, self.viewport_scale + SCALE_RATE)
+            
+        elif target_scale < self.viewport_scale:
+            scale = max(target_scale, self.viewport_scale - SCALE_RATE)
+        
+        if constraining_scale < scale:
+            scale = constraining_scale
         
         return scale
     
     def get_pan_deltas(
         self,
         scale,
+        constraining_rect,
         target_rect
     ):
         """determine the distance to move from the current viewport position"""
-        min_x_position = target_rect.left
-        min_y_position = target_rect.top
-        max_x_position = target_rect.right
-        max_y_position = target_rect.bottom
+        min_x_position = constraining_rect.left
+        min_y_position = constraining_rect.top
+        max_x_position = constraining_rect.right
+        max_y_position = constraining_rect.bottom
         
         target_position = target_rect.topleft #self.get_target_position(scale, target_rect)
         x_position = target_position[0]
