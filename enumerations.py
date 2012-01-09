@@ -164,6 +164,7 @@ class EventStates():
     ATTACK_HIT = 1
     FOOT_SOUND = 2
     ATTACK_SOUND = 3
+    COLLISION_START = 4
 
 class PlayerStates():
     FACING_RIGHT = 'FACING_RIGHT'
