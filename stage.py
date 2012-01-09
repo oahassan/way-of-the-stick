@@ -53,7 +53,8 @@ def load_from_JSON(path):
         draw_reflections,
         draw_shadows,
         camera_rects,
-        constraining_rect
+        constraining_rect,
+        stage_data["player-positions"]
     )
     
     for sprite_data in stage_data["sprites"]:
@@ -139,7 +140,8 @@ def load_default_stage():
         True,
         False,
         [get_default_camera_rect(1800, 1200)],
-        get_default_camera_rect(1800, 1200)
+        get_default_camera_rect(1800, 1200),
+        [[550, 1067], [1250, 1067]]
     )
     
     stage.sprites.append(
@@ -208,7 +210,8 @@ class ScrollableStage():
         draw_reflections,
         draw_shadows,
         camera_rects,
-        constraining_rect
+        constraining_rect,
+        player_positions
     ):
         
         self.floor_height = floor_height
@@ -237,6 +240,7 @@ class ScrollableStage():
         self.draw_reflections = draw_reflections
         self.draw_shadows = draw_shadows
         self.camera_rects = camera_rects
+        self.player_positions = player_positions
     
     def scroll_background(self, player_models):
         """Move the players and background so that it appears that the background is

@@ -980,10 +980,10 @@ def create_player(player_data):
     
     if player_data.player_position == PlayerPositions.PLAYER1:
         player.direction = PlayerStates.FACING_RIGHT
-        player.model.move_model((460, 1017))
+        player.model.move_model(gamestate.stage.player_positions[0])
     else:
         player.direction = PlayerStates.FACING_LEFT
-        player.model.move_model((1140, 1017))
+        player.model.move_model(gamestate.stage.player_positions[1])
     
     player.action = None
     player.actions[PlayerStates.STANDING].set_player_state(player)
