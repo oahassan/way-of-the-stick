@@ -440,8 +440,9 @@ class RunSmoke(ParticleSystem):
         self.floor_height = floor_height
         
         self.particle_buffer = pygame.Surface(
-            (2 * (PARTICLE_RADIUS + POINT_RADIUS), 2 * (PARTICLE_RADIUS + POINT_RADIUS))
-        ).convert()
+            (2 * (PARTICLE_RADIUS + POINT_RADIUS), 2 * (PARTICLE_RADIUS + POINT_RADIUS)),
+            pygame.SRCALPHA
+        )
         self.particle_buffer.set_colorkey(COLOR_KEY)
         
         self.direction = direction
@@ -523,28 +524,29 @@ class RunSmoke(ParticleSystem):
     
     def draw(self):
         rect = self.get_enclosing_rects()
-        system_surface = pygame.Surface(rect[1])
-        system_surface.set_colorkey((0,0,0))
-        system_surface.fill((0,0,0))
+        system_surface = pygame.Surface(rect[1], pygame.SRCALPHA)
+        system_surface.fill((0,0,0,0))
         
         particle_surface = self.particle_buffer
         
         for particle in self.live_particles:
             
             alpha = min(100, int(255 * float(particle.duration) / particle.total_duration))
-            particle_surface.fill(COLOR_KEY)
-            particle_surface.set_alpha(alpha)
             
             surface_position = (
                 int(particle.position[0] - rect[0][0] - PARTICLE_RADIUS - POINT_RADIUS),
                 int(particle.position[1] - rect[0][1] - PARTICLE_RADIUS - POINT_RADIUS)
             )
             
+            alpha_color = []
+            alpha_color.extend(particle.color)
+            alpha_color.append(alpha)
+            
             for point in particle.points:
                 if particle.position[1] + point[1] < self.floor_height:
                     pygame.draw.circle(
                         particle_surface,
-                        particle.color,
+                        alpha_color,
                         (int(point[0]), 
                         int(point[1])),
                         POINT_RADIUS
@@ -563,7 +565,7 @@ class RunSmoke(ParticleSystem):
         #    (scaled_width, scaled_height)
         #)
         #scaled_position = (rect[0][0], rect[0][1] + scaled_height)
-        return system_surface, rect[0]
+        return system_surface.convert_alpha(), rect[0]
 
 
 class JumpSmoke(ParticleSystem):
@@ -577,8 +579,9 @@ class JumpSmoke(ParticleSystem):
         self.floor_height = floor_height
         
         self.particle_buffer = pygame.Surface(
-            (2 * (PARTICLE_RADIUS + POINT_RADIUS), 2 * (PARTICLE_RADIUS + POINT_RADIUS))
-        ).convert()
+            (2 * (PARTICLE_RADIUS + POINT_RADIUS), 2 * (PARTICLE_RADIUS + POINT_RADIUS)),
+            pygame.SRCALPHA
+        )
         self.particle_buffer.set_colorkey(COLOR_KEY)
     
     def get_particle_init_velocity(self):
@@ -643,28 +646,29 @@ class JumpSmoke(ParticleSystem):
     
     def draw(self):
         rect = self.get_enclosing_rects()
-        system_surface = pygame.Surface(rect[1])
-        system_surface.set_colorkey((0,0,0))
-        system_surface.fill((0,0,0))
+        system_surface = pygame.Surface(rect[1], pygame.SRCALPHA)
+        system_surface.fill((0,0,0,0))
         
         particle_surface = self.particle_buffer
         
         for particle in self.live_particles:
             
             alpha = int(100 * float(particle.duration) / particle.total_duration)
-            particle_surface.fill(COLOR_KEY)
-            particle_surface.set_alpha(alpha)
             
             surface_position = (
                 int(particle.position[0] - rect[0][0] - PARTICLE_RADIUS - POINT_RADIUS),
                 int(particle.position[1] - rect[0][1] - PARTICLE_RADIUS - POINT_RADIUS)
             )
             
+            alpha_color = []
+            alpha_color.extend(particle.color)
+            alpha_color.append(alpha)
+            
             for point in particle.points:
                 if particle.position[1] + point[1] < self.floor_height:
                     pygame.draw.circle(
                         particle_surface,
-                        particle.color,
+                        alpha_color,
                         (int(point[0]), 
                         int(point[1])),
                         POINT_RADIUS
@@ -683,7 +687,7 @@ class JumpSmoke(ParticleSystem):
         #    (scaled_width, scaled_height)
         #)
         #scaled_position = (rect[0][0], rect[0][1] + scaled_height)
-        return system_surface, rect[0]
+        return system_surface.convert_alpha(), rect[0]
 
 class FallSmoke(ParticleSystem):
     def __init__(self, floor_height):
@@ -696,9 +700,9 @@ class FallSmoke(ParticleSystem):
         self.floor_height = floor_height
         
         self.particle_buffer = pygame.Surface(
-            (2 * (PARTICLE_RADIUS + POINT_RADIUS), 2 * (PARTICLE_RADIUS + POINT_RADIUS))
-        ).convert()
-        self.particle_buffer.set_colorkey(COLOR_KEY)
+            (2 * (PARTICLE_RADIUS + POINT_RADIUS), 2 * (PARTICLE_RADIUS + POINT_RADIUS)),
+            pygame.SRCALPHA
+        )
         
         field = ForceField(
             [self.emit_position[0] - 100, self.emit_position[1] - 100],
@@ -772,28 +776,28 @@ class FallSmoke(ParticleSystem):
     
     def draw(self):
         rect = self.get_enclosing_rects()
-        system_surface = pygame.Surface(rect[1])
-        system_surface.set_colorkey((0,0,0))
-        system_surface.fill((0,0,0))
+        system_surface = pygame.Surface(rect[1], pygame.SRCALPHA)
+        system_surface.fill((0,0,0,0))
         
         particle_surface = self.particle_buffer
         
         for particle in self.live_particles:
             
             alpha = min(100, int(255 * float(particle.duration) / particle.total_duration))
-            particle_surface.fill(COLOR_KEY)
-            particle_surface.set_alpha(alpha)
             
             surface_position = (
                 int(particle.position[0] - rect[0][0] - PARTICLE_RADIUS - POINT_RADIUS),
                 int(particle.position[1] - rect[0][1] - PARTICLE_RADIUS - POINT_RADIUS)
             )
+            alpha_color = []
+            alpha_color.extend(particle.color)
+            alpha_color.append(alpha)
             
             for point in particle.points:
                 if particle.position[1] + point[1] < self.floor_height:
                     pygame.draw.circle(
                         particle_surface,
-                        particle.color,
+                        alpha_color,
                         (int(point[0]), 
                         int(point[1])),
                         POINT_RADIUS
@@ -812,7 +816,7 @@ class FallSmoke(ParticleSystem):
         #    (scaled_width, scaled_height)
         #)
         #scaled_position = (rect[0][0], rect[0][1] + scaled_height)
-        return system_surface, rect[0]
+        return system_surface.convert_alpha(), rect[0]
 
 
 if __name__ == "__main__":
