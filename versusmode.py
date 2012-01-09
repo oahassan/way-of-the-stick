@@ -355,6 +355,9 @@ class VersusModeState():
                 emit_position
             )
     
+    def end_trail_effects(self, player_position, player_rendering_info):
+        self.trail_effects[player_position] = {}
+    
     def init_rendering_objects(self):
         
         self.player_event_handlers = {
@@ -378,6 +381,10 @@ class VersusModeState():
             (EventTypes.START, EventStates.STUN_GROUND),
             self.start_fall_particle_effect
         )
+        self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
+            (EventTypes.STOP, PlayerStates.ATTACKING),
+            self.end_trail_effects
+        )
         self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
             (EventTypes.START, PlayerStates.RUNNING),
             self.start_run_start_particle_effect
@@ -393,6 +400,10 @@ class VersusModeState():
         self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
             (EventTypes.START, EventStates.STUN_GROUND),
             self.start_fall_particle_effect
+        )
+        self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
+            (EventTypes.STOP, PlayerStates.ATTACKING),
+            self.end_trail_effects
         )
         
         self.particle_effects = {
@@ -720,7 +731,7 @@ class VersusModeState():
             attack_type = player_info.attack_type
             player_trail_effects = self.trail_effects[player_position]
             
-            if attack_type != None: #and attack_type in InputActionTypes.QUICK_ATTACKS:
+            if attack_type != None:
                 
                 player_model = player_info.player_model
                 

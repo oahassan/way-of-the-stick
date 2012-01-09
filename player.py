@@ -12,7 +12,7 @@ import mathfuncs
 import stick
 import pulltool
 from controlsdata import get_control_key
-from enumerations import InputActionTypes, CommandCollections, CommandDurations, PlayerPositions
+from enumerations import InputActionTypes, CommandCollections, CommandDurations, PlayerPositions, EventTypes
 from motion import AerialMotion, StunMotion
 from command import Command, CommandHandler
 import settingsdata
@@ -414,6 +414,7 @@ class Player():
     
     def handle_attack_end(self):
         """additional actions to be taken when an attack ends"""
+        self.events.append((EventTypes.STOP, PlayerStates.ATTACKING))
         self.current_attack = None
     
     def get_attack_lines(self):

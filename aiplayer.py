@@ -7,7 +7,7 @@ import animationexplorer
 from mathfuncs import sign
 from player import Player, PlayerTypes
 from stick import LineNames
-from enumerations import PlayerStates, CommandDurations, InputActionTypes, AttackTypes, ApproachTypes, Difficulties
+from enumerations import PlayerStates, CommandDurations, InputActionTypes, AttackTypes, ApproachTypes, Difficulties, EventTypes
 from playerutils import ActionFactory, Transition, Action, Attack
 from simulation import HitboxBuilder
 from playerconstants import *
@@ -56,7 +56,6 @@ class Bot(Player):
     
     def handle_attack_end(self):
         """update graph weights and attack data"""
-        
         if self.current_attack != None:
             current_attack_name = self.current_attack.right_animation.name
             if self.attack_landed == False:
@@ -93,6 +92,7 @@ class Bot(Player):
                 
                 self.attack_prediction_engine.last_attack_name = current_attack_name
         
+        self.events.append((EventTypes.STOP, PlayerStates.ATTACKING))
         self.pre_attack_state = None
         self.attack_landed = False
         self.current_attack = None
