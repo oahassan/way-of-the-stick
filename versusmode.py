@@ -130,11 +130,11 @@ class VersusModeState():
     def init(self, player_data):
         
         self.init_match_state_variables()
+        self.init_stage()
         self.init_player_data(player_data)
         self.init_rendering_objects()
         self.init_simulation_objects()
         self.set_GUI_module_variables()
-        self.init_stage()
         self.init_screen()
         self.initialized = True
         self.exit_indicator = False
@@ -601,6 +601,47 @@ class VersusModeState():
                 1,
                 health_bar.position, 
                 health_bar.draw()
+            )
+        
+        if self.camera.full_zoom_only and gamestate.devmode:
+            for camera_rect in gamestate.stage.camera_rects:
+                rect_surface = pygame.Surface((camera_rect.width, camera_rect.height))
+                rect_surface.fill((0,0,0))
+                rect_surface.set_colorkey((0,0,0))
+                pygame.draw.rect(
+                    rect_surface,
+                    (0,255,0),
+                    ((0,0), camera_rect.size),
+                    10
+                )
+                self.surface_renderer.draw_surface_to_screen(
+                    999,
+                    camera_rect.topleft, 
+                    rect_surface
+                )
+            
+            rect_surface = pygame.Surface((
+                self.camera.viewport_width / self.camera.viewport_scale, 
+                self.camera.viewport_height / self.camera.viewport_scale
+            ))
+            rect_surface.fill((0,0,0))
+            rect_surface.set_colorkey((0,0,0))
+            pygame.draw.rect(
+                rect_surface,
+                (255,0,0),
+                (
+                    (0,0), 
+                    (
+                        self.camera.viewport_width / self.camera.viewport_scale, 
+                        self.camera.viewport_height / self.camera.viewport_scale
+                    )
+                ),
+                10
+            )
+            self.surface_renderer.draw_surface_to_screen(
+                1000,
+                self.camera.viewport_position, 
+                rect_surface
             )
         
         if self.pause:

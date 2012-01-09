@@ -26,6 +26,7 @@ class ViewportCamera():
         self.viewport_width = viewport_width
         self.viewport_position = (0,0)
         self.viewport_scale = 1
+        self.full_zoom_scale = 1
         self.zoom_count = 3
         self.zoom_threshold = 20
         self.pan_threshold = 10
@@ -34,6 +35,7 @@ class ViewportCamera():
         self.shake_delta = [0,0]
         self.shake_indicator = False
         self.shake_decay = .5
+        self.full_zoom_only = False #True
     
     def start_shaking(self, shake_delta):
         self.shake_delta_timer = 0
@@ -66,7 +68,7 @@ class ViewportCamera():
             self.shake()
         
         target_rect = self.get_target_rect(constraining_rect)
-        scale = self.get_viewport_scale(constraining_rect, target_rect)
+        scale = self.calc_viewport_scale(constraining_rect, target_rect)
         
         #if not self.can_zoom(target_rect):
         #    scale = self.viewport_scale
@@ -101,35 +103,37 @@ class ViewportCamera():
         
         return target_rect
     
-    def can_zoom(self, target_rect):
-        """Determine whether a zoom should be allowed.  This is in place to
-        stabilize the camera.  Without it the screen shakes when because the
-        width of the fighter sprites changes in their rest positions"""
-        viewport_scale = self.viewport_scale
-        scaled_viewport_width = self.viewport_width / viewport_scale
-        scaled_viewport_height = self.viewport_height / viewport_scale
-        
-        scale_up_indicator = (
-            target_rect.width > scaled_viewport_width or
-            target_rect.height > scaled_viewport_height
-        )
-        
-        scale_down_indicator = (
-            (scaled_viewport_width - target_rect.width)*viewport_scale > 
-            self.zoom_threshold and
-            (scaled_viewport_height - target_rect.height)*viewport_scale > 
-            self.zoom_threshold
-        )
-        
-        return scale_up_indicator or scale_down_indicator
+    def get_distance_in_viewport(self, distance):
+        if self.full_zoom_only:
+            return distance * self.viewport_width / float(self.world_width)
+        else:
+            return distance * self.viewport_scale
     
     def get_position_in_viewport(self, position):
+        if self.full_zoom_only:
+            return self.get_full_zoom_position(position)
+        else:
+            return self.get_viewport_zoom_position(position)
+    
+    def get_viewport_scale(self):
+        if self.full_zoom_only:
+            return self.viewport_width / float(self.world_width)
+        else:
+            return self.viewport_scale
+    
+    def get_viewport_zoom_position(self, position):
         return (
             (position[0] - self.viewport_position[0]) * self.viewport_scale,
             ((position[1] - self.viewport_position[1]) * self.viewport_scale)
         )
     
-    def get_viewport_scale(self, constraining_rect, target_rect):
+    def get_full_zoom_position(self, position):
+        return (
+            position[0] * self.viewport_width / float(self.world_width),
+            position[1] * self.viewport_width / float(self.world_width)
+        )
+    
+    def calc_viewport_scale(self, constraining_rect, target_rect):
         """determine the scale of world objects on the viewport by forcing the
         viewport to include all rects in the constraining_rects.
         
@@ -220,6 +224,58 @@ class ViewportCamera():
                     max(y_position - self.viewport_position[1], -Y_PAN_RATE),
                     min_y_position - self.viewport_position[1]
                 )
+        
+        #Force smooth panning when scaling
+        x_diff = x_position - self.viewport_position[0]
+        y_diff = y_position - self.viewport_position[1]
+        
+        if y_diff > 0:
+            ratio = x_diff / float(y_diff)
+            
+            if ratio > 0:
+                if x_pan_delta <> 0:
+                    y_pan_delta = x_pan_delta / float(ratio)
+                elif y_pan_delta <> 0:
+                    x_pan_delta = y_pan_delta * float(ratio)
+        
+        #Force world to stay in view
+        new_viewport_right = self.viewport_position[0] + (self.viewport_width / scale) + x_pan_delta
+        new_viewport_left = self.viewport_position[0] + x_pan_delta
+        
+        #if new_viewport_left < gamestate.stage.constraining_rect.left:
+        #    x_pan_delta = min(gamestate.stage.constraining_rect.left - self.viewport_position[0], 0)
+        if new_viewport_right > gamestate.stage.constraining_rect.right:
+            x_pan_delta = gamestate.stage.constraining_rect.right - new_viewport_right
+            #NOTE sometimes the corrected pan delata is 10 pixesl bigger the constraining right
+        
+        new_viewport_bottom = self.viewport_position[1] + (self.viewport_height / scale) + y_pan_delta
+        new_viewport_top = self.viewport_position[1] + y_pan_delta
+        
+        #if new_viewport_top < gamestate.stage.constraining_rect.top:
+        #    y_pan_delta = max(gamestate.stage.constraining_rect.top - self.viewport_position[1], 0)
+        if new_viewport_bottom > gamestate.stage.constraining_rect.bottom:
+            y_pan_delta = gamestate.stage.constraining_rect.bottom - new_viewport_bottom
+        
+        #Force players to be in view
+        new_viewport_right = self.viewport_position[0] + (self.viewport_width / scale) + x_pan_delta
+        new_viewport_left = self.viewport_position[0] + x_pan_delta
+        
+        #if new_viewport_left < gamestate.stage.constraining_rect.left:
+        #    x_pan_delta = min(gamestate.stage.constraining_rect.left - self.viewport_position[0], 0)
+        if new_viewport_right < constraining_rect.right:
+            x_pan_delta = constraining_rect.right - new_viewport_right        
+        
+        new_viewport_bottom = self.viewport_position[1] + (self.viewport_height / scale) + y_pan_delta
+        new_viewport_top = self.viewport_position[1] + y_pan_delta
+        
+        #if new_viewport_top < gamestate.stage.constraining_rect.top:
+        #    y_pan_delta = max(gamestate.stage.constraining_rect.top - self.viewport_position[1], 0)
+        if new_viewport_bottom < constraining_rect.bottom:
+            #print("Correcting!")
+            #print("viewport bottom: " + str(new_viewport_bottom))
+            #print("player bottom: " + str(constraining_rect.bottom))
+            y_pan_delta = constraining_rect.bottom - new_viewport_bottom
+            #print(y_pan_delta)
         
         return (x_pan_delta, y_pan_delta)
     
@@ -313,8 +369,8 @@ class SurfaceRenderer():
         scaled_surface = pygame.transform.scale(
             surface,
             (
-                int(surface.get_width() * self.viewport_camera.viewport_scale),
-                int(surface.get_height() * self.viewport_camera.viewport_scale)
+                int(surface.get_width() * self.viewport_camera.get_viewport_scale()),
+                int(surface.get_height() * self.viewport_camera.get_viewport_scale())
             )
         )
         
@@ -410,7 +466,7 @@ class PlayerRendererState():
         position = rendering_model.position
         position = self.viewport_camera.get_position_in_viewport(position)
         
-        rendering_model.scale_in_place(self.viewport_camera.viewport_scale)
+        rendering_model.scale_in_place(self.viewport_camera.get_viewport_scale())
         rendering_model.move_model(position)
 
 def draw_player_renderer_state(player_renderer_state, surface):
@@ -651,13 +707,13 @@ def draw_reflection(
                 player_rect.width * 
                 player_rect.bottom / 
                 (gamestate.stage.floor_height - camera.viewport_position[1]) /
-                camera.viewport_scale
+                camera.get_viewport_scale()
             ), 10),
             max(int(
                 (.75 * player_rect.height) *
                 player_rect.bottom /
                 (gamestate.stage.floor_height - camera.viewport_position[1]) /
-                camera.viewport_scale
+                camera.get_viewport_scale()
             ), 10)
         )
     ).convert()
@@ -665,7 +721,7 @@ def draw_reflection(
     
     reflection_position = (
         player_rect.left,
-        ((gamestate.stage.floor_height- 3) - camera.viewport_position[1]) * camera.viewport_scale
+        ((gamestate.stage.floor_height- 3) - camera.viewport_position[1]) * camera.get_viewport_scale()
     )
     wotsrendering.queue_surface(1, surface, reflection_surface, reflection_position)
     

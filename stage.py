@@ -41,6 +41,8 @@ def load_from_JSON(path):
     for rect_data in stage_data["camera-rects"]:
         camera_rects.append(pygame.Rect(*rect_data))
     
+    constraining_rect = camera_rects[0].unionall(camera_rects)
+    
     stage = ScrollableStage(
         stage_data["world-width"],
         stage_data["world-height"],
@@ -50,7 +52,8 @@ def load_from_JSON(path):
         ),
         draw_reflections,
         draw_shadows,
-        camera_rects
+        camera_rects,
+        constraining_rect
     )
     
     for sprite_data in stage_data["sprites"]:
@@ -135,7 +138,8 @@ def load_default_stage():
         create_background(),
         True,
         False,
-        [get_default_camera_rect(1800, 1200)]
+        [get_default_camera_rect(1800, 1200)],
+        get_default_camera_rect(1800, 1200)
     )
     
     stage.sprites.append(
@@ -203,7 +207,8 @@ class ScrollableStage():
         bkg_image,
         draw_reflections,
         draw_shadows,
-        camera_rects
+        camera_rects,
+        constraining_rect
     ):
         
         self.floor_height = floor_height
@@ -211,6 +216,7 @@ class ScrollableStage():
         self.right_screen_position = gamestate._WIDTH
         self.width = world_width
         self.height = world_height
+        self.constraining_rect = constraining_rect
         
         self.left_wall = physics.Wall(
             position = (0,0),
