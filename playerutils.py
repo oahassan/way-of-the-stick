@@ -10,6 +10,7 @@ import animation
 import physics
 import mathfuncs
 import animationmanipulator
+import versussound
 from animationexplorer import create_WOTS_animation
 from enumerations import PlayerStates, AttackTypes, Elevations, InputActionTypes, EventTypes, EventStates
 from playerconstants import *
@@ -298,10 +299,14 @@ class Transition(Action, GeneratedAction):
 class Walk(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.WALKING)
+        self.sound_map = None
     
     def move_player(self, player):
         Action.move_player(self, player)
         player.move_to_ground()
+        
+        if self.sound_map.frame_sounds[self.last_frame_index]:
+            player.events.append((EventTypes.START, EventStates.FOOT_SOUND))
     
     def set_player_state(self, player):
         Action.set_player_state(self, player, self.direction)
@@ -310,10 +315,14 @@ class Walk(Action):
 class Run(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.RUNNING)
+        self.sound_map = None
     
     def move_player(self, player):
         Action.move_player(self, player)
         player.move_to_ground()
+        
+        if self.sound_map.frame_sounds[self.last_frame_index]:
+            player.events.append((EventTypes.START, EventStates.FOOT_SOUND))
     
     def set_player_state(self, player):
         Action.set_player_state(self, player, self.direction)
@@ -614,6 +623,7 @@ class Attack(Action):
         self.elevation = Elevations.GROUNDED
         self.overriden = False
         self.is_jump_attack = False
+        self.sound_map = None
     
     def set_acceleration(self, action_type):
         """sets the animation acceleration for a given InputActionType.  Only
@@ -646,6 +656,7 @@ class Attack(Action):
         self.range = (self.right_animation.get_widest_frame().image_width(), 
                       self.right_animation.get_tallest_frame().image_height())
         self.attack_lines = self.get_attack_lines(model)
+        self.sound_map = versussound.AttackSoundMap(self.right_animation, self.attack_type)
     
     def move_player(self, player):
         
@@ -662,6 +673,9 @@ class Attack(Action):
         
         frame_index = self.animation.get_frame_index_at_time(end_time)
         self.last_frame_index = frame_index
+        
+        if self.sound_map.frame_sounds[self.last_frame_index]:
+            player.events.append((EventTypes.START, EventStates.ATTACK_SOUND))
         
         #apply animation physics first to determine what the player's position 
         #should be.
@@ -880,6 +894,7 @@ class ActionFactory():
         return_walk = Walk()
         
         self._set_action_animations(return_walk, animation)
+        return_walk.sound_map = versussound.FootSoundMap(animation)
         
         return return_walk
     
@@ -887,6 +902,7 @@ class ActionFactory():
         return_run = Run()
         
         self._set_action_animations(return_run, animation)
+        return_run.sound_map = versussound.FootSoundMap(animation)
         
         return return_run
     
@@ -923,6 +939,7 @@ class ActionFactory():
         )
         
         return_attack.set_attack_data(model)
+        return_attack.sound_map = versussound.AttackSoundMap(animation, action_type)
         
         return return_attack
     

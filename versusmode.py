@@ -132,6 +132,7 @@ class VersusModeState():
         self.init_match_state_variables()
         self.init_stage()
         self.init_player_data(player_data)
+        self.init_sound_objects()
         self.init_rendering_objects()
         self.init_simulation_objects()
         self.set_GUI_module_variables()
@@ -162,7 +163,6 @@ class VersusModeState():
         )
         self.player_event_handlers[player_position] = EventRegistry()
         self.player_type_dictionary[player_position] = player_data.player_type
-        self.player_sound_mixer_dictionary[player_position] = PlayerSoundMixer(player)
         self.player_health_bars[player_position] = PlayerHealth(
             player_data.moveset.name, 
             player_position
@@ -360,11 +360,6 @@ class VersusModeState():
     
     def init_rendering_objects(self):
         
-        self.player_event_handlers = {
-            PlayerPositions.PLAYER1 : EventRegistry(),
-            PlayerPositions.PLAYER2 : EventRegistry()
-        }
-        
         self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
             (EventTypes.START, PlayerStates.RUNNING),
             self.start_run_start_particle_effect
@@ -475,6 +470,24 @@ class VersusModeState():
             (gamestate._HEIGHT / 2) - (self.player2_wins_label.height / 2)
         )
         self.player2_wins_label.set_position(player2_wins_label_position)
+    
+    def init_sound_objects(self):
+        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1] = PlayerSoundMixer()
+        
+        self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
+            (EventTypes.START, EventStates.FOOT_SOUND),
+            self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1].play_sound
+        )
+        self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
+            (EventTypes.START, EventStates.ATTACK_SOUND),
+            self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1].play_sound
+        )
+        self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
+            (EventTypes.START, PlayerStates.JUMPING),
+            self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1].play_sound
+        )
+        
+        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER2] = PlayerSoundMixer()
     
     def cleanup_match_state_variables(self):
         
@@ -713,8 +726,6 @@ class VersusModeState():
             simulation_rendering_info.player_rendering_info_dictionary, 
             1
         )
-        self.play_player_sounds(simulation_rendering_info, PlayerPositions.PLAYER1)
-        self.play_player_sounds(simulation_rendering_info, PlayerPositions.PLAYER2)
         self.match_state = simulation_rendering_info.match_state
         self.match_time = simulation_rendering_info.match_time
     
@@ -773,15 +784,6 @@ class VersusModeState():
             else:
                 if len(player_trail_effects.keys()) > 0:
                     self.trail_effects[player_position] = {}
-    
-    def play_player_sounds(self, simulation_rendering_info, player_position):
-        player_rendering_info = simulation_rendering_info.player_rendering_info_dictionary[player_position]
-        
-        self.player_sound_mixer_dictionary[player_position].play_sound(
-            player_rendering_info.player_state,
-            player_rendering_info.animation_name,
-            player_rendering_info.frame_index
-        )
     
     def start_match_simulation(self):    
         

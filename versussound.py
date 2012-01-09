@@ -59,49 +59,32 @@ class PlayerSoundLibrary(SoundLibrary):
 class SoundMap():
     def __init__(self):
         self.frame_sounds = []
-        self.start_time = 0
-    
-    def play_sound(self, frame_index):
-        sound = self.frame_sounds[frame_index]
-        
-        if sound != None and not self.sound_is_playing(sound):
-            
-            self.start_sound(sound)
-    
-    def start_sound(self, sound):
-        
-        self.start_time = time.clock()
-        pygame.mixer.find_channel(True).play(sound)
-    
-    def sound_is_playing(self, sound):
-        
-        return (time.clock() - self.start_time) < sound.get_length()
 
 class AttackSoundMap(SoundMap):
-    def __init__(self, animation, attack_sound, attack_type):
+    def __init__(self, animation, attack_type):
         SoundMap.__init__(self)
-        self.set_frame_sounds(animation, attack_sound, attack_type)
+        self.set_frame_sounds(animation, attack_type)
     
-    def set_frame_sounds(self, animation, attack_sound, attack_type):
+    def set_frame_sounds(self, animation, attack_type):
         """Defines sounds for each frame index of the attack"""
         
-        self.frame_sounds.append(attack_sound)
+        self.frame_sounds.append(True)
         
         for frame_index in range(1, len(animation.frames)):
             if attack_type in [InputActionTypes.WEAK_PUNCH, InputActionTypes.MEDIUM_PUNCH, InputActionTypes.STRONG_PUNCH]:
                 if (self.test_delta_change(animation, PointNames.RIGHT_HAND, frame_index) 
                 or self.test_delta_change(animation, PointNames.LEFT_HAND, frame_index)):
-                    self.frame_sounds.append(attack_sound)
+                    self.frame_sounds.append(True)
                 else:
-                    self.frame_sounds.append(None)
+                    self.frame_sounds.append(False)
             elif attack_type in [InputActionTypes.WEAK_KICK, InputActionTypes.MEDIUM_KICK, InputActionTypes.STRONG_KICK]:
                 if (self.test_delta_change(animation, PointNames.RIGHT_FOOT, frame_index) 
                 or self.test_delta_change(animation, PointNames.LEFT_FOOT, frame_index)):
-                    self.frame_sounds.append(attack_sound)
+                    self.frame_sounds.append(True)
                 else:
-                    self.frame_sounds.append(None)
+                    self.frame_sounds.append(False)
             else:
-                self.frame_sounds.append(None)
+                self.frame_sounds.append(False)
     
     def test_delta_change(self, animation, point_name, frame_index):
         delta = animation.animation_deltas[frame_index][point_name]
@@ -114,26 +97,19 @@ class AttackSoundMap(SoundMap):
             return False
 
 class FootSoundMap(SoundMap):
-    def __init__(self, animation, foot_sounds):
-        self.set_frame_sounds(animation, foot_sounds)
+    def __init__(self, animation):
+        self.set_frame_sounds(animation)
     
-    def play_sound(self, frame_index):
-        for sound in self.frame_sounds[frame_index]:
-            
-            self.start_sound(sound)
-    
-    def set_frame_sounds(self, animation, foot_sounds):
-        frame_sounds = [[] for i in range(len(animation.frames))]
+    def set_frame_sounds(self, animation):
+        frame_sounds = [False for i in range(len(animation.frames))]
         self.add_point_sounds_to_frame_sounds(
             animation,
             PointNames.LEFT_FOOT,
-            foot_sounds,
             frame_sounds
         )
         self.add_point_sounds_to_frame_sounds(
             animation,
             PointNames.RIGHT_FOOT,
-            foot_sounds,
             frame_sounds
         )
         
@@ -143,21 +119,19 @@ class FootSoundMap(SoundMap):
         self, 
         animation, 
         point_name, 
-        foot_sounds,
         frame_sounds
     ):
         point_sounds = self.get_point_frame_sounds(
             animation, 
-            foot_sounds, 
             point_name
         )
         self.merge_point_sounds_and_frame_sounds(point_sounds, frame_sounds)
     
     def merge_point_sounds_and_frame_sounds(self, point_sounds, frame_sounds):
         for i in range(len(point_sounds)):
-            frame_sounds[i].extend(point_sounds[i])
+            frame_sounds[i] = frame_sounds[i] or point_sounds[i]
     
-    def get_point_frame_sounds(self, animation, foot_sounds, point_name):
+    def get_point_frame_sounds(self, animation, point_name):
         point_y_positions = self.get_point_y_positions(animation, point_name)
         point_sounds = []
         
@@ -165,23 +139,23 @@ class FootSoundMap(SoundMap):
             if i == 0:
                 if len(point_y_positions) > 1:
                     if point_y_positions[i] > point_y_positions[i + 1]:
-                        point_sounds.append([choice(foot_sounds)])
+                        point_sounds.append(True)
                     else:
-                        point_sounds.append([])
+                        point_sounds.append(False)
                 else:
-                    point_sounds.append([])
+                    point_sounds.append(False)
                 
             elif i == (len(point_y_positions) - 1):
                 if point_y_positions[i] > point_y_positions[i - 1]:
-                    point_sounds.append([choice(foot_sounds)])
+                    point_sounds.append(True)
                 else:
-                    point_sounds.append([])
+                    point_sounds.append(False)
             else:
                 if (point_y_positions[i] > point_y_positions[i - 1] 
                 and point_y_positions[i] > point_y_positions[i + 1]):
-                    point_sounds.append([choice(foot_sounds)])
+                    point_sounds.append(True)
                 else:
-                    point_sounds.append([])
+                    point_sounds.append(False)
         
         return point_sounds
     
@@ -195,52 +169,38 @@ class FootSoundMap(SoundMap):
         ]
 
 class PlayerSoundMixer():
-    def __init__(self, player):
+    def __init__(self):
         
         self.play_sound_indicator = True
-        self.sound_channel = None
+        self.jump_sound_channel = None
+        self.attack_sound_channel = None
+        self.foot_sound_channel = None
         self.sound_library = PlayerSoundLibrary()
-        self.sound_maps = {}
-        self.create_sound_maps(player)
-        self.last_player_state = PlayerStates.STANDING
     
-    def create_sound_maps(self, player):
-        for action in player.get_attack_actions():
-            
-            self.sound_maps[action.right_animation.name] = AttackSoundMap(
-                action.right_animation,
-                self.sound_library.attack_sounds[action.attack_type][0],
-                action.attack_type
-            )
+    def play_sound(self, player_position, player_rendering_info):
+        player_state = player_rendering_info.player_state
+        attack_type = player_rendering_info.attack_type
         
-        for action in player.get_foot_actions():
-            
-            self.sound_maps[action.right_animation.name] = FootSoundMap(
-                action.right_animation,
-                self.sound_library.movement_sounds[PlayerStates.WALKING]
+        if player_state in PlayerStates.LATERAL_MOVEMENTS:
+            self.start_sound(
+                choice(self.sound_library.movement_sounds[player_state]),
+                self.foot_sound_channel
             )
-    
-    def play_sound(self, player_state, animation_name, frame_index):
-        
-        if (player_state 
-        in [PlayerStates.WALKING, PlayerStates.RUNNING, PlayerStates.ATTACKING]):
-            self.sound_maps[animation_name].play_sound(frame_index)
+        elif player_state == PlayerStates.ATTACKING:
+            self.start_sound(
+                choice(self.sound_library.attack_sounds[attack_type]),
+                self.attack_sound_channel
+            )
         elif player_state == PlayerStates.JUMPING:
-            if self.last_player_state != PlayerStates.JUMPING:
-                jump_sound = self.sound_library.movement_sounds[PlayerStates.JUMPING][0]
-                pygame.mixer.find_channel().play(jump_sound)
-        #elif player_state in self.movement_sounds.keys():
-        #    sound = choice(self.movement_sounds[player_state])
-        #    self.start_sound(sound)
-        
-        self.last_player_state = player_state
+            jump_sound = self.sound_library.movement_sounds[PlayerStates.JUMPING][0]
+            self.start_sound(jump_sound, self.jump_sound_channel)
     
-    def start_sound(self, sound):
-        if self.sound_channel == None:
-            self.sound_channel = sound.play()
+    def start_sound(self, sound, sound_channel):
+        if sound_channel == None:
+            sound_channel = sound.play()
         else:
-            self.sound_channel.stop()
-            self.sound_channel = sound.play()
+            sound_channel.stop()
+            sound_channel = sound.play()
     
     def movement_sound_is_playing(self):
         if (self.sound_channel == None or

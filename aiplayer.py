@@ -23,7 +23,6 @@ class Bot(Player):
         
         #a dictionary mapping attacks to a list of rects for each frame
         self.attack_prediction_engine = None
-        self.attack_landed = False
         self.pre_attack_state = None
         self.approach_selected = False
         self.approach_engine = None
@@ -100,10 +99,6 @@ class Bot(Player):
     
     def get_attack_actions(self):
         return self.actions[PlayerStates.ATTACKING]
-    
-    def update_attack_data(self):
-        """indicate that the attack connected"""
-        self.attack_landed = True
     
     def handle_events(self, enemy, time_passed):
         

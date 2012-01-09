@@ -161,6 +161,9 @@ class EventTypes():
 
 class EventStates():
     STUN_GROUND = 0
+    ATTACK_HIT = 1
+    FOOT_SOUND = 2
+    ATTACK_SOUND = 3
 
 class PlayerStates():
     FACING_RIGHT = 'FACING_RIGHT'

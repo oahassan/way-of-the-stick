@@ -12,7 +12,7 @@ import mathfuncs
 import stick
 import pulltool
 from controlsdata import get_control_key
-from enumerations import InputActionTypes, CommandCollections, CommandDurations, PlayerPositions, EventTypes
+from enumerations import InputActionTypes, CommandCollections, CommandDurations, PlayerPositions, EventTypes, EventStates
 from motion import AerialMotion, StunMotion
 from command import Command, CommandHandler
 import settingsdata
@@ -118,6 +118,7 @@ class Player():
         self.run_right_action = None
         self.walk_left_action = None
         self.run_left_action = None
+        self.attack_landed = False
         self.events = []
     
     def clear_events(self):
@@ -410,12 +411,16 @@ class Player():
     
     def update_attack_data(self):
         """additional actions to be taken when an attack connects"""
-        pass
+        if self.attack_landed == False:
+            self.events.append((EventTypes.START, EventStates.ATTACK_HIT))
+        
+        self.attack_landed = True
     
     def handle_attack_end(self):
         """additional actions to be taken when an attack ends"""
         self.events.append((EventTypes.STOP, PlayerStates.ATTACKING))
         self.current_attack = None
+        self.attack_landed = False
     
     def get_attack_lines(self):
         return self.action.attack_lines
