@@ -12,7 +12,7 @@ import mathfuncs
 import animationmanipulator
 import versussound
 from animationexplorer import create_WOTS_animation
-from enumerations import PlayerStates, AttackTypes, Elevations, InputActionTypes, EventTypes, EventStates
+from enumerations import PlayerStates, AttackTypes, Elevations, InputActionTypes, EventTypes, EventStates, LineLengths, LineNames, PointNames
 from playerconstants import *
 
 class Action():
@@ -504,12 +504,29 @@ class Stun(Action, GeneratedAction):
     def init_toy_model_point_positions(self, player):
         """makes the stun action's model match the player model"""
         
+        self.toy_model.lines[LineNames.HEAD].max_length = LineLengths.HEAD * player.get_scale()
+        self.toy_model.lines[LineNames.TORSO].max_length = LineLengths.TORSO * player.get_scale()
+        
         for point_name, point in self.toy_model.points.iteritems():
             position = player.model.points[point_name].pos
             point.pos = (position[0], position[1])
         
+        self.correct_model_lengths(player)
+        
         for line in self.toy_model.lines.values():
             line.set_length()
+    
+    def correct_model_lengths(self, player):
+        scale = player.get_scale()
+        
+        torso = self.toy_model.lines[LineNames.TORSO]
+        if torso.length > scale * LineLengths.TORSO:
+            torso.correct(self.toy_model.points[PointNames.TORSO_TOP])
+        
+        head = self.toy_model.lines[LineNames.HEAD]
+        if head.length > scale * LineLengths.HEAD:
+            head.correct(self.toy_model.points[PointNames.TORSO_TOP])
+       
     
     def pull_toy_model(self, player):
         

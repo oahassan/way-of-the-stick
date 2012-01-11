@@ -308,6 +308,28 @@ class Line:
         else:
             pulled_point.pos = (slctd_point.pos[0], slctd_point.pos[1])
     
+    def correct(self, slctd_point):
+        """Changes the position of one endpoint based off the new position of
+        the selected endpoint so that the line has a new slope and the
+        max length.
+        
+        slctd_point:  the point that has been moved"""
+        pulled_point = self.endPoint1
+        
+        if slctd_point.id == pulled_point.id:
+            pulled_point = self.endPoint2
+        
+        new_length = mathfuncs.distance(slctd_point.pos, pulled_point.pos)
+        
+        x_delta = slctd_point.pos[0] - pulled_point.pos[0]
+        y_delta = slctd_point.pos[1] - pulled_point.pos[1]
+        
+        if new_length > self.max_length:
+            pulled_point.pos = (
+                pulled_point.pos[0] + x_delta - ((x_delta / new_length) * self.max_length),
+                pulled_point.pos[1] + y_delta - ((y_delta / new_length) * self.max_length)
+            )
+    
     def get_top_left_and_bottom_right(self):
         end_point_1_corners = self.endPoint1.get_top_left_and_bottom_right()
         end_point_2_corners = self.endPoint2.get_top_left_and_bottom_right()

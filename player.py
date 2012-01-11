@@ -162,6 +162,9 @@ class Player():
     def set_player_stats(self, size):
         self.size = size
     
+    def get_scale(self):
+        return self.get_animation_height() / float(REFERENCE_HEIGHT)
+    
     def get_animation_height(self):
         return 50 + (10 * self.size)
     
