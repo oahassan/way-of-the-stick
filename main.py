@@ -9,7 +9,7 @@ import pygame
 
 from pygame.locals import *
 
-pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=4096)
+pygame.mixer.pre_init(frequency=44100, size=-16, channels=3, buffer=4096)
 pygame.init()
 pygame.font.init()
 

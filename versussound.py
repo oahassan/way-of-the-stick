@@ -169,12 +169,12 @@ class FootSoundMap(SoundMap):
         ]
 
 class PlayerSoundMixer():
-    def __init__(self):
+    def __init__(self, channel_id):
         
         self.play_sound_indicator = True
-        self.jump_sound_channel = None
-        self.attack_sound_channel = None
-        self.foot_sound_channel = None
+        self.jump_sound_channel = pygame.mixer.Channel(channel_id)
+        self.attack_sound_channel = pygame.mixer.Channel(channel_id)
+        self.foot_sound_channel = pygame.mixer.Channel(channel_id)
         self.sound_library = PlayerSoundLibrary()
     
     def play_sound(self, player_position, player_rendering_info):
@@ -241,13 +241,19 @@ class AttackResultSoundMixer():
     def __init__(self):
         self.sound_library = AttackResultSoundLibrary()
         self.start_time = 0
-        self.hit_sound_channel = None
-        self.clash_sound_channel = None
+        self.hit_sound_channel = pygame.mixer.Channel(2)
+        self.clash_sound_channel = pygame.mixer.Channel(2)
+        self.last_hit_sound = None
     
     def hit_sound_is_playing(self, hit_sound):
-        return (time.clock() - self.start_time) < hit_sound.get_length()
+        if self.last_hit_sound == None:
+            return False
+        else:
+            return (time.clock() - self.start_time) < self.last_hit_sound.get_length()
     
     def play_hit_sound(self, sound_channel, hit_sound):
+        self.last_hit_sound = hit_sound
+        self.start_time = time.clock()
         
         if sound_channel == None:
             sound_channel = hit_sound.play()

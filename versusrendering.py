@@ -500,18 +500,21 @@ def draw_player(
     """draws the model to the screen"""
     
     enclosing_rect = pygame.Rect(*model.get_enclosing_rect())  
-    
     gamestate.new_dirty_rects.append(enclosing_rect)
+    
+    #enclosing_rects = []
     
     #if gamestate.devmode:
     #    pygame.draw.rect(gamestate.screen, (100,100,100),enclosing_rect,1)
     
     for name, point in model.points.iteritems():
         if name != PointNames.HEAD_TOP:
+            #enclosing_rects.append(draw_outline_point(point, (0,0,0), surface))
             draw_outline_point(point, (0,0,0), surface)
     
     for name, line in model.lines.iteritems():
         if name == LineNames.HEAD:
+            #enclosing_rects.append(draw_outline_circle(line, (0,0,0), surface))
             draw_outline_circle(line, (0,0,0), surface)
         else:
             #if player.action.action_state == PlayerStates.FLOATING:
@@ -519,7 +522,10 @@ def draw_player(
             #elif player.action.action_state == PlayerStates.TRANSITION:
             #    outline_color = (0,255,0)
                 
+            #enclosing_rects.append(draw_outline_line(line, (0,0,0), surface))
             draw_outline_line(line, (0,0,0), surface)
+    
+    #gamestate.new_dirty_rects.append(enclosing_rects[0].unionall(enclosing_rects))
     
     for name, point in model.points.iteritems():
         if name != PointNames.HEAD_TOP:
@@ -574,6 +580,11 @@ def draw_outline_line(line, color, surface):
         point2,
         int(18)
     )
+    
+    top_left = map(min, zip(point1, point2))
+    bottom_right = map(max, zip(point1, point2))
+    
+    return pygame.Rect(top_left, (bottom_right[0] - top_left[0], bottom_right[1] - top_left[1]))
 
 def draw_outer_line(line, color, surface):
     point1 = line.endPoint1.pixel_pos()
@@ -599,6 +610,11 @@ def draw_outline_circle(circle, color, surface):
         color,
         (int(pos[0]), int(pos[1])),
         int(radius) + 2
+    )
+    
+    return pygame.Rect(
+        (pos[0] - radius - 2, pos[1] - radius - 2), 
+        (2 * (radius + 2), 2 * (radius + 2))
     )
 
 def draw_outer_circle(circle, color, surface):
@@ -640,6 +656,11 @@ def draw_outline_point(point, color, surface):
         color,
         position,
         int(9)
+    )
+    
+    return pygame.Rect(
+        (position[0] - 9, position[1] - 9), 
+        (18, 18)
     )
 
 def draw_outer_point(point, color, surface):

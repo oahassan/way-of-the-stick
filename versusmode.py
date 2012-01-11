@@ -472,7 +472,7 @@ class VersusModeState():
         self.player2_wins_label.set_position(player2_wins_label_position)
     
     def init_sound_objects(self):
-        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1] = PlayerSoundMixer()
+        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1] = PlayerSoundMixer(0)
         
         self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(
             (EventTypes.START, EventStates.FOOT_SOUND),
@@ -487,7 +487,20 @@ class VersusModeState():
             self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1].play_sound
         )
         
-        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER2] = PlayerSoundMixer()
+        self.player_sound_mixer_dictionary[PlayerPositions.PLAYER2] = PlayerSoundMixer(1)
+        
+        self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
+            (EventTypes.START, EventStates.FOOT_SOUND),
+            self.player_sound_mixer_dictionary[PlayerPositions.PLAYER2].play_sound
+        )
+        self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
+            (EventTypes.START, EventStates.ATTACK_SOUND),
+            self.player_sound_mixer_dictionary[PlayerPositions.PLAYER2].play_sound
+        )
+        self.player_event_handlers[PlayerPositions.PLAYER2].add_event_handler(
+            (EventTypes.START, PlayerStates.JUMPING),
+            self.player_sound_mixer_dictionary[PlayerPositions.PLAYER2].play_sound
+        )
     
     def cleanup_match_state_variables(self):
         
