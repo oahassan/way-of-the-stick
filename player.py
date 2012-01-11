@@ -158,6 +158,10 @@ class Player():
             PlayerStates.CROUCHING,
             moveset.movement_animations[PlayerStates.CROUCHING]
         )
+        self.actions[PlayerStates.RUNNING] = controller_factory.create_action(
+            PlayerStates.RUNNING,
+            moveset.movement_animations[PlayerStates.CROUCHING]
+        )
     
     def set_player_stats(self, size):
         self.size = size

@@ -156,6 +156,31 @@ def load_default_stage():
     
     return stage
 
+def load_play_tool_stage():
+    stage = ScrollableStage(
+        1800,
+        800,
+        500, 
+        create_background(),
+        True,
+        False,
+        [get_default_camera_rect(1800, 1200)],
+        get_default_camera_rect(1800, 1200),
+        [[550, 1067], [1250, 1067]]
+    )
+    
+    stage.sprites.append(
+        BkgSprite(
+            (-50, 1127),
+            1900,
+            20,
+            draw_ground(1900),
+            -1
+        )
+    )
+    
+    return stage
+
 def create_background():
     background_surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
     background_surface.fill((0,0,0))

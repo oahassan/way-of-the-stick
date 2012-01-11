@@ -375,6 +375,7 @@ class Stand(Action):
     def __init__(self):
         Action.__init__(self, PlayerStates.STANDING)
         self.frame_index = 0
+        self.start_position = None
     
     def move_player(self, player):
         
@@ -426,7 +427,11 @@ class Stand(Action):
             self.animation = self.right_animation
             player.model.orientation = physics.Orientations.FACING_RIGHT
         
-        if player.action == None or player.action.action_state != PlayerStates.STANDING:
+        if (
+            player.action == None or 
+            player.action.action_state != PlayerStates.STANDING or 
+            self.start_position == None
+        ):
             self.start_position = (player.model.position[0], player.model.position[1])
         
             player.model.set_relative_point_positions(

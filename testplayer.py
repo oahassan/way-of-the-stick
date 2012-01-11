@@ -3,6 +3,7 @@ from player import Player, draw_model
 from playerutils import ActionFactory
 from enumerations import PlayerStates, AttackTypes
 import gamestate
+import physics
 import math
 
 from controlsdata import InputActionTypes
@@ -36,6 +37,38 @@ class TestPlayer(Player):
         self.action.move_player(self)
         
         draw_model(self, gamestate.screen)
+    
+    def apply_physics(self, duration, gravity = True):
+        
+        system = []
+        
+        self.set_velocity(duration)
+        self.model.resolve_self(duration, gravity)
+        
+        if (self.is_aerial() == False or 
+        self.get_player_state() in [PlayerStates.WALKING, PlayerStates.RUNNING, PlayerStates.CROUCHING, PlayerStates.STANDING, PlayerStates.LANDING]):
+            system.append(gamestate.stage.ground)
+            
+            #if (((self.action.action_state == PlayerStates.FLOATING)
+            #or  (self.action.action_state == PlayerStates.JUMPING)) and
+            #(mathfuncs.sign(self.model.velocity[1]) > 0)):
+            #    self.transition(self.actions[PlayerStates.LANDING])
+        
+        if self.model.orientation == physics.Orientations.FACING_RIGHT:
+            if self.model.position[0] + self.model.width > gamestate.stage.right_wall.position[0]:
+                system.append(gamestate.stage.right_wall)
+        elif self.model.orientation == physics.Orientations.FACING_LEFT:
+            if self.model.position[0] > gamestate.stage.right_wall.position[0]:
+                system.append(gamestate.stage.right_wall)
+        
+        if self.model.orientation == physics.Orientations.FACING_RIGHT:
+            if self.model.position[0] < gamestate.stage.left_wall.position[0]:
+                system.append(gamestate.stage.left_wall)
+        elif self.model.orientation == physics.Orientations.FACING_LEFT:
+            if self.model.position[0] - self.model.width < gamestate.stage.left_wall.position[0]:
+                system.append(gamestate.stage.left_wall)
+        
+        self.model.resolve_system(system, duration)
     
     def create_action(self, action_type, animation = None, direction = PlayerStates.FACING_RIGHT, key = pygame.K_UP):
         return_action = None

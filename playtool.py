@@ -37,17 +37,17 @@ class PlayTool(EditorTools.Tool):
                             PlayTool._SYMBOL_LINE_THICKNESS)
     def init_state(self, animation):
         EditorTools.Tool.init_state(self, animation)
-        self.test_player = TestPlayer()
-        self.test_player.init_state()
-        self.test_player.load_action(self.animation_type, self.animation)
         
         gamestate.frame_rate = 100
         gamestate.drawing_mode = gamestate.DrawingModes.DIRTY_RECTS
         
-        gamestate.stage = stage.ScrollableStage(447, 0, gamestate._WIDTH)
-        gamestate.stage.background_image = gamestate.stage.create_black_background()
+        gamestate.stage = stage.load_play_tool_stage()
         gamestate.screen.blit(gamestate.stage.background_image, (0,0))
         gamestate.new_dirty_rects.append(pygame.Rect((0,0),(gamestate._WIDTH, gamestate._HEIGHT)))
+        
+        self.test_player = TestPlayer()
+        self.test_player.init_state()
+        self.test_player.load_action(self.animation_type, self.animation)
     
     def clear_state(self):
         """clears the state of this tool"""

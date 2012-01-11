@@ -373,9 +373,7 @@ class ApproachEngine():
     
     def run(self, player, enemy):
         
-        if (player.get_player_state() == PlayerStates.TRANSITION and
-        player.action.next_action.action_state != PlayerStates.RUNNING and
-        player.action.next_action.action_state != PlayerStates.STANDING):
+        if (player.dash_timer > 10 and player.dash_timer < 35):
             return InputActionTypes.NO_MOVEMENT
         else:
             if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
@@ -394,15 +392,15 @@ class ApproachEngine():
     
     def walk(self, player, enemy):
         
-        if (player.get_player_state() == PlayerStates.TRANSITION and
-        player.action.next_action.action_state != PlayerStates.WALKING):
-            return InputActionTypes.NO_MOVEMENT
-            
+        #if (player.get_player_state() == PlayerStates.TRANSITION and
+        #player.action.next_action.action_state != PlayerStates.WALKING):
+        #    return InputActionTypes.NO_MOVEMENT
+        #    
+        #else:
+        if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
+            return InputActionTypes.MOVE_RIGHT
         else:
-            if player.get_direction(enemy) == PlayerStates.FACING_RIGHT:
-                return InputActionTypes.MOVE_RIGHT
-            else:
-                return InputActionTypes.MOVE_LEFT
+            return InputActionTypes.MOVE_LEFT
     
     def walk_jump(self, player, enemy):
     
