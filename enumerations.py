@@ -153,6 +153,14 @@ class EffectTypes:
     JUMP_SMOKE = 2
     FALL_SMOKE = 3
 
+class LineLengths:
+    HEAD = 35
+    TORSO = 60
+    UPPER_ARM = 40
+    FOREARM = 40
+    UPPER_LEG = 50
+    LOWER_LEG = 50
+
 # player state
 
 class EventTypes():
