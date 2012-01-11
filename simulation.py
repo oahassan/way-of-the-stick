@@ -461,10 +461,10 @@ class CollisionHandler():
         receiver.model.shift((.5 * separation_vector[0], .5 * separation_vector[1]))
         attacker.model.shift((-.5 * separation_vector[0], -.5 * separation_vector[1]))
         receiver.model.velocity = (0,0)
-        receiver.model.accelerate(30,#5 * receiver.knockback_vector[0], \
+        receiver.model.accelerate(5 * receiver.knockback_vector[0], \
                                   receiver.knockback_vector[1])
         attacker.model.velocity = (0,0)
-        attacker.model.accelerate(30, #-5 * receiver.knockback_vector[0], \
+        attacker.model.accelerate(-5 * receiver.knockback_vector[0], \
                                   receiver.knockback_vector[1])
 
     def apply_collision_physics(
