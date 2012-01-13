@@ -145,6 +145,8 @@ class PlayerHealth(wotsui.UIObjectBase):
         return_surface = pygame.Surface(
             (self.width, self.height)
         ).convert()
+        return_surface.set_colorkey((111,111,111))
+        return_surface.fill((111,111,111))
         
         self.label.draw_relative(return_surface, self.position)
         

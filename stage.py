@@ -119,8 +119,8 @@ def create_sprite_image(sprite_data):
     next_x_position = 0
     next_y_position = 0
     
-    for j in xrange(max(int(image_height / sprite_image_height), 1)):
-        for i in xrange(max(int(image_width / sprite_image_width) + 1, 1)):
+    for j in xrange(max(int(image_height / (sprite_image_height + y_offset)), 1)):
+        for i in xrange(max(int(image_width / (sprite_image_width + x_offset)) + 1, 1)):
             image.blit(sprite_image, (next_x_position, next_y_position))
             
             if repeat_x:
