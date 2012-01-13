@@ -125,7 +125,7 @@ class VersusModeState():
         self.recording_indicator = False
         self.recording = None
 
-        self.attack_result_sound_mixer = AttackResultSoundMixer()
+        self.attack_result_sound_mixer = None
     
     def init(self, player_data):
         
@@ -472,6 +472,8 @@ class VersusModeState():
         self.player2_wins_label.set_position(player2_wins_label_position)
     
     def init_sound_objects(self):
+        self.attack_result_sound_mixer = AttackResultSoundMixer()
+        
         self.player_sound_mixer_dictionary[PlayerPositions.PLAYER1] = PlayerSoundMixer(0)
         
         self.player_event_handlers[PlayerPositions.PLAYER1].add_event_handler(

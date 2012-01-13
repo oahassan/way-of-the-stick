@@ -239,11 +239,11 @@ class AttackResultSoundLibrary(SoundLibrary):
 
 class AttackResultSoundMixer():
     def __init__(self):
-        self.sound_library = AttackResultSoundLibrary()
         self.start_time = 0
         self.hit_sound_channel = pygame.mixer.Channel(2)
         self.clash_sound_channel = pygame.mixer.Channel(2)
         self.last_hit_sound = None
+        self.sound_library = AttackResultSoundLibrary()
     
     def hit_sound_is_playing(self, hit_sound):
         if self.last_hit_sound == None:

@@ -423,7 +423,9 @@ class CollisionHandler():
         )
         
         if receiver.health_meter > 0:
-            receiver.health_meter = max(0, receiver.health_meter - damage)
+            if attacker.attack_landed == False:
+                receiver.health_meter = max(0, receiver.health_meter - damage)
+            
             receiver.set_stun_timeout(
                 min(
                     receiver.stun_timeout + attacker.get_stun_timeout(),
