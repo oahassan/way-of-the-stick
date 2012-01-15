@@ -131,6 +131,21 @@ class VersusMovesetSelectUiObjects():
             player2_widget_position[1] + 50
         )
         self.player2_color_select = ColorWheel(player2_color_select_position, 3)
+    
+    def get_player_type(self, player_type_select):
+        if player_type_select.selected_button != None:
+            if player_type_select.selected_button.text == 'Human':
+                return PlayerTypes.HUMAN
+            elif player_type_select.selected_button.text == 'Bot':
+                return PlayerTypes.BOT
+        else:
+            return 'Human'
+
+    def get_player_difficulty(self, player_difficulty_select):
+        if player_difficulty_select.selected_button != None:
+            return player_difficulty_select.selected_button.difficulty
+        else:
+            return None
         
 loaded = False
 exit_button = None
@@ -186,6 +201,8 @@ def handle_events():
     player2_moveset_select = UI_objects.player2_moveset_select
     player2_stats_widget = UI_objects.player2_stats_widget
     player2_color_select = UI_objects.player2_color_select
+    get_player_type = UI_objects.get_player_type
+    get_player_difficulty = UI_objects.get_player_difficulty
     
     if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
         if exit_button.contains(wotsuievents.mouse_pos):
@@ -319,18 +336,3 @@ def handle_events():
         player2_moveset_select.draw(gamestate.screen)
         player2_stats_widget.draw(gamestate.screen)
         player2_color_select.draw(gamestate.screen)
-
-def get_player_type(player_type_select):
-    if player_type_select.selected_button != None:
-        if player_type_select.selected_button.text == 'Human':
-            return PlayerTypes.HUMAN
-        elif player_type_select.selected_button.text == 'Bot':
-            return PlayerTypes.BOT
-    else:
-        return 'Human'
-
-def get_player_difficulty(player_difficulty_select):
-    if player_difficulty_select.selected_button != None:
-        return player_difficulty_select.selected_button.difficulty
-    else:
-        return None
