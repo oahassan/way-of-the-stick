@@ -206,8 +206,7 @@ class Player():
             self.invincibility_timer += time_passed
         
         if (self.is_invincible and 
-        (self.get_player_state() == PlayerStates.ATTACKING or
-        self.invincibility_timer >= INVINCIBILITY_TIMEOUT)):
+        (self.invincibility_timer >= INVINCIBILITY_TIMEOUT)):
             self.is_invincible = False
     
     def set_invincibility(self):
@@ -218,8 +217,8 @@ class Player():
         if self.is_invincible:
             if (self.invincibility_timer % 30) >= 15:
                 self.outline_color = (0, 255, 255)
-            else:
-                self.outline_color = (255, 255, 255)
+            #else:
+            #    self.outline_color = (255, 255, 255)
         elif self.get_player_state() == PlayerStates.STUNNED:
             if (self.stun_timer % 30) >= 15:
                 self.outline_color = (255, 255, 0)

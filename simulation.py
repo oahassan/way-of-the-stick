@@ -484,13 +484,21 @@ class CollisionHandler():
         #    separation_vector = self.get_separation_vector(attacker,receiver)
         #    receiver.model.shift((0, -1 * abs(.5 * separation_vector[0]) + .5 * separation_vector[1]))
         
-        receiver.knockback_vector = attack_result.knockback_vector
+        receiver.knockback_vector = list(attack_result.knockback_vector)
         receiver.interaction_point = attack_result.receive_point
         receiver.interaction_vector = self.get_pull_point_deltas(attack_result)
         receiver.pull_point(receiver.interaction_vector)
-        receiver.model.velocity = (0,0)
+        receiver.model.velocity = [0,0]
         
         if attack_type in InputActionTypes.STRONG_ATTACKS:
+            if (
+                (attacker.model.velocity > 0 and 
+                attacker.model.velocity[0] > receiver.knockback_vector[0])
+            or (attacker.model.velocity < 0 and 
+                attacker.model.velocity[0] < receiver.knockback_vector[0])
+            ):
+                receiver.knockback_vector[0] = attacker.model.velocity[0]
+            
             receiver.model.accelerate(
                 receiver.knockback_vector[0],
                 receiver.knockback_vector[1]
@@ -588,7 +596,31 @@ class AttackResolver():
                     colliding_line_names
                 )
                 
-                if clash_result == ClashResults.TIE:
+                if receiver.is_invincible:
+                    #swap attacker and receiver
+                    temp = attacker
+                    attacker = receiver
+                    receiver = temp
+                    
+                    #reverse the order of the colliding line names to math
+                    #that player 2 is now the attacker.
+                    colliding_line_names = colliding_line_names[::-1]
+                    
+                    attack_result = self.build_attack_result(
+                        attacker,
+                        receiver,
+                        colliding_line_names, 
+                        clash_indicator
+                    )
+                elif attacker.is_invincible:
+                    attack_result = self.build_attack_result(
+                        attacker,
+                        receiver,
+                        colliding_line_names, 
+                        clash_indicator
+                    )
+                
+                elif clash_result == ClashResults.TIE:
                     clash_indicator = True
                     
                     attack_result = self.build_attack_result(
@@ -633,7 +665,10 @@ class AttackResolver():
                     attacker_hitboxes
                 )
                 
-                if colliding_line_names:
+                if attacker.is_invincible:
+                    attack_result = None
+                
+                elif colliding_line_names:
                     #swap attacker and receiver
                     temp = attacker
                     attacker = receiver
@@ -671,7 +706,10 @@ class AttackResolver():
                 receiver_hitboxes
             )
             
-            if colliding_line_names:
+            if receiver.is_invincible:
+                attack_result = None
+            
+            elif colliding_line_names:
                 
                 attack_result = self.build_attack_result(
                     attacker,
