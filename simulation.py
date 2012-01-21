@@ -382,8 +382,8 @@ class CollisionHandler():
         attacker = attack_result.attacker
         receiver = attack_result.receiver
         
-        if attacker.action.attack_type in InputActionTypes.STRONG_ATTACKS:
-            receiver.set_invincibility()
+        #if attacker.action.attack_type in InputActionTypes.STRONG_ATTACKS:
+        #    receiver.set_invincibility()
         
         attack_knockback_vector = attack_result.knockback_vector
         
