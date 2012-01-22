@@ -109,7 +109,7 @@ class StageThumbnail(SelectableObjectBase):
             self.position[1] + self.image_height + self.outline_width + self.label_padding),
             self.stage.name, 
             (255,255,255), 
-            14
+            36
         )
         self.height = self.image_height + self.outline_width + self.label_padding + self.label.height
         self.width = self.image_width + self.outline_width

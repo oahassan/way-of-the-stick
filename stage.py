@@ -2,6 +2,7 @@ import os
 import json
 import pygame
 import physics
+import music
 import gamestate
 import mathfuncs
 
@@ -57,7 +58,8 @@ def load_from_JSON(path):
         camera_rects,
         constraining_rect,
         stage_data["player-positions"],
-        stage_data["stage-name"]
+        stage_data["stage-name"],
+        os.path.join(".", "stages", stage_data["music"])
     )
     
     for sprite_data in stage_data["sprites"]:
@@ -145,7 +147,8 @@ def load_default_stage():
         [get_default_camera_rect(1800, 1200)],
         get_default_camera_rect(1800, 1200),
         [[550, 1067], [1250, 1067]],
-        "Void"
+        "Void",
+        music.versusmode_music_path
     )
     
     stage.sprites.append(
@@ -242,7 +245,8 @@ class ScrollableStage():
         camera_rects,
         constraining_rect,
         player_positions,
-        name
+        name,
+        music
     ):
         self.name = name
         self.floor_height = floor_height
@@ -272,6 +276,7 @@ class ScrollableStage():
         self.draw_shadows = draw_shadows
         self.camera_rects = camera_rects
         self.player_positions = player_positions
+        self.music = music
     
     def scroll_background(self, player_models):
         """Move the players and background so that it appears that the background is
