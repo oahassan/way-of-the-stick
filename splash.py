@@ -37,7 +37,7 @@ def create_model():
     
     return model
 
-def draw_model(model, surface):
+def draw_model(model, surface, color = (0,0,0)):
     for name, point in model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
             draw_outline_point(point, surface)
@@ -50,19 +50,19 @@ def draw_model(model, surface):
     
     for name, point in model.points.iteritems():
         if name != stick.PointNames.HEAD_TOP:
-            draw_inner_point(point, surface)
+            draw_inner_point(point, surface, color)
     
     for name, line in model.lines.iteritems():
         if name == stick.LineNames.HEAD:
-            draw_inner_circle(line, surface)
+            draw_inner_circle(line, surface, color)
         else:
-            draw_inner_line(line, surface)
+            draw_inner_line(line, surface, color)
 
 def draw_outline_line(line, surface):
     pygame.draw.line(surface, (255,255,255), line.endPoint1.pixel_pos(), line.endPoint2.pixel_pos(), 40)
     
-def draw_inner_line(line, surface):
-    pygame.draw.line(surface, (0,0,0), line.endPoint1.pixel_pos(), line.endPoint2.pixel_pos(), 30)
+def draw_inner_line(line, surface, color):
+    pygame.draw.line(surface, color, line.endPoint1.pixel_pos(), line.endPoint2.pixel_pos(), 30)
 
 def draw_outline_circle(circle, surface):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, circle.endPoint2.pos))
@@ -70,17 +70,17 @@ def draw_outline_circle(circle, surface):
     
     pygame.draw.circle(surface, (255, 255, 255), (int(position[0]), int(position[1])), int(radius))
 
-def draw_inner_circle(circle, surface):
+def draw_inner_circle(circle, surface, color):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, circle.endPoint2.pos))
     position = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
     
-    pygame.draw.circle(surface, (0, 0, 0), (int(position[0]), int(position[1])), int(radius) - 5)
+    pygame.draw.circle(surface, color, (int(position[0]), int(position[1])), int(radius) - 5)
 
 def draw_outline_point(point, surface):
     pygame.draw.circle(surface, (255,255,255), point.pixel_pos(), 20)
 
-def draw_inner_point(point, surface):
-    pygame.draw.circle(surface, (0,0,0), point.pixel_pos(), 15)
+def draw_inner_point(point, surface, color):
+    pygame.draw.circle(surface, color, point.pixel_pos(), 15)
 
 model = create_model()
 stick_surface_position_delta = -.3

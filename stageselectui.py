@@ -1,10 +1,69 @@
+import copy
+
 import pygame
 
+import splash
 import wotsuievents
 import wotsuicontainers
 import gamestate
 import button
+import physics
 from wotsui import SelectableObjectBase, UIObjectBase
+from enumerations import PlayerPositions, PlayerStates
+
+class SelectStageBackground():
+    def __init__(self, player_data):
+        self.surface = pygame.Surface((gamestate._WIDTH, gamestate._HEIGHT))
+        self.create_background(player_data)
+    
+    def create_background(self, player_data):
+        player1_model = physics.Model((0,0))
+        player2_model = physics.Model((0,0))
+        
+        self.set_point_positions(player_data, PlayerPositions.PLAYER1, player1_model)
+        self.set_point_positions(player_data, PlayerPositions.PLAYER2, player2_model)
+        
+        splash.draw_model(player1_model, self.surface, player_data[0].color)
+        splash.draw_model(player2_model, self.surface, player_data[1].color)
+        
+        self.surface.set_alpha(100)
+    
+    def set_point_positions(self, player_data, player_position, player_model):
+        data_index = 0
+        
+        if player_position == PlayerPositions.PLAYER2:
+            data_index = 1
+            player_model.direction = physics.Orientations.FACING_LEFT
+        
+        data = player_data[data_index]
+        animation = data.moveset.movement_animations[PlayerStates.STANDING]
+        frame = copy.deepcopy(animation.get_widest_frame())
+        
+        frame.scale(3)
+        
+        if player_position == PlayerPositions.PLAYER2:
+            frame.flip()
+        
+        point_id_position_dictionary = frame.build_pos_delta_dictionary(frame.get_reference_position())
+        point_name_position_dictionary = dict([
+            (name, point_id_position_dictionary[id]) 
+            for name, id in animation.point_names.iteritems()
+        ])
+        
+        player_model.set_absolute_point_positions(point_name_position_dictionary)
+        
+        if player_position == PlayerPositions.PLAYER1:
+            x_position = 200 - player_model.width
+            player_model.move_model(
+                (x_position, 
+                (gamestate._HEIGHT / 2) - (player_model.height / 2))
+            )
+        else:
+            x_position = gamestate._WIDTH - 200
+            player_model.move_model(
+                (x_position, 
+                (gamestate._HEIGHT / 2) - (player_model.height / 2))
+            )
 
 class StartMatchLabel():
     
@@ -41,8 +100,8 @@ class StageThumbnail(SelectableObjectBase):
     def __init__(self, stage):
         SelectableObjectBase.__init__(self)
         self.stage = stage
-        self.image_height = 133
-        self.image_width = 200
+        self.image_height = 225
+        self.image_width = 300
         self.outline_width = 4
         self.label_padding = 5
         self.label = button.Label(
@@ -66,7 +125,7 @@ class StageThumbnail(SelectableObjectBase):
     
     def get_scale(self):
         stage = self.stage
-        if stage.height > stage.width:
+        if stage.height < stage.width:
             return self.image_width / float(stage.width)
         else:
             return self.image_height / float(stage.height)
@@ -126,7 +185,7 @@ class StageSelector(UIObjectBase):
         UIObjectBase.__init__(self)
         self.set_position(position)
         self.height = 500
-        self.width = 210
+        self.width = 310
         self.stages = stages
         self.thumbnails = [StageThumbnail(stage) for stage in stages]
         self.thumbnail_padding = 20

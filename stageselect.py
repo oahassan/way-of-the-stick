@@ -10,7 +10,7 @@ import gamestate
 import versusmode
 import splash
 import versusmovesetselect
-from stageselectui import StageSelector, StartMatchLabel
+from stageselectui import StageSelector, StartMatchLabel, SelectStageBackground
 
 loaded = False
 exit_button = None
@@ -18,7 +18,8 @@ UI_objects = None
 
 class StageSelectUI():
     def __init__(self, stages):
-        self.stage_selector = StageSelector(stages, (300, 50))
+        self.background = None
+        self.stage_selector = StageSelector(stages, (250, 50))
         self.title_label = button.Label((10,15), "Select Stage", (255,255,255))
         self.start_match_label = StartMatchLabel()
         self.start_match_label_draw_timer = 0
@@ -37,6 +38,8 @@ def load():
     
     if UI_objects == None:
         UI_objects = StageSelectUI(get_stage_data())
+    
+    UI_objects.background = SelectStageBackground(versusmovesetselect.create_player_data())
     
 def unload():
     global loaded
@@ -88,6 +91,7 @@ def handle_events():
                 clear_data()
     
     if loaded:
+        gamestate.screen.blit(UI_objects.background.surface, (0,0))
         exit_button.draw(gamestate.screen)
         UI_objects.stage_selector.draw(gamestate.screen)
         UI_objects.title_label.draw(gamestate.screen)
