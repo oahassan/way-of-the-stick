@@ -46,6 +46,13 @@ def load_from_JSON(path):
     
     constraining_rect = camera_rects[0].unionall(camera_rects)
     
+    music_path = ""
+    if ("music" not in stage_data or 
+    not os.path.isfile(os.path.join(".", "stages", stage_data["music"]))):
+        music_path = music.versusmovesetselect_music_path
+    else:
+        music_path = os.path.join(".", "stages", stage_data["music"])
+    
     stage = ScrollableStage(
         stage_data["world-width"],
         stage_data["world-height"],
@@ -59,7 +66,7 @@ def load_from_JSON(path):
         constraining_rect,
         stage_data["player-positions"],
         stage_data["stage-name"],
-        os.path.join(".", "stages", stage_data["music"])
+        music_path
     )
     
     for sprite_data in stage_data["sprites"]:
