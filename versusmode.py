@@ -218,13 +218,13 @@ class VersusModeState():
                     self.fps_label.position,
                     (self.fps_label.width, self.fps_label.height))
             )
-        
-        self.command_label.draw(gamestate.screen)
-        gamestate.new_dirty_rects.append(
-            pygame.Rect(
-                self.command_label.position,
-                (self.command_label.width, self.command_label.height))
-        )
+            
+            self.command_label.draw(gamestate.screen)
+            gamestate.new_dirty_rects.append(
+                pygame.Rect(
+                    self.command_label.position,
+                    (self.command_label.width, self.command_label.height))
+            )
         
         if self.exiting == False:
             simulation_rendering_info = None
