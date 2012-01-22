@@ -57,6 +57,7 @@ def get_events():
               (event.type == pygame.MOUSEBUTTONDOWN)):
             mouse_pos = event.pos
             mouse_buttons_pressed = pygame.mouse.get_pressed()
+            
         elif event.type == pygame.KEYDOWN:
             if event.key not in keys_pressed:
                 keys_pressed.append(event.key)
@@ -68,3 +69,6 @@ def get_events():
             
             if event.key in keys_pressed:
                 keys_pressed.remove(event.key)
+    
+    if pygame.MOUSEMOTION not in events:
+        mouse_delta = (0,0)

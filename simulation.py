@@ -382,6 +382,7 @@ class CollisionHandler():
         attacker = attack_result.attacker
         receiver = attack_result.receiver
         
+        #A poor attempt at balancing movesets
         #if attacker.action.attack_type in InputActionTypes.STRONG_ATTACKS:
         #    receiver.set_invincibility()
         

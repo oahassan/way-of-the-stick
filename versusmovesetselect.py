@@ -29,7 +29,7 @@ class VersusMovesetSelectUiObjects():
         self.init_UI_objects()
         
     def init_UI_objects(self):
-        self.start_match_label = movesetselectui.MovesetActionLabel((50, 550), "Start Match!")
+        self.start_match_label = movesetselectui.MovesetActionLabel((50, 550), "Select Stage!")
         self.start_match_label.inactivate()
         
         playable_movesets = get_playable_movesets()
@@ -277,35 +277,8 @@ def handle_events():
             if start_match_label.contains(wotsuievents.mouse_pos):
                 
                 splash.draw_loading_splash()
-                
-                player_data = [
-                    versusmode.PlayerData(
-                        PlayerPositions.PLAYER1,
-                        get_player_type(player1_type_select),
-                        player1_moveset_select.selected_moveset,
-                        player1_stats_widget.get_size(),
-                        player1_color_select.selected_swatch.color,
-                        get_player_difficulty(player1_difficulty_select)
-                    ),
-                    versusmode.PlayerData(
-                        PlayerPositions.PLAYER2,
-                        get_player_type(player2_type_select),
-                        player2_moveset_select.selected_moveset,
-                        player2_stats_widget.get_size(),
-                        player2_color_select.selected_swatch.color,
-                        get_player_difficulty(player2_difficulty_select)
-                    )
-                ]
-                
-                versusmode.init(player_data)
-                
-                #versusmode.local_state.init_recording(
-                #    player1_moveset_select.selected_moveset.name,
-                #    player2_moveset_select.selected_moveset.name
-                #)
-                
                 unload()
-                gamestate.mode = gamestate.Modes.VERSUSMODE
+                gamestate.mode = gamestate.Modes.STAGESELECT
     if loaded:
         player1_moveset_select.handle_events()
         player2_moveset_select.handle_events()
@@ -336,3 +309,25 @@ def handle_events():
         player2_moveset_select.draw(gamestate.screen)
         player2_stats_widget.draw(gamestate.screen)
         player2_color_select.draw(gamestate.screen)
+
+def create_player_data():
+    global UI_objects
+    
+    return [
+        versusmode.PlayerData(
+            PlayerPositions.PLAYER1,
+            UI_objects.get_player_type(UI_objects.player1_type_select),
+            UI_objects.player1_moveset_select.selected_moveset,
+            UI_objects.player1_stats_widget.get_size(),
+            UI_objects.player1_color_select.selected_swatch.color,
+            UI_objects.get_player_difficulty(UI_objects.player1_difficulty_select)
+        ),
+        versusmode.PlayerData(
+            PlayerPositions.PLAYER2,
+            UI_objects.get_player_type(UI_objects.player2_type_select),
+            UI_objects.player2_moveset_select.selected_moveset,
+            UI_objects.player2_stats_widget.get_size(),
+            UI_objects.player2_color_select.selected_swatch.color,
+            UI_objects.get_player_difficulty(UI_objects.player2_difficulty_select)
+        )
+    ]

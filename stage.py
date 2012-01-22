@@ -5,6 +5,8 @@ import physics
 import gamestate
 import mathfuncs
 
+STAGE_DIR_NM = "stages"
+
 class BkgSprite():
     
     def __init__(
@@ -54,7 +56,8 @@ def load_from_JSON(path):
         draw_shadows,
         camera_rects,
         constraining_rect,
-        stage_data["player-positions"]
+        stage_data["player-positions"],
+        stage_data["stage-name"]
     )
     
     for sprite_data in stage_data["sprites"]:
@@ -141,7 +144,8 @@ def load_default_stage():
         False,
         [get_default_camera_rect(1800, 1200)],
         get_default_camera_rect(1800, 1200),
-        [[550, 1067], [1250, 1067]]
+        [[550, 1067], [1250, 1067]],
+        "Void"
     )
     
     stage.sprites.append(
@@ -166,7 +170,8 @@ def load_play_tool_stage():
         False,
         [get_default_camera_rect(1800, 1200)],
         get_default_camera_rect(1800, 1200),
-        [[550, 1067], [1250, 1067]]
+        [[550, 1067], [1250, 1067]],
+        "Play Tool"
     )
     
     stage.sprites.append(
@@ -236,9 +241,10 @@ class ScrollableStage():
         draw_shadows,
         camera_rects,
         constraining_rect,
-        player_positions
+        player_positions,
+        name
     ):
-        
+        self.name = name
         self.floor_height = floor_height
         self.left_screen_position = 0
         self.right_screen_position = gamestate._WIDTH

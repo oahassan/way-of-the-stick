@@ -130,7 +130,6 @@ class VersusModeState():
     def init(self, player_data):
         
         self.init_match_state_variables()
-        self.init_stage()
         self.init_player_data(player_data)
         self.init_sound_objects()
         self.init_rendering_objects()
@@ -181,11 +180,6 @@ class VersusModeState():
             pygame.Rect((0,0), (gamestate._WIDTH, gamestate._HEIGHT))
         )
         gamestate.update_screen()
-
-    def init_stage(self):
-        gamestate.stage = stage.load_from_JSON(
-            os.path.join(".","stages","mountain.stg")
-        )
 
     def set_GUI_module_variables(self):
         wotsuievents.key_repeat = wotsuievents.KeyRepeat.HIGH
