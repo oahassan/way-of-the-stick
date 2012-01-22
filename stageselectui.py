@@ -116,8 +116,8 @@ class StageThumbnail(SelectableObjectBase):
         self.scale = self.get_scale()
         self.image = pygame.transform.scale(
             self.stage.background_image,
-            (int(self.scale * stage.width),
-            int(self.scale * stage.height))
+            (min(int(self.scale * stage.width), self.image_width),
+            min(int(self.scale * stage.height), self.image_height))
         )
         self.fixed_dimensions = True
         
@@ -129,9 +129,6 @@ class StageThumbnail(SelectableObjectBase):
             return self.image_width / float(stage.width)
         else:
             return self.image_height / float(stage.height)
-    
-    def get_image(self):
-        return 
     
     def draw(self):
         half_outline_width = self.outline_width / 2
@@ -196,6 +193,9 @@ class StageSelector(UIObjectBase):
             self.position[1] + (.5 * self.height) - (.5 * self.thumbnails[0].height)
         ]
         self.layout_thumbnails()
+        self.fade_top = None
+        self.fade_bottom = None
+        self.create_fades()
     
     def layout_thumbnails(self):
         next_position = [self.position[0], self.position[1]]
@@ -208,6 +208,28 @@ class StageSelector(UIObjectBase):
             ]
             self.thumbnails[i].set_position(next_position)
     
+    def create_fades(self):
+        self.fade_top = pygame.Surface((self.width, 100), pygame.SRCALPHA)
+        height = self.fade_top.get_height()
+        height_interval = 5
+        alpha_count = 20
+        alpha = 50
+        alpha_interval = (255 - 50) / alpha_count
+        
+        for i in xrange(1,31):
+            pygame.draw.rect(
+                self.fade_top,
+                (0,0,0,alpha),
+                ((0,0), (self.fade_top.get_width(), height))
+            )
+            
+            if i % 6 == 0:
+                height_interval -= 1
+            
+            alpha = min(255, alpha + alpha_interval)
+            height -= height_interval
+        self.fade_bottom = pygame.transform.rotate(self.fade_top, 180)
+    
     def draw(self, surface):
         self.surface.fill((0,0,0))
         container_surface = self.surface
@@ -219,6 +241,12 @@ class StageSelector(UIObjectBase):
                 thumbnail_surface, 
                 thumbnail.get_relative_position(self.position)
             )
+        
+        container_surface.blit(self.fade_top, (0,0))
+        container_surface.blit(
+            self.fade_bottom, 
+            (0, self.height - self.fade_bottom.get_height())
+        )
         
         #self.draw_scroll_button(self.left_scroll_button, container_surface)
         #self.draw_scroll_button(self.right_scroll_button, container_surface)
