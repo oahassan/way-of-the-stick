@@ -65,7 +65,8 @@ def get_stage_data():
             except:
                 print("unable to load stage: " + file_path)
     
-    stage_list.append(stage.load_default_stage())
+    if len(stage_list) == 0:
+        stage_list.append(stage.load_default_stage())
     
     return stage_list
 
