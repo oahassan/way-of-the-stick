@@ -3,6 +3,8 @@ import gamestate
 import wotsui
 import wotsuievents
 
+FONT_SIZES = [5, 7, 9, 12, 16, 21, 28, 37, 50, 67]
+
 class Symbol:
     _DfltColor = (255, 255, 255)
     """an empty class for the symbol draw funciton of a tool"""

@@ -68,7 +68,11 @@ class SelectStageBackground():
 class StartMatchLabel():
     
     def __init__(self):
-        self.text = button.Label((0,0), "Press Enter to Start Match", (255,255,255), 40)
+        self.text = button.Label(
+            (0,0), 
+            "Press Enter to Start Match", 
+            (255,255,255), 
+            button.FONT_SIZES[8])
         self.width = gamestate._WIDTH
         self.height = self.text.height + 40
         self.surface = pygame.Surface((self.width, self.height))
@@ -109,7 +113,7 @@ class StageThumbnail(SelectableObjectBase):
             self.position[1] + self.image_height + self.outline_width + self.label_padding),
             self.stage.name, 
             (255,255,255), 
-            36
+            button.FONT_SIZES[6]
         )
         self.height = self.image_height + self.outline_width + self.label_padding + self.label.height
         self.width = self.image_width + self.outline_width

@@ -20,7 +20,7 @@ class StageSelectUI():
     def __init__(self, stages):
         self.background = None
         self.stage_selector = StageSelector(stages, (250, 50))
-        self.title_label = button.Label((10,15), "Select Stage", (255,255,255))
+        self.title_label = button.Label((10,15), "Select Stage", (255,255,255), button.FONT_SIZES[7])
         self.start_match_label = StartMatchLabel()
         self.start_match_label_draw_timer = 0
         self.start_match_label_draw_timeout = 2000
