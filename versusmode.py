@@ -216,7 +216,8 @@ class VersusModeState():
             gamestate.new_dirty_rects.append(
                 pygame.Rect(
                     self.fps_label.position,
-                    (self.fps_label.width, self.fps_label.height))
+                    (self.fps_label.width, self.fps_label.height)
+                )
             )
             
             self.command_label.draw(gamestate.screen)

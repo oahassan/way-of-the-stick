@@ -6,8 +6,18 @@ import gamestate
 wait_music_path = os.path.join("music","single_hit.wav")
 versusmode_music_path = os.path.join("music","versusmode.wav")
 versusmovesetselect_music_path = os.path.join("music","446457_Logical_Defiance___Mist_of.mp3")
-current_game_mode = None
-current_song_path = ""
+
+def get_music_path():
+    if (gamestate.mode == gamestate.Modes.VERSUSMOVESETSELECT or 
+    gamestate.mode == gamestate.Modes.STAGESELECT):
+        return versusmovesetselect_music_path
+    elif gamestate.mode == gamestate.Modes.VERSUSMODE:
+        return gamestate.stage.music
+    else:
+        return wait_music_path
+
+current_game_mode = gamestate.mode
+current_song_path = get_music_path()
 
 def init():
     pygame.mixer.music.load(wait_music_path)
@@ -34,12 +44,3 @@ def update():
             current_song_path = new_music_path
         
         current_game_mode = gamestate.mode
-
-def get_music_path():
-    if (gamestate.mode == gamestate.Modes.VERSUSMOVESETSELECT or 
-    gamestate.mode == gamestate.Modes.STAGESELECT):
-        return versusmovesetselect_music_path
-    elif gamestate.mode == gamestate.Modes.VERSUSMODE:
-        return gamestate.stage.music
-    else:
-        return wait_music_path
