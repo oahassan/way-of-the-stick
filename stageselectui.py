@@ -284,9 +284,9 @@ class StageSelector(UIObjectBase):
         
         if pygame.K_UP in wotsuievents.keys_pressed:
             if self.selected_thumbnail != None:
-                new_selected_index = self.thumbnails.index(self.selected_thumbnail) + 1
-                if new_selected_index == len(self.thumbnails):
-                    new_selected_index = 0
+                new_selected_index = self.thumbnails.index(self.selected_thumbnail) - 1
+                if new_selected_index == -1:
+                    new_selected_index = len(self.thumbnails) - 1
                 
                 self.selected_thumbnail.handle_deselected()
                 self.thumbnails[new_selected_index].handle_selected()
@@ -296,11 +296,11 @@ class StageSelector(UIObjectBase):
                 self.thumbnails[new_selected_index].handle_selected()
                 self.selected_thumbnail = self.thumbnails[new_selected_index]
         
-        if pygame.K_UP in wotsuievents.keys_pressed:
+        if pygame.K_DOWN in wotsuievents.keys_pressed:
             if self.selected_thumbnail != None:
-                new_selected_index = self.thumbnails.index(self.selected_thumbnail) - 1
-                if new_selected_index == 0:
-                    new_selected_index = len(self.thumbnails) - 1
+                new_selected_index = self.thumbnails.index(self.selected_thumbnail) + 1
+                if new_selected_index == len(self.thumbnails):
+                    new_selected_index = 0
                 
                 self.selected_thumbnail.handle_deselected()
                 self.thumbnails[new_selected_index].handle_selected()

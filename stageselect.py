@@ -23,7 +23,7 @@ class StageSelectUI():
         self.title_label = button.Label((10,15), "Select Stage", (255,255,255))
         self.start_match_label = StartMatchLabel()
         self.start_match_label_draw_timer = 0
-        self.start_match_label_draw_timeout = 5000
+        self.start_match_label_draw_timeout = 2000
     
     def stage_selected(self):
         return self.stage_selector.selected_thumbnail != None
@@ -103,8 +103,10 @@ def handle_events():
             else:
                 UI_objects.start_match_label_draw_timer += gamestate.time_passed
             
-            if (UI_objects.stage_selector.contains(wotsuievents.mouse_pos) and
-            pygame.MOUSEMOTION in wotsuievents.event_types):
+            if ((UI_objects.stage_selector.contains(wotsuievents.mouse_pos) and
+            pygame.MOUSEMOTION in wotsuievents.event_types) or 
+            pygame.K_UP in wotsuievents.keys_pressed or
+            pygame.K_DOWN in wotsuievents.keys_pressed):
                UI_objects.start_match_label_draw_timer = 0
                UI_objects.start_match_label.hide() 
             
