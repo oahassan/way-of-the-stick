@@ -18,9 +18,10 @@ class StartMatchLabel():
             ((gamestate._WIDTH / 2) - (self.text.width / 2),
             (gamestate._HEIGHT / 2) - (self.text.height / 2))
         )
-        self.alpha = 0
+        self.alpha = 5
     
     def draw(self, surface):
+        self.surface.fill((0,0,0))
         
         self.text.draw_relative(self.surface, self.position)
         pygame.draw.line(self.surface, (255,255,255), (0,5), (self.width, 5), 10)
@@ -62,17 +63,6 @@ class StageThumbnail(SelectableObjectBase):
         self.fixed_dimensions = True
         
         self.add_child(self.label)
-    
-    #def set_position(self, position):
-    #    SelectableObjectBase.set_position(self, position)
-    #    self.label.set_position(
-    #        (self.position[0], 
-    #        self.position[1] + self.image_height + self.outline_width + self.label_padding)
-    #    )
-    
-    #def shift(self, x_delta, y_delta):
-    #    SelectableObjectBase.shift(self, x_delta, y_delta)
-    #    self.label.shift(x_delta, y_delta)
     
     def get_scale(self):
         stage = self.stage

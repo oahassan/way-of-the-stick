@@ -100,7 +100,7 @@ def handle_events():
                 UI_objects.start_match_label_draw_timer += gamestate.time_passed
             
             if (UI_objects.stage_selector.contains(wotsuievents.mouse_pos) and
-            pygame.MOUSEMOTION in wotsuievents.events):
+            pygame.MOUSEMOTION in wotsuievents.event_types):
                UI_objects.start_match_label_draw_timer = 0
                UI_objects.start_match_label.hide() 
             
@@ -122,4 +122,5 @@ def handle_events():
                 unload()
                 gamestate.mode = gamestate.Modes.VERSUSMODE
         else:
+            UI_objects.start_match_label_draw_timer = 0            
             UI_objects.start_match_label.hide()
