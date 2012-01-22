@@ -44,7 +44,13 @@ class StageThumbnail(SelectableObjectBase):
         self.image_width = 200
         self.outline_width = 4
         self.label_padding = 5
-        self.label = button.Label((0,0), self.stage.name, (255,255,255), 14)
+        self.label = button.Label(
+            (self.position[0],
+            self.position[1] + self.image_height + self.outline_width + self.label_padding),
+            self.stage.name, 
+            (255,255,255), 
+            14
+        )
         self.height = self.image_height + self.outline_width + self.label_padding + self.label.height
         self.width = self.image_width + self.outline_width
         self.scale = self.get_scale()
@@ -53,13 +59,20 @@ class StageThumbnail(SelectableObjectBase):
             (int(self.scale * stage.width),
             int(self.scale * stage.height))
         )
+        self.fixed_dimensions = True
+        
+        self.add_child(self.label)
     
-    def set_position(self, position):
-        SelectableObjectBase.set_position(self, position)
-        self.label.set_position(
-            (self.position[0], 
-            self.position[1] + self.image_height + self.outline_width + self.label_padding)
-        )
+    #def set_position(self, position):
+    #    SelectableObjectBase.set_position(self, position)
+    #    self.label.set_position(
+    #        (self.position[0], 
+    #        self.position[1] + self.image_height + self.outline_width + self.label_padding)
+    #    )
+    
+    #def shift(self, x_delta, y_delta):
+    #    SelectableObjectBase.shift(self, x_delta, y_delta)
+    #    self.label.shift(x_delta, y_delta)
     
     def get_scale(self):
         stage = self.stage
@@ -107,7 +120,7 @@ class StageThumbnail(SelectableObjectBase):
             rect.bottomright,
             half_outline_width
         )
-
+        
         pygame.draw.rect(
             temp_surface,
             self.color,
@@ -179,7 +192,7 @@ class StageSelector(UIObjectBase):
     
     def selected_thumbnail_is_not_in_place(self):
         return (self.selected_thumbnail != None and 
-        self.selected_thumbnail.position[1] == self.selected_thumbnail_target_position[1])
+        self.selected_thumbnail.position[1] != self.selected_thumbnail_target_position[1])
     
     def handle_events(self):
         if self.contains(wotsuievents.mouse_pos):

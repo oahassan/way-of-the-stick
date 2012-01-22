@@ -173,7 +173,7 @@ class Label(wotsui.UIObjectBase):
         if self.visible:
             wotsui.UIObjectBase.draw(self, surface)
             
-            text_surface = self.font.render(self.text, 1, self.text_color)
+            text_surface = self.font.render(self.text, True, self.text_color)
             
             surface.blit(text_surface, self.position)
     
@@ -187,7 +187,7 @@ class Label(wotsui.UIObjectBase):
                 reference_position
             )
             
-            text_surface = self.font.render(self.text, 1, self.text_color)
+            text_surface = self.font.render(self.text, True, self.text_color)
             
             surface.blit(text_surface, self.get_relative_position(reference_position))
 
@@ -201,7 +201,7 @@ class SelectableLabel(Label, wotsui.SelectableObjectBase):
         if self.visible:
             wotsui.UIObjectBase.draw(self, surface)
             
-            text_surface = self.font.render(self.text, 1, self.color)
+            text_surface = self.font.render(self.text, True, self.color)
             
             surface.blit(text_surface, self.position)
     
@@ -215,7 +215,7 @@ class SelectableLabel(Label, wotsui.SelectableObjectBase):
                 reference_position
             )
             
-            text_surface = self.font.render(self.text, 1, self.color)
+            text_surface = self.font.render(self.text, True, self.color)
             
             surface.blit(text_surface, self.get_relative_position(reference_position))
 

@@ -99,7 +99,8 @@ def handle_events():
             else:
                 UI_objects.start_match_label_draw_timer += gamestate.time_passed
             
-            if wotsuievents.mouse_delta[0] != 0 or wotsuievents.mouse_delta[1] != 0:
+            if (UI_objects.stage_selector.contains(wotsuievents.mouse_pos) and
+            pygame.MOUSEMOTION in wotsuievents.events):
                UI_objects.start_match_label_draw_timer = 0
                UI_objects.start_match_label.hide() 
             
