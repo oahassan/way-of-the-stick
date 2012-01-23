@@ -204,7 +204,8 @@ def load_play_tool_stage():
         [get_default_camera_rect(1800, 1200)],
         get_default_camera_rect(1800, 1200),
         [[550, 1067], [1250, 1067]],
-        "Play Tool"
+        "Play Tool",
+        music.wait_music_path
     )
     
     stage.sprites.append(
