@@ -50,7 +50,7 @@ def get_stage_group_labels(next_position):
                 stage_group.append(
                     button.Label(
                         next_position,
-                        "Art by: " + credit_data["art"],
+                        "Art: " + credit_data["art"],
                         (255,255,255),
                         button.FONT_SIZES[4]
                     )
@@ -147,7 +147,7 @@ next_position = (start_position[0], next_position[1] + stages_group[-1].height +
 stages_group.extend(get_stage_group_labels(next_position))
 label_groups.append(stages_group)
 
-next_position = (start_position[0], stages_group[-1].bottom_right()[1] + stages_group[-1].height + 20)
+next_position = (start_position[0], stages_group[-1].bottom_right()[1] + 20)
 
 libraries_group = []
 libraries_group.append(

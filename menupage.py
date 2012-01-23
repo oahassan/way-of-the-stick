@@ -127,7 +127,7 @@ def load():
             gamestate.Modes.SETTINGSMODE
         )
     
-    settings_page_button = \
+    credits_page_button = \
         MenuButton(
             'Credits',
             gamestate.Modes.CREDITS
@@ -138,6 +138,7 @@ def load():
     main_menu_buttons.append(move_set_builder_button)
     main_menu_buttons.append(controls_page_button)
     main_menu_buttons.append(settings_page_button)
+    main_menu_buttons.append(credits_page_button)
     
     menu_button_index = 0
     menu_pos = get_menu_pos()
