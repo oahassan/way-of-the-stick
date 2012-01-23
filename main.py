@@ -36,6 +36,7 @@ import volume
 import music
 import versusclient
 import stageselect
+import credits
 
 import gamestate
 import serializability
@@ -145,6 +146,9 @@ if __name__ == "__main__":
             
             elif gamestate.mode == gamestate.Modes.STAGESELECT:
                 stageselect.handle_events()
+            
+            elif gamestate.mode == gamestate.Modes.CREDITS:
+                credits.handle_events()
             
             if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
                 pygame.display.flip()

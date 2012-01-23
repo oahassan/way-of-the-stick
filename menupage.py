@@ -127,6 +127,12 @@ def load():
             gamestate.Modes.SETTINGSMODE
         )
     
+    settings_page_button = \
+        MenuButton(
+            'Credits',
+            gamestate.Modes.CREDITS
+        )
+    
     main_menu_buttons.append(versus_mode_button)
     #main_menu_buttons.append(multiplayer_versus_mode_button)
     main_menu_buttons.append(move_set_builder_button)

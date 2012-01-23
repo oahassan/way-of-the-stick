@@ -21,6 +21,7 @@ class Modes():
     CONTROLSPAGE = 'CONTROLSPAGE'
     SPLASH = 'SPLASH'
     STAGESELECT = 'STAGESELECT'
+    CREDITS = 'CREDITS'
 
 class DrawingModes():
     DIRTY_RECTS = 'DIRTY_RECTS'

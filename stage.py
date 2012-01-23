@@ -1,5 +1,7 @@
 import os
+from glob import glob
 import json
+
 import pygame
 import physics
 import music
@@ -24,6 +26,27 @@ class BkgSprite():
         self.image = image
         self.surface = pygame.Surface((width, height))
         self.layer = layer
+
+def get_stage_credits():
+    credits_list = []
+    
+    for file_path in glob(os.path.join(".", STAGE_DIR_NM, "*.stg")):
+        if os.path.isfile(file_path):
+            
+            try:
+                stage_data = None
+                
+                with open(file_path,'r') as stage_file:
+                    stage_data = json.load(stage_file)
+                
+                if "credits" in stage_data:
+                    stage_data["credits"]["name"] = stage_data["stage-name"]
+                    credits_list.append(stage_data["credits"])
+            except Exception as ex:
+                print("unable to load stage credits: " + file_path)
+                print(ex)
+    
+    return credits_list
 
 def load_from_JSON(path):    
     stage_data = None
