@@ -21,10 +21,10 @@ _MOVESET_SUFFIX = "-mov.mvs"
 _SHARED_MOVESETS_GLOB_PATH = os.path.join(_SHARED_MOVESETS_DIR, "*" + _MOVESET_SUFFIX)
 
 if not os.path.exists(_SHARING_DIR):
-    os.mkdir(_SHARING_DIR)
-    os.mkdir(_EXPORTED_MOVESETS_DIR)
-    os.mkdir(_IMPORTED_MOVESETS_DIR)
-    os.mkdir(_SHARED_MOVESETS_DIR)
+    os.makedirs(_SHARING_DIR)
+    os.makedirs(_EXPORTED_MOVESETS_DIR)
+    os.makedirs(_IMPORTED_MOVESETS_DIR)
+    os.makedirs(_SHARED_MOVESETS_DIR)
 
 def import_movesets():
     

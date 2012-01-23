@@ -51,7 +51,7 @@ def get_stage_credits():
 def load_from_JSON(path):    
     stage_data = None
     
-    with open(path,'r') as stage_file:
+    with open(path,'rb') as stage_file:
         stage_data = json.load(stage_file)
     
     draw_reflections = False
@@ -170,7 +170,7 @@ def load_default_stage():
     stage = ScrollableStage(
         1800,
         1200,
-        1147, 
+        1330, 
         create_background(),
         True,
         False,

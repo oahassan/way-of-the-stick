@@ -135,10 +135,14 @@ class VersusModeState():
         self.init_rendering_objects()
         self.init_simulation_objects()
         self.set_GUI_module_variables()
-        self.init_screen()
         self.initialized = True
         self.exit_indicator = False
         self.exiting = False
+        
+        if self.simulation_process == None and self.exiting == False:
+            self.start_match_simulation()
+        
+        self.init_screen()
     
     def init_recording(self, moveset1_name, moveset2_name):
         self.recording = record.Recording(
@@ -206,9 +210,6 @@ class VersusModeState():
         gamestate.frame_rate = gamestate.NORMAL_FRAMERATE
 
     def handle_events(self):
-        
-        if self.simulation_process == None and self.exiting == False:
-            self.start_match_simulation()
         
         if gamestate.devmode:
             self.fps_label.set_text(str(gamestate.clock.get_fps()))
