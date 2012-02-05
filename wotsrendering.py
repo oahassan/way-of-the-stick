@@ -7,6 +7,7 @@ class DrawTypes:
     ELLIPSE = 3
     POLYGON = 4
     SURFACE = 5
+    FUNCTION = 6
 
 draw_queue = {}
 
@@ -28,6 +29,8 @@ def draw(draw_type, args):
         pygame.draw.polygon(*args)
     elif draw_type == DrawTypes.SURFACE:
         args[0].blit(args[1], args[2])
+    elif draw_type == DrawTypes.FUNCTION:
+        args[0](*args[1])
 
 def add_draw_to_queue(layer, args):
     global draw_queue
@@ -36,6 +39,18 @@ def add_draw_to_queue(layer, args):
         draw_queue[layer].append(args)
     else:
         draw_queue[layer] = [args]
+
+def queue_rendering_function(layer, f, args):
+    global draw_queue
+    
+    add_draw_to_queue(
+        layer,
+        (
+            DrawTypes.FUNCTION, 
+            (f, 
+            args)
+        )
+    )
 
 def queue_line(layer, surface, color, point1, point2, thickness=0):
     

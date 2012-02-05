@@ -124,7 +124,7 @@ class ViewportCamera():
     def get_viewport_zoom_position(self, position):
         return (
             (position[0] - self.viewport_position[0]) * self.viewport_scale,
-            ((position[1] - self.viewport_position[1]) * self.viewport_scale)
+            (position[1] - self.viewport_position[1]) * self.viewport_scale
         )
     
     def get_full_zoom_position(self, position):
@@ -719,38 +719,48 @@ def draw_reflection(
         reflection_surface
     )
     
-    #flip and scale the surface and decrease its opacity to make the reflection
-    reflection_surface = pygame.transform.flip(reflection_surface, False, True)
-    reflection_surface = pygame.transform.scale(
-        reflection_surface,
-        (
-            max(int(
-                player_rect.width * 
-                player_rect.bottom / 
-                (gamestate.stage.floor_height - camera.viewport_position[1]) /
-                camera.get_viewport_scale()
-            ), 10),
-            max(int(
-                (.75 * player_rect.height) *
-                player_rect.bottom /
-                (gamestate.stage.floor_height - camera.viewport_position[1]) /
-                camera.get_viewport_scale()
-            ), 10)
+    def reflection_transform(surface, reflection_surface, player_rect, camera):
+        #flip and scale the surface and decrease its opacity to make the reflection
+        reflection_surface = pygame.transform.flip(reflection_surface, False, True)
+        reflection_surface = pygame.transform.scale(
+            reflection_surface,
+            (
+                max(int(
+                    player_rect.width * 
+                    player_rect.bottom / 
+                    (gamestate.stage.floor_height - camera.viewport_position[1]) /
+                    camera.get_viewport_scale()
+                ), 10),
+                max(int(
+                    (.75 * player_rect.height) *
+                    player_rect.bottom /
+                    (gamestate.stage.floor_height - camera.viewport_position[1]) /
+                    camera.get_viewport_scale()
+                ), 10)
+            )
+        ).convert()
+        reflection_surface.set_alpha(150)
+        
+        reflection_position = (
+            player_rect.left,
+            ((gamestate.stage.floor_height- 3) - camera.viewport_position[1]) * camera.get_viewport_scale()
         )
-    ).convert()
-    reflection_surface.set_alpha(150)
-    
-    reflection_position = (
-        player_rect.left,
-        ((gamestate.stage.floor_height- 3) - camera.viewport_position[1]) * camera.get_viewport_scale()
-    )
-    wotsrendering.queue_surface(1, surface, reflection_surface, reflection_position)
-    
-    gamestate.new_dirty_rects.append(
-        pygame.Rect(
-            reflection_position,
-            (reflection_surface.get_width(), reflection_surface.get_height())
+        wotsrendering.queue_surface(
+            3, 
+            surface, 
+            reflection_surface, 
+            reflection_position
         )
+        gamestate.new_dirty_rects.append(
+            pygame.Rect(
+                reflection_position,
+                (reflection_surface.get_width(), reflection_surface.get_height())
+            )
+        )
+    wotsrendering.queue_rendering_function(
+        3, 
+        reflection_transform, 
+        (surface, reflection_surface, player_rect, camera)
     )
     
     model.move_model(previous_position)
