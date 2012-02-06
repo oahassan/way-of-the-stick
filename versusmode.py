@@ -229,16 +229,9 @@ class VersusModeState():
             )
         
         if self.exiting == False:
-            simulation_rendering_info = None
             
-            while self.simulation_connection.poll():
-                simulation_rendering_info = self.simulation_connection.recv()
-                
-                if self.recording_indicator:
-                    self.recording.simulation_snapshots.append(simulation_rendering_info)
-                
-                if simulation_rendering_info.match_time > self.match_time:
-                    self.update_simulation_rendering(simulation_rendering_info)
+            simulation_messages = self.get_simulation_messages()
+            self.handle_simulation_messages(simulation_messages)
             
             self.render_simulation()
             
@@ -253,6 +246,25 @@ class VersusModeState():
             self.update_simulation()
         
         self.handle_exit_events()
+    
+    def get_simulation_messages(self):
+        simulation_messages = []
+        
+        while self.simulation_connection.poll():
+            simulation_messages.append(self.simulation_connection.recv())
+        
+        return simulation_messages
+    
+    def handle_simulation_messages(self, simulation_messages):
+        
+        for message in simulation_messages:
+            simulation_rendering_info = message
+            
+            if self.recording_indicator:
+                self.recording.simulation_snapshots.append(simulation_rendering_info)
+            
+            if simulation_rendering_info.match_time > self.match_time:
+                self.update_simulation_rendering(simulation_rendering_info)
     
     def handle_pause_events(self):
         if ((

@@ -115,6 +115,13 @@ def get_movesets():
     
     return sorted(return_movesets, key=lambda moveset: moveset.name)
 
+
+def get_playable_movesets():
+    movesets = get_movesets()
+    playable_movesets = [moveset for moveset in movesets if moveset.is_complete()]
+    
+    return playable_movesets
+
 def get_moveset(moveset_name):
     movesets = shelve.open(_MOVESET_DB_FILE_NM, "c")
     return_moveset = None

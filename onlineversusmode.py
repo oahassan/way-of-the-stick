@@ -24,11 +24,10 @@ SimulationActionTypes, PlayerStates, PlayerPositions
 from controlsdata import get_controls
 from playercontroller import InputCommandTypes
 
-class NetworkPlayer(humanplayer.HumanPlayer):
+class NetworkPlayer(player.Player):
     
     def __init__(self, position, player_position):
-        humanplayer.HumanPlayer.__init__(self, position)
-        self.player_position = player_position
+        humanplayer.HumanPlayer.__init__(self, position, player_position) 
     
     def sync_to_server_state(self, player_state):
         """syncs a players state to that given from the server"""
@@ -204,20 +203,15 @@ class NetworkPlayer(humanplayer.HumanPlayer):
 class OnlineVersusModeState(VersusModeState):
     def __init__(self):
         VersusModeState.__init__(self)
-        chatting = False
+        self.chatting = False
     
-    def init(self):
+    def init(self, player_data):
         print("hosting: " + str(gamestate.hosting))
         self.register_network_callbacks()
-        self.init_match_state_variables()
-        self.init_rendering_objects()
-        self.init_simulation_objects()
-        self.set_GUI_module_variables()
-        self.init_stage()
-        self.init_screen()
+        VersusModeState.init(self, player_data)
         
-        self.initialized = True
-        self.exit_indicator = False
+        #self.initialized = True
+        #self.exit_indicator = False
         self.chatting = False
     
     def register_network_callbacks(self):
@@ -234,10 +228,10 @@ class OnlineVersusModeState(VersusModeState):
 
     def init_simulation_objects(self):
         
-        for player_position in self.player_dictionary:
-            self.player_key_handlers[player_position] = KeyToCommandTypeConverter(
-                dict([(entry[1], entry[0]) for entry in get_controls().iteritems()])
-            )
+        #for player_position in self.player_dictionary:
+        #    self.player_key_handlers[player_position] = KeyToCommandTypeConverter(
+        #        dict([(entry[1], entry[0]) for entry in get_controls().iteritems()])
+        #    )
         
         self.simulation_connection, input_connection = multiprocessing.Pipe()
         player_position = versusclient.get_local_player_position()
@@ -258,28 +252,23 @@ class OnlineVersusModeState(VersusModeState):
             )
 
     def exit(self):
-        if gamestate.devmode:
-            print("exiting")
+        VersusModeState.exit(self)
         
         self.unregister_network_callbacks()
-        self.end_simulation()
-        self.cleanup_rendering_objects()
-        self.cleanup_match_state_variables()
-        self.reset_GUI_variables()
-        self.initialized = False
+        
         self.chatting = False
         gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
     
-    def end_simulation(self):
-        
-        self.simulation_connection.send('STOP')
-        self.simulation_connection.close()
-        self.simulation_process.terminate()
-        self.simulation_process.join()
-        self.simulation_connection = None
-        gamestate.processes.remove(self.simulation_process)
-        self.simulation_process = None
-        self.match_simulation = None
+    #def end_simulation(self):
+    #    
+    #    self.simulation_connection.send('STOP')
+    #    self.simulation_connection.close()
+    #    self.simulation_process.terminate()
+    #    self.simulation_process.join()
+    #    self.simulation_connection = None
+    #    gamestate.processes.remove(self.simulation_process)
+    #    self.simulation_process = None
+    #    self.match_simulation = None
     
     def unregister_network_callbacks(self):
         if gamestate.hosting:
@@ -292,60 +281,35 @@ class OnlineVersusModeState(VersusModeState):
             )
 
     def handle_events(self):
-        
-        if self.exit_indicator == False and self.simulation_process == None:
-            self.start_match_simulation()
-        
-        if gamestate.devmode:
-            self.fps_label.set_text(str(gamestate.clock.get_fps()))
-            self.fps_label.draw(gamestate.screen)
-            gamestate.new_dirty_rects.append(
-                pygame.Rect(
-                    self.fps_label.position,
-                    (self.fps_label.width, self.fps_label.height)
-                )
-            )
-        
-        if self.exit_indicator == False:
-            simulation_rendering_info = None
-            
-            while self.simulation_connection.poll():
-                data = self.simulation_connection.recv()
-                action = data[SimulationDataKeys.ACTION]
-                
-                if action == SimulationActionTypes.STEP:
-                    self.update_simulation_rendering(
-                        data[SimulationDataKeys.RENDERING_INFO]
-                    )
-                else:
-                    if versusclient.local_player_is_in_match():
-                        if gamestate.hosting:
-                            if action == SimulationActionTypes.GET_STATE:
-                                versusclient.listener.update_simulation_state(
-                                    data[SimulationDataKeys.SIMULATION_STATE]
-                                )
-                            
-                        else:
-                            if action == SimulationActionTypes.UPDATE_INPUT:
-                                versusclient.listener.send_input_to_host(
-                                    data
-                                )
-                        
-                    else:
-                        pass #do nothing because this is a spectator
-            
-            self.render_simulation()
-            
-            self.clean_expired_effects()
-            
-            self.handle_match_state()
-        
-        if self.simulation_connection != None:
-            self.update_simulation()
+        VersusModeState.handle_events(self)
         
         self.handle_network_events()
-        self.handle_exit_events()
-
+    
+    def handle_simulation_messages(self, simulation_messages):
+        
+        for message in simulation_messages:
+            action = message[SimulationDataKeys.ACTION]
+            
+            if action == SimulationActionTypes.STEP:
+                self.update_simulation_rendering(
+                    message[SimulationDataKeys.RENDERING_INFO]
+                )
+            else:
+                if versusclient.local_player_is_in_match():
+                    if gamestate.hosting:
+                        if action == SimulationActionTypes.GET_STATE:
+                            versusclient.listener.update_simulation_state(
+                                message[SimulationDataKeys.SIMULATION_STATE]
+                            )
+                        
+                    else:
+                        if action == SimulationActionTypes.UPDATE_INPUT:
+                            versusclient.listener.send_input_to_host(
+                                message
+                            )
+                else:
+                    pass #do nothing because this is a spectator
+    
     def update_simulation(self):
         self.simulation_connection.send(
             {
@@ -428,55 +392,12 @@ class OnlineVersusModeState(VersusModeState):
         
         if gamestate.hosting:
             versusserver.server.Pump()
-
+    
     def handle_match_state(self):
+        VersusModeState.handle_match_state(self)
         
-        if self.match_state == MatchStates.READY:
-            self.ready_label.draw(gamestate.screen)
-            gamestate.new_dirty_rects.append(
-                pygame.Rect(
-                    self.ready_label.position,
-                    (self.ready_label.width, self.ready_label.height)
-                )
-            )
-            
-        elif self.match_state == MatchStates.FIGHT and self.match_time < 4000:
-            self.fight_start_timer += gamestate.clock.get_time()
-            self.match_state = MatchStates.FIGHT
-            gamestate.new_dirty_rects.append(
-                pygame.Rect(
-                    self.fight_label.position,
-                    (self.fight_label.width, self.fight_label.height)
-                )
-            )
-        
-        elif self.match_state == MatchStates.PLAYER1_WINS:
-            
-            if self.fight_end_timer < 8000:
-                self.fight_end_timer += gamestate.clock.get_time()
-                self.player1_wins_label.draw(gamestate.screen)
-                
-                gamestate.new_dirty_rects.append(
-                    pygame.Rect(
-                        self.player1_wins_label.position, 
-                        (self.player1_wins_label.width, self.player1_wins_label.height)
-                    )
-                )
-                
-            else:
-                versusclient.listener.end_match()
-        elif self.match_state == MatchStates.PLAYER2_WINS:
-            
-            if self.fight_end_timer < 8000:
-                self.fight_end_timer += gamestate.clock.get_time()
-                self.player2_wins_label.draw(gamestate.screen)
-                gamestate.new_dirty_rects.append(
-                    pygame.Rect(
-                        self.player2_wins_label.position,
-                        (self.player2_wins_label.width, self.player2_wins_label.height)
-                    )
-                )
-            else:
+        if self.fight_end_timer > 8000:
+            if self.match_state == MatchStates.PLAYER1_WINS or self.match_state == MatchStates.PLAYER2_WINS:
                 versusclient.listener.end_match()
 
     def handle_chat_events(self):
@@ -495,36 +416,16 @@ class OnlineVersusModeState(VersusModeState):
                 players[versusclient.get_local_player_position()].handle_input_events = True
 
     def handle_exit_events(self):
+        VersusModeState.handle_exit_events(self)
         
-        self.exit_button.draw(gamestate.screen)
-        gamestate.new_dirty_rects.append(
-            pygame.Rect(
-                self.exit_button.position, 
-                (self.exit_button.width, self.exit_button.height)
-            )
-        )
-        
-        if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
-            if self.exit_button.contains(wotsuievents.mouse_pos):
-                self.exit_indicator = True
-                self.exit_button.color = button.Button._SlctdColor
-                self.exit_button.symbol.color = button.Button._SlctdColor
-        elif pygame.MOUSEBUTTONUP in wotsuievents.event_types:
-            if self.exit_indicator == True:
-                self.exit_indicator = False
-                self.exit_button.color = button.Button._InactiveColor
-                self.exit_button.symbol.color = button.Button._InactiveColor
-                
-                if self.exit_button.contains(wotsuievents.mouse_pos):
-                    if versusclient.local_player_is_in_match():
-                        versusclient.listener.end_match()
-                    else:
-                        #if you're a spectator go to the main menu
-                        versusclient.listener.close()
-                        versusclient.unload()
-                        gamestate.mode = gamestate.Modes.MAINMENU
-                
-                self.exit()
+        if self.exiting:
+            if versusclient.local_player_is_in_match():
+                versusclient.listener.end_match()
+            else:
+                #if you're a spectator go to the main menu
+                versusclient.listener.close()
+                versusclient.unload()
+                gamestate.mode = gamestate.Modes.MAINMENU
 
 local_state = OnlineVersusModeState()
 
