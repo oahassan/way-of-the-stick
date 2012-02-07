@@ -8,8 +8,10 @@ import wotsuievents
 import wotsuicontainers
 import button
 import movesetselectui
+import versusmovesetselectui
 
 import player
+from enumerations import *
 
 class ConnectingAlertBox(wotsuicontainers.AlertBox):
     
@@ -74,30 +76,64 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase, PlayerStatusUiBase):
                 100,
                 300,
                 'Select Player Type',
-                button.TextButton,
-                [[player.PlayerTypes.HUMAN,15], [player.PlayerTypes.BOT,15]]
+                button.SelectableLabel,
+                [[(0,0),player.PlayerTypes.BOT,15]] #[[player.PlayerTypes.HUMAN,15], [player.PlayerTypes.BOT,15]]
             )
+        self.player_type_select.buttons[0].handle_selected()
+        self.player_type_select.selected_button = self.player_type_select.buttons[0]
         self.add_child(self.player_type_select)
         
-        moveset_select_position = \
-            (
-                player_type_select_position[0],
-                player_type_select_position[1] + self.player_type_select.height + 20
-            )
-        self.moveset_select = \
-            movesetselectui.MovesetSelectContainer(
-                moveset_select_position,
-                200, \
-                100, \
-                'Select Your Moveset', \
-                movesets
-            )
+        player_difficulty_select_position = (
+            player_type_select_position[0], 
+            player_type_select_position[1] + self.player_type_select.height - 20
+        )
+        self.player_difficulty_select = wotsuicontainers.ButtonContainer(
+            player_difficulty_select_position,
+            100,
+            350,
+            'Select Difficulty',
+            versusmovesetselectui.DifficultyLabel,
+            [
+                ['Easy', Difficulties.EASY], 
+                ['Medium', Difficulties.MEDIUM],
+                ['Hard', Difficulties.HARD],
+                ['Challenge', Difficulties.CHALLENGE]
+            ]
+        )
+        #self.player_difficulty_select.inactivate()
+        self.add_child(self.player_difficulty_select)
+        
+        moveset_select_position = (
+            player_difficulty_select_position[0],
+            player_difficulty_select_position[1] + self.player_difficulty_select.height #+ 20
+        )
+        self.moveset_select = versusmovesetselectui.MovesetSelector(
+            moveset_select_position,
+            movesets
+        )
         self.add_child(self.moveset_select)
+        
+        player_widget_position = (
+            moveset_select_position[0], 
+            self.moveset_select.position[1] + self.moveset_select.height + 10
+        )
+        self.player_stats_widget = versusmovesetselectui.PlayerStatsWidget(player_widget_position)
+        self.add_child(self.player_stats_widget)
+        
+        player_color_select_position = (
+            player_widget_position[0] + self.player_stats_widget.width + 100,
+            player_widget_position[1] + 50
+        )
+        self.player_color_select = versusmovesetselectui.ColorWheel(player_color_select_position, 0)
+        self.add_child(self.player_color_select)
     
     def handle_events(self):
     
         self.moveset_select.handle_events()
         self.player_type_select.handle_events()
+        self.player_difficulty_select.handle_events()
+        self.player_color_select.handle_events()
+        self.player_stats_widget.handle_events()
         
         if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
             for button in self.player_type_select.buttons:
@@ -120,6 +156,15 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase, PlayerStatusUiBase):
     def get_player_moveset(self):
         if self.moveset_select.selected_moveset != None:
             return self.moveset_select.selected_moveset
+        else:
+            return None
+    
+    def get_player_color(self):
+        return self.UI_objects.player_color_select.selected_swatch.color
+    
+    def get_player_difficulty(self):
+        if self.player_difficulty_select.selected_button != None:
+            return self.player_difficulty_select.selected_button.difficulty
         else:
             return None
     

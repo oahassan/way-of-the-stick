@@ -65,7 +65,7 @@ def load():
     connecting_alert_box = ConnectingAlertBox()
     exit_button = button.ExitButton()
     loaded = True
-    start_match_label = movesetselectui.MovesetActionLabel((10, 520), "Start Match!")
+    start_match_label = movesetselectui.MovesetActionLabel((10, 550), "Start Match!")
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
     assigned_positions = []
@@ -426,9 +426,9 @@ def reset_empty_position_uis():
     
 def get_local_player_setup_container_position(player_position):
     if player_position == versusserver.PlayerPositions.PLAYER1:
-        return (50, 150)
+        return (50, 120)
     elif player_position == versusserver.PlayerPositions.PLAYER2:
-        return (450, 150)
+        return (450, 120)
 
 def get_remote_player_state_label_position(player_position):
     if player_position == versusserver.PlayerPositions.PLAYER1:

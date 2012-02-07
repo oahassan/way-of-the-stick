@@ -186,7 +186,7 @@ class MovesetSelector(UIObjectBase, MovesetLoader):
     HEIGHT = 120
     
     def __init__(self, position, movesets):
-        
+        UIObjectBase.__init__(self)
         self.set_layout_data(position, MovesetSelector.HEIGHT, MovesetSelector.WIDTH)
         self.selected_thumbnail_index = 0
         self.fixed_dimensions = True
