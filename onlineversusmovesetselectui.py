@@ -149,20 +149,25 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase, PlayerStatusUiBase):
     
     def get_player_type(self):
         if self.player_type_select.selected_button != None:
-            return self.player_type_select.selected_button.text.text
+            if self.player_type_select.selected_button.text == 'Human':
+                return PlayerTypes.HUMAN
+            elif self.player_type_select.selected_button.text == 'Bot':
+                return PlayerTypes.BOT
         else:
-            return None
-    
-    def get_player_moveset(self):
+            return PlayerTypes.BOT
+    def get_moveset(self):
         if self.moveset_select.selected_moveset != None:
             return self.moveset_select.selected_moveset
         else:
             return None
     
-    def get_player_color(self):
-        return self.UI_objects.player_color_select.selected_swatch.color
+    def get_color(self):
+        return self.player_color_select.selected_swatch.color
     
-    def get_player_difficulty(self):
+    def get_size(self):
+        return self.player_stats_widget.get_size()
+    
+    def get_difficulty(self):
         if self.player_difficulty_select.selected_button != None:
             return self.player_difficulty_select.selected_button.difficulty
         else:

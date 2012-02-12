@@ -4,7 +4,7 @@ import socket
 from functools import reduce
 from wotsprot.udpserver import Server
 from wotsprot.channel import Channel
-from enumerations import PlayerPositions
+from enumerations import PlayerPositions, PlayerDataKeys
 
 class DataKeys:
     ACTION = "action"
@@ -21,9 +21,14 @@ class DataKeys:
     PLAYER_STATE = "player state"
     POINT_POSITIONS = "point positions"
     MESSAGE = "message"
-    MOVESET = "moveset"
+    MOVESET_NAME = 14
     PLAYER_MOVESETS = "player movesets"
     SIMULATION_STATE = "simulation state"
+    COLOR = 17
+    DIFFICULTY = 18
+    PLAYER_TYPE = 19
+    SIZE = 20
+    
 
 class ClientActions:
     SPECTATOR_JOINED = "spectator_joined"
@@ -52,6 +57,11 @@ class ClientChannel(Channel):
         self.nickname = self._server.generate_nickname()
         self.postion = PlayerPositions.NONE
         self.player_id = id(self)
+        self.size = None
+        self.moveset = None
+        self.player_type = None
+        self.difficulty = None
+        self.color = None
     
     def Network(self, data):
         #print("Server channel")
@@ -149,9 +159,27 @@ class ClientChannel(Channel):
         self._server.send_to_all(data)
     
     def Network_set_moveset(self, data):
-        self._server.player_movesets[
-            self._server.get_player_position(self)
-        ] = data[DataKeys.MOVESET]
+        self.moveset_name = data[PlayerDataKeys.MOVESET_NAME]
+        
+        self._server.send_to_all(data)
+    
+    def Network_set_color(self, data):
+        self.color = data[PlayerDataKeys.COLOR]
+        
+        self._server.send_to_all(data)
+    
+    def Network_set_difficulty(self, data):
+        self.difficulty = data[PlayerDataKeys.DIFFICULTY]
+        
+        self._server.send_to_all(data)
+    
+    def Network_set_player_type(self, data):
+        self.player_type = data[PlayerDataKeys.PLAYER_TYPE]
+        
+        self._server.send_to_all(data)
+    
+    def Network_set_size(self, data):
+        self.size = data[PlayerDataKeys.SIZE]
         
         self._server.send_to_all(data)
     

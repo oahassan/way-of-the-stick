@@ -4,7 +4,7 @@ from wotsprot.udpclient import EndPoint
 import wotsuievents
 import movesetdata
 import gamestate
-from enumerations import PlayerPositions, SimulationDataKeys
+from enumerations import PlayerPositions, SimulationDataKeys, PlayerDataKeys, PlayerSelectActions
 from versusserver import DFLT_PORT, DataKeys, ServerModes
 
 class ConnectionStatus:
@@ -133,11 +133,47 @@ class ClientConnectionListener(EndPoint):
         
         self.Send(data)
     
-    def set_moveset(self, moveset):
+    def set_moveset(self, moveset_name):
         data = {
-            DataKeys.ACTION : ServerActions.SET_MOVESET,
-            DataKeys.MOVESET : moveset,
-            DataKeys.PLAYER_POSITION : get_local_player_position()
+            DataKeys.ACTION : PlayerSelectActions.SET_MOVESET,
+            PlayerDataKeys.MOVESET_NAME : moveset_name,
+            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+        }
+        
+        self.Send(data)
+    
+    def set_color(self, color):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.SET_COLOR,
+            PlayerDataKeys.COLOR : color,
+            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+        }
+        
+        self.Send(data)
+    
+    def set_size(self, size):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.SET_SIZE,
+            PlayerDataKeys.SIZE : size,
+            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+        }
+        
+        self.Send(data)
+    
+    def set_player_type(self, player_type):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.SET_PLAYER_TYPE,
+            PlayerDataKeys.PLAYER_TYPE : player_type,
+            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+        }
+        
+        self.Send(data)
+    
+    def set_difficulty(self, difficulty):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.SET_DIFFICULTY,
+            PlayerDataKeys.DIFFICULTY : difficulty,
+            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
         }
         
         self.Send(data)
@@ -251,10 +287,10 @@ class ClientConnectionListener(EndPoint):
     def Network_get_player_id(self, data):
         self.player_id = data[DataKeys.PLAYER_ID]
     
-    def Network_set_moveset(self, data):
-        
-        player_position = data[DataKeys.PLAYER_POSITION]
-        self.player_movesets[player_position] = data[DataKeys.MOVESET]
+    #def Network_set_moveset(self, data):
+    #    
+    #    player_position = data[DataKeys.PLAYER_POSITION]
+    #    self.player_movesets[player_position] = data[DataKeys.MOVESET]
     
     def Network_sync_to_server(self, data):
         """syncs client data on connected players with server"""

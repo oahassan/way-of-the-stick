@@ -65,6 +65,7 @@ def handle_events():
     global exit_indicator
     global menu
     global host_match_button
+    global loaded
     
     if not loaded:
         load()

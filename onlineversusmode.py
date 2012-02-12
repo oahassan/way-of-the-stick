@@ -16,18 +16,19 @@ import animation
 import mathfuncs
 import versusmode
 from versusmode import VersusModeState, KeyToCommandTypeConverter
+from versusmodeui import PlayerHealth, AttackList, PAUSE_MENU_WIDTH, PAUSE_MENU_HEIGHT
 from simulation import ServerSimulation, ClientSimulation
 from playerutils import Transition
 from playerconstants import TRANSITION_ACCELERATION, STUN_ACCELERATION
 from enumerations import InputActionTypes, MatchStates, SimulationDataKeys, \
-SimulationActionTypes, PlayerStates, PlayerPositions
+SimulationActionTypes, PlayerStates, PlayerPositions, PlayerTypes
 from controlsdata import get_controls
 from playercontroller import InputCommandTypes
 
 class NetworkPlayer(player.Player):
     
     def __init__(self, position, player_position):
-        humanplayer.HumanPlayer.__init__(self, position, player_position) 
+        player.Player.__init__(self, position, player_position) 
     
     def sync_to_server_state(self, player_state):
         """syncs a players state to that given from the server"""
@@ -200,6 +201,11 @@ class NetworkPlayer(player.Player):
         
         return save_frame
 
+class AINetworkPlayer(aiplayer.Bot, NetworkPlayer):
+    def __init__(self, position, player_position):
+        NetworkPlayer.__init__(self, position, player_position)
+        aiplayer.Bot.__init__(self, position, player_position)
+
 class OnlineVersusModeState(VersusModeState):
     def __init__(self):
         VersusModeState.__init__(self)
@@ -213,6 +219,29 @@ class OnlineVersusModeState(VersusModeState):
         #self.initialized = True
         #self.exit_indicator = False
         self.chatting = False
+    
+    def add_player(self, player_data):
+        player = create_player(player_data)
+        player_position = player_data.player_position
+        self.player_positions.append(player_position)
+        self.player_dictionary[player_position] = player
+        self.player_key_handlers[player_position] = KeyToCommandTypeConverter(
+            dict([(entry[1], entry[0]) 
+            for entry in get_controls()[player_position].iteritems()])
+        )
+        self.player_event_handlers[player_position] = versusmode.EventRegistry()
+        self.player_type_dictionary[player_position] = player_data.player_type
+        self.player_health_bars[player_position] = PlayerHealth(
+            player_data.moveset.name, 
+            player_position
+        )
+        self.attack_lists[player_position] = AttackList(
+            player_data.moveset,
+            (
+                int((gamestate._WIDTH / 2) - PAUSE_MENU_WIDTH),
+                int((gamestate._HEIGHT / 2) - (PAUSE_MENU_HEIGHT / 2))
+            )
+        )
     
     def register_network_callbacks(self):
         if gamestate.hosting:
@@ -429,10 +458,10 @@ class OnlineVersusModeState(VersusModeState):
 
 local_state = OnlineVersusModeState()
 
-def init():
+def init(player_data):
     global local_state
     
-    local_state.init()
+    local_state.init(player_data)
 
 def initialized():
     global local_state
@@ -444,7 +473,39 @@ def handle_events():
     
     local_state.handle_events()
 
-def set_player(player_position, player):
-    global local_state
+def create_player(player_data):   
     
-    local_state.player_dictionary[player_position] = player
+    if gamestate.hosting:
+        player = AINetworkPlayer(
+            (0, 0),
+            player_data.player_position
+        )
+    
+    else:
+        player = NetworkPlayer(
+            (0, 0),
+            player_data.player_position
+        )
+    
+    player.init_state()
+    
+    if gamestate.hosting:
+        if player_data.player_type == PlayerTypes.BOT:
+            player.set_difficulty(player_data.difficulty)
+    
+    player.set_player_stats(player_data.size)
+    player.load_moveset(player_data.moveset)
+    player.model.velocity = (0,0)
+    player.health_color = player_data.color
+    
+    if player_data.player_position == PlayerPositions.PLAYER1:
+        player.direction = PlayerStates.FACING_RIGHT
+        player.model.move_model(gamestate.stage.player_positions[0])
+    else:
+        player.direction = PlayerStates.FACING_LEFT
+        player.model.move_model(gamestate.stage.player_positions[1])
+    
+    player.action = None
+    player.actions[PlayerStates.STANDING].set_player_state(player)
+    
+    return player

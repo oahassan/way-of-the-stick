@@ -17,6 +17,20 @@ class Difficulties:
     CHALLENGE = 4
 
 # networking
+class PlayerDataKeys:
+    MOVESET_NAME = 0
+    COLOR = 1
+    DIFFICULTY = 2
+    PLAYER_TYPE = 3
+    SIZE = 4
+    PLAYER_POSITION = 5
+
+class PlayerSelectActions:
+    SET_MOVESET = "set_moveset"
+    SET_COLOR = "set_color"
+    SET_SIZE = "set_size"
+    SET_DIFFICULTY = "set_difficulty"
+    SET_PLAYER_TYPE = "set_player_type"
 
 class SimulationDataKeys:
     ACTION = 0

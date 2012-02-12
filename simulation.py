@@ -1238,6 +1238,31 @@ class NetworkedSimulation(MatchSimulation):
             )
             self.accumulator -= self.timestep
     
+    def handle_player_events(self, player_keys_pressed, timestep):
+        """Advance player animations according to the current pygame events"""
+        
+        for player_position, active_player in self.player_dictionary.iteritems():
+            player_type = self.player_type_dictionary[player_position]
+            
+            if player_type == PlayerTypes.HUMAN:
+                active_player.handle_events(
+                    player_keys_pressed[player_position],
+                    timestep
+                )
+            elif player_type == PlayerTypes.BOT:
+                [active_player.handle_events(other_player, timestep) 
+                for other_player_position, other_player 
+                in self.player_dictionary.iteritems()
+                if not other_player_position == player_position]
+            elif player_type == PlayerTypes.REMOTE:
+                active_player.handle_events(
+                    timestep
+                )
+            else:
+                raise Exception(
+                    "Invalid Player Type: " + player_type
+                )
+    
     def get_updated_player_keys_pressed(self, player_keys_pressed):
         """sync player keys pressed to ai decisions"""
         

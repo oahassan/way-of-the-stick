@@ -8,6 +8,7 @@ import movesetdata
 import gamestate
 import versusserver
 import versusclient
+import onlinematchloader
 
 import button
 from onlineversusmovesetselectui import LocalPlayerSetupContainer, RemotePlayerStateLabel, ConnectingAlertBox
@@ -65,7 +66,7 @@ def load():
     connecting_alert_box = ConnectingAlertBox()
     exit_button = button.ExitButton()
     loaded = True
-    start_match_label = movesetselectui.MovesetActionLabel((10, 550), "Start Match!")
+    start_match_label = movesetselectui.MovesetActionLabel((300, 550), "Start Match!")
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()
     assigned_positions = []
@@ -102,6 +103,8 @@ def load():
         ip_address_input.inactivate()
         
         connect_button.hide()
+        
+        onlinematchloader.register_network_callbacks()
 
 def unload():
     global loaded
@@ -293,7 +296,7 @@ def handle_events():
                     connect_button.inactivate()
                     
                     connected = True
-                    
+                    onlinematchloader.register_network_callbacks()
                 else:
                     connect_button.handle_deselected()
         
@@ -334,6 +337,8 @@ def handle_events():
                     spectate_button.inactivate()
                 
             else:
+                update_player_data()
+                
                 if not spectate_button.active:
                     spectate_button.activate()
                 
@@ -350,6 +355,18 @@ def handle_events():
         
         if gamestate.hosting:
             versusserver.server.Pump()
+
+def update_player_data():
+    global player_status_ui_dictionary
+    
+    local_player_position = versusclient.get_local_player_position()
+    player_status_ui = player_status_ui_dictionary[local_player_position]
+    
+    versusclient.listener.set_moveset(player_status_ui.get_moveset().name)
+    versusclient.listener.set_color(player_status_ui.get_color())
+    versusclient.listener.set_size(player_status_ui.get_size())
+    versusclient.listener.set_difficulty(player_status_ui.get_difficulty())
+    versusclient.listener.set_player_type(player_status_ui.get_player_type())
 
 def handle_local_player_ui_changes():
     """change ui if local or remote player states change"""
