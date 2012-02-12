@@ -1122,10 +1122,10 @@ class ActionDataFactory():
     
     def create_transition_action_data(self, action):
         last_transition_action_data = None
-        if action.last_action.action_state == PlayerStates.TRANSITION:
-            last_transition_action_data = self.create_transition_action_data(
-                action.last_action
-            )
+        # action.last_action.action_state == PlayerStates.TRANSITION:
+        #    last_transition_action_data = self.create_transition_action_data(
+        #        action.last_action
+        #    )
         
         return_data = TransitionActionData(
             PlayerStates.TRANSITION,

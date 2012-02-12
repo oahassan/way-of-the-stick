@@ -28,7 +28,7 @@ from particles import RunSmoke, JumpSmoke, FallSmoke
 from physics import Orientations
 import record
 
-gamestate.stage = stage.load_default_stage()
+gamestate.stage = stage.load_from_JSON("./stages/mountain.stg")#stage.load_default_stage()
 step_number = 0
 SIMULATION_FPS = 100
 

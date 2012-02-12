@@ -61,9 +61,9 @@ class NetworkPlayer(player.Player):
             action.set_player_state(self)
         
         elif action_state == PlayerStates.TRANSITION:
-            
-            action = self.create_transition(action_data)
-            action.set_player_state(self)
+            pass
+            #action = self.create_transition(action_data)
+            #action.set_player_state(self)
         
         elif action_state == PlayerStates.JUMPING:
             player.jump_timer = action_data.timer

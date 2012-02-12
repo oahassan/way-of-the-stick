@@ -75,7 +75,7 @@ class Action():
     def get_previous_action(self, action):
         
         if action.action_state == PlayerStates.TRANSITION:
-            return self.get_previous_action(action.last_action)
+            return action.last_action
         else:
             return action
     

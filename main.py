@@ -110,7 +110,6 @@ if __name__ == "__main__":
                     versusmode.init()
                     
                 versusmode.handle_events()
-                wotsrendering.flush()
             elif gamestate.mode == gamestate.Modes.SETTINGSMODE:
                 volume.handle_events()
             elif gamestate.mode == gamestate.Modes.MOVEBUILDER:
@@ -153,6 +152,7 @@ if __name__ == "__main__":
             if gamestate.drawing_mode == gamestate.DrawingModes.UPDATE_ALL:
                 pygame.display.flip()
             elif gamestate.drawing_mode == gamestate.DrawingModes.DIRTY_RECTS:
+                wotsrendering.flush()
                 gamestate.update_screen()
         
             gamestate.clock.tick(gamestate.frame_rate)
