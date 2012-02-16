@@ -7,7 +7,7 @@ import splash
 
 class MenuButton(button.TextButton):
     def __init__(self, text, gamestate_mode, font_size=32):
-        button.TextButton.__init__(self, text, font_size)
+        button.TextButton.__init__(self, text, font_size, "osaka-re.ttf")
         self.gamestate_mode = gamestate_mode
     
     def handle_select(self):

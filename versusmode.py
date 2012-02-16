@@ -14,6 +14,7 @@ import mathfuncs
 import math
 import settingsdata
 import versusrendering
+import wotsrendering
 from wotsfx import ClashEffect, HitEffect, TrailEffect
 from versusmodeui import PlayerHealth, AttackList, PAUSE_MENU_WIDTH, PAUSE_MENU_HEIGHT
 from simulation import MatchSimulation
@@ -198,6 +199,7 @@ class VersusModeState():
         self.reset_GUI_variables()
         self.flush_recording()
         self.initialized = False
+        wotsrendering.flush()
     
     def flush_recording(self):
         if self.recording_indicator:
@@ -451,28 +453,28 @@ class VersusModeState():
         self.command_label = AttackLabel("", [])
         self.command_label.key_combination_label.set_position((20,200))
         
-        self.ready_label = button.Label((0,0),'READY...',(0,0,255),80)
+        self.ready_label = button.Label((0,0),'READY...',(0,0,255),120)
         ready_label_position = (
             (gamestate._WIDTH / 2) - (self.ready_label.width / 2),
             (gamestate._HEIGHT / 2) - (self.ready_label.height / 2)
         )
         self.ready_label.set_position(ready_label_position)
         
-        self.fight_label = button.Label((0,0),'FIGHT!',(0,0,255),80)
+        self.fight_label = button.Label((0,0),'FIGHT!',(0,0,255),120)
         fight_label_position = (
             (gamestate._WIDTH / 2) - (self.fight_label.width / 2),
             (gamestate._HEIGHT / 2) - (self.fight_label.height / 2)
         )
         self.fight_label.set_position(fight_label_position)
         
-        self.player1_wins_label = button.Label((0,0),'PLAYER 1 WINS!',(0,0,255),80)
+        self.player1_wins_label = button.Label((0,0),'PLAYER 1 WINS!',(0,0,255),100)
         player1_wins_label_position = (
             (gamestate._WIDTH / 2) - (self.player1_wins_label.width / 2), 
             (gamestate._HEIGHT / 2) - (self.player1_wins_label.height / 2)
         )
         self.player1_wins_label.set_position(player1_wins_label_position)
         
-        self.player2_wins_label = button.Label((0,0),'PLAYER 2 WINS!',(0,0,255),80)
+        self.player2_wins_label = button.Label((0,0),'PLAYER 2 WINS!',(0,0,255),100)
         player2_wins_label_position = (
             (gamestate._WIDTH / 2) - (self.player2_wins_label.width / 2),
             (gamestate._HEIGHT / 2) - (self.player2_wins_label.height / 2)

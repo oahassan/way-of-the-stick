@@ -87,9 +87,9 @@ stick_surface_position_delta = -.3
 stick_surface_path_count = 0
 stick_surface_current_delta = 0
 
-title_label = button.Label((50,50), "Way of the Stick", (255,255,255), 90)
+title_label = button.Label((50,50), "Way of the Stick", (255,255,255), 66, "NinjaLine.ttf")
 credits_label = button.Label((20, 550), "Powered by Pygame.", (255,255,255), 32)
-loading_label = button.Label((185, 50), "Loading...", (255,255,255), 90)
+loading_label = button.Label((185, 50), "Loading...", (255,255,255), 66, "NinjaLine.ttf")
 
 def draw_title_splash():
     title_label.draw(gamestate.screen)

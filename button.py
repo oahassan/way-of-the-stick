@@ -125,12 +125,12 @@ class ExitButton(Button):
 class TextButton(Button):
     TEXT_PADDING = 15
     
-    def __init__(self, text, font_size = 32):
+    def __init__(self, text, font_size = 32, font='osaka-re.ttf'):
         Button.__init__(self)
         text_pos = (self.position[0] + TextButton.TEXT_PADDING, \
                     self.position[1] + TextButton.TEXT_PADDING)
         
-        self.text = Label(text_pos, text, self.color, font_size)
+        self.text = Label(text_pos, text, self.color, font_size, font)
         
         self.add_child(self.text)
         
@@ -153,12 +153,12 @@ class TextButton(Button):
         pass
 
 class Label(wotsui.UIObjectBase):
-    def __init__(self, position, text, text_color, font_size=32):
+    def __init__(self, position, text, text_color, font_size=32, font='osaka-re.ttf'):
         wotsui.UIObjectBase.__init__(self)
         self.position = position
         self.text = text
         self.text_color = text_color
-        self.font = pygame.font.Font('freesansbold.ttf', font_size)
+        self.font = pygame.font.Font(font, font_size)
         text_dimensions = self.font.size(self.text)
         self.width = text_dimensions[0]
         self.height = text_dimensions[1]
