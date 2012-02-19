@@ -472,30 +472,33 @@ class PlayerRendererState():
 def draw_player_renderer_state(player_renderer_state, surface):
     
     for player_position in player_renderer_state.player_positions:
-        draw_player(
-            player_renderer_state.player_model_dictionary[player_position],
-            player_renderer_state.player_health_percentage_dictionary[player_position],
-            player_renderer_state.player_outline_color_dictionary[player_position],
-            player_renderer_state.player_health_color_dictionary[player_position],
-            surface
-        )
-        
         if gamestate.stage.draw_reflections:
             draw_reflection(
                 player_renderer_state.player_model_dictionary[player_position],
-                player_renderer_state.player_health_percentage_dictionary[player_position],
                 player_renderer_state.player_outline_color_dictionary[player_position],
                 player_renderer_state.player_health_color_dictionary[player_position],
+                10,
                 player_renderer_state.viewport_camera,
-                surface
+                surface,
+                gamestate.stage.floor_height
             )
+        
+        draw_player(
+            player_renderer_state.player_model_dictionary[player_position],
+            player_renderer_state.player_outline_color_dictionary[player_position],
+            player_renderer_state.player_health_color_dictionary[player_position],
+            10,
+            surface,
+            1
+        )
 
 def draw_player(
     model, 
-    health_percentage, 
     outline_color,
     health_color,
-    surface
+    line_thickness,
+    surface,
+    base_layer
 ):
     """draws the model to the screen"""
     
@@ -510,12 +513,12 @@ def draw_player(
     for name, point in model.points.iteritems():
         if name != PointNames.HEAD_TOP:
             #enclosing_rects.append(draw_outline_point(point, (0,0,0), surface))
-            draw_outline_point(point, (0,0,0), surface)
+            draw_outline_point(point, (0,0,0), line_thickness, surface, base_layer)
     
     for name, line in model.lines.iteritems():
         if name == LineNames.HEAD:
             #enclosing_rects.append(draw_outline_circle(line, (0,0,0), surface))
-            draw_outline_circle(line, (0,0,0), surface)
+            draw_outline_circle(line, (0,0,0), line_thickness, surface, base_layer)
         else:
             #if player.action.action_state == PlayerStates.FLOATING:
             #    outline_color = (255,0,0)
@@ -523,62 +526,66 @@ def draw_player(
             #    outline_color = (0,255,0)
                 
             #enclosing_rects.append(draw_outline_line(line, (0,0,0), surface))
-            draw_outline_line(line, (0,0,0), surface)
+            draw_outline_line(line, (0,0,0), line_thickness, surface, base_layer)
     
     #gamestate.new_dirty_rects.append(enclosing_rects[0].unionall(enclosing_rects))
     
     for name, point in model.points.iteritems():
         if name != PointNames.HEAD_TOP:
-            draw_outer_point(point, outline_color, surface)
+            draw_outer_point(point, outline_color, line_thickness, surface, base_layer)
     
     for name, line in model.lines.iteritems():
         if name == LineNames.HEAD:
-            draw_outer_circle(line, outline_color, surface)
+            draw_outer_circle(line, outline_color, line_thickness, surface, base_layer)
         else:
-            draw_outer_line(line, outline_color, surface)
+            draw_outer_line(line, outline_color, line_thickness, surface, base_layer)
     
     for name, point in model.points.iteritems():
         if name != PointNames.HEAD_TOP:
             draw_inner_point(
                 point,
                 health_color,
-                surface
+                line_thickness,
+                surface, 
+                base_layer
             )
     
     for name, line in model.lines.iteritems():
         if name == LineNames.HEAD:
-            draw_inner_circle(line, health_color, surface)
+            draw_inner_circle(line, health_color, line_thickness, surface, base_layer)
         else:
             draw_health_line(
                 line,
                 health_color,
-                surface
+                line_thickness,
+                surface, 
+                base_layer
             )
 
-def draw_health_line(line, health_color, surface):
+def draw_health_line(line, health_color, line_thickness, surface, base_layer):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
     wotsrendering.queue_line(
-        2,
+        base_layer + 1,
         surface,
         health_color,
         point1,
         point2,
-        int(10)
+        line_thickness
     )
 
-def draw_outline_line(line, color, surface):
+def draw_outline_line(line, color, line_thickness, surface, base_layer):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
     wotsrendering.queue_line(
-        1,
+        base_layer,
         surface,
         color,
         point1,
         point2,
-        int(18)
+        line_thickness + int(.8 * line_thickness)
     )
     
     top_left = map(min, zip(point1, point2))
@@ -586,116 +593,123 @@ def draw_outline_line(line, color, surface):
     
     return pygame.Rect(top_left, (bottom_right[0] - top_left[0], bottom_right[1] - top_left[1]))
 
-def draw_outer_line(line, color, surface):
+def draw_outer_line(line, color, line_thickness, surface, base_layer):
     point1 = line.endPoint1.pixel_pos()
     point2 = line.endPoint2.pixel_pos()
     
     wotsrendering.queue_line(
-        1,
+        base_layer,
         surface,
         color,
         point1,
         point2,
-        int(14)
+        line_thickness + int(.4 * line_thickness)
     )
 
-def draw_outline_circle(circle, color, surface):
+def draw_outline_circle(circle, color, line_thickness, surface, base_layer):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
+    outline_width = int(.2 * line_thickness)
     
     wotsrendering.queue_circle(
-        1,
+        base_layer,
         surface,
         color,
         (int(pos[0]), int(pos[1])),
-        int(radius) + 2
+        int(radius) + outline_width
     )
     
     return pygame.Rect(
-        (pos[0] - radius - 2, pos[1] - radius - 2), 
-        (2 * (radius + 2), 2 * (radius + 2))
+        (pos[0] - radius - outline_width, pos[1] - radius - outline_width), 
+        (2 * (radius + outline_width), 2 * (radius + outline_width))
     )
 
-def draw_outer_circle(circle, color, surface):
+def draw_outer_circle(circle, color, line_thickness, surface, base_layer):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
     
     wotsrendering.queue_circle(
-        1,
+        base_layer,
         surface,
         color,
         (int(pos[0]), int(pos[1])),
         int(radius)
     )
 
-def draw_inner_circle(circle, color, surface):
+def draw_inner_circle(circle, color, line_thickness, surface, base_layer):
     radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, \
                                       circle.endPoint2.pos))
     pos = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
+    outline_width = int(.2 * line_thickness)
     
     if radius <= 2:
         radius = 3
     
     wotsrendering.queue_circle(
-        2,
+        base_layer + 1,
         surface,
         color,
         (int(pos[0]), int(pos[1])),
-        int(radius - 2)
+        int(radius - outline_width)
     )
 
 
-def draw_outline_point(point, color, surface):
+def draw_outline_point(point, color, line_thickness, surface, base_layer):
     position = point.pixel_pos()
+    radius = (line_thickness + int(.8 * line_thickness)) / 2
     
     wotsrendering.queue_circle(
-        1,
+        base_layer,
         surface,
         color,
         position,
-        int(9)
+        radius
     )
     
     return pygame.Rect(
-        (position[0] - 9, position[1] - 9), 
-        (18, 18)
+        (position[0] - radius, position[1] - radius), 
+        (2 * radius, 2 * radius)
     )
 
-def draw_outer_point(point, color, surface):
+def draw_outer_point(point, color, line_thickness, surface, base_layer):
     position = point.pixel_pos()
     
+    radius =  (line_thickness +  int(.4 * line_thickness)) / 2
+    
     wotsrendering.queue_circle(
-        1,
+        base_layer,
         surface,
         color,
         position,
-        int(7)
+        radius
     )
 
-def draw_inner_point(point, color, surface):
+def draw_inner_point(point, color, line_thickness, surface, base_layer):
     """Draws a point on a surface
     
     surface: the pygame surface to draw the point on"""
     
     position = point.pixel_pos()
+    radius = line_thickness / 2
     
     wotsrendering.queue_circle(
-        2,
+        base_layer + 1,
         surface,
         color,
         position,
-        int(5)
+        radius
     )
 
 def draw_reflection(
     model,
-    health_percentage,
     outline_color,
     health_color,
+    line_thickness,
     camera,
-    surface
+    surface,
+    floor_height
 ):
     """draws the reflection of the player on the given surface"""
 
@@ -703,20 +717,24 @@ def draw_reflection(
     previous_position = (model.position[0], model.position[1])
     
     if model.orientation == Orientations.FACING_RIGHT:
-        model.move_model((8,8))
+        model.move_model((line_thickness, line_thickness))
     else:
-        model.move_model((player_rect.width - 8, 8))
+        model.move_model((player_rect.width - line_thickness, line_thickness))
     
     #create a surface to perform the reflection on that tightly surounds the player
-    reflection_surface = pygame.Surface((player_rect.width, player_rect.height))
+    reflection_surface = pygame.Surface(
+        (player_rect.width + int(line_thickness), 
+        player_rect.height + int(line_thickness))
+    )
     reflection_surface.fill((1,234,25))
     reflection_surface.set_colorkey((1,234,25))
     draw_player(
         model,
-        health_percentage,
         outline_color,
         health_color,
-        reflection_surface
+        line_thickness,
+        reflection_surface,
+        -3
     )
     
     def reflection_transform(surface, reflection_surface, player_rect, camera):
@@ -728,13 +746,13 @@ def draw_reflection(
                 max(int(
                     player_rect.width * 
                     player_rect.bottom / 
-                    (gamestate.stage.floor_height - camera.viewport_position[1]) /
+                    (floor_height - camera.viewport_position[1]) /
                     camera.get_viewport_scale()
                 ), 10),
                 max(int(
                     (.75 * player_rect.height) *
                     player_rect.bottom /
-                    (gamestate.stage.floor_height - camera.viewport_position[1]) /
+                    (floor_height - camera.viewport_position[1]) /
                     camera.get_viewport_scale()
                 ), 10)
             )
@@ -742,11 +760,11 @@ def draw_reflection(
         reflection_surface.set_alpha(150)
         
         reflection_position = (
-            player_rect.left,
-            ((gamestate.stage.floor_height- 3) - camera.viewport_position[1]) * camera.get_viewport_scale()
+            player_rect.center[0] - (player_rect.width / 2),
+            ((floor_height) - camera.viewport_position[1]) * camera.get_viewport_scale()
         )
         wotsrendering.queue_surface(
-            3, 
+            0, 
             surface, 
             reflection_surface, 
             reflection_position
@@ -758,7 +776,7 @@ def draw_reflection(
             )
         )
     wotsrendering.queue_rendering_function(
-        3, 
+        0, 
         reflection_transform, 
         (surface, reflection_surface, player_rect, camera)
     )

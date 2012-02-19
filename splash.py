@@ -7,6 +7,9 @@ import gamestate
 import wotsuievents
 import stick
 import mathfuncs
+import stage
+import wotsrendering
+import versusrendering
 
 model_points = {
     "leftknee":(327.0, 397.0),
@@ -37,68 +40,52 @@ def create_model():
     
     return model
 
-def draw_model(model, surface, color = (0,0,0)):
-    for name, point in model.points.iteritems():
-        if name != stick.PointNames.HEAD_TOP:
-            draw_outline_point(point, surface)
-    
-    for name, line in model.lines.iteritems():
-        if name == stick.LineNames.HEAD:
-            draw_outline_circle(line, surface)
-        else:
-            draw_outline_line(line, surface)
-    
-    for name, point in model.points.iteritems():
-        if name != stick.PointNames.HEAD_TOP:
-            draw_inner_point(point, surface, color)
-    
-    for name, line in model.lines.iteritems():
-        if name == stick.LineNames.HEAD:
-            draw_inner_circle(line, surface, color)
-        else:
-            draw_inner_line(line, surface, color)
-
-def draw_outline_line(line, surface):
-    pygame.draw.line(surface, (255,255,255), line.endPoint1.pixel_pos(), line.endPoint2.pixel_pos(), 40)
-    
-def draw_inner_line(line, surface, color):
-    pygame.draw.line(surface, color, line.endPoint1.pixel_pos(), line.endPoint2.pixel_pos(), 30)
-
-def draw_outline_circle(circle, surface):
-    radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, circle.endPoint2.pos))
-    position = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
-    
-    pygame.draw.circle(surface, (255, 255, 255), (int(position[0]), int(position[1])), int(radius))
-
-def draw_inner_circle(circle, surface, color):
-    radius = (.5 * mathfuncs.distance(circle.endPoint1.pos, circle.endPoint2.pos))
-    position = mathfuncs.midpoint(circle.endPoint1.pos, circle.endPoint2.pos)
-    
-    pygame.draw.circle(surface, color, (int(position[0]), int(position[1])), int(radius) - 5)
-
-def draw_outline_point(point, surface):
-    pygame.draw.circle(surface, (255,255,255), point.pixel_pos(), 20)
-
-def draw_inner_point(point, surface, color):
-    pygame.draw.circle(surface, color, point.pixel_pos(), 15)
-
 model = create_model()
 stick_surface_position_delta = -.3
 stick_surface_path_count = 0
 stick_surface_current_delta = 0
+camera = versusrendering.ViewportCamera(800,600,800,600)
 
-title_label = button.Label((50,50), "Way of the Stick", (255,255,255), 66, "NinjaLine.ttf")
+title_label = button.Label((50,50), "Way of the Stick", (255,255,255), 82)#, "NinjaLine.ttf")
 credits_label = button.Label((20, 550), "Powered by Pygame.", (255,255,255), 32)
-loading_label = button.Label((185, 50), "Loading...", (255,255,255), 66, "NinjaLine.ttf")
+loading_label = button.Label((185, 50), "Loading...", (255,255,255), 82)#, "NinjaLine.ttf")
+
+def draw_bkg_and_stick():
+    ground_surface = stage.draw_ground(800, 200)
+    gamestate.screen.fill((0,0,0), ((0,450),(800,250)))
+    gamestate.screen.fill((0,0,0), ((0,0),(800,450)))
+    gamestate.screen.blit(ground_surface, (0, 450))
+    versusrendering.draw_reflection(
+        model,
+        (255,255,255),
+        (0,0,0),
+        30,
+        camera,
+        gamestate.screen,
+        500
+    )
+    versusrendering.draw_player(
+        model, 
+        (255,255,255),
+        (0,0,0),
+        30,
+        gamestate.screen,
+        1)
+    
+    wotsrendering.flush()
 
 def draw_title_splash():
+    
+    draw_bkg_and_stick()
+    
     title_label.draw(gamestate.screen)
     credits_label.draw(gamestate.screen)
-    draw_model(model, gamestate.screen)
 
 def draw_loading_splash():
+    draw_bkg_and_stick()
+    
     loading_label.draw(gamestate.screen)
-    draw_model(model, gamestate.screen)
+    
     pygame.display.flip()
 
 def handle_events():

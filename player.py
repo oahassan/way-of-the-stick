@@ -467,10 +467,10 @@ class Player():
                     (mathfuncs.distance(
                         current_relative_position,
                         previous_relative_position
-                    ) + self.get_extension_damage(
+                    ) + (.0 * self.get_extension_damage(
                         point_name,
                         current_point_positions_dictionary
-                    )) * self.get_damage_growth_rate()
+                    ))) * self.get_damage_growth_rate()
                 )
             
             self.point_name_to_point_damage[point_name] += additional_damage

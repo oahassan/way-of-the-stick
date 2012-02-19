@@ -186,7 +186,7 @@ def load_default_stage():
             (-50, 1127),
             1900,
             20,
-            draw_ground(1900),
+            draw_ground(1900, 100),
             -1
         )
     )
@@ -213,7 +213,7 @@ def load_play_tool_stage():
             (-50, 1127),
             1900,
             20,
-            draw_ground(1900),
+            draw_ground(1900, 100),
             -1
         )
     )
@@ -226,13 +226,13 @@ def create_background():
     
     return background_surface
 
-def draw_ground(width):
+def draw_ground(width, start_color):
     ground_surface = pygame.Surface((width, 20))
     
     for i in range(20):
         pygame.draw.line(
             ground_surface,
-            (int(100 * (20 - i)/20), int(100 * (20 - i)/20), int(100 * (20 - i)/20)),
+            (int(start_color * (20 - i)/20), int(start_color * (20 - i)/20), int(start_color * (20 - i)/20)),
             (0, i),
             (width, i),
             3,

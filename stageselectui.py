@@ -2,7 +2,8 @@ import copy
 
 import pygame
 
-import splash
+import versusrendering
+import wotsrendering
 import wotsuievents
 import wotsuicontainers
 import gamestate
@@ -23,8 +24,9 @@ class SelectStageBackground():
         self.set_point_positions(player_data, PlayerPositions.PLAYER1, player1_model)
         self.set_point_positions(player_data, PlayerPositions.PLAYER2, player2_model)
         
-        splash.draw_model(player1_model, self.surface, player_data[0].color)
-        splash.draw_model(player2_model, self.surface, player_data[1].color)
+        versusrendering.draw_player(player1_model, (255,255,255), player_data[0].color, 30, self.surface, 1)
+        versusrendering.draw_player(player2_model, (255,255,255), player_data[1].color, 30, self.surface, 1)
+        wotsrendering.flush()
         
         self.surface.set_alpha(100)
     
