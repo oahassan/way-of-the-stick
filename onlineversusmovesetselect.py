@@ -228,13 +228,19 @@ def handle_events():
                 if versusclient.listener.player_positions_ready_dictionary[player_position]:
                     player_status_ui.set_player_ready(True)
                     
-                    if player_position in versusclient.get_remote_player_positions():
+                    if (player_position in versusclient.get_remote_player_positions() and
+                    not versusclient.is_dummy(player_position)):
                         player_status_ui.set_player_state_label_text("Player Ready")
                 else:
                     player_status_ui.set_player_ready(False)
                     
-                    if player_position in versusclient.get_remote_player_positions():
+                    if (player_position in versusclient.get_remote_player_positions() and
+                    not versusclient.is_dummy(player_position)):
                         player_status_ui.set_player_state_label_text("Preparing...")
+        
+        if versusclient.dummies_only() and start_match_label.active == False:
+            start_match_label.activate()
+            
         
         if local_player_container_created:
             players_ready = True
@@ -359,14 +365,16 @@ def handle_events():
 def update_player_data():
     global player_status_ui_dictionary
     
-    local_player_position = versusclient.get_local_player_position()
-    player_status_ui = player_status_ui_dictionary[local_player_position]
-    
-    versusclient.listener.set_moveset(player_status_ui.get_moveset().name)
-    versusclient.listener.set_color(player_status_ui.get_color())
-    versusclient.listener.set_size(player_status_ui.get_size())
-    versusclient.listener.set_difficulty(player_status_ui.get_difficulty())
-    versusclient.listener.set_player_type(player_status_ui.get_player_type())
+    for player_position in player_status_ui_dictionary:
+        if (player_position == versusclient.get_local_player_position() or
+        versusclient.is_dummy(player_position)):
+            player_status_ui = player_status_ui_dictionary[player_position]
+            
+            versusclient.listener.set_moveset(player_status_ui.get_moveset().name, player_position)
+            versusclient.listener.set_color(player_status_ui.get_color(), player_position)
+            versusclient.listener.set_size(player_status_ui.get_size(), player_position)
+            versusclient.listener.set_difficulty(player_status_ui.get_difficulty(), player_position)
+            versusclient.listener.set_player_type(player_status_ui.get_player_type(), player_position)
 
 def handle_local_player_ui_changes():
     """change ui if local or remote player states change"""
@@ -413,15 +421,22 @@ def handle_remote_player_ui_changes():
             remote_player_id = versusclient.get_player_id_at_position(player_position)
             remote_player_nickname = versusclient.get_player_nickname(remote_player_id)
             
-            new_ui_position = \
-                get_remote_player_state_label_position(player_position)
+            if versusclient.is_dummy(player_position):
+                new_ui_position = \
+                get_local_player_setup_container_position(player_position)
             
-            player_status_ui_dictionary[player_position] = \
-                RemotePlayerStateLabel(
-                    new_ui_position,
-                    remote_player_id,
-                    remote_player_nickname
-                )
+                player_status_ui_dictionary[player_position] = \
+                    LocalPlayerSetupContainer(new_ui_position, get_playable_movesets())
+            else:
+                new_ui_position = \
+                    get_remote_player_state_label_position(player_position)
+                
+                player_status_ui_dictionary[player_position] = \
+                    RemotePlayerStateLabel(
+                        new_ui_position,
+                        remote_player_id,
+                        remote_player_nickname
+                    )
             
             assigned_positions.append(player_position)
 

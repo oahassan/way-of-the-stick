@@ -29,6 +29,7 @@ class ClientConnectionListener(EndPoint):
     def __init__(self):
         EndPoint.__init__(self, local_address=("",0))
         self.connection_status = ConnectionStatus.DISCONNECTED
+        self.dummy_ids = []
         self.player_positions = {
             PlayerPositions.PLAYER1 : None, 
             PlayerPositions.PLAYER2 : None
@@ -133,47 +134,72 @@ class ClientConnectionListener(EndPoint):
         
         self.Send(data)
     
-    def set_moveset(self, moveset_name):
+    def set_moveset(self, moveset_name, player_position = None):
+        if player_position == None:
+            player_position = get_local_player_position()
+        elif player_position != get_local_player_position() and self.player_positions[player_position] not in self.dummy_ids:
+            return
+        
         data = {
             DataKeys.ACTION : PlayerSelectActions.SET_MOVESET,
             PlayerDataKeys.MOVESET_NAME : moveset_name,
-            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+            PlayerDataKeys.PLAYER_POSITION : player_position
         }
         
         self.Send(data)
     
-    def set_color(self, color):
+    def set_color(self, color, player_position = None):
+        if player_position == None:
+            player_position = get_local_player_position()
+        elif player_position != get_local_player_position() and self.player_positions[player_position] not in self.dummy_ids:
+            return
+        
         data = {
             DataKeys.ACTION : PlayerSelectActions.SET_COLOR,
             PlayerDataKeys.COLOR : color,
-            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+            PlayerDataKeys.PLAYER_POSITION : player_position
         }
         
         self.Send(data)
     
-    def set_size(self, size):
+    def set_size(self, size, player_position = None):
+        if player_position == None:
+            player_position = get_local_player_position()
+        elif player_position != get_local_player_position() and self.player_positions[player_position] not in self.dummy_ids:
+            return
+        
         data = {
             DataKeys.ACTION : PlayerSelectActions.SET_SIZE,
             PlayerDataKeys.SIZE : size,
-            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+            PlayerDataKeys.PLAYER_POSITION : player_position
         }
         
         self.Send(data)
     
-    def set_player_type(self, player_type):
+    def set_player_type(self, player_type, player_position = None):
+        if player_position == None:
+            player_position = get_local_player_position()
+        elif player_position != get_local_player_position() and self.player_positions[player_position] not in self.dummy_ids:
+            return
+        
         data = {
             DataKeys.ACTION : PlayerSelectActions.SET_PLAYER_TYPE,
             PlayerDataKeys.PLAYER_TYPE : player_type,
-            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+            PlayerDataKeys.PLAYER_POSITION : player_position
         }
         
         self.Send(data)
     
-    def set_difficulty(self, difficulty):
+    def set_difficulty(self, difficulty, player_position = None):
+        if player_position == None:
+            player_position = get_local_player_position()
+        elif player_position != get_local_player_position() and self.player_positions[player_position] not in self.dummy_ids:
+            return
+        
         data = {
             DataKeys.ACTION : PlayerSelectActions.SET_DIFFICULTY,
             PlayerDataKeys.DIFFICULTY : difficulty,
-            PlayerDataKeys.PLAYER_POSITION : get_local_player_position()
+            PlayerDataKeys.PLAYER_POSITION : player_position
         }
         
         self.Send(data)
@@ -262,6 +288,13 @@ class ClientConnectionListener(EndPoint):
         #print("local client")
         #print(data)
     
+    def Network_add_dummy(self, data):
+        dummy_id = data[DataKeys.PLAYER_ID]
+        self.player_positions[data[DataKeys.PLAYER_POSITION]] = dummy_id
+        
+        if dummy_id not in self.dummy_ids:
+            self.dummy_ids.append(dummy_id)
+    
     def Network_player_joined_match(self, data):
         player_position = data[DataKeys.PLAYER_POSITION]
         id_of_player_at_position = data[DataKeys.PLAYER_ID]
@@ -304,6 +337,12 @@ class ClientConnectionListener(EndPoint):
         self.player_movesets = data[DataKeys.PLAYER_MOVESETS]
         
         self.server_mode = data[DataKeys.SERVER_MODE]
+        
+        for dummy_position, dummy_id in data[DataKeys.DUMMIES].iteritems():
+            self.player_positions[dummy_position] = dummy_id
+            
+            if dummy_id not in self.dummy_ids:
+                self.dummy_ids.append(dummy_id)
     
     def Network_match_full(self, data):
         pass
@@ -405,7 +444,17 @@ def get_player_id_at_position(player_position):
     return listener.player_positions[player_position]
 
 def get_player_nickname(player_id):
-    return listener.player_nicknames[player_id]
+    if player_id in listener.player_nicknames:
+        return listener.player_nicknames[player_id]
+    else:
+        return "Mystery Stick"
+
+def is_dummy(player_position):
+    return listener.player_positions[player_position] in listener.dummy_ids
+
+def dummies_only():
+    return (listener.player_positions[PlayerPositions.PLAYER1] in listener.dummy_ids and
+    listener.player_positions[PlayerPositions.PLAYER2] in listener.dummy_ids)
 
 def connected():
     if listener == None:

@@ -29,7 +29,7 @@ from particles import RunSmoke, JumpSmoke, FallSmoke
 from physics import Orientations
 import record
 
-gamestate.stage = stage.load_from_JSON("./stages/mountain.stg")#stage.load_default_stage()
+gamestate.stage = stage.load_from_JSON("./stages/mountain.stg")
 step_number = 0
 SIMULATION_FPS = 100
 
@@ -986,6 +986,10 @@ class PlayerData():
         self.size = size
         self.color = color
         self.difficulty = difficulty
+    
+    def __pack__(self):
+        return (self.player_position, self.player_type, self.mvoeset, 
+        self.size, self.color, self.difficulty)
 
 def create_player(player_data):   
     player = None

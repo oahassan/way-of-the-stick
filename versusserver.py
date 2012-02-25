@@ -4,7 +4,8 @@ import socket
 from functools import reduce
 from wotsprot.udpserver import Server
 from wotsprot.channel import Channel
-from enumerations import PlayerPositions, PlayerDataKeys
+from enumerations import PlayerPositions, PlayerDataKeys, PlayerTypes, Difficulties, PlayerSelectActions
+import versusmode
 
 class DataKeys:
     ACTION = "action"
@@ -28,6 +29,7 @@ class DataKeys:
     DIFFICULTY = 18
     PLAYER_TYPE = 19
     SIZE = 20
+    DUMMIES = 21
     
 
 class ClientActions:
@@ -43,17 +45,22 @@ class ClientActions:
     UPDATE_SIMULATION_STATE = "update_simulation_state"
     UPDATE_INPUT_STATE = "update_input_state"
     RECEIVE_CHAT_MESSAGE = "receive_chat_message"
-    
+    ADD_DUMMY = "add_dummy"
 
 class ServerModes:
     MOVESET_SELECT = "moveset select"
     LOADING_MATCH_DATA = "loading match data"
     MATCH = "match"
 
+class ChannelTypes:
+    DUMMY = 0
+    CLIENT = 1
+
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
         Channel.__init__(self, *args, **kwargs)
         
+        self.channel_type = ChannelTypes.CLIENT
         self.nickname = self._server.generate_nickname()
         self.postion = PlayerPositions.NONE
         self.player_id = id(self)
@@ -159,27 +166,27 @@ class ClientChannel(Channel):
         self._server.send_to_all(data)
     
     def Network_set_moveset(self, data):
-        self.moveset_name = data[PlayerDataKeys.MOVESET_NAME]
+        self._server.player_data[data[DataKeys.PLAYER_POSITION]].moveset = data[PlayerDataKeys.MOVESET_NAME]
         
         self._server.send_to_all(data)
     
     def Network_set_color(self, data):
-        self.color = data[PlayerDataKeys.COLOR]
+        self._server.player_data[data[DataKeys.PLAYER_POSITION]].color = data[PlayerDataKeys.COLOR]
         
         self._server.send_to_all(data)
     
     def Network_set_difficulty(self, data):
-        self.difficulty = data[PlayerDataKeys.DIFFICULTY]
+        self._server.player_data[data[DataKeys.PLAYER_POSITION]].difficulty = data[PlayerDataKeys.DIFFICULTY]
         
         self._server.send_to_all(data)
     
     def Network_set_player_type(self, data):
-        self.player_type = data[PlayerDataKeys.PLAYER_TYPE]
+        self._server.player_data[data[DataKeys.PLAYER_POSITION]].player_type = data[PlayerDataKeys.PLAYER_TYPE]
         
         self._server.send_to_all(data)
     
     def Network_set_size(self, data):
-        self.size = data[PlayerDataKeys.SIZE]
+        self._server.player_data[data[DataKeys.PLAYER_POSITION]].size = data[PlayerDataKeys.SIZE]
         
         self._server.send_to_all(data)
     
@@ -187,7 +194,7 @@ class ClientChannel(Channel):
         self._server.send_to_all(data)
     
     def Network_set_game_mode(self, data):
-        if self._server.client_is_player(self):
+        if self._server.client_is_player(self) or self._server.dummies_only():
             server_mode = data[DataKeys.SERVER_MODE]
             
             self._server.mode = server_mode
@@ -198,24 +205,60 @@ class ClientChannel(Channel):
         print("deleting player: " + self.nickname)
         self._server.del_player(self)
 
+class DummyChannel():
+    def __init__(self, player_data, server):
+        self._server = server
+        self.channel_type = ChannelTypes.DUMMY
+        self.nickname = self._server.generate_nickname()
+        self.position = player_data.player_position
+        self.player_id = id(self)
+        self.size = player_data.size
+        self.moveset = player_data.moveset
+        self.player_type = player_data.player_type
+        self.difficulty = player_data.difficulty
+        self.color = player_data.color
+
 class WotsServer(Server):
     channelClass = ClientChannel
     
     def __init__(self, *args, **kwargs):
         Server.__init__(self, *args, **kwargs)
         self.player_name_count = 0
-        self.player_positions = {
-            PlayerPositions.PLAYER1 : None, 
-            PlayerPositions.PLAYER2 : None
-        }
         self.player_positions_ready = {
             PlayerPositions.PLAYER1 : False,
             PlayerPositions.PLAYER2 : False
         }
         self.player_movesets = {
-            PlayerPositions.PLAYER1 : None, 
-            PlayerPositions.PLAYER2 : None
+            PlayerPositions.PLAYER1 : "one attack", 
+            PlayerPositions.PLAYER2 : "one attack"
         }
+        self.player_data = {
+            PlayerPositions.PLAYER1 : versusmode.PlayerData(
+                PlayerPositions.PLAYER1,
+                PlayerTypes.BOT,
+                "one attack",
+                5,
+                (255,0,0),
+                Difficulties.CHALLENGE
+            ), 
+            PlayerPositions.PLAYER2 : versusmode.PlayerData(
+                PlayerPositions.PLAYER2,
+                PlayerTypes.BOT,
+                "one attack",
+                5,
+                (0,0,255),
+                Difficulties.CHALLENGE
+            )
+        }
+        self.dummies = {
+            PlayerPositions.PLAYER1 : DummyChannel(self.player_data[PlayerPositions.PLAYER1], self), 
+            PlayerPositions.PLAYER2 : DummyChannel(self.player_data[PlayerPositions.PLAYER2], self)
+        }
+        self.player_positions = {
+            PlayerPositions.PLAYER1 : self.dummies[PlayerPositions.PLAYER1], 
+            PlayerPositions.PLAYER2 : self.dummies[PlayerPositions.PLAYER2]
+        }
+        
         #indicates that point position data has been received by players in the match
         #this ensures that models are ready to be drawn at each client.
         self.all_movesets_loaded_indicators = {
@@ -235,6 +278,14 @@ class WotsServer(Server):
         self.assign_id(channel)
         self.add_spectator(channel)
         self.sync_client_to_server(channel)
+    
+    def dummies_only(self):
+        return_indicator = True
+        
+        for dummy in self.dummies.values():
+            return_indicator = return_indicator and dummy in self.player_positions.values()
+        
+        return return_indicator
     
     def close(self):
         """remove all players and close the sever's socket"""
@@ -271,6 +322,32 @@ class WotsServer(Server):
                 player_positions[position] = None
             else:
                 player_positions[position] = player.player_id
+                
+                client.Send({
+                    DataKeys.ACTION : PlayerSelectActions.SET_COLOR,
+                    PlayerDataKeys.COLOR : player.color,
+                    PlayerDataKeys.PLAYER_POSITION : player.position
+                })
+                client.Send({
+                    DataKeys.ACTION : PlayerSelectActions.SET_SIZE,
+                    PlayerDataKeys.SIZE : player.size,
+                    PlayerDataKeys.PLAYER_POSITION : player.position
+                })
+                client.Send({
+                    DataKeys.ACTION : PlayerSelectActions.SET_DIFFICULTY,
+                    PlayerDataKeys.DIFFICULTY : player.difficulty,
+                    PlayerDataKeys.PLAYER_POSITION : player.position
+                })
+                client.Send({
+                    DataKeys.ACTION : PlayerSelectActions.SET_PLAYER_TYPE,
+                    PlayerDataKeys.PLAYER_TYPE : player.player_type,
+                    PlayerDataKeys.PLAYER_POSITION : player.position
+                })
+                client.Send({
+                    DataKeys.ACTION : PlayerSelectActions.SET_MOVESET,
+                    PlayerDataKeys.MOVESET_NAME : player.moveset,
+                    PlayerDataKeys.PLAYER_POSITION : player.position
+                })
         
         player_nicknames = {}
         
@@ -281,14 +358,18 @@ class WotsServer(Server):
             player_nicknames[spectator.player_id] = spectator.nickname
         
         data = {
-                DataKeys.ACTION : ClientActions.SYNC_TO_SERVER,
-                DataKeys.SPECTATORS : spectators,
-                DataKeys.PLAYER_POSITIONS : player_positions,
-                DataKeys.PLAYER_NICKNAMES : player_nicknames,
-                DataKeys.PLAYER_POSITIONS_READY : self.player_positions_ready,
-                DataKeys.PLAYER_MOVESETS : self.player_movesets,
-                DataKeys.SERVER_MODE : self.mode
+            DataKeys.ACTION : ClientActions.SYNC_TO_SERVER,
+            DataKeys.SPECTATORS : spectators,
+            DataKeys.PLAYER_POSITIONS : player_positions,
+            DataKeys.PLAYER_NICKNAMES : player_nicknames,
+            DataKeys.PLAYER_POSITIONS_READY : self.player_positions_ready,
+            DataKeys.PLAYER_MOVESETS : self.player_movesets,
+            DataKeys.SERVER_MODE : self.mode,
+            DataKeys.DUMMIES : { 
+                PlayerPositions.PLAYER1 : self.dummies[PlayerPositions.PLAYER1].player_id,
+                PlayerPositions.PLAYER2 : self.dummies[PlayerPositions.PLAYER2].player_id
             }
+        }
         
         client.Send(data)
     
@@ -331,12 +412,22 @@ class WotsServer(Server):
                 
                 break
         
-        data = \
-            {
-                DataKeys.ACTION : ClientActions.SPECTATOR_JOINED,
-                DataKeys.NICKNAME : spectator.nickname,
-                DataKeys.PLAYER_ID : spectator.player_id
-            }
+        data = {
+            DataKeys.ACTION : ClientActions.SPECTATOR_JOINED,
+            DataKeys.NICKNAME : spectator.nickname,
+            DataKeys.PLAYER_ID : spectator.player_id
+        }
+        
+        self.send_to_all(data)
+    
+    def add_dummy(self, player_position):
+        self.player_positions[player_position] = self.dummies[player_position]
+        
+        data = {
+            DataKeys.ACTION : ClientActions.ADD_DUMMY,
+            DataKeys.PLAYER_POSITION : player_position,
+            DataKeys.PLAYER_ID : self.dummies[player_position].id
+        }
         
         self.send_to_all(data)
     
@@ -347,14 +438,14 @@ class WotsServer(Server):
         player1 = self.player_positions[PlayerPositions.PLAYER1]
         player2 = self.player_positions[PlayerPositions.PLAYER2]
         
-        if player1 == None and not player == player2:
+        if player1.channel_type == ChannelTypes.DUMMY and not player == player2:
             self.player_positions[PlayerPositions.PLAYER1] = player
             self.players.append(player)
             self.spectators.remove(player)
             
             return PlayerPositions.PLAYER1
             
-        elif player2 == None and not player == player1:
+        elif player2.channel_type == ChannelTypes.DUMMY and not player == player1:
             self.player_positions[PlayerPositions.PLAYER2] = player
             self.players.append(player)
             self.spectators.remove(player)
@@ -376,11 +467,12 @@ class WotsServer(Server):
             self.player_positions[PlayerPositions.PLAYER1] = None
             self.player_positions_ready[PlayerPositions.PLAYER1] = False
             self.all_movesets_loaded_indicators[PlayerPositions.PLAYER1] = False
-            
+            self.add_dummy(PlayerPositions.PLAYER1)
         elif player == self.player_positions[PlayerPositions.PLAYER2]:
             self.player_positions[PlayerPositions.PLAYER2] = None
             self.player_positions_ready[PlayerPositions.PLAYER2] = False
             self.all_movesets_loaded_indicators[PlayerPositions.PLAYER2] = False
+            self.add_dummy(PlayerPositions.PLAYER2)
         
         if player in self.players:
             self.players.remove(player)

@@ -6,6 +6,7 @@ import versusserver
 import player
 import onlineversusmode
 import movesetdata
+import splash
 from versusmode import PlayerData
 from functools import reduce
 from enumerations import PlayerTypes, PlayerStates, PlayerPositions, PlayerDataKeys, PlayerSelectActions
@@ -58,11 +59,7 @@ def set_player_type(data):
 def set_moveset(data):
     global player_data
     
-    if (player_data[data[PlayerDataKeys.PLAYER_POSITION]].moveset == None
-    or player_data[data[PlayerDataKeys.PLAYER_POSITION]].moveset.name != data[PlayerDataKeys.MOVESET_NAME]):
-        player_data[data[PlayerDataKeys.PLAYER_POSITION]].moveset = movesetdata.get_moveset(
-            data[PlayerDataKeys.MOVESET_NAME]
-        )
+    player_data[data[PlayerDataKeys.PLAYER_POSITION]].moveset = data[PlayerDataKeys.MOVESET_NAME]
 
 def register_network_callbacks():
     versusclient.listener.register_callback(
@@ -105,12 +102,23 @@ def load():
     loading_match_label = button.Label((0, 0), LOADING_MATCH_TEXT, (255,255,255),40)
     loading_match_label.set_position(get_layout_label_pos())
     
+    splash.draw_loading_splash()
+    pygame.display.flip()
+    
     load_match_progress_timer = 0
     
+    #swap actual moveset with moveset name
+    for player_data_object in player_data.values():
+        player_data_object.moveset = movesetdata.get_moveset(player_data_object.moveset)
+    
+    onlineversusmode.init(player_data.values())
+    
     if versusclient.local_player_is_in_match():
-        onlineversusmode.init(player_data.values())
         
         versusclient.listener.send_all_movesets_loaded()
+    
+    elif versusclient.dummies_only():
+        versusclient.listener.start_match()
 
 def unload():
     global loading_match_label
@@ -127,16 +135,16 @@ def handle_events():
         load()
         loaded_indicator = True
     
-    loading_match_label.draw(gamestate.screen)
+    #loading_match_label.draw(gamestate.screen)
     
-    load_match_progress_timer += gamestate.clock.get_time()
+    #load_match_progress_timer += gamestate.clock.get_time()
     
-    if load_match_progress_timer > 3000:
-        loading_match_label.set_text(loading_match_label.text + ".")
-        load_match_progress_timer = 0
+    #if load_match_progress_timer > 3000:
+    #    loading_match_label.set_text(loading_match_label.text + ".")
+    #    load_match_progress_timer = 0
     
-    if loading_match_label.text == LOADING_MATCH_TEXT + "....":
-        loading_match_label.set_text(LOADING_MATCH_TEXT)
+    #if loading_match_label.text == LOADING_MATCH_TEXT + "....":
+    #    loading_match_label.set_text(LOADING_MATCH_TEXT)
     
     if versusclient.listener.server_mode == versusserver.ServerModes.MATCH:
         

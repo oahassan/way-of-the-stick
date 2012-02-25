@@ -205,6 +205,9 @@ class AINetworkPlayer(aiplayer.Bot, NetworkPlayer):
     def __init__(self, position, player_position):
         NetworkPlayer.__init__(self, position, player_position)
         aiplayer.Bot.__init__(self, position, player_position)
+    
+    def handle_events(self, enemy, time_passed):
+        NetworkPlayer.handle_events(self, time_passed)
 
 class OnlineVersusModeState(VersusModeState):
     def __init__(self):
@@ -285,8 +288,16 @@ class OnlineVersusModeState(VersusModeState):
         
         self.unregister_network_callbacks()
         
+        if versusclient.local_player_is_in_match() or versusclient.dummies_only():
+            versusclient.listener.end_match()
+            gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+        else:
+            #if you're a spectator go to the main menu
+            versusclient.listener.close()
+            versusclient.unload()
+            gamestate.mode = gamestate.Modes.MAINMENU
+        
         self.chatting = False
-        gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
     
     #def end_simulation(self):
     #    
@@ -335,6 +346,12 @@ class OnlineVersusModeState(VersusModeState):
                         if action == SimulationActionTypes.UPDATE_INPUT:
                             versusclient.listener.send_input_to_host(
                                 message
+                            )
+                elif versusclient.dummies_only():
+                    if gamestate.hosting:
+                        if action == SimulationActionTypes.GET_STATE:
+                            versusclient.listener.update_simulation_state(
+                                message[SimulationDataKeys.SIMULATION_STATE]
                             )
                 else:
                     pass #do nothing because this is a spectator
@@ -399,7 +416,8 @@ class OnlineVersusModeState(VersusModeState):
             
             if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
                 print("match exited")
-                self.exit()
+                if self.exiting == False and self.exit_indicator == False:
+                    self.exit()
                 
                 #This must be called here to make sure that the player states get set to None. If
                 #not a new match cannot be joined
@@ -412,7 +430,9 @@ class OnlineVersusModeState(VersusModeState):
             
         else:
             print("disconnected")
-            self.exit()
+            if self.exiting == False and self.exit_indicator == False:
+                self.exit()
+            
             #This must be called here to make sure that the player states get set to None. If
             #not a new match cannot be joined
             versusclient.clear_player_states()
@@ -446,15 +466,6 @@ class OnlineVersusModeState(VersusModeState):
 
     def handle_exit_events(self):
         VersusModeState.handle_exit_events(self)
-        
-        if self.exiting:
-            if versusclient.local_player_is_in_match():
-                versusclient.listener.end_match()
-            else:
-                #if you're a spectator go to the main menu
-                versusclient.listener.close()
-                versusclient.unload()
-                gamestate.mode = gamestate.Modes.MAINMENU
 
 local_state = OnlineVersusModeState()
 
@@ -476,7 +487,7 @@ def handle_events():
 def create_player(player_data):   
     
     if gamestate.hosting:
-        player = AINetworkPlayer(
+        player = aiplayer.Bot(
             (0, 0),
             player_data.player_position
         )

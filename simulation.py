@@ -1370,7 +1370,7 @@ class ServerSimulation(NetworkedSimulation):
                 else:
                     raise Exception("Invalid Action Type: " + str(action_type))
             
-            self.clock.tick(30)
+            self.clock.tick(100)
     
     def sync_to_client(self, match_time, player_position, keys_pressed):
         """replay the given number of steps with a client's inputs"""
@@ -1413,6 +1413,7 @@ class ClientSimulation(NetworkedSimulation):
                     )
                     
                     if self.player_position != PlayerPositions.NONE:
+                        print("broadcsting state")
                         if self.match_time % 120 == 0 and len(self.input_history) >= 1:
                             self.pipe_connection.send(
                                 {
@@ -1439,7 +1440,7 @@ class ClientSimulation(NetworkedSimulation):
                 else:
                     raise Exception("Invalid Action Type: " + str(action_type))
             
-            self.clock.tick(30)
+            self.clock.tick(60)
     
     def sync_to_server_state(self, server_simulation_state):
         #sync players to simulation state
