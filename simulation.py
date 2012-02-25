@@ -1334,7 +1334,7 @@ class ServerSimulation(NetworkedSimulation):
                 
                 if action_type == SimulationActionTypes.STOP or data == 'STOP':
                     raise Exception("Terminating Simulation Process!")
-                    
+                
                 elif action_type == SimulationActionTypes.STEP:
                     self.step(
                         data[SimulationDataKeys.KEYS_PRESSED], 
@@ -1355,7 +1355,10 @@ class ServerSimulation(NetworkedSimulation):
                                 SimulationDataKeys.SIMULATION_STATE : state
                             }
                         )
-                        
+                     
+                    for player in self.player_dictionary.values():
+                        player.clear_events() 
+                       
                 elif action_type == SimulationActionTypes.UPDATE_INPUT:
                     self.sync_to_client(
                         data[SimulationDataKeys.MATCH_TIME],
@@ -1412,6 +1415,9 @@ class ClientSimulation(NetworkedSimulation):
                         }
                     )
                     
+                    for player in self.player_dictionary.values():
+                        player.clear_events() 
+                    
                     if self.player_position != PlayerPositions.NONE:
                         print("broadcsting state")
                         if self.match_time % 120 == 0 and len(self.input_history) >= 1:
@@ -1440,7 +1446,7 @@ class ClientSimulation(NetworkedSimulation):
                 else:
                     raise Exception("Invalid Action Type: " + str(action_type))
             
-            self.clock.tick(60)
+            self.clock.tick(100)
     
     def sync_to_server_state(self, server_simulation_state):
         #sync players to simulation state
