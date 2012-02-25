@@ -150,8 +150,8 @@ def handle_events():
         
         elif start_match_label.selected:
             if start_match_label.contains(wotsuievents.mouse_pos):
-                versusclient.listener.load_match_data()
                 start_match_label.handle_deselected()
+                versusclient.listener.load_match_data()
         
         #TODO - inactivate join if selected and same for spectate
         elif join_match_button.selected:

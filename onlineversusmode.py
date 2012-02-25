@@ -5,6 +5,7 @@ import pygame
 import versusclient
 import versusserver
 import wotsuievents
+import wotsrendering
 import gamestate
 import player
 import humanplayer
@@ -284,13 +285,21 @@ class OnlineVersusModeState(VersusModeState):
             )
 
     def exit(self):
-        VersusModeState.exit(self)
+        
+        self.end_simulation()
+        self.cleanup_rendering_objects()
+        self.cleanup_match_state_variables()
+        self.reset_GUI_variables()
+        self.flush_recording()
+        self.initialized = False
+        
+        wotsrendering.flush()
         
         self.unregister_network_callbacks()
         
         if versusclient.local_player_is_in_match() or versusclient.dummies_only():
             versusclient.listener.end_match()
-            gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+            
         else:
             #if you're a spectator go to the main menu
             versusclient.listener.close()

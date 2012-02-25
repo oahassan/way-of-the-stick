@@ -199,6 +199,7 @@ class VersusModeState():
         self.reset_GUI_variables()
         self.flush_recording()
         self.initialized = False
+        gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
         wotsrendering.flush()
     
     def flush_recording(self):
@@ -570,7 +571,7 @@ class VersusModeState():
                 
                 if self.exit_button.contains(wotsuievents.mouse_pos):
                     self.exiting = True
-                    gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
+                    
                     self.exit()
 
     def clean_expired_effects(self):
