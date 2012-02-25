@@ -27,22 +27,16 @@ start_match_label = None
 player_type_select = None
 player_moveset_select = None
 remote_player_state = None
-ip_address_input = None
-connect_button = None
-connected = False
 join_match_button = None
 local_player_container_created = False
 assigned_positions = None
 spectate_button = None
 local_player_position = None
 
-player_status_ui_dictionary = \
-    {
-        versusserver.PlayerPositions.PLAYER1 : None,
-        versusserver.PlayerPositions.PLAYER2 : None
-    }
-
-connecting_alert_box = None
+player_status_ui_dictionary = {
+    versusserver.PlayerPositions.PLAYER1 : None,
+    versusserver.PlayerPositions.PLAYER2 : None
+}
 
 def get_playable_movesets():
     movesets = movesetdata.get_movesets()
@@ -54,16 +48,11 @@ def load():
     global loaded
     global exit_button
     global start_match_label
-    global ip_address_input
-    global connect_button
-    global connected
     global player_status_ui_dictionary
     global join_match_button
     global assigned_positions
     global spectate_button
-    global connecting_alert_box
     
-    connecting_alert_box = ConnectingAlertBox()
     exit_button = button.ExitButton()
     loaded = True
     start_match_label = movesetselectui.MovesetActionLabel((300, 550), "Start Match!")
@@ -73,14 +62,6 @@ def load():
     
     init_player_status_ui_dictionary()
     
-    ip_address_input = \
-        wotsuicontainers.TextEntryBox(
-            prompt_text = 'Enter ip address: ',
-            position = (10,10),
-            max_length = 15,
-            text_color = (255, 255, 255)
-        )
-    
     join_match_button = button.TextButton("Join Match")
     join_match_button.set_position((360, 50))
     join_match_button.inactivate()
@@ -88,54 +69,31 @@ def load():
     spectate_button = button.TextButton("Spectate")
     spectate_button.set_position((600, 50))
     spectate_button.inactivate()
-    
-    connect_button = button.TextButton("Connect to server")
-    connect_button.set_position((10, 50))
-    connect_button.inactivate()
-    
-    if gamestate.hosting:
-        versusserver.start_lan_server()
-        versusclient.connect_to_host(versusserver.get_lan_ip_address())
-        
-        connected = True
-        
-        ip_address_input.set_text(versusserver.get_lan_ip_address())
-        ip_address_input.inactivate()
-        
-        connect_button.hide()
-        
-        onlinematchloader.register_network_callbacks()
 
 def unload():
     global loaded
     global exit_button
     global start_match_label
     global ip_address_input
-    global connect_button
-    global connected
     global player_status_ui_dictionary
     global join_match_button
     global assigned_positions
     global spectate_button
     global local_player_position
     global local_player_container_created
-    global connecting_alert_box
     
-    connecting_alert_box = None
     exit_button = None
     loaded = False
     start_match_label = None
-    ip_address_input = None
     network_message_label = None
     join_match_button = None
     assigned_positions = None
     spectate_button = None
-    connect_button = None
     player_status_ui_dictionary = None
     local_player_position = None
     local_player_container_created = False
     
-    if connected:
+    if versusclient.connected():
         #clean up any remaining messages to the client
         versusclient.get_network_messages()
         versusclient.listener.Pump()
@@ -153,21 +111,15 @@ def unload():
         print("server closed")
         
         gamestate.hosting = False
-    
-    connected = False
 
 def handle_events():
     global loaded
     global exit_button
     global start_match_label
-    global ip_address_input
-    global connect_button
-    global connected
     global player_status_ui_dictionary
     global join_match_button
     global local_player_container_created
     global local_player_position
-    global connecting_alert_box
     
     if loaded == False:
         load()
@@ -274,67 +226,14 @@ def handle_events():
         start_match_label.draw(gamestate.screen)
         spectate_button.draw(gamestate.screen)
         
-        #IP adress handle events
-        if ip_address_input.active:
-            ip_address_input.handle_events()
-        
-        server_address = ip_address_input.text_entry_box.value.strip()
-        
-        if re.match(VALID_IPV4_ADDRESS_REGEX, server_address) and not connected:
-            connect_button.activate()
-        else:
-            connect_button.inactivate()
-        
-        if connect_button.active and connect_button.contains(wotsuievents.mouse_pos):
-            if pygame.MOUSEBUTTONDOWN in wotsuievents.event_types:
-                connect_button.handle_selected()
-                
-            if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
+        #Network Dependent Event Handling
+        if (versusclient.listener.connection_status == 
+        versusclient.ConnectionStatus.DISCONNECTED):
             
-                if connect_button.selected:
-                    ip_address_input.inactivate()
-                
-                    versusclient.connect_to_host(server_address)
-                    versusclient.get_network_messages()
-                    versusclient.listener.Pump()
-                    
-                    connect_button.handle_deselected()
-                    connect_button.inactivate()
-                    
-                    connected = True
-                    onlinematchloader.register_network_callbacks()
-                else:
-                    connect_button.handle_deselected()
+            unload()
+            gamestate.mode = gamestate.Modes.ONLINEMENUPAGE
         
-        ip_address_input.draw(gamestate.screen)
-        
-        if gamestate.hosting == False:
-            if versusclient.listener.connection_status == \
-            versusclient.ConnectionStatus.DISCONNECTED:
-                
-                connected = False
-                
-                if ip_address_input.active == False:
-                    ip_address_input.activate()
-                    init_player_status_ui_dictionary()
-                
-                if join_match_button.active:
-                    join_match_button.inactivate()
-                
-                if spectate_button.active:
-                    spectate_button.inactivate()
-                
-                if start_match_label.active:
-                    start_match_label.inactivate()
-            elif versusclient.listener.connection_status == \
-            versusclient.ConnectionStatus.CONNECTING:
-                connecting_alert_box.draw(gamestate.screen)
-            
-            if not versusclient.client_was_connected():
-                
-                connect_button.draw(gamestate.screen)
-        
-        if connected or gamestate.hosting:
+        if versusclient.connected() or gamestate.hosting:
             if not versusclient.local_player_is_in_match():
                 if not join_match_button.active:
                     join_match_button.activate()
@@ -343,7 +242,6 @@ def handle_events():
                     spectate_button.inactivate()
                 
             else:
-                update_player_data()
                 
                 if not spectate_button.active:
                     spectate_button.activate()
@@ -351,23 +249,26 @@ def handle_events():
                 if join_match_button.active:
                     join_match_button.inactivate()
             
-            versusclient.get_network_messages()
-            versusclient.listener.Pump()            
+            update_player_data()
             
             if (versusclient.listener.server_mode == 
             versusserver.ServerModes.LOADING_MATCH_DATA) or \
             (versusclient.listener.server_mode == versusserver.ServerModes.MATCH):
                 gamestate.mode = gamestate.Modes.ONLINEMATCHLOADER
-        
-        if gamestate.hosting:
-            versusserver.server.Pump()
+            
+            versusclient.get_network_messages()
+            versusclient.listener.Pump() 
+            
+            if gamestate.hosting:
+                versusserver.server.Pump()
 
 def update_player_data():
     global player_status_ui_dictionary
     
     for player_position in player_status_ui_dictionary:
         if (player_position == versusclient.get_local_player_position() or
-        versusclient.is_dummy(player_position)):
+        (versusclient.is_dummy(player_position) and gamestate.hosting)):
+            
             player_status_ui = player_status_ui_dictionary[player_position]
             
             versusclient.listener.set_moveset(player_status_ui.get_moveset().name, player_position)
@@ -385,12 +286,12 @@ def handle_local_player_ui_changes():
     
     if local_player_container_created:
         if not versusclient.local_player_is_in_match():
-            new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
-            set_player_state_label_position(new_ui, local_player_position)
-            
-            player_status_ui_dictionary[local_player_position] = new_ui
-            
-            assigned_positions.remove(local_player_position)
+        #    new_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
+        #    set_player_state_label_position(new_ui, local_player_position)
+        #    
+        #    player_status_ui_dictionary[local_player_position] = new_ui
+        #    
+        #    assigned_positions.remove(local_player_position)
             local_player_position = None
             local_player_container_created = False
         
@@ -421,22 +322,22 @@ def handle_remote_player_ui_changes():
             remote_player_id = versusclient.get_player_id_at_position(player_position)
             remote_player_nickname = versusclient.get_player_nickname(remote_player_id)
             
-            if versusclient.is_dummy(player_position):
-                new_ui_position = \
-                get_local_player_setup_container_position(player_position)
-            
-                player_status_ui_dictionary[player_position] = \
-                    LocalPlayerSetupContainer(new_ui_position, get_playable_movesets())
-            else:
-                new_ui_position = \
-                    get_remote_player_state_label_position(player_position)
-                
-                player_status_ui_dictionary[player_position] = \
-                    RemotePlayerStateLabel(
-                        new_ui_position,
-                        remote_player_id,
-                        remote_player_nickname
-                    )
+            #if versusclient.is_dummy(player_position):
+            new_ui_position = \
+            get_local_player_setup_container_position(player_position)
+        
+            player_status_ui_dictionary[player_position] = \
+                LocalPlayerSetupContainer(new_ui_position, get_playable_movesets())
+            #else:
+            #    new_ui_position = \
+            #        get_remote_player_state_label_position(player_position)
+            #    
+            #    player_status_ui_dictionary[player_position] = \
+            #        RemotePlayerStateLabel(
+            #            new_ui_position,
+            #            remote_player_id,
+            #            remote_player_nickname
+            #        )
             
             assigned_positions.append(player_position)
 
@@ -473,20 +374,24 @@ def init_player_status_ui_dictionary():
     
     global player_status_ui_dictionary
     global local_player_container_created
+    global assigned_positions
     
     local_player_container_created = False
+    assigned_positions = []
     
-    player1_ui = button.Label((50,300), "Waiting for Player", (255,255,255),32)
-    player2_ui = button.Label((0,0), "Waiting for Player", (255,255,255),32)
+    for player_position in versusclient.get_remote_player_positions():
+        remote_player_id = versusclient.get_player_id_at_position(player_position)
+        remote_player_nickname = versusclient.get_player_nickname(remote_player_id)
+        
+        new_ui_position = \
+        get_local_player_setup_container_position(player_position)
     
-    player_status_ui_dictionary = \
-    {
-        versusserver.PlayerPositions.PLAYER1 : player1_ui,
-        versusserver.PlayerPositions.PLAYER2 : player2_ui
-    }
+        player_status_ui_dictionary[player_position] = \
+            LocalPlayerSetupContainer(new_ui_position, get_playable_movesets())
+        
+        assigned_positions.append(player_position)
     
-    set_player_state_label_position(player1_ui, versusserver.PlayerPositions.PLAYER1)
-    set_player_state_label_position(player2_ui, versusserver.PlayerPositions.PLAYER2)
+    print(player_status_ui_dictionary)
 
 def set_player_state_label_position(player_state_label, player_position):
     

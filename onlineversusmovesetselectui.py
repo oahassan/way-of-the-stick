@@ -155,6 +155,7 @@ class LocalPlayerSetupContainer(wotsui.UIObjectBase, PlayerStatusUiBase):
                 return PlayerTypes.BOT
         else:
             return PlayerTypes.BOT
+    
     def get_moveset(self):
         if self.moveset_select.selected_moveset != None:
             return self.moveset_select.selected_moveset

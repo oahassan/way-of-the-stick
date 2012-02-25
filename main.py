@@ -27,6 +27,7 @@ import movesetselect
 import versusmovesetselect
 import onlineversusmode
 import onlineversusmovesetselect
+import onlineversusmovesetselectloader
 import onlinemenupage
 import onlinematchloader
 import controlspage
@@ -129,7 +130,10 @@ if __name__ == "__main__":
             elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT:
                 onlineversusmovesetselect.handle_events()
                 chat.handle_events()
-                
+            
+            elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECTLOADER:
+                onlineversusmovesetselectloader.handle_events()
+            
             elif gamestate.mode == gamestate.Modes.ONLINEMENUPAGE:
                 onlinemenupage.handle_events()
                 

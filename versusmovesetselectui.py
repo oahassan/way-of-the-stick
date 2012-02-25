@@ -84,6 +84,13 @@ class ColorWheel(UIObjectBase):
             self.swatch_radius
         )
     
+    def set_color(self, color):
+        for swatch in self.color_swatches:
+            if swatch.color == color:
+                self.selected_swatch.handle_deselected()
+                swatch.handle_selected()
+                self.selected_swatch = swatch
+    
     def handle_events(self):
         if wotsuievents.mousebutton_pressed():
             for swatch in self.color_swatches:
@@ -330,6 +337,12 @@ class MovesetSelector(UIObjectBase, MovesetLoader):
         
         return target_x_position == self.thumbnails[index].position[0]
     
+    def set_moveset_by_name(self, moveset_name):
+        for i in range(len(self.thumbnails)):
+            if self.thumbnails[i].moveset.name == moveset_name:
+                self.select_next_moveset(i)
+                break
+    
     def get_thumbnail_x_displacement(self):
         target_x_position = self.get_selected_thumbnail_position()[0]
         index = self.selected_thumbnail_index
@@ -374,6 +387,9 @@ class PlayerSettingControl(Slider):
         
     def get_value(self):
         return int(10 * self.get_scroll_percent())
+    
+    def set_value(self, value):
+        self.set_scroll_percent(float(value / 10))
     
     def set_layout_data(self, position, slider_width, bar_height):
         slider_position = (
@@ -439,6 +455,9 @@ class PlayerStatsWidget(UIObjectBase):
     
     def get_size(self): 
         return self.size_control.get_value()
+    
+    def set_size(self, value):
+        self.size_control.set_value(value)
     
     def handle_events(self):
         size_control_percent = self.size_control.get_scroll_percent()

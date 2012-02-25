@@ -166,29 +166,79 @@ class ClientChannel(Channel):
         self._server.send_to_all(data)
     
     def Network_set_moveset(self, data):
-        self._server.player_data[data[DataKeys.PLAYER_POSITION]].moveset = data[PlayerDataKeys.MOVESET_NAME]
+        self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].moveset = data[PlayerDataKeys.MOVESET_NAME]
         
         self._server.send_to_all(data)
+    
+    def Network_get_moveset(self, data):
+        data[DataKeys.ACTION] = PlayerSelectActions.SET_MOVESET
+        data[PlayerDataKeys.MOVESET_NAME] = self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].moveset
+        
+        self.Send(data)
     
     def Network_set_color(self, data):
-        self._server.player_data[data[DataKeys.PLAYER_POSITION]].color = data[PlayerDataKeys.COLOR]
+        self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].color = data[PlayerDataKeys.COLOR]
         
         self._server.send_to_all(data)
+    
+    def Network_get_color(self, data):
+        data[DataKeys.ACTION] = PlayerSelectActions.SET_COLOR
+        data[PlayerDataKeys.COLOR] = self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].color
+        
+        self.Send(data)
     
     def Network_set_difficulty(self, data):
-        self._server.player_data[data[DataKeys.PLAYER_POSITION]].difficulty = data[PlayerDataKeys.DIFFICULTY]
+        self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].difficulty = data[PlayerDataKeys.DIFFICULTY]
         
         self._server.send_to_all(data)
+    
+    def Network_get_difficulty(self, data):
+        data[DataKeys.ACTION] = PlayerSelectActions.SET_DIFFICULTY
+        data[PlayerDataKeys.DIFFICULTY] = self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].difficulty
+        
+        self.Send(data)
     
     def Network_set_player_type(self, data):
-        self._server.player_data[data[DataKeys.PLAYER_POSITION]].player_type = data[PlayerDataKeys.PLAYER_TYPE]
+        self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].player_type = data[PlayerDataKeys.PLAYER_TYPE]
         
         self._server.send_to_all(data)
     
+    def Network_get_player_type(self, data):
+        data[DataKeys.ACTION] = PlayerSelectActions.SET_PLAYER_TYPE
+        data[PlayerDataKeys.PLAYER_TYPE] = self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].player_type
+        
+        self.Send(data)
+    
     def Network_set_size(self, data):
-        self._server.player_data[data[DataKeys.PLAYER_POSITION]].size = data[PlayerDataKeys.SIZE]
+        self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].size = data[PlayerDataKeys.SIZE]
         
         self._server.send_to_all(data)
+    
+    def Network_get_size(self, data):
+        data[DataKeys.ACTION] = PlayerSelectActions.SET_SIZE
+        data[PlayerDataKeys.SIZE] = self._server.player_data[
+            data[PlayerDataKeys.PLAYER_POSITION]
+        ].size
+        
+        self.Send(data)
     
     def Network_update_input_state(self, data):
         self._server.send_to_all(data)
@@ -322,32 +372,6 @@ class WotsServer(Server):
                 player_positions[position] = None
             else:
                 player_positions[position] = player.player_id
-                
-                client.Send({
-                    DataKeys.ACTION : PlayerSelectActions.SET_COLOR,
-                    PlayerDataKeys.COLOR : player.color,
-                    PlayerDataKeys.PLAYER_POSITION : player.position
-                })
-                client.Send({
-                    DataKeys.ACTION : PlayerSelectActions.SET_SIZE,
-                    PlayerDataKeys.SIZE : player.size,
-                    PlayerDataKeys.PLAYER_POSITION : player.position
-                })
-                client.Send({
-                    DataKeys.ACTION : PlayerSelectActions.SET_DIFFICULTY,
-                    PlayerDataKeys.DIFFICULTY : player.difficulty,
-                    PlayerDataKeys.PLAYER_POSITION : player.position
-                })
-                client.Send({
-                    DataKeys.ACTION : PlayerSelectActions.SET_PLAYER_TYPE,
-                    PlayerDataKeys.PLAYER_TYPE : player.player_type,
-                    PlayerDataKeys.PLAYER_POSITION : player.position
-                })
-                client.Send({
-                    DataKeys.ACTION : PlayerSelectActions.SET_MOVESET,
-                    PlayerDataKeys.MOVESET_NAME : player.moveset,
-                    PlayerDataKeys.PLAYER_POSITION : player.position
-                })
         
         player_nicknames = {}
         

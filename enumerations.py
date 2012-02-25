@@ -31,6 +31,11 @@ class PlayerSelectActions:
     SET_SIZE = "set_size"
     SET_DIFFICULTY = "set_difficulty"
     SET_PLAYER_TYPE = "set_player_type"
+    GET_MOVESET = "get_moveset"
+    GET_COLOR = "get_color"
+    GET_SIZE = "get_size"
+    GET_DIFFICULTY = "get_difficulty"
+    GET_PLAYER_TYPE = "get_player_type"
 
 class SimulationDataKeys:
     ACTION = 0

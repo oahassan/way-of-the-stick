@@ -31,13 +31,13 @@ def load():
     host_match_button = \
         menupage.MenuButton(
             "Host Match", 
-            gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+            gamestate.Modes.ONLINEVERSUSMOVESETSELECTLOADER
         )
     
     join_match_button = \
         menupage.MenuButton(
             "Join Match",
-            gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+            gamestate.Modes.ONLINEVERSUSMOVESETSELECTLOADER
         )
     
     #create module menu object
@@ -87,7 +87,7 @@ def handle_events():
                 unload()
                 gamestate.mode = gamestate.Modes.MAINMENU
         
-        if gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECT:
+        if gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECTLOADER:
             if host_match_button.contains(wotsuievents.mouse_pos):
                 gamestate.hosting = True
             elif join_match_button.contains(wotsuievents.mouse_pos):

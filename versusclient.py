@@ -68,6 +68,11 @@ class ClientConnectionListener(EndPoint):
         else:
             self.callbacks[client_action] = [f]
     
+    def unregister_callback(self, client_action, f):
+        
+        if client_action in self.callbacks:
+            self.callbacks[client_action].remove(f)
+    
     def clear_callbacks(self, client_action):
         
         if client_action in self.callbacks:
@@ -148,6 +153,14 @@ class ClientConnectionListener(EndPoint):
         
         self.Send(data)
     
+    def get_moveset(self, player_position):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.GET_MOVESET,
+            PlayerDataKeys.PLAYER_POSITION : player_position
+        }
+        
+        self.Send(data)
+    
     def set_color(self, color, player_position = None):
         if player_position == None:
             player_position = get_local_player_position()
@@ -157,6 +170,14 @@ class ClientConnectionListener(EndPoint):
         data = {
             DataKeys.ACTION : PlayerSelectActions.SET_COLOR,
             PlayerDataKeys.COLOR : color,
+            PlayerDataKeys.PLAYER_POSITION : player_position
+        }
+        
+        self.Send(data)
+    
+    def get_color(self, player_position):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.GET_COLOR,
             PlayerDataKeys.PLAYER_POSITION : player_position
         }
         
@@ -176,6 +197,14 @@ class ClientConnectionListener(EndPoint):
         
         self.Send(data)
     
+    def get_size(self, player_position):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.GET_SIZE,
+            PlayerDataKeys.PLAYER_POSITION : player_position
+        }
+        
+        self.Send(data)
+    
     def set_player_type(self, player_type, player_position = None):
         if player_position == None:
             player_position = get_local_player_position()
@@ -185,6 +214,14 @@ class ClientConnectionListener(EndPoint):
         data = {
             DataKeys.ACTION : PlayerSelectActions.SET_PLAYER_TYPE,
             PlayerDataKeys.PLAYER_TYPE : player_type,
+            PlayerDataKeys.PLAYER_POSITION : player_position
+        }
+        
+        self.Send(data)
+    
+    def get_player_type(self, player_position):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.GET_PLAYER_TYPE,
             PlayerDataKeys.PLAYER_POSITION : player_position
         }
         
@@ -204,13 +241,18 @@ class ClientConnectionListener(EndPoint):
         
         self.Send(data)
     
+    def get_difficulty(self, player_position):
+        data = {
+            DataKeys.ACTION : PlayerSelectActions.GET_DIFFICULTY,
+            PlayerDataKeys.PLAYER_POSITION : player_position
+        }
+        
+        self.Send(data)
+    
     def send_input_to_host(self, data):
         data[DataKeys.ACTION] = ServerActions.UPDATE_INPUT_STATE
         
         self.Send(data)
-    
-    def get_moveset(self, player_position):
-        return self.player_movesets[player_position]
     
     def del_player(self, player_to_delete_id):
         del self.player_nicknames[player_to_delete_id]

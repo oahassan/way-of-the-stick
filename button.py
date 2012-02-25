@@ -139,6 +139,9 @@ class TextButton(Button):
         
         self.symbol.draw = TextButton.draw_symbol
     
+    def is_match(self, text):
+        return self.text.text == text
+    
     def inactivate(self):
         Button.inactivate(self)
         
@@ -169,6 +172,9 @@ class Label(wotsui.UIObjectBase):
         text_dimensions = self.font.size(self.text)
         self.width = text_dimensions[0]
         self.height = text_dimensions[1]
+    
+    def is_match(self, text):
+        return self.text == text
     
     def draw(self, surface):
         """draw text of label on a surface"""

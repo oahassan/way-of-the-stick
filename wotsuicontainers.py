@@ -724,9 +724,22 @@ class ButtonContainer(ScrollableContainer):
         for button in self.buttons:
             button.inactivate()
     
+    def set_selected_button(self, button_text):
+        for button in self.buttons:
+            if button.is_match(button_text):
+                button.handle_selected()
+                
+                if ((self.selected_button != None)
+                and (self.selected_button != button)):
+                    self.selected_button.handle_deselected()
+                
+                self.selected_button = button
+                break
+    
     def handle_events(self):
         for button in self.buttons:
-            if button.contains(wotsuievents.mouse_pos):
+            if (button.contains(wotsuievents.mouse_pos) and 
+            wotsuievents.mousebutton_pressed()):
                 button.handle_selected()
                 
                 if ((self.selected_button != None)
