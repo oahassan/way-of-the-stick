@@ -389,7 +389,7 @@ class PlayerSettingControl(Slider):
         return int(10 * self.get_scroll_percent())
     
     def set_value(self, value):
-        self.set_scroll_percent(float(value / 10))
+        self.set_scroll_percent(float(value) / 10.0)
     
     def set_layout_data(self, position, slider_width, bar_height):
         slider_position = (
