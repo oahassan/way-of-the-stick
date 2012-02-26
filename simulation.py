@@ -1222,6 +1222,8 @@ class NetworkedSimulation(MatchSimulation):
         self.state_history = []
         self.input_history = []
         self.action_data_factory = ActionDataFactory()
+        self.broadcast_interval = 60
+        self.broadcast_timer = 0
     
     def step(self, player_keys_pressed, time_passed):
         """update the state of the players in the simulation"""
@@ -1326,6 +1328,7 @@ class NetworkedSimulation(MatchSimulation):
             )
 
 class ServerSimulation(NetworkedSimulation):
+    
     def run(self):
         while 1:
             while self.pipe_connection.poll():
@@ -1346,7 +1349,10 @@ class ServerSimulation(NetworkedSimulation):
                             SimulationDataKeys.RENDERING_INFO : self.get_rendering_info()
                         }
                     )
-                    if self.match_time % 120 == 0:
+                    
+                    self.broadcast_timer += data[SimulationDataKeys.TIME_PASSED]
+                    
+                    if self.broadcast_timer > self.broadcast_interval:
                         state = self.get_simulation_state()
                         #print([player_dat.action_data for player_dat in state.player_states.values()])
                         self.pipe_connection.send(
@@ -1355,7 +1361,8 @@ class ServerSimulation(NetworkedSimulation):
                                 SimulationDataKeys.SIMULATION_STATE : state
                             }
                         )
-                     
+                        self.broadcast_timer = 0
+                    
                     for player in self.player_dictionary.values():
                         player.clear_events() 
                        
@@ -1367,7 +1374,6 @@ class ServerSimulation(NetworkedSimulation):
                     )
                 
                 elif action_type == SimulationActionTypes.UPDATE_STATE:
-                    print("update state")
                     pass #Since hosts are the authority they don't get checked against
                     #remote simulation states.
                 else:
@@ -1419,7 +1425,7 @@ class ClientSimulation(NetworkedSimulation):
                         player.clear_events() 
                     
                     if self.player_position != PlayerPositions.NONE:
-                        print("broadcsting state")
+                        
                         if self.match_time % 120 == 0 and len(self.input_history) >= 1:
                             self.pipe_connection.send(
                                 {
@@ -1440,7 +1446,7 @@ class ClientSimulation(NetworkedSimulation):
                        raise 
                 
                 elif action_type == SimulationActionTypes.UPDATE_INPUT:
-                    print("update input")
+                    
                     pass #clients should only update against the player state of the
                     #host
                 else:

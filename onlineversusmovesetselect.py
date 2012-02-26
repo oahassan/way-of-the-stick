@@ -19,6 +19,8 @@ import player
 import humanplayer
 import aiplayer
 
+from enumerations import PlayerSelectActions, PlayerDataKeys
+
 VALID_IPV4_ADDRESS_REGEX = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
 
 loaded = False
@@ -69,6 +71,95 @@ def load():
     spectate_button = button.TextButton("Spectate")
     spectate_button.set_position((600, 50))
     spectate_button.inactivate()
+    
+    register_network_callbacks()
+
+def set_color(data):
+    global player_status_ui_dictionary
+    
+    player_position = data[PlayerDataKeys.PLAYER_POSITION]
+    player_ui = player_status_ui_dictionary[player_position]
+    player_ui.player_color_select.set_color(data[PlayerDataKeys.COLOR])
+
+def set_size(data):
+    global player_status_ui_dictionary
+    
+    player_position = data[PlayerDataKeys.PLAYER_POSITION]
+    player_ui = player_status_ui_dictionary[player_position]
+    player_ui.player_stats_widget.set_size(data[PlayerDataKeys.SIZE])
+
+def set_difficulty(data):
+    global player_status_ui_dictionary
+    
+    player_position = data[PlayerDataKeys.PLAYER_POSITION]
+    player_ui = player_status_ui_dictionary[player_position]
+    player_ui.player_difficulty_select.set_selected_button(data[PlayerDataKeys.DIFFICULTY])
+
+def set_player_type(data):
+    global player_status_ui_dictionary
+    
+    player_position = data[PlayerDataKeys.PLAYER_POSITION]
+    player_ui = player_status_ui_dictionary[player_position]
+    player_ui.player_type_select.set_selected_button(data[PlayerDataKeys.PLAYER_TYPE])
+
+def set_moveset(data):
+    global player_status_ui_dictionary
+    
+    player_position = data[PlayerDataKeys.PLAYER_POSITION]
+    player_ui = player_status_ui_dictionary[player_position]
+    player_ui.moveset_select.set_moveset_by_name(data[PlayerDataKeys.MOVESET_NAME])
+
+def register_network_callbacks():
+    versusclient.listener.register_callback(
+        PlayerSelectActions.SET_COLOR,
+        set_color
+    )
+    
+    versusclient.listener.register_callback(
+        PlayerSelectActions.SET_SIZE,
+        set_size
+    )
+    
+    versusclient.listener.register_callback(
+        PlayerSelectActions.SET_DIFFICULTY,
+        set_difficulty
+    )
+    
+    versusclient.listener.register_callback(
+        PlayerSelectActions.SET_PLAYER_TYPE,
+        set_player_type
+    )
+    
+    versusclient.listener.register_callback(
+        PlayerSelectActions.SET_MOVESET,
+        set_moveset
+    )
+
+def unregister_network_callbacks():
+    versusclient.listener.unregister_callback(
+        PlayerSelectActions.SET_COLOR,
+        set_color
+    )
+    
+    versusclient.listener.unregister_callback(
+        PlayerSelectActions.SET_SIZE,
+        set_size
+    )
+    
+    versusclient.listener.unregister_callback(
+        PlayerSelectActions.SET_DIFFICULTY,
+        set_difficulty
+    )
+    
+    versusclient.listener.unregister_callback(
+        PlayerSelectActions.SET_PLAYER_TYPE,
+        set_player_type
+    )
+    
+    versusclient.listener.unregister_callback(
+        PlayerSelectActions.SET_MOVESET,
+        set_moveset
+    )
 
 def unload():
     global loaded
@@ -94,6 +185,8 @@ def unload():
     local_player_container_created = False
     
     if versusclient.connected():
+        unregister_network_callbacks()
+        
         #clean up any remaining messages to the client
         versusclient.get_network_messages()
         versusclient.listener.Pump()
@@ -271,11 +364,21 @@ def update_player_data():
             
             player_status_ui = player_status_ui_dictionary[player_position]
             
-            versusclient.listener.set_moveset(player_status_ui.get_moveset().name, player_position)
-            versusclient.listener.set_color(player_status_ui.get_color(), player_position)
-            versusclient.listener.set_size(player_status_ui.get_size(), player_position)
-            versusclient.listener.set_difficulty(player_status_ui.get_difficulty(), player_position)
-            versusclient.listener.set_player_type(player_status_ui.get_player_type(), player_position)
+            if pygame.MOUSEBUTTONUP in wotsuievents.event_types:
+                if player_status_ui.moveset_select.contains(wotsuievents.mouse_pos):
+                    versusclient.listener.set_moveset(player_status_ui.get_moveset().name, player_position)
+                
+                if player_status_ui.player_color_select.contains(wotsuievents.mouse_pos):
+                    versusclient.listener.set_color(player_status_ui.get_color(), player_position)
+                
+                if player_status_ui.player_stats_widget.contains(wotsuievents.mouse_pos):
+                    versusclient.listener.set_size(player_status_ui.get_size(), player_position)
+                
+                if player_status_ui.player_difficulty_select.contains(wotsuievents.mouse_pos):
+                    versusclient.listener.set_difficulty(player_status_ui.get_difficulty(), player_position)
+                
+                if player_status_ui.player_type_select.contains(wotsuievents.mouse_pos):
+                    versusclient.listener.set_player_type(player_status_ui.get_player_type(), player_position)
 
 def handle_local_player_ui_changes():
     """change ui if local or remote player states change"""

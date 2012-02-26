@@ -461,6 +461,8 @@ class PlayerStatsWidget(UIObjectBase):
     
     def set_size(self, value):
         self.size_control.set_value(value)
+        self.power_control.set_value(value)
+        self.speed_control.set_value(10 - value)
     
     def handle_events(self):
         size_control_percent = self.size_control.get_scroll_percent()
