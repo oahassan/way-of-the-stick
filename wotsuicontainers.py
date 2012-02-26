@@ -1043,9 +1043,9 @@ class SliderButton(ScrollButton):
         ScrollButton.__init__(self, direction)
         
         if self.direction == SCROLL_LEFT:
-            self.image = button.Label(self.position, '-', self.color)
+            self.image = button.Label(self.position, '-', self.color, 32, 'freesansbold.ttf')
         else:
-            self.image = button.Label(self.position, '+', self.color)
+            self.image = button.Label(self.position, '+', self.color, 32, 'freesansbold.ttf')
         
         self.add_child(self.image)
     
