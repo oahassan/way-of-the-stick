@@ -37,11 +37,12 @@ class TrailEffect():
         polygon_positions = [[self.positions[0]]]
         polygon_positions[0].extend(self.get_line_positions(1))
         
-        for i in range(2,len(self.positions)):
-            new_positions = polygon_positions[i - 2][-2:]
-            new_positions.extend(self.get_line_positions(i))
-            
-            polygon_positions.append(new_positions)
+        if len(self.positions) > 2:
+            for i in range(2,len(self.positions)):
+                new_positions = polygon_positions[i - 2][-2:]
+                new_positions.extend(self.get_line_positions(i))
+                
+                polygon_positions.append(new_positions)
         
         return polygon_positions
     
