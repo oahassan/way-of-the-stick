@@ -292,6 +292,8 @@ class OnlineVersusModeState(VersusModeState):
         self.reset_GUI_variables()
         self.flush_recording()
         self.initialized = False
+        self.exiting = True
+        self.exit_indicator = True
         
         wotsrendering.flush()
         

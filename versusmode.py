@@ -886,7 +886,6 @@ class VersusModeState():
                 )
                 
             else:
-                gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
                 self.exit()
         elif self.match_state == MatchStates.PLAYER2_WINS:
             
@@ -903,7 +902,6 @@ class VersusModeState():
                     )
                 )
             else:
-                gamestate.mode = gamestate.Modes.VERSUSMOVESETSELECT
                 self.exit()
 
     def create_collision_effects(self, attack_result_rendering_info):
