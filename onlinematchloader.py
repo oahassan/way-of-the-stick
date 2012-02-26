@@ -107,11 +107,22 @@ def load():
     
     load_match_progress_timer = 0
     
+    versusmode_player_data = []
+    
     #swap actual moveset with moveset name
     for player_data_object in player_data.values():
-        player_data_object.moveset = movesetdata.get_moveset(player_data_object.moveset)
+        versusmode_player_data.append(
+            PlayerData(
+                player_data_object.player_position,
+                player_data_object.player_type,
+                movesetdata.get_moveset(player_data_object.moveset),
+                player_data_object.size,
+                player_data_object.color,
+                player_data_object.difficulty
+            )
+        )
     
-    onlineversusmode.init(player_data.values())
+    onlineversusmode.init(versusmode_player_data)
     
     if versusclient.local_player_is_in_match():
         
