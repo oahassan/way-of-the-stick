@@ -38,7 +38,7 @@ def load():
     join_match_button = \
         menupage.MenuButton(
             "Join Match",
-            gamestate.Modes.ONLINEVERSUSMOVESETSELECTLOADER
+            gamestate.Modes.SERVERSELECT
         )
     
     #create module menu object
@@ -92,8 +92,7 @@ def handle_events():
         if host_match_button.contains(wotsuievents.mouse_pos):
             gamestate.hosting = True
             onlineversusmovesetselectloader.load(versusserver.get_lan_ip_address())
-        elif join_match_button.contains(wotsuievents.mouse_pos):
-            onlineversusmovesetselectloader.load(versusserver.get_lan_ip_address())
+        
     elif loaded:
         exit_button.draw(gamestate.screen)
         menu.draw(gamestate.screen)

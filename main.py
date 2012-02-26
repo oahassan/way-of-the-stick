@@ -38,6 +38,7 @@ import music
 import versusclient
 import stageselect
 import credits
+import serverselect
 
 import gamestate
 import serializability
@@ -140,7 +141,10 @@ if __name__ == "__main__":
             elif gamestate.mode == gamestate.Modes.ONLINEMATCHLOADER:
                 onlinematchloader.handle_events()
                 chat.handle_events()
-                
+            
+            elif gamestate.mode == gamestate.Modes.SERVERSELECT:
+                serverselect.handle_events()
+                    
             elif gamestate.mode == gamestate.Modes.CONTROLSPAGE:
                 controlspage.handle_events()
             

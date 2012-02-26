@@ -1,7 +1,4 @@
-import re
-
 import pygame
-import eztext
 
 import wotsuievents
 import movesetdata
@@ -20,8 +17,6 @@ import humanplayer
 import aiplayer
 
 from enumerations import PlayerSelectActions, PlayerDataKeys
-
-VALID_IPV4_ADDRESS_REGEX = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
 
 loaded = False
 exit_button = None

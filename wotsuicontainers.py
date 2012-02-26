@@ -756,7 +756,8 @@ class TextEntryBox(wotsui.SelectableObjectBase):
         prompt_text = '',
         max_length = 100,
         position = (0, 0),
-        text_color =(255, 255, 255)
+        text_color =(255, 255, 255),
+        font = 'freesansbold.ttf'
     ):
         wotsui.SelectableObjectBase.__init__(self)
         self.moveset = None
@@ -782,6 +783,9 @@ class TextEntryBox(wotsui.SelectableObjectBase):
     def set_text(self, text):
         """sets the value of the text entry box to the given text"""
         self.text_entry_box.value = text
+    
+    def get_input(self):
+        return self.text_entry_box.value
     
     def set_position(self, position):
         """moves the top left of the text entry box to the given position"""
