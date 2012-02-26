@@ -299,7 +299,8 @@ class OnlineVersusModeState(VersusModeState):
         
         self.unregister_network_callbacks()
         
-        if versusclient.local_player_is_in_match() or versusclient.dummies_only():
+        if (versusclient.local_player_is_in_match() or 
+        (versusclient.dummies_only() and gamestate.hosting)):
             versusclient.listener.end_match()
             
         else:
@@ -430,10 +431,6 @@ class OnlineVersusModeState(VersusModeState):
                 if self.exiting == False and self.exit_indicator == False:
                     self.exit()
                 
-                #This must be called here to make sure that the player states get set to None. If
-                #not a new match cannot be joined
-                versusclient.clear_player_states()
-                
                 gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
             
             versusclient.get_network_messages()
@@ -444,11 +441,7 @@ class OnlineVersusModeState(VersusModeState):
             if self.exiting == False and self.exit_indicator == False:
                 self.exit()
             
-            #This must be called here to make sure that the player states get set to None. If
-            #not a new match cannot be joined
-            versusclient.clear_player_states()
-            
-            gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
+            gamestate.mode = gamestate.Modes.ONLINEMENUPAGE
         
         if gamestate.hosting:
             versusserver.server.Pump()
