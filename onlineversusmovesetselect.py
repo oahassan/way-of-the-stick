@@ -57,6 +57,10 @@ def load():
     
     exit_button = button.ExitButton()
     loaded = True
+    player_status_ui_dictionary = {
+        versusserver.PlayerPositions.PLAYER1 : None,
+        versusserver.PlayerPositions.PLAYER2 : None
+    }
     start_match_label = movesetselectui.MovesetActionLabel((300, 550), "Start Match!")
     start_match_label.inactivate()
     playable_movesets = get_playable_movesets()

@@ -183,12 +183,12 @@ class OnlineMovesetSelectLoader():
 loaded = False
 moveset_select_loader = OnlineMovesetSelectLoader()
 
-def load(): 
+def load(server_address = None): 
     global moveset_select_loader
     global loaded
     
     splash.draw_loading_splash()
-    
+    moveset_select_loader = OnlineMovesetSelectLoader()
     moveset_select_loader.loaded_player_data = {
         PlayerPositions.PLAYER1 : {
             PlayerDataKeys.COLOR : False,
@@ -205,9 +205,6 @@ def load():
             PlayerDataKeys.MOVESET_NAME : False
         }
     }
-    
-    #TODO - Make this passed in
-    server_address = versusserver.get_lan_ip_address()
     
     if gamestate.hosting:
         versusserver.start_lan_server()
@@ -233,7 +230,7 @@ def handle_events():
     
     if loaded == False:
         load()
-    
+    splash.draw_loading_splash()
     versusclient.get_network_messages()
     versusclient.listener.Pump()
     
