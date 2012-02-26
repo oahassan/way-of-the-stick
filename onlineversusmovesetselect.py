@@ -390,8 +390,6 @@ def init_player_status_ui_dictionary():
             LocalPlayerSetupContainer(new_ui_position, get_playable_movesets())
         
         assigned_positions.append(player_position)
-    
-    print(player_status_ui_dictionary)
 
 def set_player_state_label_position(player_state_label, player_position):
     

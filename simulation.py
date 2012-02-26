@@ -1452,25 +1452,25 @@ class ClientSimulation(NetworkedSimulation):
         #sync players to simulation state
         
         #get matching history index. NOTE - history index is negative
-        history_index = self.get_history_index(server_simulation_state.match_time)
+        #history_index = self.get_history_index(server_simulation_state.match_time)
         
-        if history_index != None and abs(history_index) < len(self.state_history):
-            client_simulation_state = self.state_history[history_index]
+        #if history_index != None and abs(history_index) < len(self.state_history):
+        #    client_simulation_state = self.state_history[history_index]
             
-            if client_simulation_state != server_simulation_state:
+        #    if client_simulation_state != server_simulation_state:
                 
-                self.state_history = self.state_history[:history_index]
+        #        self.state_history = self.state_history[:history_index]
                 #sync player states to simulation state
-                for player_position, player_state in server_simulation_state.player_states.iteritems():
-                    self.player_dictionary[player_position].sync_to_server_state(
-                        player_state
-                    )
+        for player_position, player_state in server_simulation_state.player_states.iteritems():
+            self.player_dictionary[player_position].sync_to_server_state(
+                player_state
+            )
             
             #change history to match
-            self.state_history.append(server_simulation_state)
+        #    self.state_history.append(server_simulation_state)
             
             #replay from point in history
-            self.replay(len(self.input_history) - len(self.state_history))
+        #    self.replay(len(self.input_history) - len(self.state_history))
 
 serializable.register(PlayerState)
 serializable.register(SimulationState)
