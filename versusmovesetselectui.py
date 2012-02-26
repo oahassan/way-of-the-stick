@@ -187,6 +187,9 @@ class DifficultyLabel(button.SelectableLabel):
     def __init__(self, text, difficulty):
         button.SelectableLabel.__init__(self, (0,0), text, 20)
         self.difficulty = difficulty
+    
+    def is_match(self, difficulty):
+        return self.difficulty == difficulty
 
 class MovesetSelector(UIObjectBase, MovesetLoader):
     WIDTH = 300
