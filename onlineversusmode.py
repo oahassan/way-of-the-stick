@@ -443,9 +443,6 @@ class OnlineVersusModeState(VersusModeState):
                 self.exit()
             
             gamestate.mode = gamestate.Modes.ONLINEMENUPAGE
-        
-        if gamestate.hosting:
-            versusserver.server.Pump()
     
     def handle_match_state(self):
         VersusModeState.handle_match_state(self)

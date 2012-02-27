@@ -1,10 +1,13 @@
 import urllib
 import socket
+import struct
+import datetime
 
 from functools import reduce
 from wotsprot.udpserver import Server
 from wotsprot.channel import Channel
-from enumerations import PlayerPositions, PlayerDataKeys, PlayerTypes, Difficulties, PlayerSelectActions
+from wotsprot import protocol
+from enumerations import PlayerPositions, PlayerDataKeys, PlayerTypes, Difficulties, PlayerSelectActions, ServerDiscovery
 import versusmode
 
 class DataKeys:
@@ -46,6 +49,7 @@ class ClientActions:
     UPDATE_INPUT_STATE = "update_input_state"
     RECEIVE_CHAT_MESSAGE = "receive_chat_message"
     ADD_DUMMY = "add_dummy"
+    ACK_SERVER = "acknowledge_server"
 
 class ServerModes:
     MOVESET_SELECT = "moveset select"
@@ -55,6 +59,30 @@ class ServerModes:
 class ChannelTypes:
     DUMMY = 0
     CLIENT = 1
+
+class LanDiscoveryBroadcast(socket.socket):
+
+    def __init__(self, address, name):
+        socket.socket.__init__(self, socket.AF_INET, socket.SOCK_DGRAM)
+        
+        # Set Time-to-live (optional)
+        ttl_bin = struct.pack('@i', 1)
+        self.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl_bin)
+        self.last_update_timestamp = datetime.datetime.now()
+        self.address = address
+        self.name = name
+    
+    def Send(self):
+        payload = protocol.write_broadcast_header(0) + protocol.encode(
+            {
+                DataKeys.ACTION : ClientActions.ACK_SERVER,
+                ServerDiscovery.ADDRESS : self.address,
+                ServerDiscovery.NAME : self.name
+            }
+        )
+        
+        self.sendto(payload, (protocol.SERVER_DISCOVERY_GROUP, protocol.SERVER_DISCOVERY_PORT))
+        self.last_update_timestamp = datetime.datetime.now()
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -522,10 +550,9 @@ class WotsServer(Server):
         return client in self.players
 
 server = None
+broadcast = None
 
 DFLT_PORT = 45000
-
-listner = None
 
 def get_public_ip_address():
     """this only works if you have an internet connection"""
@@ -548,8 +575,19 @@ def start_public_server():
 
 def start_lan_server():
     global server
+    global broadcast
     
-    server = WotsServer(address=(get_lan_ip_address(), int(DFLT_PORT)))
+    address = get_lan_ip_address()
+    server = WotsServer(address=(address, int(DFLT_PORT)))
+    broadcast = LanDiscoveryBroadcast(address, "LAN Server")
+
+def pump():
+    if server != None:
+        server.Pump()
+    
+    if broadcast != None:
+        if (datetime.datetime.now() - broadcast.last_update_timestamp) > protocol.BROADCAST_INTERVAL:
+            broadcast.Send()
 
 def server_ready():
     if server:

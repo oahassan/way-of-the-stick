@@ -17,6 +17,10 @@ class Difficulties:
     CHALLENGE = 4
 
 # networking
+class ServerDiscovery:
+    ADDRESS = 0
+    NAME = 1
+
 class PlayerDataKeys:
     MOVESET_NAME = 0
     COLOR = 1

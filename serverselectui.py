@@ -40,7 +40,7 @@ class ServerTable(wotsuicontainers.ScrollableContainer):
         self.allow_multiple_select = False
         
         self.selected_row = None
-        
+        self.added_servers = []
         self.set_layout_data(
             position,
             300,
@@ -53,12 +53,13 @@ class ServerTable(wotsuicontainers.ScrollableContainer):
         )
     
     def add_server_address(self, ip_address):
-        server_row = RowEntry(ip_address)
-        server_row.set_position(self.get_address_position())
-        
-        self.add_child(server_row, True)
-        
-        #self.reset_scroll()
+        if ip_address not in self.added_servers:
+            server_row = RowEntry(ip_address)
+            server_row.set_position(self.get_address_position())
+            
+            self.add_child(server_row, True)
+            
+            self.added_servers.append(ip_address)
     
     def get_address_position(self):
         x_position = self.position[0]

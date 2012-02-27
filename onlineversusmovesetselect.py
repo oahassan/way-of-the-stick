@@ -202,6 +202,10 @@ def unload():
         versusserver.server = None
         print("server closed")
         
+        versusserver.broadcast.close()
+        versusserver.broadcast = None
+        print("server broadcasting closed")
+        
         gamestate.hosting = False
 
 def handle_events():
@@ -331,9 +335,6 @@ def handle_events():
             
             versusclient.get_network_messages()
             versusclient.listener.Pump() 
-            
-            if gamestate.hosting:
-                versusserver.server.Pump()
 
 def update_player_data():
     global player_status_ui_dictionary

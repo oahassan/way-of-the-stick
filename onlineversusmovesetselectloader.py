@@ -234,9 +234,6 @@ def handle_events():
     versusclient.get_network_messages()
     versusclient.listener.Pump()
     
-    if gamestate.hosting:
-        versusserver.server.Pump()
-    
     if versusclient.connected():
         if onlineversusmovesetselect.loaded == False:
             onlineversusmovesetselect.load()

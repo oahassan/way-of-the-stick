@@ -164,9 +164,6 @@ def handle_events():
     
     versusclient.get_network_messages()
     versusclient.listener.Pump()
-    
-    if gamestate.hosting:
-        versusserver.server.Pump()
 
 def get_layout_label_pos():
     """returns a position that centers the loading match label in the middle of the

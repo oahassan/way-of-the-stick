@@ -36,6 +36,7 @@ import splash
 import volume
 import music
 import versusclient
+import versusserver
 import stageselect
 import credits
 import serverselect
@@ -135,12 +136,12 @@ if __name__ == "__main__":
             elif gamestate.mode == gamestate.Modes.ONLINEVERSUSMOVESETSELECTLOADER:
                 onlineversusmovesetselectloader.handle_events()
             
-            elif gamestate.mode == gamestate.Modes.ONLINEMENUPAGE:
-                onlinemenupage.handle_events()
-                
             elif gamestate.mode == gamestate.Modes.ONLINEMATCHLOADER:
                 onlinematchloader.handle_events()
                 chat.handle_events()
+            
+            elif gamestate.mode == gamestate.Modes.ONLINEMENUPAGE:
+                onlinemenupage.handle_events()
             
             elif gamestate.mode == gamestate.Modes.SERVERSELECT:
                 serverselect.handle_events()
@@ -162,7 +163,10 @@ if __name__ == "__main__":
             elif gamestate.drawing_mode == gamestate.DrawingModes.DIRTY_RECTS:
                 wotsrendering.flush()
                 gamestate.update_screen()
-        
+            
+            if gamestate.hosting:
+                versusserver.pump()
+            
             gamestate.clock.tick(gamestate.frame_rate)
         
         except Exception as err:
