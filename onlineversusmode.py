@@ -284,7 +284,7 @@ class OnlineVersusModeState(VersusModeState):
                 player_position=player_position
             )
 
-    def exit(self):
+    def exit(self, quit=True):
         
         self.end_simulation()
         self.cleanup_rendering_objects()
@@ -304,10 +304,11 @@ class OnlineVersusModeState(VersusModeState):
             versusclient.listener.end_match()
             
         else:
-            #if you're a spectator go to the main menu
-            versusclient.listener.close()
-            versusclient.unload()
-            gamestate.mode = gamestate.Modes.MAINMENU
+            if quit:
+                #if you're a spectator go to the main menu
+                versusclient.listener.close()
+                versusclient.unload()
+                gamestate.mode = gamestate.Modes.MAINMENU
         
         self.chatting = False
     
@@ -429,7 +430,7 @@ class OnlineVersusModeState(VersusModeState):
             if versusclient.listener.server_mode == versusserver.ServerModes.MOVESET_SELECT:
                 print("match exited")
                 if self.exiting == False and self.exit_indicator == False:
-                    self.exit()
+                    self.exit(False)
                 
                 gamestate.mode = gamestate.Modes.ONLINEVERSUSMOVESETSELECT
             
